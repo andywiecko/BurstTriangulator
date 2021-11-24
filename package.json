@@ -1,6 +1,6 @@
 {
     "name": "com.andywiecko.burst.triangulator",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "displayName": "Burst Triangulator",
     "description": "A single-file package which provides simple Delaunay triangulation of the given set of points with mesh refinement.",
     "unity": "2021.1",
@@ -21,6 +21,6 @@
     },
     "dependencies": {
         "com.unity.burst": "1.5.5",
-        "com.unity.jobs": "0.8.0-preview.23"
+        "com.unity.jobs": "0.11.0-preview.6"
     }
 }

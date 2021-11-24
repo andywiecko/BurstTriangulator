@@ -152,7 +152,7 @@ namespace andywiecko.BurstTriangulator
             public NativeList<Triangle> triangles;
             public NativeList<Circle> circles;
             public NativeList<Edge3> trianglesToEdges;
-            public NativeHashMap<Edge, FixedList32<int>> edgesToTriangles;
+            public NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
 
             private NativeList<Edge> tmpPolygon;
             private NativeList<int> badTriangles;
@@ -166,7 +166,7 @@ namespace andywiecko.BurstTriangulator
                 triangles = new NativeList<Triangle>(capacity, allocator);
                 circles = new NativeList<Circle>(capacity, allocator);
                 trianglesToEdges = new NativeList<Edge3>(capacity, allocator);
-                edgesToTriangles = new NativeHashMap<Edge, FixedList32<int>>(capacity, allocator);
+                edgesToTriangles = new NativeHashMap<Edge, FixedList32Bytes<int>>(capacity, allocator);
 
                 tmpPolygon = new NativeList<Edge>(capacity, allocator);
                 badTriangles = new NativeList<int>(capacity, allocator);
@@ -220,7 +220,7 @@ namespace andywiecko.BurstTriangulator
                 }
                 else
                 {
-                    edgesToTriangles.Add(edge, new FixedList32<int>() { triangleId });
+                    edgesToTriangles.Add(edge, new FixedList32Bytes<int>() { triangleId });
                 }
             }
 
@@ -650,30 +650,21 @@ namespace andywiecko.BurstTriangulator
         #region Utils
         private static float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
         private static float Cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
-        private static Circle GetCircumcenter(float2 pA, float2 pB, float2 pC)
+        private static Circle GetCircumcenter(float2 a, float2 b, float2 c)
         {
-            var pAB = pB - pA;
-            var pAC = pC - pA;
-            var mat = math.transpose(math.float2x2(pAB, pAC));
-            var det = math.determinant(mat);
+            var aLenSq = math.lengthsq(a);
+            var bLenSq = math.lengthsq(b);
+            var cLenSq = math.lengthsq(c);
 
-            var pBC = pC - pB;
-
-            var pABlenSq = math.lengthsq(pAB);
-            var pAClenSq = math.lengthsq(pAC);
-            var pBClenSq = math.lengthsq(pBC);
-
-            var r = 0.5f * math.sqrt(pABlenSq * pAClenSq * pBClenSq) / det;
-
-            var lengths = math.float2(pABlenSq, pAClenSq);
-            var offset = 0.5f * math.float2
+            var d = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+            var p = math.float2
             (
-                x: -math.determinant(math.float2x2(mat.c1, lengths)),
-                y: +math.determinant(math.float2x2(mat.c0, lengths))
-            ) / det;
+                x: aLenSq * (b.y - c.y) + bLenSq * (c.y - a.y) + cLenSq * (a.y - b.y),
+                y: aLenSq * (c.x - b.x) + bLenSq * (a.x - c.x) + cLenSq * (b.x - a.x)
+            ) / d;
+            var r = math.distance(p, a);
 
-            var c = pA + offset;
-            return new Circle(center: c, radius: r);
+            return new Circle(center: p, radius: r);
         }
         #endregion
     }
