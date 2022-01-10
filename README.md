@@ -11,7 +11,7 @@ To use the package choose one of the following:
 
 - Put the file [`Runtime/Triangulator.cs`](Runtime/Triangulator.cs) somewhere in your project to use this independently.
 
-- Use package manager via git install: `https://github.com/andywiecko/BurstTriangulator/`.
+- Use package manager via git install: `https://github.com/andywiecko/BurstTriangulator.git`.
 
 ## Usage
 
