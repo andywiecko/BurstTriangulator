@@ -81,20 +81,20 @@ Using Burst can provide more or less two order of magnitude faster computation.
 
 ## Dependencies
 
-- [`Unity.Burst`](https://docs.unity3d.com/Packages/com.unity.burst@1.6/manual/index.html)
+- [`Unity.Burst`](https://docs.unity3d.com/Packages/com.unity.burst@1.7/manual/index.html)
 - [`Unity.Mathematics`](https://docs.unity3d.com/Packages/com.unity.mathematics@1.2/manual/index.html)
-- [`Unity.Collections`](https://docs.unity3d.com/Packages/com.unity.collections@1.0/manual/index.html)
-- [`Unity.Jobs`](https://docs.unity3d.com/Manual/JobSystem.html)
+- [`Unity.Collections`](https://docs.unity3d.com/Packages/com.unity.collections@1.1/manual/index.html)
+- [`Unity.Jobs`](https://docs.unity3d.com/Packages/com.unity.jobs@0.11/manual/index.html)
 
 ## TODO
 
-- Use bounding volume (or kd) tree to speed up the computation.
-- Add option of preserving the external edges of input points.
-- Add support for "holes".
-- Consider better parallelism.
-- Do some optimization with respect to SIMD architecture.
-- CI/CD setup.
-- Add more sophisticated tests.
+- [ ] Use bounding volume (or kd) tree to speed up the computation.
+- [ ] Add option of preserving the external edges of input points.
+- [ ] Add support for "holes".
+- [ ] Consider better parallelism.
+- [ ] Do some optimization with respect to SIMD architecture.
+- [X] ~~CI/CD setup.~~
+- [ ] Add more sophisticated tests.
 
 ## Contributors
 
