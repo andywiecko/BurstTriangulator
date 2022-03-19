@@ -1,5 +1,7 @@
 # Burst Triangulator
 
+[![Editor tests](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml/badge.svg)](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml)
+
 A **single-file** package which provides simple Delaunay triangulation of the given set of points (`float2`) with mesh refinement.
 Implemented triangulation is based on [Bowyer–Watson algorithm][bowyerwatson] and refinement on [Ruppert's algorithm][rupperts].
 
