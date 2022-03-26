@@ -3,11 +3,31 @@
 [![Editor tests](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml/badge.svg)](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml)
 
 A **single-file** package which provides simple Delaunay triangulation of the given set of points (`float2`) with mesh refinement.
-Implemented triangulation is based on [Bowyer–Watson algorithm][bowyerwatson] and refinement on [Ruppert's algorithm][rupperts].
+Implemented triangulation is based on [Bowyer–Watson algorithm][bowyerwatson][^bowyer.1981] [^watson.1981] and refinement on [Ruppert's algorithm][rupperts][^ruppert.1995].
+
+The package provides also constraint triangulation which is based on Sloan's algorithm[^sloan.1993].
+
+## Table of contents
+
+- [Burst Triangulator](#burst-triangulator)
+  - [Table of contents](#table-of-contents)
+  - [Getting started](#getting-started)
+  - [Example usage](#example-usage)
+    - [Delaunay triangulation](#delaunay-triangulation)
+    - [Delaunay triangulation with mesh refinement](#delaunay-triangulation-with-mesh-refinement)
+    - [Constraint Delaunay triangulation](#constraint-delaunay-triangulation)
+    - [Constraint Delaunay triangulation with mesh refinement](#constraint-delaunay-triangulation-with-mesh-refinement)
+    - [Support for holes and boundaries](#support-for-holes-and-boundaries)
+    - [Input validation](#input-validation)
+  - [Benchmark](#benchmark)
+  - [Dependencies](#dependencies)
+  - [TODO](#todo)
+  - [Contributors](#contributors)
+  - [Bibliography](#bibliography)
 
 ## Getting started
 
-To use the package choose one of the following:
+Install [`Unity.Burst`][burst] and [`Unity.Jobs`][jobs] and then to use the package choose one of the following:
 
 - Clone or download this repository and then select `package.json` using Package Manager (`Window/Package Manager`).
 
@@ -15,7 +35,7 @@ To use the package choose one of the following:
 
 - Use package manager via git install: `https://github.com/andywiecko/BurstTriangulator.git`.
 
-## Usage
+## Example usage
 
 Below one can find example usage of the `Triangulator` with input set as four
 points that form the unit square:
@@ -32,10 +52,12 @@ var positions = new[]
 using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent);
 using var inputPositions = new NativeArray<float2>(positions, Allocator.Persistent);
 
-triangulator.Schedule(inputPositions.AsReadOnly(), default).Complete();
+triangulator.Input.Positions = inputPositions
 
-var outputTriangles = triangulator.Triangles;
-var outputPositions = triangulator.Positions;
+triangulator.Run();
+
+var outputTriangles = triangulator.Output.Triangles;
+var outputPositions = triangulator.Output.Positions;
 ```
 
 The result of the triangulation procedure will depend on selected settings.
@@ -44,38 +66,121 @@ There are a few settings of the triangulation, shortly described below:
 ```csharp
 var settings = triangulator.Settings;
 
+// Batch count used in parallel job.
+settings.BatchCount = 64;
 // Triangle is considered as bad if any of its angles is smaller than MinimumAngle. Note: radians.
 settings.MinimumAngle = math.radians(33);
 // Triangle is not considered as bad if its area is smaller than MinimumArea.
 settings.MinimumArea = 0.015f
 // Triangle is considered as bad if its area is greater than MaximumArea.
 settings.MaximumArea = 0.5f;
-// If true, refines mesh using Ruppert's algorithm.
+// If true refines mesh using Ruppert's algorithm.
 settings.RefineMesh = true;
-// Batch count used in parallel job.
-settings.BatchCount = 64;
+// If true constrains edges defined in the Triangulator.Input.ConstraintEdges
+settings.ConstrainEdges = false;
+// If true and provided Triangulator.Input is not valid, it will throw an exception.
+settings.ValidateInput = true;
 ```
 
-## Example result
+Below one can find the result of the triangulation for different selected options.
 
-The boundary of "Nyan Cat" was used as a test specimen:
+**Note:** to obtain the boundary from a texture, the `UnityEngine.PolygonCollider` was used.
+Generating the image boundary is certainly a separate task and is not considered in the project.
 
-![nyan-cat](Documentation~/nyan-cat.png)
+### Delaunay triangulation
+
+To use *classic* Delaunay triangulation make sure that constraint and refinement are disabled.
+
+```csharp
+settings.RefineMesh = false;
+settings.ConstrainEdges = false;
+```
 
 The result *without* mesh refinement (Delaunay triangulation):
 
 ![nyan-cat-without-refinement](Documentation~/nyan-cat-without-refinement.png)
 
+### Delaunay triangulation with mesh refinement
+
+To proceed with triangulation with the mesh refinement one has to set a proper refinement option
+
+```csharp
+settings.RefineMesh = true;
+settings.ConstrainEdges = false;
+```
+
+Users can control the quality of the triangles by these options
+
+```csharp
+// Triangle is considered as bad if any of its angles is smaller than MinimumAngle. Note: radians.
+settings.MinimumAngle = math.radians(33);
+// Triangle is not considered as bad if its area is smaller than MinimumArea.
+settings.MinimumArea = 0.015f
+// Triangle is considered as bad if its area is greater than MaximumArea.
+settings.MaximumArea = 0.5f;
+```
+
 The result *with* mesh refinement:
 
 ![nyan-cat-with-refinement](Documentation~/nyan-cat-with-refinement.png)
 
-Note: to obtain the boundary from a texture, the `UnityEngine.PolygonCollider` was used.
-Generating the image boundary is certainly a separate task and is not considered in the project.
+### Constraint Delaunay triangulation
+
+It is not guaranteed that the boundary of the input will be present in the *classic* Delaunay triangulation result.
+One needs to specify the constraints to resolve this issue.
+To specify the edges which should be present in the final triangulation
+provide the additional input data
+
+```csharp
+triangulator.Settings.RefineMesh = false;
+triangulator.Settings.ConstrainEdges = true;
+
+// Provided input of constraint edges
+// (a0, a1), (b0, b1), (c0, c1), ...
+// should be in the following form
+// constraintEdges elements:
+// [0]: a0, [1]: a1, [2]: b0, [3]: b1, ...
+using var constraintEdges = new NativeArray<int>(64, Allocator.Persistent);
+
+triangulator.Input.ConstraintEdges = constraintEdges;
+```
+
+In the following figure
+one can see the non-constraint triangulation result (with yellow),
+and user-specified constraints (with red).
+
+![nyan-cat-constraint-disabled](Documentation~/nyan-cat-constraint-disabled.png)
+
+After enabling `Settings.ConstrainEdges = true` and providing the corresponding input, the result of the constraint triangulation fully covers all specified edges by the user 
+
+![nyan-cat-constraint-enabled](Documentation~/nyan-cat-constraint-enabled.png)
+
+### Constraint Delaunay triangulation with mesh refinement
+
+*Work in progress.*
+
+### Support for holes and boundaries
+
+*Work in progress.*
+
+### Input validation
+
+If `Triangulator.Settings.ValidateInput` is set to true, the provided data will be validated before running the triangulation procedure.
+Input positions, as well as input constraints, have a few restrictions:
+
+- Points count must be greater/equal 3.
+- Points positions cannot be duplicated.
+- Points cannot contain NaNs or infinities.
+- Constraint edges cannot intersect with each other.
+- Constraint edges cannot be duplicated or swapped duplicated.
+- Zero-length constraint edges are forbidden.
+- Constraint edges cannot intersect with points other than the points for which they are defined.
+
+**Note:** validation is limited only for Editor.
 
 ## Benchmark
 
-The package uses `Burst` compiler, which produces highly optimized native code using LLVM.
+The package uses [`Burst`][burst] compiler, which produces highly optimized native code using LLVM.
 Below one can see a log-log plot of elapsed time as a function of the final triangles count after mesh refinement.
 Using Burst can provide more or less two order of magnitude faster computation.
 
@@ -83,24 +188,37 @@ Using Burst can provide more or less two order of magnitude faster computation.
 
 ## Dependencies
 
-- [`Unity.Burst`](https://docs.unity3d.com/Packages/com.unity.burst@1.7/manual/index.html)
+- [`Unity.Burst`][burst]
 - [`Unity.Mathematics`](https://docs.unity3d.com/Packages/com.unity.mathematics@1.2/manual/index.html)
 - [`Unity.Collections`](https://docs.unity3d.com/Packages/com.unity.collections@1.1/manual/index.html)
-- [`Unity.Jobs`](https://docs.unity3d.com/Packages/com.unity.jobs@0.11/manual/index.html)
+- [`Unity.Jobs`][jobs]
 
 ## TODO
 
+- [X] ~~CI/CD setup.~~
+- [X] ~~Add more sophisticated tests.~~
+- [X] ~~Add option of preserving the external edges of input points.~~
+- [ ] Add support for "holes" as well as mesh boundaries.
+- [ ] Optimize Bower-Watson with BFS or DFS walk.
 - [ ] Use bounding volume (or kd) tree to speed up the computation.
-- [ ] Add option of preserving the external edges of input points.
-- [ ] Add support for "holes".
 - [ ] Consider better parallelism.
 - [ ] Do some optimization with respect to SIMD architecture.
-- [X] ~~CI/CD setup.~~
-- [ ] Add more sophisticated tests.
+- [ ] Experiment with removing super triangle before refinement.
+- [ ] Support for intersecting input constraint edges.
+- [ ] Use queues for the refinements.
 
 ## Contributors
 
 - [Andrzej Więckowski, Ph.D](https://andywiecko.github.io/).
 
+## Bibliography
+
+[^bowyer.1981]: A. Bowyer. "Computing Dirichlet tessellations". [Comput. J. 24 (2): 162–166 (1981)](https://doi.org/10.1093%2Fcomjnl%2F24.2.162).
+[^watson.1981]: D.F. Watson. "Computing the n-dimensional Delaunay tessellation with application to Voronoi polytopes". [Comput. J. 24 (2): 167–172 (1981)](https://doi.org/10.1093%2Fcomjnl%2F24.2.167).
+[^sloan.1993]:S.W. Sloan. "A fast algorithm for generating constrained Delaunay triangulations." [Comput. Struct. 47.3:441-450 (1993)](https://doi.org/10.1016/0045-7949(93)90239-A).
+[^ruppert.1995]:J. Ruppert. "A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation". [J. Algorithms 18(3):548-585 (1995)](https://doi.org/10.1006/jagm.1995.1021).
+
 [bowyerwatson]: https://en.wikipedia.org/wiki/Bowyer%E2%80%93Watson_algorithm
 [rupperts]: https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm
+[burst]: https://docs.unity3d.com/Packages/com.unity.burst@1.7/manual/index.html
+[jobs]: https://docs.unity3d.com/Packages/com.unity.jobs@0.11/manual/index.html
