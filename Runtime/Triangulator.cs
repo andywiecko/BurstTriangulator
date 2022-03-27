@@ -6,6 +6,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace andywiecko.BurstTriangulator
 {
@@ -57,6 +58,7 @@ namespace andywiecko.BurstTriangulator
                 return Cross(pAB, pAC);
             }
             public float GetArea2(NativeList<float2> positions) => math.abs(GetSignedArea2(positions));
+            public override string ToString() => $"({IdA}, {IdB}, {IdC})";
         }
 
         private readonly struct Circle
@@ -79,7 +81,7 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private readonly struct Edge : IEquatable<Edge>
+        private readonly struct Edge : IEquatable<Edge>, IComparable<Edge>
         {
             public readonly int IdA;
             public readonly int IdB;
@@ -94,8 +96,11 @@ namespace andywiecko.BurstTriangulator
             public void Deconstruct(out int idA, out int idB) => _ = (idA = IdA, idB = IdB);
             public bool Equals(Edge other) => IdA == other.IdA && IdB == other.IdB;
             public bool Contains(int id) => IdA == id || IdB == id;
+            public bool ContainsCommonPointWith(Edge other) => Contains(other.IdA) || Contains(other.IdB);
             // Elegant pairing function: https://en.wikipedia.org/wiki/Pairing_function
             public override int GetHashCode() => IdA < IdB ? IdB * IdB + IdA : IdA * IdA + IdA + IdB;
+            public int CompareTo(Edge other) => IdA != other.IdA ? IdA.CompareTo(other.IdA) : IdB.CompareTo(other.IdB);
+            public override string ToString() => $"({IdA}, {IdB})";
         }
 
         private readonly struct Edge3
@@ -153,6 +158,7 @@ namespace andywiecko.BurstTriangulator
             public NativeList<Circle> circles;
             public NativeList<Edge3> trianglesToEdges;
             public NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
+            public NativeList<Edge> constraintEdges;
 
             private NativeList<Edge> tmpPolygon;
             private NativeList<int> badTriangles;
@@ -167,6 +173,7 @@ namespace andywiecko.BurstTriangulator
                 circles = new NativeList<Circle>(capacity, allocator);
                 trianglesToEdges = new NativeList<Edge3>(capacity, allocator);
                 edgesToTriangles = new NativeHashMap<Edge, FixedList32Bytes<int>>(capacity, allocator);
+                constraintEdges = new NativeList<Edge>(capacity, allocator);
 
                 tmpPolygon = new NativeList<Edge>(capacity, allocator);
                 badTriangles = new NativeList<int>(capacity, allocator);
@@ -180,6 +187,7 @@ namespace andywiecko.BurstTriangulator
                 circles.Dispose();
                 trianglesToEdges.Dispose();
                 edgesToTriangles.Dispose();
+                constraintEdges.Dispose();
 
                 tmpPolygon.Dispose();
                 badTriangles.Dispose();
@@ -192,6 +200,8 @@ namespace andywiecko.BurstTriangulator
                 triangles.Clear();
                 circles.Clear();
                 trianglesToEdges.Clear();
+                edgesToTriangles.Clear();
+                constraintEdges.Clear();
 
                 tmpPolygon.Clear();
                 badTriangles.Clear();
@@ -200,15 +210,16 @@ namespace andywiecko.BurstTriangulator
             public void AddTriangle(Triangle t)
             {
                 triangles.Add(t);
-
                 var (idA, idB, idC) = t;
-
-                var pA = outputPositions[idA];
-                var pB = outputPositions[idB];
-                var pC = outputPositions[idC];
-
-                circles.Add(GetCircumcenter(pA, pB, pC));
+                circles.Add(CalculateCircumcenter(t));
                 trianglesToEdges.Add(((idA, idB), (idA, idC), (idB, idC)));
+            }
+
+            private Circle CalculateCircumcenter(Triangle triangle)
+            {
+                var (idA, idB, idC) = triangle;
+                var (pA, pB, pC) = (outputPositions[idA], outputPositions[idB], outputPositions[idC]);
+                return GetCircumcenter(pA, pB, pC);
             }
 
             private void RegisterEdgeData(Edge edge, int triangleId)
@@ -231,12 +242,8 @@ namespace andywiecko.BurstTriangulator
                 trianglesToEdges.RemoveAt(id);
             }
 
-            public int InsertPoint(float2 p)
+            private void RecalculateBadTriangles(float2 p)
             {
-                var pId = outputPositions.Length;
-
-                outputPositions.Add(p);
-
                 badTriangles.Clear();
                 for (int tId = 0; tId < triangles.Length; tId++)
                 {
@@ -246,7 +253,10 @@ namespace andywiecko.BurstTriangulator
                         badTriangles.Add(tId);
                     }
                 }
+            }
 
+            private void CalculateStarPolygon()
+            {
                 tmpPolygon.Clear();
                 foreach (var t1 in badTriangles)
                 {
@@ -278,6 +288,15 @@ namespace andywiecko.BurstTriangulator
                         }
                     }
                 }
+            }
+
+            public int InsertPoint(float2 p)
+            {
+                var pId = outputPositions.Length;
+                outputPositions.Add(p);
+
+                RecalculateBadTriangles(p);
+                CalculateStarPolygon();
 
                 badTriangles.Sort(comparer);
                 foreach (var tId in badTriangles)
@@ -301,60 +320,163 @@ namespace andywiecko.BurstTriangulator
 
                 return pId;
             }
+
+            public void UnsafeSwapEdge(Edge edge)
+            {
+                var (e0, e1) = edge;
+                var tris = edgesToTriangles[edge];
+                var t0 = tris[0];
+                var t1 = tris[1];
+                var triangle0 = triangles[t0];
+                var triangle1 = triangles[t1];
+                var q0 = triangle0.UnsafeOtherPoint(edge);
+                var q1 = triangle1.UnsafeOtherPoint(edge);
+
+                triangles[t0] = (q0, e0, q1);
+                triangles[t1] = (q1, e1, q0);
+                trianglesToEdges[t0] = ((q0, q1), (q0, e0), (q1, e0));
+                trianglesToEdges[t1] = ((q0, q1), (q0, e1), (q1, e1));
+
+                var eTot0 = edgesToTriangles[(e0, q1)];
+                eTot0.Remove(t1);
+                eTot0.Add(t0);
+                edgesToTriangles[(e0, q1)] = eTot0;
+
+                var eTot1 = edgesToTriangles[(e1, q0)];
+                eTot1.Remove(t0);
+                eTot1.Add(t1);
+                edgesToTriangles[(e1, q0)] = eTot1;
+
+                edgesToTriangles.Remove(edge);
+                edgesToTriangles.Add((q0, q1), new FixedList32Bytes<int>() { t0, t1 });
+
+                circles[t0] = CalculateCircumcenter(triangles[t0]);
+                circles[t1] = CalculateCircumcenter(triangles[t1]);
+            }
         }
         #endregion
 
+        [Serializable]
         public class TriangulationSettings
         {
+            /// <summary>
+            /// Batch count used in parallel jobs.
+            /// </summary>
+            [field: SerializeField]
+            public int BatchCount { get; set; } = 64;
             /// <summary>
             /// Triangle is considered as <em>bad</em> if any of its angles is smaller than <see cref="MinimumAngle"/>.
             /// </summary>
             /// <remarks>
             /// Expressed in <em>radians</em>.
             /// </remarks>
+            [field: SerializeField]
             public float MinimumAngle { get; set; } = math.radians(33);
             /// <summary>
             /// Triangle is <b>not</b> considered as <em>bad</em> if its area is smaller than <see cref="MinimumArea"/>.
             /// </summary>
+            [field: SerializeField]
             public float MinimumArea { get; set; } = 0.015f;
             /// <summary>
             /// Triangle is considered as <em>bad</em> if its area is greater than <see cref="MaximumArea"/>.
             /// </summary>
+            [field: SerializeField]
             public float MaximumArea { get; set; } = 0.5f;
             /// <summary>
             /// If <see langword="true"/> refines mesh using 
             /// <see href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</see>.
             /// </summary>
+            [field: SerializeField]
             public bool RefineMesh { get; set; } = true;
             /// <summary>
-            /// Batch count used in parallel jobs.
+            /// If <see langword="true"/> constrains edges defined in <see cref="Input"/> using
+            /// <see href="https://www.sciencedirect.com/science/article/abs/pii/004579499390239A">Sloan's algorithm</see>.
             /// </summary>
-            public int BatchCount { get; set; } = 64;
+            [field: SerializeField]
+            public bool ConstrainEdges { get; set; } = false;
+            /// <summary>
+            /// If <see langword="true"/> and provided <see cref="Triangulator.Input"/> is not valid, it will throw an exception.
+            /// </summary>
+            /// <remarks>
+            /// Input validation is enabled only at Editor.
+            /// </remarks>
+            [field: SerializeField]
+            public bool ValidateInput = true;
+        }
+
+        public class InputData
+        {
+            public NativeArray<float2> Positions { get; set; }
+            public NativeArray<int> ConstraintEdges { get; set; }
+        }
+
+        public class OutputData
+        {
+            public NativeList<float2> Positions => owner.data.outputPositions;
+            public NativeList<int> Triangles => owner.data.outputTriangles;
+            private readonly Triangulator owner;
+            public OutputData(Triangulator triangulator) => owner = triangulator;
         }
 
         public TriangulationSettings Settings { get; } = new TriangulationSettings();
+        public InputData Input { get; set; } = new InputData();
+        public OutputData Output { get; }
+
+        [Obsolete("To get the result use this.Output instead.")]
         public NativeArray<float2>.ReadOnly Positions => data.outputPositions.AsArray().AsReadOnly();
+        [Obsolete("To get the result use this.Output instead.")]
         public NativeArray<int>.ReadOnly Triangles => data.outputTriangles.AsArray().AsReadOnly();
+        [Obsolete("To get the result use this.Output instead.")]
         public NativeArray<float2> PositionsDeferred => data.outputPositions.AsDeferredJobArray();
+        [Obsolete("To get the result use this.Output instead.")]
         public NativeArray<int> TrianglesDeferred => data.outputTriangles.AsDeferredJobArray();
 
         private static readonly Triangle SuperTriangle = new Triangle(0, 1, 2);
         private TriangulatorNativeData data;
 
-        public Triangulator(int capacity, Allocator allocator) => data = new TriangulatorNativeData(capacity, allocator);
+        public Triangulator(int capacity, Allocator allocator)
+        {
+            data = new TriangulatorNativeData(capacity, allocator);
+            Output = new OutputData(this);
+        }
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
 
+        public void Dispose() => data.Dispose();
+
+        public void Run() => Schedule().Complete();
+
+        public JobHandle Schedule(JobHandle dependencies = default)
+        {
+#pragma warning disable CS0618
+            return Schedule(Input.Positions.AsReadOnly(), dependencies);
+#pragma warning restore CS0618 
+        }
+
+        [Obsolete("Use this.Input to provide data and Schedule(JobHandle) or Run() to collect the result.")]
         public JobHandle Schedule(NativeArray<float2>.ReadOnly positions, JobHandle dependencies)
         {
-            CheckPositionsCount(positions.Length);
+            if (Settings.ValidateInput)
+            {
+                RunValidateInputPositions(this, dependencies);
+            }
 
             dependencies = new ClearDataJob(this).Schedule(dependencies);
             dependencies = new RegisterSuperTriangleJob(this, positions).Schedule(dependencies);
             dependencies = new DelaunayTriangulationJob(this, positions).Schedule(dependencies);
 
-            if (Settings.RefineMesh)
+            switch (Settings)
             {
-                dependencies = new RefineMeshJob(this).Schedule(dependencies);
+                case { ConstrainEdges: true, RefineMesh: false }:
+                    dependencies = ScheduleConstrainEdges(dependencies);
+                    break;
+
+                case { ConstrainEdges: false, RefineMesh: true }:
+                    dependencies = new RefineMeshJob(this).Schedule(dependencies);
+                    break;
+
+                case { ConstrainEdges: true, RefineMesh: true }:
+                    dependencies.Complete();
+                    throw new NotImplementedException();
             }
 
             dependencies = new CleanupTrianglesJob(this).Schedule(this, dependencies);
@@ -363,28 +485,116 @@ namespace andywiecko.BurstTriangulator
             return dependencies;
         }
 
-        public void Dispose() => data.Dispose();
+        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        private static void RunValidateInputPositions(Triangulator @this, JobHandle dependencies)
+        {
+            using var isValid = new NativeReference<bool>(Allocator.TempJob);
+            new ValidateInputPositionsJob(@this, isValid).Schedule(dependencies).Complete();
+            if (isValid.Value == false)
+            {
+                throw new ArgumentException(
+                    $"The provided input {nameof(Triangulator.Input.Positions)} is not supported!\n" +
+                    $"1. Points count must be greater/equal 3.\n" +
+                    $"2. Input positions cannot contain duplicated entries.\n" +
+                    $"3. Input positions cannot contain NaN or infinities."
+                );
+            }
+        }
 
         [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        private static void CheckPositionsCount(int length)
+        private static void RunValidateConstraintEdges(Triangulator @this, JobHandle dependencies)
         {
-            if (length < 3)
+            using var isValid = new NativeReference<bool>(Allocator.TempJob);
+            new ValidateInputConstraintEdges(@this, isValid).Schedule(dependencies).Complete();
+            if (isValid.Value == false)
             {
-                throw new ArgumentException("Cannot schedule triangulation without at least 3 points", nameof(length));
+                throw new ArgumentException(
+                    $"The provided input {nameof(Triangulator.Input.ConstraintEdges)} is not supported!\n" +
+                    $"1. Edges mustn't intersect.\n" +
+                    $"2. Edges mustn't be duplicated, e.g. (a0, a1), (a1, a0) cannot be present.\n" +
+                    $"3. Edges mustn't intersect point other than two points which they are defined.\n" +
+                    $"4. Edges cannot be zero length, i.e. (a0, a0) is forbiden.\n" +
+                    $"5. Constraint input buffer must contain even number of elements."
+                );
             }
+        }
+
+        private JobHandle ScheduleConstrainEdges(JobHandle dependencies)
+        {
+            if (Settings.ValidateInput)
+            {
+                RunValidateConstraintEdges(this, dependencies);
+            }
+
+            var edges = new NativeList<Edge>(Allocator.TempJob);
+            dependencies = new CopyEdgesJob(this, edges).Schedule(dependencies);
+            dependencies = new ResizeEdgeConstraintsJob(this).Schedule(dependencies);
+            dependencies = new ConstructConstraintEdgesJob(this).Schedule(data.constraintEdges, Settings.BatchCount, dependencies);
+            dependencies = new FilterAlreadyConstraintEdges(edges, this).Schedule(dependencies);
+            dependencies = new ConstrainEdgesJob(this, edges).Schedule(dependencies);
+            dependencies = edges.Dispose(dependencies);
+
+            return dependencies;
         }
 
         #region Jobs
         [BurstCompile]
+        private struct ValidateInputPositionsJob : IJob
+        {
+            private NativeArray<float2>.ReadOnly positions;
+            private NativeReference<bool> isValidRef;
+
+            public ValidateInputPositionsJob(Triangulator triangulator, NativeReference<bool> isValid)
+            {
+                positions = triangulator.Input.Positions.AsReadOnly();
+                isValidRef = isValid;
+            }
+
+            public void Execute() => isValidRef.Value = ValidatePositions();
+
+            private bool ValidatePositions()
+            {
+                if (positions.Length < 3)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    if (!PointValidation(i) ||
+                        !PointPointValidation(i))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            private bool PointValidation(int i) => math.all(math.isfinite(positions[i]));
+
+            private bool PointPointValidation(int i)
+            {
+                var pi = positions[i];
+                for (int j = i + 1; j < positions.Length; j++)
+                {
+                    var pj = positions[j];
+                    if (math.all(pi == pj))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        [BurstCompile]
         private struct ClearDataJob : IJob
         {
             private TriangulatorNativeData data;
-
             public ClearDataJob(Triangulator triangulator)
             {
                 data = triangulator.data;
             }
-
             public void Execute() => data.Clear();
         }
 
@@ -444,6 +654,290 @@ namespace andywiecko.BurstTriangulator
                 for (int i = 0; i < inputPositions.Length; i++)
                 {
                     data.InsertPoint(inputPositions[i]);
+                }
+            }
+        }
+
+        [BurstCompile]
+        private struct ValidateInputConstraintEdges : IJob
+        {
+            private NativeArray<int>.ReadOnly constraints;
+            private NativeArray<float2>.ReadOnly positions;
+            private NativeReference<bool> isValidRef;
+
+            public ValidateInputConstraintEdges(Triangulator triangulator, NativeReference<bool> isValid)
+            {
+                constraints = triangulator.Input.ConstraintEdges.AsReadOnly();
+                positions = triangulator.Input.Positions.AsReadOnly();
+                isValidRef = isValid;
+            }
+
+            public void Execute() => isValidRef.Value = ValidateEdgeConstraint();
+
+            private bool ValidateEdgeConstraint()
+            {
+                if (constraints.Length % 2 == 1)
+                {
+                    return false;
+                }
+
+                for (int i = 0; i < constraints.Length / 2; i++)
+                {
+                    if (!EdgeValidation(i) ||
+                        !EdgePointValidation(i) ||
+                        !EdgeEdgeValidation(i))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            private bool EdgeValidation(int i)
+            {
+                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                return a0Id != a1Id;
+            }
+
+            private bool EdgePointValidation(int i)
+            {
+                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                var (a0, a1) = (positions[a0Id], positions[a1Id]);
+
+                for (int j = 0; j < positions.Length; j++)
+                {
+                    if (j == a0Id || j == a1Id)
+                    {
+                        continue;
+                    }
+
+                    var p = positions[j];
+                    if (PointLineSegmentIntersection(p, a0, a1))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            private bool EdgeEdgeValidation(int i)
+            {
+                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                for (int j = i + 1; j < constraints.Length / 2; j++)
+                {
+                    var (b0Id, b1Id) = (constraints[2 * j], constraints[2 * j + 1]);
+                    if (!ValidatePair(a0Id, a1Id, b0Id, b1Id))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            private bool ValidatePair(int a0Id, int a1Id, int b0Id, int b1Id)
+            {
+                // Repeated indicies
+                if (a0Id == b0Id && a1Id == b1Id ||
+                    a0Id == b1Id && a1Id == b0Id)
+                {
+                    return false;
+                }
+
+                // One common point, cases should be filtered out at EdgePointValidation
+                if (a0Id == b0Id || a0Id == b1Id || a1Id == b0Id || a1Id == b1Id)
+                {
+                    return true;
+                }
+
+                var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
+                if (EdgeEdgeIntersection(a0, a1, b0, b1))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        [BurstCompile]
+        private struct CopyEdgesJob : IJob
+        {
+            [ReadOnly]
+            private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
+            private NativeList<Edge> edges;
+
+            public CopyEdgesJob(Triangulator triangulator, NativeList<Edge> edges)
+            {
+                edgesToTriangles = triangulator.data.edgesToTriangles;
+                this.edges = edges;
+            }
+
+            public void Execute()
+            {
+                using var tmp = edgesToTriangles.GetKeyArray(Allocator.Temp);
+                edges.CopyFrom(tmp);
+            }
+        }
+
+        [BurstCompile]
+        private struct ResizeEdgeConstraintsJob : IJob
+        {
+            private NativeArray<int>.ReadOnly inputConstraintEdges;
+            private NativeList<Edge> constraintEdges;
+
+            public ResizeEdgeConstraintsJob(Triangulator triangulator)
+            {
+                inputConstraintEdges = triangulator.Input.ConstraintEdges.AsReadOnly();
+                constraintEdges = triangulator.data.constraintEdges;
+            }
+
+            public void Execute()
+            {
+                constraintEdges.Length = inputConstraintEdges.Length / 2;
+            }
+        }
+
+        [BurstCompile]
+        private struct ConstructConstraintEdgesJob : IJobParallelForDefer
+        {
+            private NativeArray<int>.ReadOnly inputConstraintEdges;
+            private NativeArray<Edge> constraintEdges;
+
+            public ConstructConstraintEdgesJob(Triangulator triangulator)
+            {
+                inputConstraintEdges = triangulator.Input.ConstraintEdges.AsReadOnly();
+                constraintEdges = triangulator.data.constraintEdges.AsDeferredJobArray();
+            }
+
+            public void Execute(int index)
+            {
+                var i = inputConstraintEdges[2 * index];
+                var j = inputConstraintEdges[2 * index + 1];
+                // Note: +3 due to supertriangle points
+                constraintEdges[index] = new Edge(i + 3, j + 3);
+            }
+        }
+
+        [BurstCompile]
+        private struct FilterAlreadyConstraintEdges : IJob
+        {
+            private NativeList<Edge> edges;
+            private NativeList<Edge> constraints;
+
+            public FilterAlreadyConstraintEdges(NativeList<Edge> edges, Triangulator triangulator)
+            {
+                this.edges = edges;
+                this.constraints = triangulator.data.constraintEdges;
+            }
+
+            public void Execute()
+            {
+                edges.Sort();
+                for (int i = constraints.Length - 1; i >= 0; i--)
+                {
+                    var id = edges.BinarySearch(constraints[i]);
+                    if (id >= 0)
+                    {
+                        constraints.RemoveAtSwapBack(i);
+                    }
+                }
+            }
+        }
+
+        [BurstCompile]
+        private struct ConstrainEdgesJob : IJob
+        {
+            private TriangulatorNativeData data;
+            private NativeList<Edge> edges;
+
+            public ConstrainEdgesJob(Triangulator triangluator, NativeList<Edge> edges)
+            {
+                data = triangluator.data;
+                this.edges = edges;
+            }
+
+            private bool EdgeEdgeIntersection(Edge e1, Edge e2)
+            {
+                var (a0, a1) = (data.outputPositions[e1.IdA], data.outputPositions[e1.IdB]);
+                var (b0, b1) = (data.outputPositions[e2.IdA], data.outputPositions[e2.IdB]);
+                return Triangulator.EdgeEdgeIntersection(a0, a1, b0, b1);
+            }
+
+            private void CollectIntersections(Edge edge, NativeQueue<Edge> intersections)
+            {
+                foreach (var otherEdge in edges)
+                {
+                    if (otherEdge.ContainsCommonPointWith(edge))
+                    {
+                        continue;
+                    }
+
+                    if (EdgeEdgeIntersection(otherEdge, edge))
+                    {
+                        intersections.Enqueue(otherEdge);
+                    }
+                }
+            }
+
+            public void Execute()
+            {
+                edges.Sort();
+                data.constraintEdges.Sort();
+                using var intersections = new NativeQueue<Edge>(Allocator.Temp);
+                for (int i = data.constraintEdges.Length - 1; i >= 0; i--)
+                {
+                    intersections.Clear();
+
+                    var c = data.constraintEdges[i];
+                    CollectIntersections(c, intersections);
+
+                    while (intersections.TryDequeue(out var e))
+                    {
+                        var tris = data.edgesToTriangles[e];
+                        var t0 = tris[0];
+                        var t1 = tris[1];
+
+                        var q0 = data.triangles[t0].UnsafeOtherPoint(e);
+                        var q1 = data.triangles[t1].UnsafeOtherPoint(e);
+                        var swapped = new Edge(q0, q1);
+
+                        if (!intersections.IsEmpty())
+                        {
+                            if (!c.ContainsCommonPointWith(swapped))
+                            {
+                                if (EdgeEdgeIntersection(c, swapped))
+                                {
+                                    intersections.Enqueue(e);
+                                    continue;
+                                }
+                            }
+
+                            var (e0, e1) = e;
+                            var (p0, p1, p2, p3) = (data.outputPositions[e0], data.outputPositions[q0], data.outputPositions[e1], data.outputPositions[q1]);
+                            if (!IsConvexQuadrilateral(p0, p1, p2, p3))
+                            {
+                                intersections.Enqueue(e);
+                                continue;
+                            }
+
+                            var id = data.constraintEdges.BinarySearch(swapped);
+                            if (id >= 0)
+                            {
+                                data.constraintEdges.RemoveAt(id);
+                                i--;
+                            }
+                        }
+
+                        data.UnsafeSwapEdge(e);
+                        var eId = edges.BinarySearch(e);
+                        edges[eId] = swapped;
+                        edges.Sort();
+                    }
+
+                    data.constraintEdges.RemoveAtSwapBack(i);
                 }
             }
         }
@@ -666,6 +1160,14 @@ namespace andywiecko.BurstTriangulator
 
             return new Circle(center: p, radius: r);
         }
+        private static float CCW(float2 a, float2 b, float2 c) => math.sign(Cross(b - a, b - c));
+        private static bool PointLineSegmentIntersection(float2 a, float2 b0, float2 b1) =>
+            CCW(b0, b1, a) == 0 && math.all(a >= math.min(b0, b1) & a <= math.max(b0, b1));
+        private static bool EdgeEdgeIntersection(float2 a0, float2 a1, float2 b0, float2 b1) =>
+            CCW(a0, a1, b0) != CCW(a0, a1, b1) && CCW(b0, b1, a0) != CCW(b0, b1, a1);
+        private static bool IsConvexQuadrilateral(float2 a, float2 b, float2 c, float2 d) =>
+            CCW(a, c, b) != 0 && CCW(a, c, d) != 0 && CCW(b, d, a) != 0 && CCW(b, d, c) != 0 &&
+            CCW(a, c, b) != CCW(a, c, d) && CCW(b, d, a) != CCW(b, d, c);
         #endregion
     }
 }
