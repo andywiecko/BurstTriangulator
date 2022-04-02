@@ -1,5 +1,17 @@
 # Change log
 
+## [1.2.0] - 2022-04-02
+
+### Features
+
+- Add support for the Constraint Delaunay Triangulation with mesh refinement.
+
+### Changes
+
+- Performance: Bower-Watson point insertion algorithm has been optimised and is based on the breadth-first search.
+- Refactor: moved a few methods from jobs into `TriangulatorNativeData`.
+- Refactor: structures have more compact layout. 
+
 ## [1.1.0] - 2022-03-27
 
 ### Features
