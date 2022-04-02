@@ -13,25 +13,16 @@ namespace andywiecko.BurstTriangulator
     public class Triangulator : IDisposable
     {
         #region Primitives
-        private readonly struct Triangle
+        private readonly struct Triangle : IEquatable<Triangle>
         {
-            public readonly int IdA;
-            public readonly int IdB;
-            public readonly int IdC;
-
-            public Triangle(int idA, int idB, int idC)
-            {
-                IdA = idA;
-                IdB = idB;
-                IdC = idC;
-            }
-
+            public readonly int IdA, IdB, IdC;
+            public Triangle(int idA, int idB, int idC) => (IdA, IdB, IdC) = (idA, idB, idC);
             public static implicit operator Triangle((int a, int b, int c) ids) => new Triangle(ids.a, ids.b, ids.c);
-            public void Deconstruct(out int idA, out int idB, out int idC) => _ = (idA = IdA, idB = IdB, idC = IdC);
+            public void Deconstruct(out int idA, out int idB, out int idC) => (idA, idB, idC) = (IdA, IdB, IdC);
             public bool Contains(int id) => IdA == id || IdB == id || IdC == id;
             public bool ContainsCommonPointWith(Triangle t) => Contains(t.IdA) || Contains(t.IdB) || Contains(t.IdC);
             public bool ContainsCommonPointWith(Edge e) => Contains(e.IdA) || Contains(e.IdB);
-
+            public bool Equals(Triangle other) => IdA == other.IdA && IdB == other.IdB && IdC == other.IdC;
             public int UnsafeOtherPoint(Edge edge)
             {
                 if (!edge.Contains(IdA))
@@ -83,17 +74,10 @@ namespace andywiecko.BurstTriangulator
 
         private readonly struct Edge : IEquatable<Edge>, IComparable<Edge>
         {
-            public readonly int IdA;
-            public readonly int IdB;
-
-            public Edge(int idA, int idB)
-            {
-                IdA = idA < idB ? idA : idB;
-                IdB = idA < idB ? idB : idA;
-            }
-
+            public readonly int IdA, IdB;
+            public Edge(int idA, int idB) => (IdA, IdB) = idA < idB ? (idA, idB) : (idB, idA);
             public static implicit operator Edge((int a, int b) ids) => new Edge(ids.a, ids.b);
-            public void Deconstruct(out int idA, out int idB) => _ = (idA = IdA, idB = IdB);
+            public void Deconstruct(out int idA, out int idB) => (idA, idB) = (IdA, IdB);
             public bool Equals(Edge other) => IdA == other.IdA && IdB == other.IdB;
             public bool Contains(int id) => IdA == id || IdB == id;
             public bool ContainsCommonPointWith(Edge other) => Contains(other.IdA) || Contains(other.IdB);
@@ -105,16 +89,8 @@ namespace andywiecko.BurstTriangulator
 
         private readonly struct Edge3
         {
-            public readonly Edge EdgeA;
-            public readonly Edge EdgeB;
-            public readonly Edge EdgeC;
-
-            public Edge3(Edge edgeA, Edge edgeB, Edge edgeC)
-            {
-                EdgeA = edgeA;
-                EdgeB = edgeB;
-                EdgeC = edgeC;
-            }
+            public readonly Edge EdgeA, EdgeB, EdgeC;
+            public Edge3(Edge edgeA, Edge edgeB, Edge edgeC) => (EdgeA, EdgeB, EdgeC) = (edgeA, edgeB, edgeC);
 
             public struct Iterator
             {
@@ -139,7 +115,6 @@ namespace andywiecko.BurstTriangulator
 
             public Iterator GetEnumerator() => new Iterator(this);
             public bool Contains(Edge edge) => EdgeA.Equals(edge) || EdgeB.Equals(edge) || EdgeC.Equals(edge);
-
             public static implicit operator Edge3((Edge eA, Edge eB, Edge eC) v) => new Edge3(v.eA, v.eB, v.eC);
         }
         #endregion
@@ -162,6 +137,8 @@ namespace andywiecko.BurstTriangulator
 
             private NativeList<Edge> tmpPolygon;
             private NativeList<int> badTriangles;
+            private NativeQueue<int> trianglesQueue;
+            private NativeList<bool> visitedTriangles;
 
             private static readonly DescendingComparer comparer = new DescendingComparer();
 
@@ -177,6 +154,8 @@ namespace andywiecko.BurstTriangulator
 
                 tmpPolygon = new NativeList<Edge>(capacity, allocator);
                 badTriangles = new NativeList<int>(capacity, allocator);
+                trianglesQueue = new NativeQueue<int>(allocator);
+                visitedTriangles = new NativeList<bool>(capacity, allocator);
             }
 
             public void Dispose()
@@ -191,6 +170,8 @@ namespace andywiecko.BurstTriangulator
 
                 tmpPolygon.Dispose();
                 badTriangles.Dispose();
+                trianglesQueue.Dispose();
+                visitedTriangles.Dispose();
             }
 
             public void Clear()
@@ -242,15 +223,47 @@ namespace andywiecko.BurstTriangulator
                 trianglesToEdges.RemoveAt(id);
             }
 
-            private void RecalculateBadTriangles(float2 p)
+            private void SearchForFirstBadTriangle(float2 p)
             {
-                badTriangles.Clear();
                 for (int tId = 0; tId < triangles.Length; tId++)
                 {
                     var circle = circles[tId];
                     if (math.distancesq(circle.Center, p) <= circle.RadiusSq)
                     {
+                        trianglesQueue.Enqueue(tId);
                         badTriangles.Add(tId);
+                        return;
+                    }
+                }
+            }
+
+            private void RecalculateBadTriangles(float2 p, bool constraint = false)
+            {
+                while (trianglesQueue.TryDequeue(out var tId))
+                {
+                    visitedTriangles[tId] = true;
+
+                    foreach (var e in trianglesToEdges[tId])
+                    {
+                        if (constraint && constraintEdges.Contains(e))
+                        {
+                            continue;
+                        }
+
+                        foreach (var otherId in edgesToTriangles[e])
+                        {
+                            if (visitedTriangles[otherId])
+                            {
+                                continue;
+                            }
+
+                            var circle = circles[otherId];
+                            if (math.distancesq(circle.Center, p) <= circle.RadiusSq)
+                            {
+                                badTriangles.Add(otherId);
+                                trianglesQueue.Enqueue(otherId);
+                            }
+                        }
                     }
                 }
             }
@@ -290,25 +303,25 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            public int InsertPoint(float2 p)
+            private void RemoveBadTriangles()
             {
-                var pId = outputPositions.Length;
-                outputPositions.Add(p);
-
-                RecalculateBadTriangles(p);
-                CalculateStarPolygon();
-
                 badTriangles.Sort(comparer);
                 foreach (var tId in badTriangles)
                 {
                     RemoveTriangle(tId);
                 }
+            }
 
+            private void CreatePolygonTriangles(int pId)
+            {
                 foreach (var (e1, e2) in tmpPolygon)
                 {
                     AddTriangle((pId, e1, e2));
                 }
+            }
 
+            private void RecalculateEdgeToTrianglesMapping()
+            {
                 edgesToTriangles.Clear();
                 for (int tId = 0; tId < triangles.Length; tId++)
                 {
@@ -317,8 +330,32 @@ namespace andywiecko.BurstTriangulator
                         RegisterEdgeData(edge, tId);
                     }
                 }
+            }
 
+            private void ClearVisitedTriangles()
+            {
+                visitedTriangles.Clear();
+                visitedTriangles.Length = triangles.Length;
+            }
+
+            public int InsertPoint(float2 p)
+            {
+                var pId = outputPositions.Length;
+                outputPositions.Add(p);
+                badTriangles.Clear();
+                ClearVisitedTriangles();
+                SearchForFirstBadTriangle(p);
+                RecalculateBadTriangles(p);
+                ProcessBadTriangles(pId);
                 return pId;
+            }
+
+            private void ProcessBadTriangles(int pId)
+            {
+                CalculateStarPolygon();
+                RemoveBadTriangles();
+                CreatePolygonTriangles(pId);
+                RecalculateEdgeToTrianglesMapping();
             }
 
             public void UnsafeSwapEdge(Edge edge)
@@ -352,6 +389,121 @@ namespace andywiecko.BurstTriangulator
 
                 circles[t0] = CalculateCircumcenter(triangles[t0]);
                 circles[t1] = CalculateCircumcenter(triangles[t1]);
+            }
+
+            public int SplitEdge(Edge edge, bool constraint = false)
+            {
+                var (e0, e1) = edge;
+                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
+                var p = 0.5f * (pA + pB);
+
+                var pId = outputPositions.Length;
+                outputPositions.Add(p);
+                badTriangles.Clear();
+
+                ClearVisitedTriangles();
+                foreach (var tId in edgesToTriangles[edge])
+                {
+                    if (!visitedTriangles[tId])
+                    {
+                        trianglesQueue.Enqueue(tId);
+                        badTriangles.Add(tId);
+                        RecalculateBadTriangles(p, constraint);
+                    }
+                }
+                ProcessBadTriangles(pId);
+                return pId;
+            }
+
+            public int InsertPointAtTriangleCircumcenter(float2 p, int tId, bool constraint = false)
+            {
+                var pId = outputPositions.Length;
+                outputPositions.Add(p);
+                badTriangles.Clear();
+                ClearVisitedTriangles();
+                badTriangles.Add(tId);
+                trianglesQueue.Enqueue(tId);
+                RecalculateBadTriangles(p, constraint);
+                ProcessBadTriangles(pId);
+                return pId;
+            }
+
+            public bool EdgeIsEncroached(Edge edge)
+            {
+                var (e1, e2) = edge;
+                var (pA, pB) = (outputPositions[e1], outputPositions[e2]);
+                var circle = new Circle(0.5f * (pA + pB), 0.5f * math.distance(pA, pB));
+                foreach (var tId in edgesToTriangles[edge])
+                {
+                    var triangle = triangles[tId];
+                    var pointId = triangle.UnsafeOtherPoint(edge);
+                    var pC = outputPositions[pointId];
+                    if (math.distancesq(circle.Center, pC) < circle.RadiusSq)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            public bool TriangleIsEncroached(int triangleId)
+            {
+                var edges = trianglesToEdges[triangleId];
+                foreach (var e in edges)
+                {
+                    if (EdgeIsEncroached(e))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            public int SplitConstraint(Edge edge)
+            {
+                var (e0, e1) = edge;
+                var pId = outputPositions.Length;
+                var eId = constraintEdges.IndexOf(edge);
+                constraintEdges.RemoveAt(eId);
+                constraintEdges.Add((pId, e0));
+                constraintEdges.Add((pId, e1));
+
+                return SplitEdge(edge, constraint: true);
+            }
+
+            public bool TriangleIsBad(Triangle triangle, float minimumArea2, float maximumArea2, float minimumAngle)
+            {
+                var area2 = triangle.GetArea2(outputPositions);
+                if (area2 < minimumArea2)
+                {
+                    return false;
+                }
+
+                if (area2 > maximumArea2)
+                {
+                    return true;
+                }
+
+                return AngleIsTooSmall(triangle, minimumAngle);
+            }
+
+            private bool AngleIsTooSmall(Triangle triangle, float minimumAngle)
+            {
+                var (a, b, c) = triangle;
+                var (pA, pB, pC) = (outputPositions[a], outputPositions[b], outputPositions[c]);
+
+                var pAB = pB - pA;
+                var pBC = pC - pB;
+                var pCA = pA - pC;
+
+                var angles = math.float3
+                (
+                    Angle(pAB, -pCA),
+                    Angle(pBC, -pAB),
+                    Angle(pCA, -pBC)
+                );
+
+                return math.any(math.abs(angles) < minimumAngle);
             }
         }
         #endregion
@@ -471,12 +623,13 @@ namespace andywiecko.BurstTriangulator
                     break;
 
                 case { ConstrainEdges: false, RefineMesh: true }:
-                    dependencies = new RefineMeshJob(this).Schedule(dependencies);
+                    dependencies = new RefineMeshJob<ConstraintDisable>(this).Schedule(dependencies);
                     break;
 
                 case { ConstrainEdges: true, RefineMesh: true }:
-                    dependencies.Complete();
-                    throw new NotImplementedException();
+                    dependencies = ScheduleConstrainEdges(dependencies);
+                    dependencies = new RefineMeshJob<ConstraintEnable>(this).Schedule(dependencies);
+                    break;
             }
 
             dependencies = new CleanupTrianglesJob(this).Schedule(this, dependencies);
@@ -527,11 +680,14 @@ namespace andywiecko.BurstTriangulator
             }
 
             var edges = new NativeList<Edge>(Allocator.TempJob);
+            var constraints = new NativeList<Edge>(Allocator.TempJob);
             dependencies = new CopyEdgesJob(this, edges).Schedule(dependencies);
             dependencies = new ResizeEdgeConstraintsJob(this).Schedule(dependencies);
             dependencies = new ConstructConstraintEdgesJob(this).Schedule(data.constraintEdges, Settings.BatchCount, dependencies);
-            dependencies = new FilterAlreadyConstraintEdges(edges, this).Schedule(dependencies);
-            dependencies = new ConstrainEdgesJob(this, edges).Schedule(dependencies);
+            dependencies = new CopyConstraintsJob(this, constraints).Schedule(dependencies);
+            dependencies = new FilterAlreadyConstraintEdges(edges, constraints).Schedule(dependencies);
+            dependencies = new ConstrainEdgesJob(this, edges, constraints).Schedule(dependencies);
+            dependencies = constraints.Dispose(dependencies);
             dependencies = edges.Dispose(dependencies);
 
             return dependencies;
@@ -634,6 +790,9 @@ namespace andywiecko.BurstTriangulator
                 var idC = data.InsertPoint(pC);
 
                 data.AddTriangle((idA, idB, idC));
+                data.edgesToTriangles.Add((idA, idB), new FixedList32Bytes<int> { 0 });
+                data.edgesToTriangles.Add((idB, idC), new FixedList32Bytes<int> { 0 });
+                data.edgesToTriangles.Add((idC, idA), new FixedList32Bytes<int> { 0 });
             }
         }
 
@@ -783,6 +942,25 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
+        private struct CopyConstraintsJob : IJob
+        {
+            [ReadOnly]
+            private NativeArray<Edge> internalConstraints;
+            private NativeList<Edge> constraints;
+
+            public CopyConstraintsJob(Triangulator triangulator, NativeList<Edge> constraints)
+            {
+                internalConstraints = triangulator.data.constraintEdges.AsDeferredJobArray();
+                this.constraints = constraints;
+            }
+
+            public void Execute()
+            {
+                constraints.CopyFrom(internalConstraints);
+            }
+        }
+
+        [BurstCompile]
         private struct ResizeEdgeConstraintsJob : IJob
         {
             private NativeArray<int>.ReadOnly inputConstraintEdges;
@@ -827,10 +1005,10 @@ namespace andywiecko.BurstTriangulator
             private NativeList<Edge> edges;
             private NativeList<Edge> constraints;
 
-            public FilterAlreadyConstraintEdges(NativeList<Edge> edges, Triangulator triangulator)
+            public FilterAlreadyConstraintEdges(NativeList<Edge> edges, NativeList<Edge> constraints)
             {
                 this.edges = edges;
-                this.constraints = triangulator.data.constraintEdges;
+                this.constraints = constraints;
             }
 
             public void Execute()
@@ -852,11 +1030,13 @@ namespace andywiecko.BurstTriangulator
         {
             private TriangulatorNativeData data;
             private NativeList<Edge> edges;
+            private NativeList<Edge> constraints;
 
-            public ConstrainEdgesJob(Triangulator triangluator, NativeList<Edge> edges)
+            public ConstrainEdgesJob(Triangulator triangluator, NativeList<Edge> edges, NativeList<Edge> constraints)
             {
                 data = triangluator.data;
                 this.edges = edges;
+                this.constraints = constraints;
             }
 
             private bool EdgeEdgeIntersection(Edge e1, Edge e2)
@@ -885,13 +1065,13 @@ namespace andywiecko.BurstTriangulator
             public void Execute()
             {
                 edges.Sort();
-                data.constraintEdges.Sort();
+                constraints.Sort();
                 using var intersections = new NativeQueue<Edge>(Allocator.Temp);
-                for (int i = data.constraintEdges.Length - 1; i >= 0; i--)
+                for (int i = constraints.Length - 1; i >= 0; i--)
                 {
                     intersections.Clear();
 
-                    var c = data.constraintEdges[i];
+                    var c = constraints[i];
                     CollectIntersections(c, intersections);
 
                     while (intersections.TryDequeue(out var e))
@@ -923,10 +1103,10 @@ namespace andywiecko.BurstTriangulator
                                 continue;
                             }
 
-                            var id = data.constraintEdges.BinarySearch(swapped);
+                            var id = constraints.BinarySearch(swapped);
                             if (id >= 0)
                             {
-                                data.constraintEdges.RemoveAt(id);
+                                constraints.RemoveAt(id);
                                 i--;
                             }
                         }
@@ -937,18 +1117,69 @@ namespace andywiecko.BurstTriangulator
                         edges.Sort();
                     }
 
-                    data.constraintEdges.RemoveAtSwapBack(i);
+                    constraints.RemoveAtSwapBack(i);
+                }
+            }
+        }
+
+        private interface IRefineMeshJobMode
+        {
+            void SplitEdge(Edge edge, TriangulatorNativeData data);
+            void InsertPointAtTriangleCircumcenter(float2 p, int tId, TriangulatorNativeData data);
+        }
+
+        private readonly struct ConstraintDisable : IRefineMeshJobMode
+        {
+            public void InsertPointAtTriangleCircumcenter(float2 p, int tId, TriangulatorNativeData data)
+            {
+                data.InsertPointAtTriangleCircumcenter(p, tId);
+            }
+
+            public void SplitEdge(Edge edge, TriangulatorNativeData data)
+            {
+                data.SplitEdge(edge);
+            }
+        }
+
+        private readonly struct ConstraintEnable : IRefineMeshJobMode
+        {
+            public void InsertPointAtTriangleCircumcenter(float2 p, int tId, TriangulatorNativeData data)
+            {
+                foreach (var e in data.constraintEdges)
+                {
+                    var (e0, e1) = (data.outputPositions[e.IdA], data.outputPositions[e.IdB]);
+                    var circle = new Circle(0.5f * (e0 + e1), 0.5f * math.distance(e0, e1));
+                    if (math.distancesq(circle.Center, p) < circle.RadiusSq)
+                    {
+                        data.SplitConstraint(e);
+                        return;
+                    }
+                }
+
+                data.InsertPointAtTriangleCircumcenter(p, tId, constraint: true);
+            }
+
+            public void SplitEdge(Edge edge, TriangulatorNativeData data)
+            {
+                if (data.constraintEdges.Contains(edge))
+                {
+                    data.SplitConstraint(edge);
+                }
+                else
+                {
+                    data.SplitEdge(edge, constraint: true);
                 }
             }
         }
 
         [BurstCompile]
-        private struct RefineMeshJob : IJob
+        private struct RefineMeshJob<T> : IJob where T : struct, IRefineMeshJobMode
         {
             private TriangulatorNativeData data;
             private readonly float minimumArea2;
             private readonly float maximumArea2;
             private readonly float minimumAngle;
+            private readonly T mode;
 
             public RefineMeshJob(Triangulator triangulator)
             {
@@ -956,6 +1187,7 @@ namespace andywiecko.BurstTriangulator
                 minimumArea2 = 2 * triangulator.Settings.MinimumArea;
                 maximumArea2 = 2 * triangulator.Settings.MaximumArea;
                 minimumAngle = triangulator.Settings.MinimumAngle;
+                mode = default;
             }
 
             public void Execute()
@@ -969,16 +1201,14 @@ namespace andywiecko.BurstTriangulator
                 {
                     foreach (var edge in edge3)
                     {
-                        if (!SuperTriangle.ContainsCommonPointWith(edge) && EdgeIsEncroached(edge))
+                        if (!SuperTriangle.ContainsCommonPointWith(edge) && data.EdgeIsEncroached(edge))
                         {
                             if (AnyEdgeTriangleAreaIsTooSmall(edge))
                             {
                                 continue;
                             }
 
-                            var (e1, e2) = edge;
-                            var (pA, pB) = (data.outputPositions[e1], data.outputPositions[e2]);
-                            data.InsertPoint(0.5f * (pA + pB));
+                            mode.SplitEdge(edge, data);
                             return true;
                         }
                     }
@@ -1000,85 +1230,20 @@ namespace andywiecko.BurstTriangulator
                 return false;
             }
 
-            private bool EdgeIsEncroached(Edge edge)
-            {
-                var (e1, e2) = edge;
-                var (pA, pB) = (data.outputPositions[e1], data.outputPositions[e2]);
-                var circle = new Circle(0.5f * (pA + pB), 0.5f * math.distance(pA, pB));
-                foreach (var tId in data.edgesToTriangles[edge])
-                {
-                    var triangle = data.triangles[tId];
-                    var pointId = triangle.UnsafeOtherPoint(edge);
-                    var pC = data.outputPositions[pointId];
-                    if (math.distancesq(circle.Center, pC) < circle.RadiusSq)
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
             private bool TryRemoveBadTriangle()
             {
                 for (int tId = 0; tId < data.triangles.Length; tId++)
                 {
                     var triangle = data.triangles[tId];
-                    if (!SuperTriangle.ContainsCommonPointWith(triangle) && !TriangleIsEncroached(tId) && TriangleIsBad(triangle))
+                    if (!SuperTriangle.ContainsCommonPointWith(triangle) && !data.TriangleIsEncroached(tId) &&
+                        data.TriangleIsBad(triangle, minimumArea2, maximumArea2, minimumAngle))
                     {
                         var circle = data.circles[tId];
-                        data.InsertPoint(circle.Center);
+                        mode.InsertPointAtTriangleCircumcenter(circle.Center, tId, data);
                         return true;
                     }
                 }
                 return false;
-            }
-
-            private bool TriangleIsEncroached(int triangleId)
-            {
-                var edges = data.trianglesToEdges[triangleId];
-                foreach (var edgeId in edges)
-                {
-                    if (EdgeIsEncroached(edgeId))
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            private bool TriangleIsBad(Triangle triangle)
-            {
-                var area2 = triangle.GetArea2(data.outputPositions);
-                if (area2 < minimumArea2)
-                {
-                    return false;
-                }
-
-                if (area2 > maximumArea2)
-                {
-                    return true;
-                }
-
-                return AngleIsTooSmall(triangle);
-            }
-
-            private bool AngleIsTooSmall(Triangle triangle)
-            {
-                var (a, b, c) = triangle;
-                var (pA, pB, pC) = (data.outputPositions[a], data.outputPositions[b], data.outputPositions[c]);
-
-                var pAB = pB - pA;
-                var pBC = pC - pB;
-                var pCA = pA - pC;
-
-                var angles = math.float3
-                (
-                    Angle(pAB, -pCA),
-                    Angle(pBC, -pAB),
-                    Angle(pCA, -pBC)
-                );
-
-                return math.any(math.abs(angles) < minimumAngle);
             }
         }
 
