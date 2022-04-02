@@ -5,7 +5,7 @@
 A **single-file** package which provides simple Delaunay triangulation of the given set of points (`float2`) with mesh refinement.
 Implemented triangulation is based on [Bowyer–Watson algorithm][bowyerwatson][^bowyer.1981] [^watson.1981] and refinement on [Ruppert's algorithm][rupperts][^ruppert.1995].
 
-The package provides also constraint triangulation which is based on Sloan's algorithm[^sloan.1993].
+The package provides also constraint triangulation (with mesh refinement) which is based on Sloan's algorithm[^sloan.1993].
 
 ## Table of contents
 
@@ -157,7 +157,21 @@ After enabling `Settings.ConstrainEdges = true` and providing the corresponding 
 
 ### Constraint Delaunay triangulation with mesh refinement
 
-*Work in progress.*
+Constraint triangulation can be also refined in the same manner as non-constraint one,
+by enabling corresponding options in triangulation settings:
+
+```csharp
+triangulator.Settings.RefineMesh = true;
+triangulator.Settings.ConstrainEdges = true;
+```
+
+In the following figure one can see the non-constraint triangulation result (with yellow), and user-specified constraints (with red) with the refinement.
+
+![nyan-constraint-refinement-disabled](Documentation~/nyan-constraint-refinement-disabled.png)
+
+After enabling the refinement and the constraint and providing the input, the result of the constraint triangulation fully covers all specified edges by the user and the mesh is refined with the given refinement conditions. 
+
+![nyan-constraint-refinement-enabled](Documentation~/nyan-constraint-refinement-enabled.png)
 
 ### Support for holes and boundaries
 
@@ -198,8 +212,9 @@ Using Burst can provide more or less two order of magnitude faster computation.
 - [X] ~~CI/CD setup.~~
 - [X] ~~Add more sophisticated tests.~~
 - [X] ~~Add option of preserving the external edges of input points.~~
+- [X] ~~Refinement for constraint triangulation.~~
+- [X] ~~Optimize Bower-Watson with BFS or DFS walk.~~
 - [ ] Add support for "holes" as well as mesh boundaries.
-- [ ] Optimize Bower-Watson with BFS or DFS walk.
 - [ ] Use bounding volume (or kd) tree to speed up the computation.
 - [ ] Consider better parallelism.
 - [ ] Do some optimization with respect to SIMD architecture.
