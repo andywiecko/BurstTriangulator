@@ -11,6 +11,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public static (int, int, int)[] ToTrisTuple(this NativeList<int> triangles) => Enumerable
             .Range(0, triangles.Length / 3)
             .Select(i => (triangles[3 * i], triangles[3 * i + 1], triangles[3 * i + 2]))
+            .OrderBy(i => i.Item1).ThenBy(i => i.Item2).ThenBy(i => i.Item3)
             .ToArray();
     }
 
@@ -159,7 +160,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             var expectedTriangles = new[]
             {
-                (2, 1, 4), (1, 0, 4), (4, 0, 3), (3, 2, 4)
+                (1, 0, 4), (2, 1, 4), (3, 2, 4), (4, 0, 3)
             };
             Assert.That(Triangles, Is.EqualTo(expectedTriangles));
         }
@@ -189,12 +190,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 1",
                 ExpectedResult = new[]
                 {
+                    (1, 0, 7),
+                    (1, 7, 5),
                     (2, 1, 3),
                     (4, 3, 5),
                     (5, 3, 1),
-                    (1, 7, 5),
                     (6, 5, 7),
-                    (1, 0, 7),
                 }
             },
 
@@ -221,12 +222,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 2",
                 ExpectedResult = new[]
                 {
-                    (2, 1, 3),
-                    (4, 3, 1),
+                    (1, 0, 7),
                     (1, 5, 4),
                     (1, 7, 5),
+                    (2, 1, 3),
+                    (4, 3, 1),
                     (6, 5, 7),
-                    (1, 0, 7),
                 }
             },
 
@@ -260,16 +261,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 3",
                 ExpectedResult = new[]
                 {
-                    (3, 2, 11),
-                    (6, 5, 7),
-                    (9, 8, 3),
-                    (3, 10, 9),
-                    (8, 7, 5),
-                    (8, 5, 4),
-                    (8, 4, 3),
-                    (3, 11, 10),
-                    (2, 1, 11),
                     (1, 0, 11),
+                    (2, 1, 11),
+                    (3, 2, 11),
+                    (3, 10, 9),
+                    (3, 11, 10),
+                    (6, 5, 7),
+                    (8, 4, 3),
+                    (8, 5, 4),
+                    (8, 7, 5),
+                    (9, 8, 3),
                 }
             },
         };
@@ -363,6 +364,132 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             input.ConstraintEdges = constraintEdges;
 
             Assert.Throws<ArgumentException>(() => triangulator.Run());
+        }
+
+        private static readonly TestCaseData[] constraintDelaunayTriangulationWithRefinementTestData = new[]
+        {
+            //  3 -------- 2
+            //  | ' .      |
+            //  |    ' .   |
+            //  |       ' .|
+            //  0 -------- 1
+            new TestCaseData(
+                new []
+                {
+                    math.float2(0, 0),
+                    math.float2(1, 0),
+                    math.float2(1, 1),
+                    math.float2(0, 1)
+                },
+                new []
+                {
+                    0, 1,
+                    1, 2,
+                    2, 3,
+                    3, 0,
+                    0, 2
+                },
+                new []
+                {
+                    math.float2(0.5f, 0.5f)
+                }
+            )
+            {
+                TestName = "Test case 1 (square)",
+                ExpectedResult = new []
+                {
+                    (1, 0, 4),
+                    (2, 1, 4),
+                    (3, 2, 4),
+                    (4, 0, 3),
+                }
+            },
+
+            //  5 -------- 4 -------- 3
+            //  |       . '|      . ' |
+            //  |    . '   |   . '    |
+            //  |. '      .|. '       |
+            //  0 -------- 1 -------- 2
+            new TestCaseData(
+                new []
+                {
+                    math.float2(0, 0),
+                    math.float2(1, 0),
+                    math.float2(2, 0),
+                    math.float2(2, 1),
+                    math.float2(1, 1),
+                    math.float2(0, 1),
+                },
+                new []
+                {
+                    0, 1,
+                    1, 2,
+                    2, 3,
+                    3, 4,
+                    4, 5,
+                    5, 0,
+                    0, 3
+                },
+                new []
+                {
+                    math.float2(1, 0.5f),
+                    math.float2(0.5f, 0),
+                    math.float2(0.5f, 0.25f),
+                    math.float2(0.75f, 0.625f),
+                    math.float2(0.5f, 1),
+                    math.float2(1.5f, 1),
+                    math.float2(1.5f, 0.75f),
+                    math.float2(1.25f, 0.375f),
+                    math.float2(1.5f, 0),
+                }
+            )
+            {
+                TestName = "Test case 2 (rectangle)",
+                ExpectedResult = new []
+                {
+                    (3, 2, 12),
+                    (6, 1, 8),
+                    (6, 4, 12),
+                    (7, 0, 8),
+                    (8, 0, 5),
+                    (8, 1, 7),
+                    (8, 5, 10),
+                    (9, 4, 6),
+                    (9, 6, 8),
+                    (9, 8, 10),
+                    (10, 4, 9),
+                    (11, 3, 12),
+                    (12, 2, 14),
+                    (12, 4, 11),
+                    (13, 1, 6),
+                    (13, 6, 12),
+                    (13, 12, 14),
+                    (14, 1, 13)
+                }
+            },
+        };
+
+        [Test, TestCaseSource(nameof(constraintDelaunayTriangulationWithRefinementTestData))]
+        public (int, int, int)[] ConstraintDelaunayTriangulationWithRefinementTest(float2[] managedPositions, int[] constraints, float2[] insertedPoints)
+        {
+            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
+
+            var settings = triangulator.Settings;
+            settings.ConstrainEdges = true;
+            settings.RefineMesh = true;
+            settings.MinimumArea = .125f;
+            settings.MaximumArea = .250f;
+
+            var input = triangulator.Input;
+            input.Positions = positions;
+            input.ConstraintEdges = constraintEdges;
+
+            triangulator.Run();
+
+            Assert.That(Positions, Is.EqualTo(managedPositions.Union(insertedPoints)));
+
+            return Triangles;
         }
     }
 }
