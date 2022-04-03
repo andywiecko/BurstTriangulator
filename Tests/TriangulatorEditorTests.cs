@@ -607,5 +607,161 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(Triangles, Is.EqualTo(expectedTriangles));
             Assert.That(Positions, Is.EqualTo(managedPositions.Union(new[] { math.float2(0.75f, 0.625f), math.float2(1f, 0.5f) })));
         }
+
+        [Test]
+        public void TriangulationWithHolesWithoutRefinementTest()
+        {
+            //   * --------------------- *
+            //   |                       |
+            //   |                       |
+            //   |       * ----- *       |
+            //   |       |   X   |       |
+            //   |       |       |       |
+            //   |       * ----- *       |
+            //   |                       |
+            //   |                       |
+            //   * --------------------- *
+            //
+            //
+            var managedPositions = new[]
+            {
+                math.float2(0, 0),
+                math.float2(3, 0),
+                math.float2(3, 3),
+                math.float2(0, 3),
+
+                math.float2(1, 1),
+                math.float2(2, 1),
+                math.float2(2, 2),
+                math.float2(1, 2),
+            };
+
+            var constraints = new[]
+            {
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 0,
+
+                4, 5,
+                5, 6,
+                6, 7,
+                7, 4
+            };
+
+            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
+            using var holes = new NativeArray<float2>(new[] { (float2)1.5f }, Allocator.Persistent);
+
+            var settings = triangulator.Settings;
+            settings.ConstrainEdges = true;
+            settings.RefineMesh = false;
+            settings.RestoreBoundary = true;
+
+            var input = triangulator.Input;
+            input.Positions = positions;
+            input.ConstraintEdges = constraintEdges;
+            input.HoleSeeds = holes;
+
+            triangulator.Run();
+
+            var expectedTriangles = new[]
+            {
+                (1, 0, 5),
+                (2, 1, 6),
+                (3, 2, 7),
+                (4, 0, 7),
+                (5, 0, 4),
+                (6, 1, 5),
+                (7, 0, 3),
+                (7, 2, 6),
+            };
+            Assert.That(Triangles, Is.EqualTo(expectedTriangles));
+        }
+
+        [Test]
+        public void TriangulationWithHolesWithRefinementTest()
+        {
+            //   * --------------------- *
+            //   |                       |
+            //   |                       |
+            //   |       * ----- *       |
+            //   |       |   X   |       |
+            //   |       |       |       |
+            //   |       * ----- *       |
+            //   |                       |
+            //   |                       |
+            //   * --------------------- *
+            //
+            //
+            var managedPositions = new[]
+            {
+                math.float2(0, 0),
+                math.float2(3, 0),
+                math.float2(3, 3),
+                math.float2(0, 3),
+
+                math.float2(1, 1),
+                math.float2(2, 1),
+                math.float2(2, 2),
+                math.float2(1, 2),
+            };
+
+            var constraints = new[]
+            {
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 0,
+
+                4, 5,
+                5, 6,
+                6, 7,
+                7, 4
+            };
+
+            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
+            using var holes = new NativeArray<float2>(new[] { (float2)1.5f }, Allocator.Persistent);
+
+            var settings = triangulator.Settings;
+            settings.ConstrainEdges = true;
+            settings.RefineMesh = true;
+            settings.RestoreBoundary = true;
+            settings.MinimumArea = 0.5f;
+            settings.MaximumArea = 1.0f;
+
+            var input = triangulator.Input;
+            input.Positions = positions;
+            input.ConstraintEdges = constraintEdges;
+            input.HoleSeeds = holes;
+
+            triangulator.Run();
+
+            var expectedTriangles = new[]
+            {
+                (4, 0, 10),
+                (5, 1, 8),
+                (6, 2, 9),
+                (7, 3, 11),
+                (7, 4, 10),
+                (8, 0, 4),
+                (8, 4, 5),
+                (9, 1, 5),
+                (9, 5, 6),
+                (10, 3, 7),
+                (11, 2, 6),
+                (11, 6, 7),
+            };
+            Assert.That(Triangles, Is.EqualTo(expectedTriangles));
+
+            Assert.That(Positions, Is.EqualTo(managedPositions.Union(new[]
+            {
+                math.float2(1.5f, 0),
+                math.float2(3, 1.5f),
+                math.float2(0, 1.5f),
+                math.float2(1.5f, 3f)
+            })));
+        }
     }
 }
