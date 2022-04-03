@@ -41,6 +41,7 @@ namespace andywiecko.BurstTriangulator
 
             public Triangle Flip() => (IdC, IdB, IdA);
             public Triangle WithShift(int i) => (IdA + i, IdB + i, IdC + i);
+            public Triangle WithShift(int i, int j, int k) => (IdA + i, IdB + j, IdC + k);
             public float GetSignedArea2(NativeList<float2> positions)
             {
                 var (pA, pB, pC) = (positions[IdA], positions[IdB], positions[IdC]);
@@ -139,6 +140,9 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> badTriangles;
             private NativeQueue<int> trianglesQueue;
             private NativeList<bool> visitedTriangles;
+            private NativeHashSet<int> potentialPointsToRemove;
+            public NativeList<int> pointsToRemove;
+            public NativeList<int> pointsOffset;
 
             private static readonly DescendingComparer comparer = new DescendingComparer();
 
@@ -156,6 +160,9 @@ namespace andywiecko.BurstTriangulator
                 badTriangles = new NativeList<int>(capacity, allocator);
                 trianglesQueue = new NativeQueue<int>(allocator);
                 visitedTriangles = new NativeList<bool>(capacity, allocator);
+                potentialPointsToRemove = new NativeHashSet<int>(capacity, allocator);
+                pointsToRemove = new NativeList<int>(capacity, allocator);
+                pointsOffset = new NativeList<int>(capacity, allocator);
             }
 
             public void Dispose()
@@ -172,6 +179,9 @@ namespace andywiecko.BurstTriangulator
                 badTriangles.Dispose();
                 trianglesQueue.Dispose();
                 visitedTriangles.Dispose();
+                potentialPointsToRemove.Dispose();
+                pointsToRemove.Dispose();
+                pointsOffset.Dispose();
             }
 
             public void Clear()
@@ -186,6 +196,11 @@ namespace andywiecko.BurstTriangulator
 
                 tmpPolygon.Clear();
                 badTriangles.Clear();
+                trianglesQueue.Clear();
+                visitedTriangles.Clear();
+                potentialPointsToRemove.Clear();
+                pointsToRemove.Clear();
+                pointsOffset.Clear();
             }
 
             public void AddTriangle(Triangle t)
@@ -505,6 +520,107 @@ namespace andywiecko.BurstTriangulator
 
                 return math.any(math.abs(angles) < minimumAngle);
             }
+
+            public void InitializePlantingSeeds()
+            {
+                badTriangles.Clear();
+                ClearVisitedTriangles();
+            }
+
+            public void PlantSeed(int tId)
+            {
+                visitedTriangles[tId] = true;
+                trianglesQueue.Enqueue(tId);
+                badTriangles.Add(tId);
+
+                while (trianglesQueue.TryDequeue(out tId))
+                {
+                    foreach (var e in trianglesToEdges[tId])
+                    {
+                        if (constraintEdges.Contains(e))
+                        {
+                            continue;
+                        }
+
+                        foreach (var otherId in edgesToTriangles[e])
+                        {
+                            if (!visitedTriangles[otherId])
+                            {
+                                visitedTriangles[otherId] = true;
+                                trianglesQueue.Enqueue(otherId);
+                                badTriangles.Add(otherId);
+                            }
+                        }
+                    }
+                }
+            }
+
+            public void GeneratePotentialPointsToRemove(int initialPointsCount)
+            {
+                foreach (var tId in badTriangles)
+                {
+                    var (idA, idB, idC) = triangles[tId];
+                    TryAddPotentialPointToRemove(idA, initialPointsCount);
+                    TryAddPotentialPointToRemove(idB, initialPointsCount);
+                    TryAddPotentialPointToRemove(idC, initialPointsCount);
+                }
+            }
+
+            private void TryAddPotentialPointToRemove(int id, int initialPointsCount)
+            {
+                if (id >= initialPointsCount + 3 /* super triangle */)
+                {
+                    potentialPointsToRemove.Add(id);
+                }
+            }
+
+            public void FinalizePlantingSeeds()
+            {
+                RemoveBadTriangles();
+                RecalculateEdgeToTrianglesMapping();
+            }
+
+            public void ResizePointsOffset()
+            {
+                pointsOffset.Clear();
+                pointsOffset.Length = outputPositions.Length;
+            }
+
+            public void GeneratePointsToRemove()
+            {
+                var tmp = potentialPointsToRemove.ToNativeArray(Allocator.Temp);
+                tmp.Sort();
+                foreach (var pId in tmp)
+                {
+                    if (!AnyTriangleContainsPoint(pId))
+                    {
+                        pointsToRemove.Add(pId);
+                    }
+                }
+            }
+
+            private bool AnyTriangleContainsPoint(int pId)
+            {
+                foreach (var t in triangles)
+                {
+                    if (t.Contains(pId))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            public void GeneratePointsOffset()
+            {
+                foreach (var pId in pointsToRemove)
+                {
+                    for (int i = pId; i < pointsOffset.Length; i++)
+                    {
+                        pointsOffset[i]--;
+                    }
+                }
+            }
         }
         #endregion
 
@@ -554,6 +670,11 @@ namespace andywiecko.BurstTriangulator
             /// </remarks>
             [field: SerializeField]
             public bool ValidateInput = true;
+            /// <summary>
+            /// If <see langword="true"/> the mesh boundary is restored using <see cref="Triangulator.Input"/> constraint edges.
+            /// </summary>
+            [field: SerializeField]
+            public bool RestoreBoundary = false;
         }
 
         public class InputData
@@ -616,20 +737,23 @@ namespace andywiecko.BurstTriangulator
             dependencies = new RegisterSuperTriangleJob(this, positions).Schedule(dependencies);
             dependencies = new DelaunayTriangulationJob(this, positions).Schedule(dependencies);
 
-            switch (Settings)
+            if (Settings.ConstrainEdges)
             {
-                case { ConstrainEdges: true, RefineMesh: false }:
-                    dependencies = ScheduleConstrainEdges(dependencies);
-                    break;
+                dependencies = ScheduleConstrainEdges(dependencies);
+            }
 
-                case { ConstrainEdges: false, RefineMesh: true }:
-                    dependencies = new RefineMeshJob<ConstraintDisable>(this).Schedule(dependencies);
-                    break;
+            if (Settings.RefineMesh)
+            {
+                dependencies = Settings.ConstrainEdges ?
+                    new RefineMeshJob<ConstraintEnable>(this).Schedule(dependencies) :
+                    new RefineMeshJob<ConstraintDisable>(this).Schedule(dependencies);
+            }
 
-                case { ConstrainEdges: true, RefineMesh: true }:
-                    dependencies = ScheduleConstrainEdges(dependencies);
-                    dependencies = new RefineMeshJob<ConstraintEnable>(this).Schedule(dependencies);
-                    break;
+            dependencies = new ResizePointsOffsetsJob(this).Schedule(dependencies);
+
+            if (Settings.RestoreBoundary)
+            {
+                dependencies = new PlantingSeedsJob(this).Schedule(dependencies);
             }
 
             dependencies = new CleanupTrianglesJob(this).Schedule(this, dependencies);
@@ -1248,6 +1372,40 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
+        private struct ResizePointsOffsetsJob : IJob
+        {
+            private TriangulatorNativeData data;
+            public ResizePointsOffsetsJob(Triangulator triangulator) => data = triangulator.data;
+            public void Execute() => data.ResizePointsOffset();
+        }
+
+        [BurstCompile]
+        private struct PlantingSeedsJob : IJob
+        {
+            private TriangulatorNativeData data;
+            private readonly int initialPointsCount;
+
+            public PlantingSeedsJob(Triangulator triangulator)
+            {
+                data = triangulator.data;
+                initialPointsCount = triangulator.Input.Positions.Length;
+            }
+
+            public void Execute()
+            {
+                var seed = data.edgesToTriangles[(0, 1)][0];
+
+                data.InitializePlantingSeeds();
+                data.PlantSeed(seed);
+
+                data.GeneratePotentialPointsToRemove(initialPointsCount);
+                data.FinalizePlantingSeeds();
+                data.GeneratePointsToRemove();
+                data.GeneratePointsOffset();
+            }
+        }
+
+        [BurstCompile]
         private unsafe struct CleanupTrianglesJob : IJobParallelForDefer
         {
             [ReadOnly]
@@ -1259,11 +1417,15 @@ namespace andywiecko.BurstTriangulator
             [WriteOnly]
             private NativeList<int>.ParallelWriter outputTriangles;
 
+            [ReadOnly]
+            private NativeArray<int> pointsOffset;
+
             public CleanupTrianglesJob(Triangulator triangulator)
             {
                 triangles = triangulator.data.triangles;
                 outputPositions = triangulator.data.outputPositions;
                 outputTriangles = triangulator.data.outputTriangles.AsParallelWriter();
+                pointsOffset = triangulator.data.pointsOffset.AsDeferredJobArray();
             }
 
             public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
@@ -1278,9 +1440,10 @@ namespace andywiecko.BurstTriangulator
                 {
                     return;
                 }
-
                 t = t.GetSignedArea2(outputPositions) < 0 ? t : t.Flip();
+                var (idA, idB, idC) = t;
                 t = t.WithShift(-3); // Due to supertriangle verticies.
+                t = t.WithShift(pointsOffset[idA], pointsOffset[idB], pointsOffset[idC]);
                 var ptr = UnsafeUtility.AddressOf(ref t);
                 outputTriangles.AddRangeNoResize(ptr, 3);
             }
@@ -1290,14 +1453,22 @@ namespace andywiecko.BurstTriangulator
         private struct CleanupPositionsJob : IJob
         {
             private NativeList<float2> positions;
+            [ReadOnly]
+            private NativeArray<int> pointsToRemove;
 
             public CleanupPositionsJob(Triangulator triangulator)
             {
                 positions = triangulator.data.outputPositions;
+                pointsToRemove = triangulator.data.pointsToRemove.AsDeferredJobArray();
             }
 
             public void Execute()
             {
+                for (int i = pointsToRemove.Length - 1; i >= 0; i--)
+                {
+                    positions.RemoveAt(pointsToRemove[i]);
+                }
+
                 // Remove Super Triangle positions
                 positions.RemoveAt(0);
                 positions.RemoveAt(0);
