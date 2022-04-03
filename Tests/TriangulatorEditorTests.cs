@@ -491,5 +491,121 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             return Triangles;
         }
+
+        [Test]
+        public void BoundaryReconstructionWithoutRefinementTest()
+        {
+            // 7 ----- 6       3 ----- 2
+            // |       |       |       |
+            // |       |       |       |
+            // |       5 ----- 4       |
+            // |                       |
+            // |                       |
+            // 0 --------------------- 1
+            var managedPositions = new[]
+            {
+                math.float2(0, 0),
+                math.float2(3, 0),
+                math.float2(3, 2),
+                math.float2(2, 2),
+                math.float2(2, 1),
+                math.float2(1, 1),
+                math.float2(1, 2),
+                math.float2(0, 2),
+            };
+
+            var constraints = new[]
+            {
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 4,
+                4, 5,
+                5, 6,
+                6, 7,
+                7, 0
+            };
+
+            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
+
+            var settings = triangulator.Settings;
+            settings.ConstrainEdges = true;
+            settings.RefineMesh = false;
+            settings.RestoreBoundary = true;
+
+            var input = triangulator.Input;
+            input.Positions = positions;
+            input.ConstraintEdges = constraintEdges;
+
+            triangulator.Run();
+
+            var expected = new[]
+            {
+                (1, 0, 5),
+                (2, 1, 4),
+                (3, 2, 4),
+                (4, 1, 5),
+                (5, 0, 7),
+                (6, 5, 7),
+            };
+            Assert.That(Triangles, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void BoundaryReconstructionWithRefinementTest()
+        {
+            // 4.             .2
+            // | '.         .' |
+            // |   '.     .'   |
+            // |     '. .'     |
+            // |       3       |
+            // |               |
+            // 0 ------------- 1
+            var managedPositions = new[]
+            {
+                math.float2(0, 0),
+                math.float2(1, 0),
+                math.float2(1, 1),
+                math.float2(0.5f, 0.25f),
+                math.float2(0, 1),
+            };
+
+            var constraints = new[]
+            {
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 4,
+                4, 0
+            };
+
+            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
+
+            var settings = triangulator.Settings;
+            settings.ConstrainEdges = true;
+            settings.RefineMesh = true;
+            settings.RestoreBoundary = true;
+            settings.MinimumArea = 0.125f;
+            settings.MaximumArea = 0.25f;
+
+            var input = triangulator.Input;
+            input.Positions = positions;
+            input.ConstraintEdges = constraintEdges;
+
+            triangulator.Run();
+
+            var expectedTriangles = new[]
+            {
+                (1, 0, 3),
+                (3, 0, 4),
+                (5, 2, 6),
+                (6, 1, 3),
+                (6, 3, 5),
+            };
+            Assert.That(Triangles, Is.EqualTo(expectedTriangles));
+            Assert.That(Positions, Is.EqualTo(managedPositions.Union(new[] { math.float2(0.75f, 0.625f), math.float2(1f, 0.5f) })));
+        }
     }
 }
