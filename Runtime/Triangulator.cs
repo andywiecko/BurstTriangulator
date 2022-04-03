@@ -681,6 +681,7 @@ namespace andywiecko.BurstTriangulator
         {
             public NativeArray<float2> Positions { get; set; }
             public NativeArray<int> ConstraintEdges { get; set; }
+            public NativeArray<float2> HoleSeeds { get; set; }
         }
 
         public class OutputData
@@ -751,9 +752,16 @@ namespace andywiecko.BurstTriangulator
 
             dependencies = new ResizePointsOffsetsJob(this).Schedule(dependencies);
 
-            if (Settings.RestoreBoundary)
+            var holes = Input.HoleSeeds;
+            if (Settings.RestoreBoundary && Settings.ConstrainEdges)
             {
-                dependencies = new PlantingSeedsJob(this).Schedule(dependencies);
+                dependencies = holes.IsCreated ?
+                    new PlantingSeedsJob<PlantBoundaryAndHoles>(this, new PlantBoundaryAndHoles(holes)).Schedule(dependencies) :
+                    new PlantingSeedsJob<PlantBoundary>(this, default).Schedule(dependencies);
+            }
+            else if (holes.IsCreated && Settings.ConstrainEdges)
+            {
+                dependencies = new PlantingSeedsJob<PlantHoles>(this, new PlantHoles(holes)).Schedule(dependencies);
             }
 
             dependencies = new CleanupTrianglesJob(this).Schedule(this, dependencies);
@@ -1394,25 +1402,88 @@ namespace andywiecko.BurstTriangulator
             public void Execute() => data.ResizePointsOffset();
         }
 
+        private interface IPlantingSeedJobMode
+        {
+            public void PlantBoundarySeed(TriangulatorNativeData data);
+            public void PlantHoleSeeds(TriangulatorNativeData data);
+        }
+
+        private readonly struct PlantBoundary : IPlantingSeedJobMode
+        {
+            public static void PlantBoundarySeedStatic(TriangulatorNativeData data)
+            {
+                var seed = data.edgesToTriangles[(0, 1)][0];
+                data.PlantSeed(seed);
+            }
+
+            public void PlantBoundarySeed(TriangulatorNativeData data) => PlantBoundarySeedStatic(data);
+            public void PlantHoleSeeds(TriangulatorNativeData _) { }
+        }
+
+        private readonly struct PlantHoles : IPlantingSeedJobMode
+        {
+            private readonly NativeArray<float2>.ReadOnly seeds;
+            public PlantHoles(NativeArray<float2> seeds) => this.seeds = seeds.AsReadOnly();
+
+            public static void PlantHoleSeedsStatic(TriangulatorNativeData data, NativeArray<float2>.ReadOnly seeds)
+            {
+                foreach (var s in seeds)
+                {
+                    var tId = FindTriangle(s, data);
+                    if (tId != -1)
+                    {
+                        data.PlantSeed(tId);
+                    }
+                }
+            }
+
+            private static int FindTriangle(float2 p, TriangulatorNativeData data)
+            {
+                var tId = 0;
+                foreach (var (idA, idB, idC) in data.triangles)
+                {
+                    var (a, b, c) = (data.outputPositions[idA], data.outputPositions[idB], data.outputPositions[idC]);
+                    if (PointInsideTriangle(p, a, b, c))
+                    {
+                        return tId;
+                    }
+                    tId++;
+                }
+
+                return -1;
+            }
+
+            public void PlantBoundarySeed(TriangulatorNativeData _) { }
+            public void PlantHoleSeeds(TriangulatorNativeData data) => PlantHoleSeedsStatic(data, seeds);
+        }
+
+        private readonly struct PlantBoundaryAndHoles : IPlantingSeedJobMode
+        {
+            private readonly NativeArray<float2>.ReadOnly seeds;
+            public PlantBoundaryAndHoles(NativeArray<float2> seeds) => this.seeds = seeds.AsReadOnly();
+            public void PlantBoundarySeed(TriangulatorNativeData data) => PlantBoundary.PlantBoundarySeedStatic(data);
+            public void PlantHoleSeeds(TriangulatorNativeData data) => PlantHoles.PlantHoleSeedsStatic(data, seeds);
+        }
+
         [BurstCompile]
-        private struct PlantingSeedsJob : IJob
+        private struct PlantingSeedsJob<T> : IJob where T : struct, IPlantingSeedJobMode
         {
             private TriangulatorNativeData data;
             private readonly int initialPointsCount;
+            private readonly T mode;
 
-            public PlantingSeedsJob(Triangulator triangulator)
+            public PlantingSeedsJob(Triangulator triangulator, T mode)
             {
                 data = triangulator.data;
                 initialPointsCount = triangulator.Input.Positions.Length;
+                this.mode = mode;
             }
 
             public void Execute()
             {
-                var seed = data.edgesToTriangles[(0, 1)][0];
-
                 data.InitializePlantingSeeds();
-                data.PlantSeed(seed);
-
+                mode.PlantBoundarySeed(data);
+                mode.PlantHoleSeeds(data);
                 data.GeneratePotentialPointsToRemove(initialPointsCount);
                 data.FinalizePlantingSeeds();
                 data.GeneratePointsToRemove();
@@ -1511,6 +1582,16 @@ namespace andywiecko.BurstTriangulator
 
             return new Circle(center: p, radius: r);
         }
+        private static float3 Barycentric(float2 a, float2 b, float2 c, float2 p)
+        {
+            var (v0, v1, v2) = (b - a, c - a, p - a);
+            var denInv = 1 / Cross(v0, v1);
+            var v = denInv * Cross(v2, v1);
+            var w = denInv * Cross(v0, v2);
+            var u = 1.0f - v - w;
+            return math.float3(u, v, w);
+        }
+        private static bool PointInsideTriangle(float2 p, float2 a, float2 b, float2 c) => math.cmax(-Barycentric(a, b, c, p)) <= 0;
         private static float CCW(float2 a, float2 b, float2 c) => math.sign(Cross(b - a, b - c));
         private static bool PointLineSegmentIntersection(float2 a, float2 b0, float2 b1) =>
             CCW(b0, b1, a) == 0 && math.all(a >= math.min(b0, b1) & a <= math.max(b0, b1));

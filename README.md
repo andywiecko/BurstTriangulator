@@ -194,7 +194,17 @@ After enabling the `RestoreBoundary` the result of the constraint triangulation 
 
 ![nyan-reconstruction-enabled](Documentation~/nyan-reconstruction-enabled.png)
 
-**Hole support:** *Work in progress.*
+The package provides also an option for creating holes. 
+Except for setting the `ConstraintEdges`, a user needs to provide positions of the holes in the same space as the `Input.Positions`.
+Enabling `RestoringBoundary` option is not mandatory, holes could be introduced independently of preserving the boundaries
+
+```csharp
+settings.RestoreBoundary = true; // optional
+settings.ConstraintEdges = true;
+
+using var holes = new NativeArray<float2>(new[]{ math.float2(0.5f, 0.5f) }, Allocator.Persistent);
+input.HoleSeeds = holes;
+```
 
 ### Input validation
 
