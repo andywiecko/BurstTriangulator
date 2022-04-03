@@ -175,7 +175,23 @@ After enabling the refinement and the constraint and providing the input, the re
 
 ### Support for holes and boundaries
 
-*Work in progress.*
+The package provides also an option for restoring the boundaries.
+One has to enable corresponding options and provide the constraints
+
+```csharp
+settings.RestoreBoundary = true;
+settings.ConstraintEdges = true;
+```
+
+In the following figure, one can see the constraint triangulation result (with yellow), and user-specified constraints (with red) with the disabled `RestoreBoundary` and refinement enabled.
+
+![nyan-reconstruction-disabled](Documentation~/nyan-reconstruction-disabled.png)
+
+After enabling the `RestoreBoundary` the result of the constraint triangulation fully covers all conditions and all invalid triangles are destroyed.
+
+![nyan-reconstruction-enabled](Documentation~/nyan-reconstruction-enabled.png)
+
+**Hole support:** *Work in progress.*
 
 ### Input validation
 
