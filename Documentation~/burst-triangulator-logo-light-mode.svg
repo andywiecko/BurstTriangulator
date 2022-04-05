@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="87.650589mm"
-   height="34.544685mm"
-   viewBox="0 0 131.47588 51.817029"
+   width="130.47588mm"
+   height="50.817028mm"
+   viewBox="0 0 195.71381 76.225543"
    version="1.1"
    id="svg5"
    inkscape:version="1.1 (c68e22c387, 2021-05-23)"
@@ -29,9 +29,9 @@
      fit-margin-right="1"
      fit-margin-bottom="1"
      lock-margins="true"
-     inkscape:zoom="2.6832492"
-     inkscape:cx="150.56373"
-     inkscape:cy="92.611599"
+     inkscape:zoom="1.1248724"
+     inkscape:cx="163.57411"
+     inkscape:cy="135.57093"
      inkscape:window-width="1920"
      inkscape:window-height="1027"
      inkscape:window-x="-8"
@@ -165,13 +165,13 @@
      inkscape:label="Warstwa 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-64.815846,-60.864393)">
+     transform="translate(-32.696877,-48.660136)">
     <g
        id="surface26465"
        transform="matrix(0.35277778,0,0,0.35277778,85.596667,69.47117)">
       <g
          id="g3662"
-         transform="matrix(1.5,0,0,1.5,-63.718749,-24.522148)">
+         transform="matrix(2.25,0,0,2.25,-159.29687,-61.30537)">
         <path
            style="fill:#b03030;fill-opacity:1;fill-rule:nonzero;stroke:none"
            d="m 9.710938,63.867188 c 0,-0.585938 -0.476563,-1.0625 -1.0625,-1.0625 -0.585938,0 -1.0625,0.476562 -1.0625,1.0625 0,0.585937 0.476562,1.0625 1.0625,1.0625 0.585937,0 1.0625,-0.476563 1.0625,-1.0625 z m 0,0"
