@@ -1,5 +1,8 @@
 # Burst Triangulator
 
+![logo-light-mode](Documentation~/burst-triangulator-logo-light-mode.svg#gh-light-mode-only)
+![logo-dark-mode](Documentation~/burst-triangulator-logo-dark-mode.svg#gh-dark-mode-only)
+
 [![Editor tests](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml/badge.svg)](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml)
 
 A **single-file** package which provides simple Delaunay triangulation of the given set of points (`float2`) with mesh refinement.
