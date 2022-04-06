@@ -669,12 +669,12 @@ namespace andywiecko.BurstTriangulator
             /// Input validation is enabled only at Editor.
             /// </remarks>
             [field: SerializeField]
-            public bool ValidateInput = true;
+            public bool ValidateInput { get; set; } = true;
             /// <summary>
             /// If <see langword="true"/> the mesh boundary is restored using <see cref="Triangulator.Input"/> constraint edges.
             /// </summary>
             [field: SerializeField]
-            public bool RestoreBoundary = false;
+            public bool RestoreBoundary { get; set; } = false;
         }
 
         public class InputData
