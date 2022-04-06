@@ -836,13 +836,18 @@ namespace andywiecko.BurstTriangulator
             {
                 if (positions.Length < 3)
                 {
+                    UnityEngine.Debug.LogWarning($"[Triangulator]: Positions.Length is less then 3!");
                     return false;
                 }
 
                 for (int i = 0; i < positions.Length; i++)
                 {
-                    if (!PointValidation(i) ||
-                        !PointPointValidation(i))
+                    if (!PointValidation(i))
+                    {
+                        UnityEngine.Debug.LogWarning($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
+                        return false;
+                    }
+                    if (!PointPointValidation(i))
                     {
                         return false;
                     }
@@ -860,6 +865,7 @@ namespace andywiecko.BurstTriangulator
                     var pj = positions[j];
                     if (math.all(pi == pj))
                     {
+                        UnityEngine.Debug.LogWarning($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
                         return false;
                     }
                 }
@@ -961,6 +967,7 @@ namespace andywiecko.BurstTriangulator
             {
                 if (constraints.Length % 2 == 1)
                 {
+                    UnityEngine.Debug.LogWarning($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
                     return false;
                 }
 
@@ -980,6 +987,10 @@ namespace andywiecko.BurstTriangulator
             private bool EdgeValidation(int i)
             {
                 var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                if (a0Id == a1Id)
+                {
+                    UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] is length zero!");
+                }
                 return a0Id != a1Id;
             }
 
@@ -998,6 +1009,7 @@ namespace andywiecko.BurstTriangulator
                     var p = positions[j];
                     if (PointLineSegmentIntersection(p, a0, a1))
                     {
+                        UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] and Positions[{j}] are collinear!");
                         return false;
                     }
                 }
@@ -1007,11 +1019,9 @@ namespace andywiecko.BurstTriangulator
 
             private bool EdgeEdgeValidation(int i)
             {
-                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
                 for (int j = i + 1; j < constraints.Length / 2; j++)
                 {
-                    var (b0Id, b1Id) = (constraints[2 * j], constraints[2 * j + 1]);
-                    if (!ValidatePair(a0Id, a1Id, b0Id, b1Id))
+                    if (!ValidatePair(i, j))
                     {
                         return false;
                     }
@@ -1020,12 +1030,16 @@ namespace andywiecko.BurstTriangulator
                 return true;
             }
 
-            private bool ValidatePair(int a0Id, int a1Id, int b0Id, int b1Id)
+            private bool ValidatePair(int i, int j)
             {
+                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                var (b0Id, b1Id) = (constraints[2 * j], constraints[2 * j + 1]);
+
                 // Repeated indicies
                 if (a0Id == b0Id && a1Id == b1Id ||
                     a0Id == b1Id && a1Id == b0Id)
                 {
+                    UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] and [{j}] are equivalent!");
                     return false;
                 }
 
@@ -1038,6 +1052,7 @@ namespace andywiecko.BurstTriangulator
                 var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
                 if (EdgeEdgeIntersection(a0, a1, b0, b1))
                 {
+                    UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] and [{j}] intersect!");
                     return false;
                 }
 
