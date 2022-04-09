@@ -1,5 +1,19 @@
 # Change log
 
+## [1.3.0] - 2022-04-09
+
+### Features
+
+- Restoring input boundaries. The feature allows for restoring a given boundary from triangulation input.
+It is necessary to provide constraints, as well as enable corresponding
+options in the triangulation settings, aka `RestoreBoundary`.
+- Support for holes in the mesh.
+- Upload project's logo generated using the above features. 
+
+### Changes
+
+- More verbose warnings during input validation.
+
 ## [1.2.0] - 2022-04-02
 
 ### Features
