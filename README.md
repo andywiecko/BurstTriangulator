@@ -8,7 +8,7 @@
 A **single-file** package which provides simple Delaunay triangulation of the given set of points (`float2`) with mesh refinement.
 Implemented triangulation is based on [Bowyer–Watson algorithm][bowyerwatson][^bowyer.1981] [^watson.1981] and refinement on [Ruppert's algorithm][rupperts][^ruppert.1995].
 
-The package provides also constraint triangulation (with mesh refinement) which is based on Sloan's algorithm[^sloan.1993].
+The package provides also constrained triangulation (with mesh refinement) which is based on Sloan's algorithm[^sloan.1993].
 
 ## Table of contents
 
@@ -18,13 +18,12 @@ The package provides also constraint triangulation (with mesh refinement) which 
   - [Example usage](#example-usage)
     - [Delaunay triangulation](#delaunay-triangulation)
     - [Delaunay triangulation with mesh refinement](#delaunay-triangulation-with-mesh-refinement)
-    - [Constraint Delaunay triangulation](#constraint-delaunay-triangulation)
-    - [Constraint Delaunay triangulation with mesh refinement](#constraint-delaunay-triangulation-with-mesh-refinement)
+    - [Constrained Delaunay triangulation](#constrained-delaunay-triangulation)
+    - [Constrained Delaunay triangulation with mesh refinement](#constrained-delaunay-triangulation-with-mesh-refinement)
     - [Support for holes and boundaries](#support-for-holes-and-boundaries)
     - [Input validation](#input-validation)
   - [Benchmark](#benchmark)
   - [Dependencies](#dependencies)
-  - [TODO](#todo)
   - [Contributors](#contributors)
   - [Bibliography](#bibliography)
 
@@ -127,7 +126,7 @@ The result *with* mesh refinement:
 
 ![nyan-cat-with-refinement](Documentation~/nyan-cat-with-refinement.png)
 
-### Constraint Delaunay triangulation
+### Constrained Delaunay triangulation
 
 It is not guaranteed that the boundary of the input will be present in the *classic* Delaunay triangulation result.
 One needs to specify the constraints to resolve this issue.
@@ -148,19 +147,17 @@ using var constraintEdges = new NativeArray<int>(64, Allocator.Persistent);
 triangulator.Input.ConstraintEdges = constraintEdges;
 ```
 
-In the following figure
-one can see the non-constraint triangulation result (with yellow),
-and user-specified constraints (with red).
+In the following figure one can see the non-constrained triangulation result (with yellow), and user-specified constraints (with red).
 
 ![nyan-cat-constraint-disabled](Documentation~/nyan-cat-constraint-disabled.png)
 
-After enabling `Settings.ConstrainEdges = true` and providing the corresponding input, the result of the constraint triangulation fully covers all specified edges by the user 
+After enabling `Settings.ConstrainEdges = true` and providing the corresponding input, the result of the constrained triangulation fully covers all specified edges by the user 
 
 ![nyan-cat-constraint-enabled](Documentation~/nyan-cat-constraint-enabled.png)
 
-### Constraint Delaunay triangulation with mesh refinement
+### Constrained Delaunay triangulation with mesh refinement
 
-Constraint triangulation can be also refined in the same manner as non-constraint one,
+Constrained triangulation can be also refined in the same manner as non-constrained one,
 by enabling corresponding options in triangulation settings:
 
 ```csharp
@@ -168,11 +165,11 @@ triangulator.Settings.RefineMesh = true;
 triangulator.Settings.ConstrainEdges = true;
 ```
 
-In the following figure one can see the non-constraint triangulation result (with yellow), and user-specified constraints (with red) with the refinement.
+In the following figure one can see the non-constrained triangulation result (with yellow), and user-specified constraints (with red) with the refinement.
 
 ![nyan-constraint-refinement-disabled](Documentation~/nyan-constraint-refinement-disabled.png)
 
-After enabling the refinement and the constraint and providing the input, the result of the constraint triangulation fully covers all specified edges by the user and the mesh is refined with the given refinement conditions. 
+After enabling the refinement and the constraint and providing the input, the result of the constrained triangulation fully covers all specified edges by the user and the mesh is refined with the given refinement conditions. 
 
 ![nyan-constraint-refinement-enabled](Documentation~/nyan-constraint-refinement-enabled.png)
 
@@ -186,11 +183,11 @@ settings.RestoreBoundary = true;
 settings.ConstraintEdges = true;
 ```
 
-In the following figure, one can see the constraint triangulation result (with yellow), and user-specified constraints (with red) with the disabled `RestoreBoundary` and refinement enabled.
+In the following figure, one can see the constrained triangulation result (with yellow), and user-specified constraints (with red) with the disabled `RestoreBoundary` and refinement enabled.
 
 ![nyan-reconstruction-disabled](Documentation~/nyan-reconstruction-disabled.png)
 
-After enabling the `RestoreBoundary` the result of the constraint triangulation fully covers all conditions and all invalid triangles are destroyed.
+After enabling the `RestoreBoundary` the result of the constrained triangulation fully covers all conditions and all invalid triangles are destroyed.
 
 ![nyan-reconstruction-enabled](Documentation~/nyan-reconstruction-enabled.png)
 
@@ -235,21 +232,6 @@ Using Burst can provide more or less two order of magnitude faster computation.
 - [`Unity.Mathematics`](https://docs.unity3d.com/Packages/com.unity.mathematics@1.2/manual/index.html)
 - [`Unity.Collections`](https://docs.unity3d.com/Packages/com.unity.collections@1.1/manual/index.html)
 - [`Unity.Jobs`][jobs]
-
-## TODO
-
-- [X] ~~CI/CD setup.~~
-- [X] ~~Add more sophisticated tests.~~
-- [X] ~~Add option of preserving the external edges of input points.~~
-- [X] ~~Refinement for constraint triangulation.~~
-- [X] ~~Optimize Bower-Watson with BFS or DFS walk.~~
-- [ ] Add support for "holes" as well as mesh boundaries.
-- [ ] Use bounding volume (or kd) tree to speed up the computation.
-- [ ] Consider better parallelism.
-- [ ] Do some optimization with respect to SIMD architecture.
-- [ ] Experiment with removing super triangle before refinement.
-- [ ] Support for intersecting input constraint edges.
-- [ ] Use queues for the refinements.
 
 ## Contributors
 
