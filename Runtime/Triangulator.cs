@@ -529,6 +529,11 @@ namespace andywiecko.BurstTriangulator
 
             public void PlantSeed(int tId)
             {
+                if(visitedTriangles[tId])
+                {
+                    return;
+                }
+
                 visitedTriangles[tId] = true;
                 trianglesQueue.Enqueue(tId);
                 badTriangles.Add(tId);

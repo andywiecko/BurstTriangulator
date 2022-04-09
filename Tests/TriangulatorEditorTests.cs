@@ -608,8 +608,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(Positions, Is.EqualTo(managedPositions.Union(new[] { math.float2(0.75f, 0.625f), math.float2(1f, 0.5f) })));
         }
 
-        [Test]
-        public void TriangulationWithHolesWithoutRefinementTest()
+        private static readonly TestCaseData[] triangulationWithHolesWithoutRefinementTestData = new[]
         {
             //   * --------------------- *
             //   |                       |
@@ -621,37 +620,183 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             //   |                       |
             //   |                       |
             //   * --------------------- *
-            //
-            //
-            var managedPositions = new[]
+            new TestCaseData(
+                new[]
+                {
+                    math.float2(0, 0),
+                    math.float2(3, 0),
+                    math.float2(3, 3),
+                    math.float2(0, 3),
+
+                    math.float2(1, 1),
+                    math.float2(2, 1),
+                    math.float2(2, 2),
+                    math.float2(1, 2),
+                },
+                new[]
+                {
+                    0, 1,
+                    1, 2,
+                    2, 3,
+                    3, 0,
+
+                    4, 5,
+                    5, 6,
+                    6, 7,
+                    7, 4
+                },
+                new[] { (float2)1.5f }
+            )
             {
-                math.float2(0, 0),
-                math.float2(3, 0),
-                math.float2(3, 3),
-                math.float2(0, 3),
+                TestName = "Test Case 1",
+                ExpectedResult = new[]
+                {
+                    (1, 0, 5),
+                    (2, 1, 6),
+                    (3, 2, 7),
+                    (4, 0, 7),
+                    (5, 0, 4),
+                    (6, 1, 5),
+                    (7, 0, 3),
+                    (7, 2, 6),
+                }
+            },
 
-                math.float2(1, 1),
-                math.float2(2, 1),
-                math.float2(2, 2),
-                math.float2(1, 2),
-            };
+            new TestCaseData(
+                new[]
+                {
+                    math.float2(0, 0),
+                    math.float2(3, 0),
+                    math.float2(3, 3),
+                    math.float2(0, 3),
 
-            var constraints = new[]
+                    math.float2(1, 1),
+                    math.float2(2, 1),
+                    math.float2(2, 2),
+                    math.float2(1, 2),
+                },
+                new[]
+                {
+                    0, 1,
+                    1, 2,
+                    2, 3,
+                    3, 0,
+
+                    4, 5,
+                    5, 6,
+                    6, 7,
+                    7, 4
+                },
+                new[] { (float2)1.5f, (float2)1.5f }
+            )
             {
-                0, 1,
-                1, 2,
-                2, 3,
-                3, 0,
+                TestName = "Test Case 2 (duplicated hole)",
+                ExpectedResult = new[]
+                {
+                    (1, 0, 5),
+                    (2, 1, 6),
+                    (3, 2, 7),
+                    (4, 0, 7),
+                    (5, 0, 4),
+                    (6, 1, 5),
+                    (7, 0, 3),
+                    (7, 2, 6),
+                }
+            },
 
-                4, 5,
-                5, 6,
-                6, 7,
-                7, 4
-            };
+            new TestCaseData(
+                new[]
+                {
+                    math.float2(0, 0),
+                    math.float2(3, 0),
+                    math.float2(3, 3),
+                    math.float2(0, 3),
 
+                    math.float2(1, 1),
+                    math.float2(2, 1),
+                    math.float2(2, 2),
+                    math.float2(1, 2),
+                },
+                new[]
+                {
+                    0, 1,
+                    1, 2,
+                    2, 3,
+                    3, 0,
+
+                    4, 5,
+                    5, 6,
+                    6, 7,
+                    7, 4
+                },
+                new[] { (float2)1000 }
+            )
+            {
+                TestName = "Test Case 3 (hole out of range)",
+                ExpectedResult = new[]
+                {
+                    (1, 0, 5),
+                    (2, 1, 6),
+                    (3, 2, 7),
+                    (4, 0, 7),
+                    (5, 0, 4),
+                    (5, 4, 6),
+                    (6, 1, 5),
+                    (6, 4, 7),
+                    (7, 0, 3),
+                    (7, 2, 6),
+                }
+            },
+
+            new TestCaseData(
+                new[]
+                {
+                    math.float2(0, 0),
+                    math.float2(3, 0),
+                    math.float2(3, 3),
+                    math.float2(0, 3),
+
+                    math.float2(1, 1),
+                    math.float2(2, 1),
+                    math.float2(2, 2),
+                    math.float2(1, 2),
+                },
+                new[]
+                {
+                    0, 1,
+                    1, 2,
+                    2, 3,
+                    3, 0,
+
+                    4, 5,
+                    5, 6,
+                    6, 7,
+                    7, 4
+                },
+                new[] { math.float2(1.5f + 0.25f, 1.5f), math.float2(1.5f - 0.25f, 1.5f) }
+            )
+            {
+                TestName = "Test Case 4 (hole seeds in the same area)",
+                ExpectedResult = new[]
+                {
+                    (1, 0, 5),
+                    (2, 1, 6),
+                    (3, 2, 7),
+                    (4, 0, 7),
+                    (5, 0, 4),
+                    (6, 1, 5),
+                    (7, 0, 3),
+                    (7, 2, 6),
+                }
+            },
+        };
+
+        [Test, TestCaseSource(nameof(triangulationWithHolesWithoutRefinementTestData))]
+        public (int, int, int)[] TriangulationWithHolesWithoutRefinementTest(float2[] managedPositions, int[] constraints, float2[] holeSeeds)
+        {
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
-            using var holes = new NativeArray<float2>(new[] { (float2)1.5f }, Allocator.Persistent);
+            using var holes = new NativeArray<float2>(holeSeeds, Allocator.Persistent);
 
             var settings = triangulator.Settings;
             settings.ConstrainEdges = true;
@@ -665,18 +810,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            var expectedTriangles = new[]
-            {
-                (1, 0, 5),
-                (2, 1, 6),
-                (3, 2, 7),
-                (4, 0, 7),
-                (5, 0, 4),
-                (6, 1, 5),
-                (7, 0, 3),
-                (7, 2, 6),
-            };
-            Assert.That(Triangles, Is.EqualTo(expectedTriangles));
+            return Triangles;
         }
 
         [Test]
@@ -692,8 +826,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             //   |                       |
             //   |                       |
             //   * --------------------- *
-            //
-            //
             var managedPositions = new[]
             {
                 math.float2(0, 0),
