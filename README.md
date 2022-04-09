@@ -21,6 +21,7 @@ The package provides also constrained triangulation (with mesh refinement) which
     - [Constrained Delaunay triangulation](#constrained-delaunay-triangulation)
     - [Constrained Delaunay triangulation with mesh refinement](#constrained-delaunay-triangulation-with-mesh-refinement)
     - [Support for holes and boundaries](#support-for-holes-and-boundaries)
+    - [Summary](#summary)
     - [Input validation](#input-validation)
   - [Benchmark](#benchmark)
   - [Dependencies](#dependencies)
@@ -202,6 +203,12 @@ settings.ConstraintEdges = true;
 using var holes = new NativeArray<float2>(new[]{ math.float2(0.5f, 0.5f) }, Allocator.Persistent);
 input.HoleSeeds = holes;
 ```
+
+### Summary
+
+Below one can find the comparison of the results of all possible settings which are available in the package.
+
+![summary](Documentation~/summary.png)
 
 ### Input validation
 
