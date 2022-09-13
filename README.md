@@ -4,6 +4,7 @@
 ![logo-dark-mode](Documentation~/burst-triangulator-logo-dark-mode.svg#gh-dark-mode-only)
 
 [![Editor tests](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml/badge.svg)](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml)
+[![openupm](https://img.shields.io/npm/v/com.andywiecko.burst.triangulator?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.andywiecko.burst.triangulator/)
 
 A **single-file** package which provides simple Delaunay triangulation of the given set of points (`float2`) with mesh refinement.
 Implemented triangulation is based on [Bowyer–Watson algorithm][bowyerwatson][^bowyer.1981] [^watson.1981] and refinement on [Ruppert's algorithm][rupperts][^ruppert.1995].
@@ -30,13 +31,50 @@ The package provides also constrained triangulation (with mesh refinement) which
 
 ## Getting started
 
-Install [`Unity.Burst`][burst] and [`Unity.Jobs`][jobs] and then to use the package choose one of the following:
+Install the package using one of the following methods
 
-- Clone or download this repository and then select `package.json` using Package Manager (`Window/Package Manager`).
+<details open>
+<summary> Using scoped registry <b>(recommended)</b> </summary>
+Use OpenUPM CLI or add corresponding entries to the project's <code>manifest.json</code> manually.
+Add or modify scoped registries in the manifest
+<pre>
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com/",
+      "scopes": [
+        "com.andywiecko"
+      ]
+    }
+  ]
+</pre>
+and in the dependencies provide selected version of the package
+<pre>
+"dependencies": {
+    "com.andywiecko.burst.triangulator": "1.3.0",
+    ...
+</pre>
+See Unity docs for more details https://docs.unity3d.com/2021.1/Documentation/Manual/upm-scoped.html
+</details>
 
-- Put the file [`Runtime/Triangulator.cs`](Runtime/Triangulator.cs) somewhere in your project to use this independently.
+<details>
+<summary> <code>git</code> install </summary>
+Use package manager via git install: https://github.com/andywiecko/BurstTriangulator.git.
+</details>
 
-- Use package manager via git install: `https://github.com/andywiecko/BurstTriangulator.git`.
+<details>
+<summary> Manual instalation </summary>
+Clone or download this repository and then select <code>package.json</code> using Package Manager (<code>Window/Package Manager</code>).
+</details>
+
+<details>
+<summary> Copy <code>Runtime/Triangulator.cs</code> </summary>
+Since the package is single-file only, one can put the file <code>Runtime/Triangulator.cs</code> somewhere in the project to use it independently.
+</details>
+
+> **Warning**
+>
+> Some of the methods require installing [`Unity.Burst`][burst] and [`Unity.Jobs`][jobs] first.
 
 ## Example usage
 
