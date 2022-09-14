@@ -72,10 +72,6 @@ Clone or download this repository and then select <code>package.json</code> usin
 Since the package is single-file only, one can put the file <code>Runtime/Triangulator.cs</code> somewhere in the project to use it independently.
 </details>
 
-> **Warning**
->
-> Some of the methods require installing [`Unity.Burst`][burst] and [`Unity.Jobs`][jobs] first.
-
 ## Example usage
 
 Below one can find example usage of the `Triangulator` with input set as four
