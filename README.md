@@ -24,6 +24,7 @@ The package provides also constrained triangulation (with mesh refinement) which
     - [Support for holes and boundaries](#support-for-holes-and-boundaries)
     - [Summary](#summary)
     - [Input validation](#input-validation)
+    - [Generating input in a job](#generating-input-in-a-job)
   - [Benchmark](#benchmark)
   - [Dependencies](#dependencies)
   - [Contributors](#contributors)
@@ -121,8 +122,10 @@ settings.ValidateInput = true;
 
 Below one can find the result of the triangulation for different selected options.
 
-**Note:** to obtain the boundary from a texture, the `UnityEngine.PolygonCollider` was used.
-Generating the image boundary is certainly a separate task and is not considered in the project.
+> **Note** 
+> 
+> To obtain the boundary from a texture, the `UnityEngine.PolygonCollider` was used.
+> Generating the image boundary is certainly a separate task and is not considered in the project.
 
 ### Delaunay triangulation
 
@@ -257,7 +260,33 @@ Input positions, as well as input constraints, have a few restrictions:
 - Zero-length constraint edges are forbidden.
 - Constraint edges cannot intersect with points other than the points for which they are defined.
 
-**Note:** validation is limited only for Editor.
+> **Note** 
+> 
+> Validation is limited only for Editor!
+
+### Generating input in a job
+
+`BurstTriangulation` input can be generated with job pipeline. One has to use `DeferredJobArrays`, see the example snippet:
+
+```csharp
+using var positions = new NativeList<float2>(64, Allocator.Persistent);
+using var constraints = new NativeList<int>(64, Allocator.Persistent);
+using var holes = new NativeList<float2>(64, Allocator.Persistent);
+using var triangulator = new Triangulator(64, Allocator.Persistent)
+{
+  Input = 
+  {
+    Positions = positions.AsDeferredJobArray(),
+    ConstraintEdges = constraints.AsDeferredJobArray(),
+    HoleSeeds = holes.AsDeferredJobArray()
+  }
+}
+
+var dependencies = new JobHandle();
+dependencies = new GenerateInputJob(positions, constraints, holes).Schedule(dependencies); // Lists are fed here.
+dependencies = triangulator.Schedule(dependencies);
+dependencies.Complete();
+```
 
 ## Benchmark
 

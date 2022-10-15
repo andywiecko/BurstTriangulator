@@ -1,7 +1,9 @@
 using NUnit.Framework;
 using System;
 using System.Linq;
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
@@ -894,6 +896,124 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(0, 1.5f),
                 math.float2(1.5f, 3f)
             })));
+        }
+
+        [BurstCompile]
+        private struct DeferredArraySupportInputJob : IJob
+        {
+            public NativeList<float2> positions;
+            public NativeList<int> constraints;
+            public NativeList<float2> holes;
+
+            //   * --------------------- *
+            //   |                       |
+            //   |                       |
+            //   |       * ----- *       |
+            //   |       |   X   |       |
+            //   |       |       |       |
+            //   |       * ----- *       |
+            //   |                       |
+            //   |                       |
+            //   * --------------------- *
+            public void Execute()
+            {
+                positions.Clear();
+                positions.Add(math.float2(0, 0));
+                positions.Add(math.float2(3, 0));
+                positions.Add(math.float2(3, 3));
+                positions.Add(math.float2(0, 3));
+                positions.Add(math.float2(1, 1));
+                positions.Add(math.float2(2, 1));
+                positions.Add(math.float2(2, 2));
+                positions.Add(math.float2(1, 2));
+
+                constraints.Clear();
+                constraints.Add(0); constraints.Add(1);
+                constraints.Add(1); constraints.Add(2);
+                constraints.Add(2); constraints.Add(3);
+                constraints.Add(3); constraints.Add(0);
+                constraints.Add(4); constraints.Add(5);
+                constraints.Add(5); constraints.Add(6);
+                constraints.Add(6); constraints.Add(7);
+                constraints.Add(7); constraints.Add(4);
+
+                holes.Clear();
+                holes.Add(1.5f);
+            }
+        }
+
+        [Test]
+        public void DeferredArraySupportTest()
+        {
+            using var positions = new NativeList<float2>(64, Allocator.Persistent);
+            using var constraints = new NativeList<int>(64, Allocator.Persistent);
+            using var holes = new NativeList<float2>(64, Allocator.Persistent);
+            using var triangulator = new Triangulator(64, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    ConstrainEdges = true,
+                    RefineMesh = true,
+                    RestoreBoundary = true,
+                    MinimumArea = 0.5f,
+                    MaximumArea = 1.0f
+                },
+                Input =
+                {
+                    Positions = positions.AsDeferredJobArray(),
+                    ConstraintEdges = constraints.AsDeferredJobArray(),
+                    HoleSeeds = holes.AsDeferredJobArray()
+                }
+            };
+
+            var dependencies = new JobHandle();
+            dependencies = new DeferredArraySupportInputJob
+            {
+                positions = positions,
+                constraints = constraints,
+                holes = holes
+            }.Schedule(dependencies);
+            dependencies = triangulator.Schedule(dependencies);
+            dependencies.Complete();
+
+            var expectedTriangles = new[]
+            {
+                (4, 0, 10),
+                (5, 1, 8),
+                (6, 2, 9),
+                (7, 3, 11),
+                (7, 4, 10),
+                (8, 0, 4),
+                (8, 4, 5),
+                (9, 1, 5),
+                (9, 5, 6),
+                (10, 3, 7),
+                (11, 2, 6),
+                (11, 6, 7),
+            };
+            Assert.That(triangulator.Output.Triangles.ToTrisTuple(), Is.EqualTo(expectedTriangles));
+        }
+
+        [Test, Obsolete]
+        public void ObsoleteScheduleSupportTest()
+        {
+            using var positions = new NativeArray<float2>(new float2[] { new(0), new(1, 0), new(1) }, Allocator.Persistent);
+            using var triangulator = new Triangulator(64, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    ConstrainEdges = false,
+                    RefineMesh = false,
+                    RestoreBoundary = false,
+                },
+                Input = { Positions = positions }
+            };
+
+            triangulator.Schedule(positions.AsReadOnly(), default).Complete();
+
+            Assert.That(triangulator.Output.Triangles, Has.Length.EqualTo(3));
         }
     }
 }
