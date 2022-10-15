@@ -724,15 +724,17 @@ namespace andywiecko.BurstTriangulator
 
         public void Run() => Schedule().Complete();
 
-        public JobHandle Schedule(JobHandle dependencies = default)
+        [Obsolete("Use this.Input to provide data and Schedule(JobHandle) or Run() to collect the result.")]
+        public JobHandle Schedule(NativeArray<float2>.ReadOnly positions, JobHandle dependencies = default)
         {
-#pragma warning disable CS0618
-            return Schedule(Input.Positions.AsReadOnly(), dependencies);
-#pragma warning restore CS0618 
+            var array = new NativeArray<float2>(positions.ToArray(), Allocator.TempJob);
+            Input.Positions = array;
+            dependencies = Schedule(dependencies);
+            dependencies = array.Dispose(dependencies);
+            return dependencies;
         }
 
-        [Obsolete("Use this.Input to provide data and Schedule(JobHandle) or Run() to collect the result.")]
-        public JobHandle Schedule(NativeArray<float2>.ReadOnly positions, JobHandle dependencies)
+        public JobHandle Schedule(JobHandle dependencies = default)
         {
             if (Settings.ValidateInput)
             {
@@ -740,8 +742,8 @@ namespace andywiecko.BurstTriangulator
             }
 
             dependencies = new ClearDataJob(this).Schedule(dependencies);
-            dependencies = new RegisterSuperTriangleJob(this, positions).Schedule(dependencies);
-            dependencies = new DelaunayTriangulationJob(this, positions).Schedule(dependencies);
+            dependencies = new RegisterSuperTriangleJob(this).Schedule(dependencies);
+            dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
 
             if (Settings.ConstrainEdges)
             {
@@ -834,12 +836,13 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct ValidateInputPositionsJob : IJob
         {
-            private NativeArray<float2>.ReadOnly positions;
+            [ReadOnly]
+            private NativeArray<float2> positions;
             private NativeReference<bool> isValidRef;
 
             public ValidateInputPositionsJob(Triangulator triangulator, NativeReference<bool> isValid)
             {
-                positions = triangulator.Input.Positions.AsReadOnly();
+                positions = triangulator.Input.Positions;
                 isValidRef = isValid;
             }
 
@@ -900,12 +903,13 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct RegisterSuperTriangleJob : IJob
         {
-            private NativeArray<float2>.ReadOnly inputPositions;
+            [ReadOnly]
+            private NativeArray<float2> inputPositions;
             private TriangulatorNativeData data;
 
-            public RegisterSuperTriangleJob(Triangulator triangulator, NativeArray<float2>.ReadOnly inputPositions)
+            public RegisterSuperTriangleJob(Triangulator triangulator)
             {
-                this.inputPositions = inputPositions;
+                inputPositions = triangulator.Input.Positions;
                 data = triangulator.data;
             }
 
@@ -942,12 +946,13 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct DelaunayTriangulationJob : IJob
         {
-            private NativeArray<float2>.ReadOnly inputPositions;
+            [ReadOnly]
+            private NativeArray<float2> inputPositions;
             private TriangulatorNativeData data;
 
-            public DelaunayTriangulationJob(Triangulator triangluator, NativeArray<float2>.ReadOnly inputPositions)
+            public DelaunayTriangulationJob(Triangulator triangluator)
             {
-                this.inputPositions = inputPositions;
+                inputPositions = triangluator.Input.Positions;
                 data = triangluator.data;
             }
 
@@ -963,14 +968,16 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct ValidateInputConstraintEdges : IJob
         {
-            private NativeArray<int>.ReadOnly constraints;
-            private NativeArray<float2>.ReadOnly positions;
+            [ReadOnly]
+            private NativeArray<int> constraints;
+            [ReadOnly]
+            private NativeArray<float2> positions;
             private NativeReference<bool> isValidRef;
 
             public ValidateInputConstraintEdges(Triangulator triangulator, NativeReference<bool> isValid)
             {
-                constraints = triangulator.Input.ConstraintEdges.AsReadOnly();
-                positions = triangulator.Input.Positions.AsReadOnly();
+                constraints = triangulator.Input.ConstraintEdges;
+                positions = triangulator.Input.Positions;
                 isValidRef = isValid;
             }
 
@@ -1115,12 +1122,13 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct ResizeEdgeConstraintsJob : IJob
         {
-            private NativeArray<int>.ReadOnly inputConstraintEdges;
+            [ReadOnly]
+            private NativeArray<int> inputConstraintEdges;
             private NativeList<Edge> constraintEdges;
 
             public ResizeEdgeConstraintsJob(Triangulator triangulator)
             {
-                inputConstraintEdges = triangulator.Input.ConstraintEdges.AsReadOnly();
+                inputConstraintEdges = triangulator.Input.ConstraintEdges;
                 constraintEdges = triangulator.data.constraintEdges;
             }
 
@@ -1133,12 +1141,13 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct ConstructConstraintEdgesJob : IJobParallelForDefer
         {
-            private NativeArray<int>.ReadOnly inputConstraintEdges;
+            [ReadOnly]
+            private NativeArray<int> inputConstraintEdges;
             private NativeArray<Edge> constraintEdges;
 
             public ConstructConstraintEdgesJob(Triangulator triangulator)
             {
-                inputConstraintEdges = triangulator.Input.ConstraintEdges.AsReadOnly();
+                inputConstraintEdges = triangulator.Input.ConstraintEdges;
                 constraintEdges = triangulator.data.constraintEdges.AsDeferredJobArray();
             }
 
@@ -1427,10 +1436,11 @@ namespace andywiecko.BurstTriangulator
 
         private readonly struct PlantHoles : IPlantingSeedJobMode
         {
-            private readonly NativeArray<float2>.ReadOnly seeds;
-            public PlantHoles(NativeArray<float2> seeds) => this.seeds = seeds.AsReadOnly();
+            [ReadOnly]
+            private readonly NativeArray<float2> seeds;
+            public PlantHoles(NativeArray<float2> seeds) => this.seeds = seeds;
 
-            public static void PlantHoleSeedsStatic(TriangulatorNativeData data, NativeArray<float2>.ReadOnly seeds)
+            public static void PlantHoleSeedsStatic(TriangulatorNativeData data, NativeArray<float2> seeds)
             {
                 foreach (var s in seeds)
                 {
@@ -1464,8 +1474,9 @@ namespace andywiecko.BurstTriangulator
 
         private readonly struct PlantBoundaryAndHoles : IPlantingSeedJobMode
         {
-            private readonly NativeArray<float2>.ReadOnly seeds;
-            public PlantBoundaryAndHoles(NativeArray<float2> seeds) => this.seeds = seeds.AsReadOnly();
+            [ReadOnly]
+            private readonly NativeArray<float2> seeds;
+            public PlantBoundaryAndHoles(NativeArray<float2> seeds) => this.seeds = seeds;
             public void PlantBoundarySeed(TriangulatorNativeData data) => PlantBoundary.PlantBoundarySeedStatic(data);
             public void PlantHoleSeeds(TriangulatorNativeData data) => PlantHoles.PlantHoleSeedsStatic(data, seeds);
         }
