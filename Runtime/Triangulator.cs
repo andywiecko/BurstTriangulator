@@ -806,7 +806,8 @@ namespace andywiecko.BurstTriangulator
                     $"2. Edges mustn't be duplicated, e.g. (a0, a1), (a1, a0) cannot be present.\n" +
                     $"3. Edges mustn't intersect point other than two points which they are defined.\n" +
                     $"4. Edges cannot be zero length, i.e. (a0, a0) is forbiden.\n" +
-                    $"5. Constraint input buffer must contain even number of elements."
+                    $"5. Constraint input buffer must contain even number of elements.\n" + 
+                    $"6. Constraints must be in range of Input.Positions."
                 );
             }
         }
@@ -993,12 +994,26 @@ namespace andywiecko.BurstTriangulator
 
                 for (int i = 0; i < constraints.Length / 2; i++)
                 {
-                    if (!EdgeValidation(i) ||
+                    if (!EdgePositionsRangeValidation(i) ||
+                        !EdgeValidation(i) ||
                         !EdgePointValidation(i) ||
                         !EdgeEdgeValidation(i))
                     {
                         return false;
                     }
+                }
+
+                return true;
+            }
+
+            private bool EdgePositionsRangeValidation(int i)
+            {
+                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                var count = positions.Length;
+                if(a0Id >= count || a0Id < 0 || a1Id >= count || a1Id < 0)
+                {
+                    UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
+                    return false;
                 }
 
                 return true;
@@ -1010,8 +1025,9 @@ namespace andywiecko.BurstTriangulator
                 if (a0Id == a1Id)
                 {
                     UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] is length zero!");
+                    return false;
                 }
-                return a0Id != a1Id;
+                return true;
             }
 
             private bool EdgePointValidation(int i)
