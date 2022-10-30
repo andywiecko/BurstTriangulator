@@ -1501,13 +1501,14 @@ namespace andywiecko.BurstTriangulator
         private struct PlantingSeedsJob<T> : IJob where T : struct, IPlantingSeedJobMode
         {
             private TriangulatorNativeData data;
-            private readonly int initialPointsCount;
+            [ReadOnly]
+            private NativeArray<float2> positions;
             private readonly T mode;
 
             public PlantingSeedsJob(Triangulator triangulator, T mode)
             {
                 data = triangulator.data;
-                initialPointsCount = triangulator.Input.Positions.Length;
+                positions = triangulator.Input.Positions;
                 this.mode = mode;
             }
 
@@ -1516,7 +1517,7 @@ namespace andywiecko.BurstTriangulator
                 data.InitializePlantingSeeds();
                 mode.PlantBoundarySeed(data);
                 mode.PlantHoleSeeds(data);
-                data.GeneratePotentialPointsToRemove(initialPointsCount);
+                data.GeneratePotentialPointsToRemove(initialPointsCount: positions.Length);
                 data.FinalizePlantingSeeds();
                 data.GeneratePointsToRemove();
                 data.GeneratePointsOffset();
