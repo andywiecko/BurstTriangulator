@@ -997,7 +997,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = true,
                     RestoreBoundary = true,
                     MinimumArea = 0.5f,
-                    MaximumArea = 1.0f
+                    MaximumArea = 1.0f,
                 },
                 Input =
                 {
@@ -1054,6 +1054,141 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Schedule(positions.AsReadOnly(), default).Complete();
 
             Assert.That(triangulator.Output.Triangles, Has.Length.EqualTo(3));
+        }
+
+        [Test]
+        public void LocalTransformationTest()
+        {
+            float2[] points = { new(0, -1), new(1, 0), new(0, 1), new(-1, 0) };
+            points = points.Select(i => 2 * i + 1).ToArray();
+
+            points = points.Select(i => 0.001f * i + 99f).ToArray();
+
+            using var positions = new NativeArray<float2>(points, Allocator.Persistent);
+            using var triangulator = new Triangulator(64, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    ConstrainEdges = false,
+                    RefineMesh = false,
+                    RestoreBoundary = false,
+                },
+                Input = { Positions = positions }
+            };
+
+            triangulator.Settings.UseLocalTransformation = false;
+            triangulator.Run();
+            var nonLocalTriangles = triangulator.Output.Triangles.ToTrisTuple();
+
+            triangulator.Settings.UseLocalTransformation = true;
+            triangulator.Run();
+            var localTriangles = triangulator.Output.Triangles.ToTrisTuple();
+
+            Assert.That(nonLocalTriangles, Is.Empty);
+            Assert.That(localTriangles, Is.EqualTo(new[] { (1, 0, 3), (2, 1, 3) }));
+        }
+
+        [Test]
+        public void LocalTransformationWithRefinementTest()
+        {
+            var n = 20;
+            var managedPositions = Enumerable.Range(0, n)
+                .Select(i => math.float2(
+                 x: math.cos(2 * math.PI * i / n),
+                 y: math.sin(2 * math.PI * i / n))).ToArray();
+            managedPositions = new float2[] { 0 }.Concat(managedPositions).ToArray();
+            managedPositions = managedPositions.Select(x => 0.1f * x + 5f).ToArray();
+
+            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
+            using var triangulator = new Triangulator(1024, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    ConstrainEdges = false,
+                    RefineMesh = true,
+                    RestoreBoundary = false,
+                    MinimumArea = 0.001f,
+                    MaximumArea = 0.010f,
+                },
+                Input =
+                {
+                    Positions = positions,
+                }
+            };
+
+            triangulator.Settings.UseLocalTransformation = false;
+            triangulator.Run();
+            var nonLocalTriangles = triangulator.Output.Triangles.ToTrisTuple();
+
+            triangulator.Settings.UseLocalTransformation = true;
+            triangulator.Run();
+            var localTriangles = triangulator.Output.Triangles.ToTrisTuple();
+
+            Assert.That(localTriangles, Is.EqualTo(nonLocalTriangles));
+            Assert.That(localTriangles, Has.Length.EqualTo(36));
+        }
+
+        [Test]
+        public void LocalTransformationWithHolesTest()
+        {
+            var n = 12;
+            var innerCircle = Enumerable
+                .Range(0, n)
+                .Select(i => math.float2(
+                    x: 0.75f * math.cos(2 * math.PI * i / n),
+                    y: 0.75f * math.sin(2 * math.PI * i / n)))
+                .ToArray();
+
+            var outerCircle = Enumerable
+                .Range(0, n)
+                .Select(i => math.float2(
+                    x: 1.5f * math.cos(2 * math.PI * (i + 0.5f) / n),
+                    y: 1.5f * math.sin(2 * math.PI * (i + 0.5f) / n)))
+                .ToArray();
+
+            var managedPositions = new float2[] { 0 }.Concat(outerCircle).Concat(innerCircle).ToArray();
+            managedPositions = managedPositions.Select(x => 0.1f * x + 5f).ToArray();
+
+            var constraints = Enumerable
+                .Range(1, n - 1)
+                .SelectMany(i => new[] { i, i + 1 })
+                .Concat(new[] { n, 1 })
+                .Concat(Enumerable.Range(n + 1, n - 1).SelectMany(i => new[] { i, i + 1 }))
+                .Concat(new[] { 2 * n, n + 1 })
+                .ToArray();
+
+            using var holes = new NativeArray<float2>(new float2[] { 5 }, Allocator.Persistent);
+            using var edges = new NativeArray<int>(constraints, Allocator.Persistent);
+            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
+            using var triangulator = new Triangulator(1024, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    ConstrainEdges = true,
+                    RefineMesh = false,
+                    RestoreBoundary = true,
+                },
+                Input =
+                {
+                    Positions = positions,
+                    ConstraintEdges = edges,
+                    HoleSeeds = holes,
+                }
+            };
+
+            triangulator.Settings.UseLocalTransformation = false;
+            triangulator.Run();
+            var nonLocalTriangles = triangulator.Output.Triangles.ToTrisTuple();
+
+            triangulator.Settings.UseLocalTransformation = true;
+            triangulator.Run();
+            var localTriangles = triangulator.Output.Triangles.ToTrisTuple();
+
+            Assert.That(localTriangles, Is.EqualTo(nonLocalTriangles));
+            Assert.That(localTriangles, Has.Length.EqualTo(24));
         }
     }
 }

@@ -680,6 +680,11 @@ namespace andywiecko.BurstTriangulator
             /// </summary>
             [field: SerializeField]
             public bool RestoreBoundary { get; set; } = false;
+            /// <summary>
+            /// Transforms <see cref="Triangulator.Input"/> to local coordinate system using "center of mass".
+            /// </summary>
+            [field: SerializeField]
+            public bool UseLocalTransformation { get; set; } = false;
         }
 
         public class InputData
@@ -713,14 +718,33 @@ namespace andywiecko.BurstTriangulator
         private static readonly Triangle SuperTriangle = new Triangle(0, 1, 2);
         private TriangulatorNativeData data;
 
+        // Note: Cannot hide them in the `data` due to Unity.Jobs safty restrictions
+        private NativeArray<float2> tmpInputPositions;
+        private NativeArray<float2> tmpInputHoleSeeds;
+        private NativeList<float2> localPositions;
+        private NativeList<float2> localHoleSeeds;
+        private NativeReference<float2> com;
+        private NativeReference<float> scale;
+
         public Triangulator(int capacity, Allocator allocator)
         {
             data = new TriangulatorNativeData(capacity, allocator);
+            localPositions = new NativeList<float2>(capacity, allocator);
+            localHoleSeeds = new NativeList<float2>(capacity, allocator);
+            com = new NativeReference<float2>(allocator);
+            scale = new NativeReference<float>(1, allocator);
             Output = new OutputData(this);
         }
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
 
-        public void Dispose() => data.Dispose();
+        public void Dispose()
+        {
+            data.Dispose();
+            localPositions.Dispose();
+            localHoleSeeds.Dispose();
+            com.Dispose();
+            scale.Dispose();
+        }
 
         public void Run() => Schedule().Complete();
 
@@ -742,6 +766,12 @@ namespace andywiecko.BurstTriangulator
             }
 
             dependencies = new ClearDataJob(this).Schedule(dependencies);
+
+            if (Settings.UseLocalTransformation)
+            {
+                dependencies = ScheduleWorldToLocalTransformation(dependencies);
+            }
+
             dependencies = new RegisterSuperTriangleJob(this).Schedule(dependencies);
             dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
 
@@ -773,6 +803,11 @@ namespace andywiecko.BurstTriangulator
 
             dependencies = new CleanupTrianglesJob(this).Schedule(this, dependencies);
             dependencies = new CleanupPositionsJob(this).Schedule(dependencies);
+
+            if (Settings.UseLocalTransformation)
+            {
+                dependencies = ScheduleLocalToWorldTransformation(dependencies);
+            }
 
             return dependencies;
         }
@@ -811,6 +846,43 @@ namespace andywiecko.BurstTriangulator
                 );
             }
         }
+
+        private JobHandle ScheduleWorldToLocalTransformation(JobHandle dependencies)
+        {
+            tmpInputPositions = Input.Positions;
+            Input.Positions = localPositions.AsDeferredJobArray();
+            if (Input.HoleSeeds.IsCreated)
+            {
+                tmpInputHoleSeeds = Input.HoleSeeds;
+                Input.HoleSeeds = localHoleSeeds.AsDeferredJobArray();
+            }
+
+            dependencies = new InitialLocalTransformationJob(this).Schedule(dependencies);
+            if (tmpInputHoleSeeds.IsCreated)
+            {
+                dependencies = new CalculateLocalHoleSeedsJob(this).Schedule(dependencies);
+            }
+            dependencies = new CalculateLocalPositionsJob(this).Schedule(this, dependencies);
+
+            return dependencies;
+        }
+
+        private JobHandle ScheduleLocalToWorldTransformation(JobHandle dependencies)
+        {
+            dependencies = new LocalToWorldTransformationJob(this).Schedule(this, dependencies);
+
+            Input.Positions = tmpInputPositions;
+            tmpInputPositions = default;
+
+            if (tmpInputHoleSeeds.IsCreated)
+            {
+                Input.HoleSeeds = tmpInputHoleSeeds;
+                tmpInputHoleSeeds = default;
+            }
+
+            return dependencies;
+        }
+
 
         private JobHandle ScheduleConstrainEdges(JobHandle dependencies)
         {
@@ -891,14 +963,148 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
+        private struct InitialLocalTransformationJob : IJob
+        {
+            [ReadOnly]
+            private NativeArray<float2> positions;
+            private NativeReference<float2> comRef;
+            private NativeReference<float> scaleRef;
+            private NativeList<float2> localPositions;
+
+            public InitialLocalTransformationJob(Triangulator triangulator)
+            {
+                positions = triangulator.tmpInputPositions;
+                comRef = triangulator.com;
+                scaleRef = triangulator.scale;
+                localPositions = triangulator.localPositions;
+            }
+
+            public void Execute()
+            {
+                float2 min = 0, max = 0, com = 0;
+                foreach (var p in positions)
+                {
+                    min = math.min(p, min);
+                    max = math.max(p, max);
+                    com += p;
+                }
+
+                com /= positions.Length;
+                comRef.Value = com;
+                scaleRef.Value = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
+
+                localPositions.Resize(positions.Length, NativeArrayOptions.UninitializedMemory);
+            }
+        }
+
+        [BurstCompile]
+        private struct CalculateLocalHoleSeedsJob : IJob
+        {
+            [ReadOnly]
+            private NativeArray<float2> holeSeeds;
+            private NativeList<float2> localHoleSeeds;
+            private NativeReference<float2>.ReadOnly comRef;
+            private NativeReference<float>.ReadOnly scaleRef;
+
+            public CalculateLocalHoleSeedsJob(Triangulator triangulator)
+            {
+                holeSeeds = triangulator.tmpInputHoleSeeds;
+                localHoleSeeds = triangulator.localHoleSeeds;
+                comRef = triangulator.com.AsReadOnly();
+                scaleRef = triangulator.scale.AsReadOnly();
+            }
+
+            public void Execute()
+            {
+                var com = comRef.Value;
+                var s = scaleRef.Value;
+
+                localHoleSeeds.Resize(holeSeeds.Length, NativeArrayOptions.UninitializedMemory);
+                for (int i = 0; i < holeSeeds.Length; i++)
+                {
+                    localHoleSeeds[i] = s * (holeSeeds[i] - com);
+                }
+            }
+        }
+
+        [BurstCompile]
+        private struct CalculateLocalPositionsJob : IJobParallelForDefer
+        {
+            private NativeReference<float2>.ReadOnly comRef;
+            private NativeReference<float>.ReadOnly scaleRef;
+            private NativeArray<float2> localPositions;
+            [ReadOnly]
+            private NativeArray<float2> positions;
+
+            public CalculateLocalPositionsJob(Triangulator triangulator)
+            {
+                comRef = triangulator.com.AsReadOnly();
+                scaleRef = triangulator.scale.AsReadOnly();
+                localPositions = triangulator.localPositions.AsDeferredJobArray();
+                positions = triangulator.tmpInputPositions;
+            }
+
+            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
+            {
+                return this.Schedule(triangulator.localPositions, triangulator.Settings.BatchCount, dependencies);
+            }
+
+            public void Execute(int i)
+            {
+                var p = positions[i];
+                var com = comRef.Value;
+                var s = scaleRef.Value;
+                localPositions[i] = s * (p - com);
+            }
+        }
+
+        [BurstCompile]
+        private struct LocalToWorldTransformationJob : IJobParallelForDefer
+        {
+            private NativeArray<float2> positions;
+            private NativeReference<float2>.ReadOnly comRef;
+            private NativeReference<float>.ReadOnly scaleRef;
+
+            public LocalToWorldTransformationJob(Triangulator triangulator)
+            {
+                positions = triangulator.Output.Positions.AsDeferredJobArray();
+                comRef = triangulator.com.AsReadOnly();
+                scaleRef = triangulator.scale.AsReadOnly();
+            }
+
+            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
+            {
+                return this.Schedule(triangulator.Output.Positions, triangulator.Settings.BatchCount, dependencies);
+            }
+
+            public void Execute(int i)
+            {
+                var p = positions[i];
+                var com = comRef.Value;
+                var s = scaleRef.Value;
+                positions[i] = p / s + com;
+            }
+        }
+
+        [BurstCompile]
         private struct ClearDataJob : IJob
         {
             private TriangulatorNativeData data;
+            private NativeReference<float> scaleRef;
+            private NativeReference<float2> comRef;
+
             public ClearDataJob(Triangulator triangulator)
             {
                 data = triangulator.data;
+                scaleRef = triangulator.scale;
+                comRef = triangulator.com;
             }
-            public void Execute() => data.Clear();
+            public void Execute()
+            {
+                data.Clear();
+                scaleRef.Value = 1;
+                comRef.Value = 0;
+            }
         }
 
         [BurstCompile]
@@ -1356,6 +1562,7 @@ namespace andywiecko.BurstTriangulator
             private readonly float minimumArea2;
             private readonly float maximumArea2;
             private readonly float minimumAngle;
+            private NativeReference<float>.ReadOnly scaleRef;
             private readonly T mode;
 
             public RefineMeshJob(Triangulator triangulator)
@@ -1364,6 +1571,7 @@ namespace andywiecko.BurstTriangulator
                 minimumArea2 = 2 * triangulator.Settings.MinimumArea;
                 maximumArea2 = 2 * triangulator.Settings.MaximumArea;
                 minimumAngle = triangulator.Settings.MinimumAngle;
+                scaleRef = triangulator.scale.AsReadOnly();
                 mode = default;
             }
 
@@ -1396,10 +1604,11 @@ namespace andywiecko.BurstTriangulator
 
             private bool AnyEdgeTriangleAreaIsTooSmall(Edge edge)
             {
+                var s = scaleRef.Value;
                 foreach (var tId in data.edgesToTriangles[edge])
                 {
                     var area2 = data.triangles[tId].GetArea2(data.outputPositions);
-                    if (area2 < minimumArea2)
+                    if (area2 < minimumArea2 * s * s)
                     {
                         return true;
                     }
@@ -1409,11 +1618,12 @@ namespace andywiecko.BurstTriangulator
 
             private bool TryRemoveBadTriangle()
             {
+                var s = scaleRef.Value;
                 for (int tId = 0; tId < data.triangles.Length; tId++)
                 {
                     var triangle = data.triangles[tId];
                     if (!SuperTriangle.ContainsCommonPointWith(triangle) && !data.TriangleIsEncroached(tId) &&
-                        data.TriangleIsBad(triangle, minimumArea2, maximumArea2, minimumAngle))
+                        data.TriangleIsBad(triangle, minimumArea2 * s * s, maximumArea2 * s * s, minimumAngle))
                     {
                         var circle = data.circles[tId];
                         mode.InsertPointAtTriangleCircumcenter(circle.Center, tId, data);

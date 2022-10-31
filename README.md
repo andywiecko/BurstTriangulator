@@ -25,6 +25,7 @@ The package provides also constrained triangulation (with mesh refinement) which
     - [Summary](#summary)
     - [Input validation](#input-validation)
     - [Generating input in a job](#generating-input-in-a-job)
+    - [Reduce the effect of roundoff error](#reduce-the-effect-of-roundoff-error)
   - [Benchmark](#benchmark)
   - [Dependencies](#dependencies)
   - [Contributors](#contributors)
@@ -118,12 +119,14 @@ settings.RefineMesh = true;
 settings.ConstrainEdges = false;
 // If true and provided Triangulator.Input is not valid, it will throw an exception.
 settings.ValidateInput = true;
+// If true provided point positions and hole seeds are transformed into [-1, 1] box using "center of mass".
+settings.UseLocalTransformation = false;
 ```
 
 Below one can find the result of the triangulation for different selected options.
 
-> **Note** 
-> 
+> **Note**
+>
 > To obtain the boundary from a texture, the `UnityEngine.PolygonCollider` was used.
 > Generating the image boundary is certainly a separate task and is not considered in the project.
 
@@ -189,7 +192,7 @@ In the following figure one can see the non-constrained triangulation result (wi
 
 ![nyan-cat-constraint-disabled](Documentation~/nyan-cat-constraint-disabled.png)
 
-After enabling `Settings.ConstrainEdges = true` and providing the corresponding input, the result of the constrained triangulation fully covers all specified edges by the user 
+After enabling `Settings.ConstrainEdges = true` and providing the corresponding input, the result of the constrained triangulation fully covers all specified edges by the user
 
 ![nyan-cat-constraint-enabled](Documentation~/nyan-cat-constraint-enabled.png)
 
@@ -207,7 +210,7 @@ In the following figure one can see the non-constrained triangulation result (wi
 
 ![nyan-constraint-refinement-disabled](Documentation~/nyan-constraint-refinement-disabled.png)
 
-After enabling the refinement and the constraint and providing the input, the result of the constrained triangulation fully covers all specified edges by the user and the mesh is refined with the given refinement conditions. 
+After enabling the refinement and the constraint and providing the input, the result of the constrained triangulation fully covers all specified edges by the user and the mesh is refined with the given refinement conditions.
 
 ![nyan-constraint-refinement-enabled](Documentation~/nyan-constraint-refinement-enabled.png)
 
@@ -229,7 +232,7 @@ After enabling the `RestoreBoundary` the result of the constrained triangulation
 
 ![nyan-reconstruction-enabled](Documentation~/nyan-reconstruction-enabled.png)
 
-The package provides also an option for creating holes. 
+The package provides also an option for creating holes.
 Except for setting the `ConstraintEdges`, a user needs to provide positions of the holes in the same space as the `Input.Positions`.
 Enabling `RestoringBoundary` option is not mandatory, holes could be introduced independently of preserving the boundaries
 
@@ -260,8 +263,8 @@ Input positions, as well as input constraints, have a few restrictions:
 - Zero-length constraint edges are forbidden.
 - Constraint edges cannot intersect with points other than the points for which they are defined.
 
-> **Note** 
-> 
+> **Note**
+>
 > Validation is limited only for Editor!
 
 ### Generating input in a job
@@ -287,6 +290,13 @@ dependencies = new GenerateInputJob(positions, constraints, holes).Schedule(depe
 dependencies = triangulator.Schedule(dependencies);
 dependencies.Complete();
 ```
+
+### Reduce the effect of roundoff error
+
+`BurstTriangulator` has a built-in option for transforming input positions (as well as holes) into normalized local space, i.e. [-1, 1] box.
+To enable it use `Settings.UseLocalTransformation = true`.
+Converting points into normalized local space could increase numerical accuracy.
+The option is disabled by default.
 
 ## Benchmark
 
