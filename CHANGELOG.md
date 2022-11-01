@@ -1,5 +1,17 @@
 # Change log
 
+## [1.4.0] - 2022-11-01
+
+### Features
+
+- Added option for transforming input positions (as well as holes) into normalized local space, i.e. [-1, 1] box. Converting points into normalized local space could increase numerical accuracy.
+
+### Fixes
+
+- Fix deferred array support in triangulator input.
+- Add missing constraint position range validation.
+- Fix whitespaces in code and `README.md`.
+
 ## [1.3.0] - 2022-04-09
 
 ### Features
