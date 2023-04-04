@@ -685,6 +685,12 @@ namespace andywiecko.BurstTriangulator
             /// </summary>
             [field: SerializeField]
             public bool UseLocalTransformation { get; set; } = false;
+            /// <summary>
+            /// Max iteration count during Sloan's algorithm (constraining edges). 
+            /// <b>Modify this only if you know what you are doing.</b>
+            /// </summary>
+            [field: SerializeField]
+            public int SloanMaxIters = 1_000_000;
         }
 
         public class InputData
@@ -840,7 +846,7 @@ namespace andywiecko.BurstTriangulator
                     $"1. Edges mustn't intersect.\n" +
                     $"2. Edges mustn't be duplicated, e.g. (a0, a1), (a1, a0) cannot be present.\n" +
                     $"3. Edges mustn't intersect point other than two points which they are defined.\n" +
-                    $"4. Edges cannot be zero length, i.e. (a0, a0) is forbiden.\n" +
+                    $"4. Edges cannot be zero length, i.e. (a0, a0) is forbidden.\n" +
                     $"5. Constraint input buffer must contain even number of elements.\n" +
                     $"6. Constraints must be in range of Input.Positions."
                 );
@@ -1414,12 +1420,14 @@ namespace andywiecko.BurstTriangulator
             private TriangulatorNativeData data;
             private NativeList<Edge> edges;
             private NativeList<Edge> constraints;
+            private readonly int maxIters;
 
             public ConstrainEdgesJob(Triangulator triangluator, NativeList<Edge> edges, NativeList<Edge> constraints)
             {
                 data = triangluator.data;
                 this.edges = edges;
                 this.constraints = constraints;
+                maxIters = triangluator.Settings.SloanMaxIters;
             }
 
             private bool EdgeEdgeIntersection(Edge e1, Edge e2)
@@ -1445,6 +1453,19 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
+            [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+            private static void ThrowsOnExceededMaxIters(int iter, int maxIters)
+            {
+                if (iter >= maxIters)
+                {
+                    throw new Exception(
+                        $"Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +
+                        $"It usually happens when the scale of the input positions is not uniform. " +
+                        $"Please try to post-process input data or increase {nameof(Settings.SloanMaxIters)} value."
+                    );
+                }
+            }
+
             public void Execute()
             {
                 edges.Sort();
@@ -1457,8 +1478,11 @@ namespace andywiecko.BurstTriangulator
                     var c = constraints[i];
                     CollectIntersections(c, intersections);
 
+                    var iter = 0;
                     while (intersections.TryDequeue(out var e))
                     {
+                        ThrowsOnExceededMaxIters(iter++, maxIters);
+
                         var tris = data.edgesToTriangles[e];
                         var t0 = tris[0];
                         var t1 = tris[1];

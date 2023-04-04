@@ -1,10 +1,12 @@
 using NUnit.Framework;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine.TestTools;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -1189,6 +1191,75 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             Assert.That(localTriangles, Is.EqualTo(nonLocalTriangles));
             Assert.That(localTriangles, Has.Length.EqualTo(24));
+        }
+
+        [Test]
+        public void SloanMaxItersTest()
+        {
+            // Input for this test is grabbed from issue #30 from @mduvergey user.
+            // https://github.com/andywiecko/BurstTriangulator/issues/30
+            // This test tests editor hanging problem reported in issue #30 and #31.
+            float2[] points =
+            {
+                new float2(14225.59f, -2335.27f), new float2(13380.24f, -2344.72f), new float2(13197.35f, -2119.65f),
+                new float2(11750.51f, -2122.18f), new float2(11670.1f, -2186.25f), new float2(11424.88f, -2178.53f),
+                new float2(11193.54f, -2025.36f), new float2(11159.36f, -1812.22f), new float2(10956.29f, -1731.62f),
+                new float2(10949.03f, -1524.29f), new float2(10727.71f, -1379.53f), new float2(10532.48f, -1145.83f),
+                new float2(10525.18f, -906.69f), new float2(10410.57f, -750.73f), new float2(10629.48f, -657.33f),
+                new float2(10622f, -625.7f), new float2(10467.05f, -552.15f), new float2(10415.75f, -423.21f),
+                new float2(10037.01f, -427.11f), new float2(9997.4f, -487.33f), new float2(9788.02f, -539.44f),
+                new float2(9130.03f, -533.95f), new float2(8905.69f, -490.95f), new float2(8842.1f, -396.11f),
+                new float2(8410.81f, -407.12f), new float2(8211.88f, -583.32f), new float2(7985.37f, -588.47f),
+                new float2(7880.46f, -574.94f), new float2(7200.87f, -574.14f), new float2(6664.29f, -637.89f),
+                new float2(6351.84f, -483.61f), new float2(6324.37f, -143.48f), new float2(6093.94f, -152.8f),
+                new float2(5743.03f, 213.65f), new float2(5725.63f, 624.21f), new float2(5562.64f, 815.17f),
+                new float2(5564.65f, 1145.66f), new float2(4846.4f, 1325.89f), new float2(4362.98f, 1327.97f),
+                new float2(5265.89f, 267.31f), new float2(5266.32f, -791.39f), new float2(3806f, -817.38f),
+                new float2(3385.84f, -501.25f), new float2(3374.35f, -372.48f), new float2(3555.98f, -321.11f),
+                new float2(3549.9f, -272.35f), new float2(3356.27f, -221.45f), new float2(3352.42f, 13.16f),
+                new float2(1371.39f, 5.41f), new float2(1362.47f, -191.23f), new float2(1188.9f, -235.72f),
+                new float2(1180.86f, -709.59f), new float2(132.26f, -720.07f), new float2(1.94f, -788.66f),
+                new float2(-1240.12f, -779.03f), new float2(-1352.26f, -973.64f), new float2(-1665.17f, -973.84f),
+                new float2(-1811.91f, -932.75f), new float2(-1919.98f, -772.61f), new float2(-2623.09f, -782.31f),
+                new float2(-3030.54f, -634.38f), new float2(-3045.53f, -52.71f), new float2(-3969.83f, -61.28f),
+                new float2(-6676.96f, 102.16f), new float2(-7209.27f, 100.12f), new float2(-7729.39f, 178.02f),
+                new float2(-8228.73f, 126.39f), new float2(-8409.52f, 164.47f), new float2(-9432.81f, 168.43f),
+                new float2(-9586.02f, 116.14f), new float2(-10758.65f, 110.23f), new float2(-10894.94f, 63.53f),
+                new float2(-11737.45f, 60.54f), new float2(-11935.7f, 1.79f), new float2(-12437.14f, -4.33f),
+                new float2(-12832.19f, 41.15f), new float2(-13271.23f, 30.64f), new float2(-13478.52f, 65.91f),
+                new float2(-13729f, 65.71f), new float2(-13846.23f, 21.68f), new float2(-14000.3f, 62.86f),
+                new float2(-15224.52f, 58.78f), new float2(-15232.59f, -142.28f), new float2(-4326.12f, -232.09f),
+                new float2(-4083.7f, -441.37f), new float2(-3467.35f, -478.48f), new float2(-3040.92f, -1160.16f),
+                new float2(7192.14f, -1332.7f), new float2(7249.66f, -939.11f), new float2(8399.41f, -932.84f),
+                new float2(8816.72f, -830.49f), new float2(9861.58f, -835.71f), new float2(10065.59f, -1110.57f),
+                new float2(10052.32f, -2118.14f), new float2(9006.64f, -2125.78f), new float2(8818.37f, -2203.58f),
+                new float2(8846.09f, -2620.2f), new float2(14244.65f, -2650.96f)
+            };
+
+            int[] constraintIndices =
+            {
+                97, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18,
+                18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29, 30, 30, 31, 31, 32, 32, 33,
+                33, 34, 34, 35, 35, 36, 36, 37, 37, 38, 38, 39, 39, 40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45, 45, 46, 46, 47, 47, 48,
+                48, 49, 49, 50, 50, 51, 51, 52, 52, 53, 53, 54, 54, 55, 55, 56, 56, 57, 57, 58, 58, 59, 59, 60, 60, 61, 61, 62, 62, 63,
+                63, 64, 64, 65, 65, 66, 66, 67, 67, 68, 68, 69, 69, 70, 70, 71, 71, 72, 72, 73, 73, 74, 74, 75, 75, 76, 76, 77, 77, 78,
+                78, 79, 79, 80, 80, 81, 81, 82, 82, 83, 83, 84, 84, 85, 85, 86, 86, 87, 87, 88, 88, 89, 89, 90, 90, 91, 91, 92, 92, 93,
+                93, 94, 94, 95, 95, 96, 96, 97
+            };
+
+            using var inputPositions = new NativeArray<float2>(points, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraintIndices, Allocator.Persistent);
+
+            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent);
+            triangulator.Settings.RefineMesh = false;
+            triangulator.Settings.ConstrainEdges = true;
+            triangulator.Settings.RestoreBoundary = true;
+
+            triangulator.Input.Positions = inputPositions;
+            triangulator.Input.ConstraintEdges = constraintEdges;
+
+            LogAssert.Expect(UnityEngine.LogType.Exception, new Regex("Sloan max iterations exceeded.*"));
+            triangulator.Run();
         }
     }
 }
