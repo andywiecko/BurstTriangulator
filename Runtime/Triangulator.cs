@@ -686,6 +686,10 @@ namespace andywiecko.BurstTriangulator
             [field: SerializeField]
             public bool UseLocalTransformation { get; set; } = false;
             /// <summary>
+            /// Transforms <see cref="Triangulator.Input"/> using coordinate system obtained from <em>principal component analysis</em>.
+            /// </summary>
+            public bool UsePCATransformation { get; set; } = false;
+            /// <summary>
             /// Max iteration count during Sloan's algorithm (constraining edges). 
             /// <b>Modify this only if you know what you are doing.</b>
             /// </summary>
@@ -731,6 +735,8 @@ namespace andywiecko.BurstTriangulator
         private NativeList<float2> localHoleSeeds;
         private NativeReference<float2> com;
         private NativeReference<float2> scale;
+        private NativeReference<float2> pcaCenter;
+        private NativeReference<float2x2> pcaMatrix;
 
         public Triangulator(int capacity, Allocator allocator)
         {
@@ -739,6 +745,8 @@ namespace andywiecko.BurstTriangulator
             localHoleSeeds = new NativeList<float2>(capacity, allocator);
             com = new NativeReference<float2>(allocator);
             scale = new NativeReference<float2>(1, allocator);
+            pcaCenter = new NativeReference<float2>(allocator);
+            pcaMatrix = new NativeReference<float2x2>(float2x2.identity, allocator);
             Output = new OutputData(this);
         }
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
@@ -750,6 +758,8 @@ namespace andywiecko.BurstTriangulator
             localHoleSeeds.Dispose();
             com.Dispose();
             scale.Dispose();
+            pcaCenter.Dispose();
+            pcaMatrix.Dispose();
         }
 
         public void Run() => Schedule().Complete();
@@ -773,7 +783,11 @@ namespace andywiecko.BurstTriangulator
 
             dependencies = new ClearDataJob(this).Schedule(dependencies);
 
-            if (Settings.UseLocalTransformation)
+            if (Settings.UsePCATransformation)
+            {
+                dependencies = SchedulePCATransformation(dependencies);
+            }
+            else if (Settings.UseLocalTransformation)
             {
                 dependencies = ScheduleWorldToLocalTransformation(dependencies);
             }
@@ -810,7 +824,11 @@ namespace andywiecko.BurstTriangulator
             dependencies = new CleanupTrianglesJob(this).Schedule(this, dependencies);
             dependencies = new CleanupPositionsJob(this).Schedule(dependencies);
 
-            if (Settings.UseLocalTransformation)
+            if (Settings.UsePCATransformation)
+            {
+                dependencies = SchedulePCAInverseTransformation(dependencies);
+            }
+            else if (Settings.UseLocalTransformation)
             {
                 dependencies = ScheduleLocalToWorldTransformation(dependencies);
             }
@@ -853,6 +871,40 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
+        private JobHandle SchedulePCATransformation(JobHandle dependencies)
+        {
+            tmpInputPositions = Input.Positions;
+            Input.Positions = localPositions.AsDeferredJobArray();
+            if (Input.HoleSeeds.IsCreated)
+            {
+                tmpInputHoleSeeds = Input.HoleSeeds;
+                Input.HoleSeeds = localHoleSeeds.AsDeferredJobArray();
+            }
+
+            dependencies = new PCATransformationJob(this).Schedule(dependencies);
+            if (tmpInputHoleSeeds.IsCreated)
+            {
+                dependencies = new PCATransformationHolesJob(this).Schedule(dependencies);
+            }
+            return dependencies;
+        }
+
+        private JobHandle SchedulePCAInverseTransformation(JobHandle dependencies)
+        {
+            dependencies = new PCAInverseTransformationJob(this).Schedule(this, dependencies);
+
+            Input.Positions = tmpInputPositions;
+            tmpInputPositions = default;
+
+            if (tmpInputHoleSeeds.IsCreated)
+            {
+                Input.HoleSeeds = tmpInputHoleSeeds;
+                tmpInputHoleSeeds = default;
+            }
+
+            return dependencies;
+        }
+
         private JobHandle ScheduleWorldToLocalTransformation(JobHandle dependencies)
         {
             tmpInputPositions = Input.Positions;
@@ -888,7 +940,6 @@ namespace andywiecko.BurstTriangulator
 
             return dependencies;
         }
-
 
         private JobHandle ScheduleConstrainEdges(JobHandle dependencies)
         {
@@ -965,6 +1016,146 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
                 return true;
+            }
+        }
+
+        [BurstCompile]
+        private struct PCATransformationJob : IJob
+        {
+            [ReadOnly]
+            private NativeArray<float2> positions;
+            private NativeReference<float2> scaleRef;
+            private NativeReference<float2> comRef;
+            private NativeReference<float2> cRef;
+            private NativeReference<float2x2> URef;
+
+            private NativeList<float2> localPositions;
+
+            public PCATransformationJob(Triangulator triangulator)
+            {
+                positions = triangulator.tmpInputPositions;
+                scaleRef = triangulator.scale;
+                comRef = triangulator.com;
+                cRef = triangulator.pcaCenter;
+                URef = triangulator.pcaMatrix;
+                localPositions = triangulator.localPositions;
+            }
+
+            public void Execute()
+            {
+                var n = positions.Length;
+
+                var com = (float2)0;
+                foreach (var p in positions)
+                {
+                    com += p;
+                }
+                com /= n;
+                comRef.Value = com;
+
+                var cov = float2x2.zero;
+                foreach (var p in positions)
+                {
+                    var q = p - com;
+                    localPositions.Add(q);
+                    cov += Kron(q, q);
+                }
+                cov /= n;
+
+                Eigen(cov, out _, out var U);
+                URef.Value = U;
+                for (int i = 0; i < n; i++)
+                {
+                    localPositions[i] = math.mul(math.transpose(U), localPositions[i]);
+                }
+
+                float2 min = float.MaxValue;
+                float2 max = float.MinValue;
+                foreach (var p in localPositions)
+                {
+                    min = math.min(p, min);
+                    max = math.max(p, max);
+                }
+                var c = cRef.Value = 0.5f * (min + max);
+                var s = scaleRef.Value = 2f / (max - min);
+
+                for (int i = 0; i < n; i++)
+                {
+                    var p = localPositions[i];
+                    localPositions[i] = (p - c) * s;
+                }
+            }
+        }
+
+        [BurstCompile]
+        private struct PCATransformationHolesJob : IJob
+        {
+            [ReadOnly]
+            private NativeArray<float2> holeSeeds;
+            private NativeList<float2> localHoleSeeds;
+            private NativeReference<float2>.ReadOnly scaleRef;
+            private NativeReference<float2>.ReadOnly comRef;
+            private NativeReference<float2>.ReadOnly cRef;
+            private NativeReference<float2x2>.ReadOnly URef;
+
+            public PCATransformationHolesJob(Triangulator triangulator)
+            {
+                holeSeeds = triangulator.tmpInputHoleSeeds;
+                localHoleSeeds = triangulator.localHoleSeeds;
+                scaleRef = triangulator.scale.AsReadOnly();
+                comRef = triangulator.com.AsReadOnly();
+                cRef = triangulator.pcaCenter.AsReadOnly();
+                URef = triangulator.pcaMatrix.AsReadOnly();
+            }
+
+            public void Execute()
+            {
+                var com = comRef.Value;
+                var s = scaleRef.Value;
+                var c = cRef.Value;
+                var U = URef.Value;
+                var UT = math.transpose(U);
+
+                localHoleSeeds.Resize(holeSeeds.Length, NativeArrayOptions.UninitializedMemory);
+                for (int i = 0; i < holeSeeds.Length; i++)
+                {
+                    var h = holeSeeds[i];
+                    localHoleSeeds[i] = s * (math.mul(UT, h - com) - c);
+                }
+            }
+        }
+
+        [BurstCompile]
+        private struct PCAInverseTransformationJob : IJobParallelForDefer
+        {
+            private NativeArray<float2> positions;
+            private NativeReference<float2>.ReadOnly comRef;
+            private NativeReference<float2>.ReadOnly scaleRef;
+            private NativeReference<float2>.ReadOnly cRef;
+            private NativeReference<float2x2>.ReadOnly URef;
+
+            public PCAInverseTransformationJob(Triangulator triangulator)
+            {
+                positions = triangulator.Output.Positions.AsDeferredJobArray();
+                comRef = triangulator.com.AsReadOnly();
+                scaleRef = triangulator.scale.AsReadOnly();
+                cRef = triangulator.pcaCenter.AsReadOnly();
+                URef = triangulator.pcaMatrix.AsReadOnly();
+            }
+
+            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
+            {
+                return this.Schedule(triangulator.Output.Positions, triangulator.Settings.BatchCount, dependencies);
+            }
+
+            public void Execute(int i)
+            {
+                var p = positions[i];
+                var com = comRef.Value;
+                var s = scaleRef.Value;
+                var c = cRef.Value;
+                var U = URef.Value;
+                positions[i] = math.mul(U, p / s + c) + com;
             }
         }
 
@@ -1098,18 +1289,24 @@ namespace andywiecko.BurstTriangulator
             private TriangulatorNativeData data;
             private NativeReference<float2> scaleRef;
             private NativeReference<float2> comRef;
+            private NativeReference<float2> cRef;
+            private NativeReference<float2x2> URef;
 
             public ClearDataJob(Triangulator triangulator)
             {
                 data = triangulator.data;
                 scaleRef = triangulator.scale;
                 comRef = triangulator.com;
+                cRef = triangulator.pcaCenter;
+                URef = triangulator.pcaMatrix;
             }
             public void Execute()
             {
                 data.Clear();
                 scaleRef.Value = 1;
                 comRef.Value = 0;
+                cRef.Value = 0;
+                URef.Value = float2x2.identity;
             }
         }
 
@@ -1858,6 +2055,28 @@ namespace andywiecko.BurstTriangulator
             var u = 1.0f - v - w;
             return math.float3(u, v, w);
         }
+        private static void Eigen(float2x2 matrix, out float2 eigval, out float2x2 eigvec)
+        {
+            var a00 = matrix[0][0];
+            var a11 = matrix[1][1];
+            var a01 = matrix[0][1];
+
+            var a00a11 = a00 - a11;
+            var p1 = a00 + a11;
+            var p2 = (a00a11 >= 0 ? 1 : -1) * math.sqrt(a00a11 * a00a11 + 4 * a01 * a01);
+            var lambda1 = p1 + p2;
+            var lambda2 = p1 - p2;
+            eigval = 0.5f * math.float2(lambda1, lambda2);
+
+            var phi = 0.5f * math.atan2(2 * a01, a00a11);
+
+            eigvec = math.float2x2
+            (
+                m00: math.cos(phi), m01: -math.sin(phi),
+                m10: math.sin(phi), m11: math.cos(phi)
+            );
+        }
+        private static float2x2 Kron(float2 a, float2 b) => math.float2x2(a * b[0], a * b[1]);
         private static bool PointInsideTriangle(float2 p, float2 a, float2 b, float2 c) => math.cmax(-Barycentric(a, b, c, p)) <= 0;
         private static float CCW(float2 a, float2 b, float2 c) => math.sign(Cross(b - a, b - c));
         private static bool PointLineSegmentIntersection(float2 a, float2 b0, float2 b1) =>
