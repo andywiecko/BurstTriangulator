@@ -730,7 +730,7 @@ namespace andywiecko.BurstTriangulator
         private NativeList<float2> localPositions;
         private NativeList<float2> localHoleSeeds;
         private NativeReference<float2> com;
-        private NativeReference<float> scale;
+        private NativeReference<float2> scale;
 
         public Triangulator(int capacity, Allocator allocator)
         {
@@ -738,7 +738,7 @@ namespace andywiecko.BurstTriangulator
             localPositions = new NativeList<float2>(capacity, allocator);
             localHoleSeeds = new NativeList<float2>(capacity, allocator);
             com = new NativeReference<float2>(allocator);
-            scale = new NativeReference<float>(1, allocator);
+            scale = new NativeReference<float2>(1, allocator);
             Output = new OutputData(this);
         }
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
@@ -974,7 +974,7 @@ namespace andywiecko.BurstTriangulator
             [ReadOnly]
             private NativeArray<float2> positions;
             private NativeReference<float2> comRef;
-            private NativeReference<float> scaleRef;
+            private NativeReference<float2> scaleRef;
             private NativeList<float2> localPositions;
 
             public InitialLocalTransformationJob(Triangulator triangulator)
@@ -1010,7 +1010,7 @@ namespace andywiecko.BurstTriangulator
             private NativeArray<float2> holeSeeds;
             private NativeList<float2> localHoleSeeds;
             private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float>.ReadOnly scaleRef;
+            private NativeReference<float2>.ReadOnly scaleRef;
 
             public CalculateLocalHoleSeedsJob(Triangulator triangulator)
             {
@@ -1037,7 +1037,7 @@ namespace andywiecko.BurstTriangulator
         private struct CalculateLocalPositionsJob : IJobParallelForDefer
         {
             private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float>.ReadOnly scaleRef;
+            private NativeReference<float2>.ReadOnly scaleRef;
             private NativeArray<float2> localPositions;
             [ReadOnly]
             private NativeArray<float2> positions;
@@ -1069,7 +1069,7 @@ namespace andywiecko.BurstTriangulator
         {
             private NativeArray<float2> positions;
             private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float>.ReadOnly scaleRef;
+            private NativeReference<float2>.ReadOnly scaleRef;
 
             public LocalToWorldTransformationJob(Triangulator triangulator)
             {
@@ -1096,7 +1096,7 @@ namespace andywiecko.BurstTriangulator
         private struct ClearDataJob : IJob
         {
             private TriangulatorNativeData data;
-            private NativeReference<float> scaleRef;
+            private NativeReference<float2> scaleRef;
             private NativeReference<float2> comRef;
 
             public ClearDataJob(Triangulator triangulator)
@@ -1586,7 +1586,7 @@ namespace andywiecko.BurstTriangulator
             private readonly float minimumArea2;
             private readonly float maximumArea2;
             private readonly float minimumAngle;
-            private NativeReference<float>.ReadOnly scaleRef;
+            private NativeReference<float2>.ReadOnly scaleRef;
             private readonly T mode;
 
             public RefineMeshJob(Triangulator triangulator)
@@ -1632,7 +1632,7 @@ namespace andywiecko.BurstTriangulator
                 foreach (var tId in data.edgesToTriangles[edge])
                 {
                     var area2 = data.triangles[tId].GetArea2(data.outputPositions);
-                    if (area2 < minimumArea2 * s * s)
+                    if (area2 < minimumArea2 * s.x * s.y)
                     {
                         return true;
                     }
@@ -1647,7 +1647,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     var triangle = data.triangles[tId];
                     if (!SuperTriangle.ContainsCommonPointWith(triangle) && !data.TriangleIsEncroached(tId) &&
-                        data.TriangleIsBad(triangle, minimumArea2 * s * s, maximumArea2 * s * s, minimumAngle))
+                        data.TriangleIsBad(triangle, minimumArea2 * s.x * s.y, maximumArea2 * s.x * s.y, minimumAngle))
                     {
                         var circle = data.circles[tId];
                         mode.InsertPointAtTriangleCircumcenter(circle.Center, tId, data);
