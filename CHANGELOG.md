@@ -1,5 +1,15 @@
 # Change log
 
+## [1.5.0] - 2023-04-12
+
+### Features
+
+- Added PCA transformation for input positions and holes.
+
+### Fixes
+
+- Editor hangs during Sloan algorithm for specific input data (issues #30 and #31).
+
 ## [1.4.0] - 2022-11-01
 
 ### Features
