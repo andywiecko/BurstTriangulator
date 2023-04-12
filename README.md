@@ -330,6 +330,11 @@ $$
 \boxed{x_i \to U(x_i / s + c) + \mu}.
 $$
 
+> **Note**
+>
+> The PCA transformation does not preserve the `Settings.MinimumAngle` used for refinement. 
+> As a result, triangles can be classified as bad in the PCA local space.
+
 ## Benchmark
 
 The package uses [`Burst`][burst] compiler, which produces highly optimized native code using LLVM.
