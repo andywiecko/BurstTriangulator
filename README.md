@@ -30,7 +30,7 @@ The package provides also constrained triangulation (with mesh refinement) which
       - [PCA transformation](#pca-transformation)
   - [Benchmark](#benchmark)
   - [Dependencies](#dependencies)
-  - [Contributors](#contributors)
+  - [Roadmap v2.0](#roadmap-v20)
   - [Bibliography](#bibliography)
 
 ## Getting started
@@ -350,9 +350,15 @@ Using Burst can provide more or less two order of magnitude faster computation.
 - [`Unity.Collections`](https://docs.unity3d.com/Packages/com.unity.collections@1.1/manual/index.html)
 - [`Unity.Jobs`][jobs]
 
-## Contributors
+## Roadmap v2.0
 
-- [Andrzej Więckowski, Ph.D](https://andywiecko.github.io/).
+- [ ] Cache circles for constraint edges.
+- [ ] Update `edgeToTriangles` buffer instead rebuilding.
+- [ ] Remove obsoletes.
+- [ ] Update default `Setting`.
+- [ ] Bump packages and editor.
+- [ ] Introduce state to support runtime (build) validation.
+- [ ] "Extract" transformations.
 
 ## Bibliography
 
