@@ -716,15 +716,6 @@ namespace andywiecko.BurstTriangulator
         public InputData Input { get; set; } = new InputData();
         public OutputData Output { get; }
 
-        [Obsolete("To get the result use this.Output instead.")]
-        public NativeArray<float2>.ReadOnly Positions => data.outputPositions.AsArray().AsReadOnly();
-        [Obsolete("To get the result use this.Output instead.")]
-        public NativeArray<int>.ReadOnly Triangles => data.outputTriangles.AsArray().AsReadOnly();
-        [Obsolete("To get the result use this.Output instead.")]
-        public NativeArray<float2> PositionsDeferred => data.outputPositions.AsDeferredJobArray();
-        [Obsolete("To get the result use this.Output instead.")]
-        public NativeArray<int> TrianglesDeferred => data.outputTriangles.AsDeferredJobArray();
-
         private static readonly Triangle SuperTriangle = new Triangle(0, 1, 2);
         private TriangulatorNativeData data;
 
@@ -763,16 +754,6 @@ namespace andywiecko.BurstTriangulator
         }
 
         public void Run() => Schedule().Complete();
-
-        [Obsolete("Use this.Input to provide data and Schedule(JobHandle) or Run() to collect the result.")]
-        public JobHandle Schedule(NativeArray<float2>.ReadOnly positions, JobHandle dependencies = default)
-        {
-            var array = new NativeArray<float2>(positions.ToArray(), Allocator.TempJob);
-            Input.Positions = array;
-            dependencies = Schedule(dependencies);
-            dependencies = array.Dispose(dependencies);
-            return dependencies;
-        }
 
         public JobHandle Schedule(JobHandle dependencies = default)
         {

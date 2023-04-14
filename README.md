@@ -354,7 +354,7 @@ Using Burst can provide more or less two order of magnitude faster computation.
 
 - [ ] Cache circles for constraint edges.
 - [ ] Update `edgeToTriangles` buffer instead rebuilding.
-- [ ] Remove obsoletes.
+- [X] ~~Remove obsoletes.~~
 - [ ] Update default `Setting`.
 - [ ] Bump packages and editor.
 - [ ] Introduce state to support runtime (build) validation.

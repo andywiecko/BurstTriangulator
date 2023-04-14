@@ -1051,27 +1051,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.Triangles.ToTrisTuple(), Is.EqualTo(expectedTriangles));
         }
 
-        [Test, Obsolete]
-        public void ObsoleteScheduleSupportTest()
-        {
-            using var positions = new NativeArray<float2>(new float2[] { new(0), new(1, 0), new(1) }, Allocator.Persistent);
-            using var triangulator = new Triangulator(64, Allocator.Persistent)
-            {
-                Settings =
-                {
-                    ValidateInput = true,
-                    ConstrainEdges = false,
-                    RefineMesh = false,
-                    RestoreBoundary = false,
-                },
-                Input = { Positions = positions }
-            };
-
-            triangulator.Schedule(positions.AsReadOnly(), default).Complete();
-
-            Assert.That(triangulator.Output.Triangles, Has.Length.EqualTo(3));
-        }
-
         [Test]
         public void LocalTransformationTest()
         {
