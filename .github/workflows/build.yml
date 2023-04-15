@@ -1,0 +1,57 @@
+name: Build
+
+on:
+  pull_request: {}
+  push: { branches: [main] }
+  workflow_dispatch:
+
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
+jobs:
+  testAllModes:
+    name: Build for ${{ matrix.targetPlatform }} on version ${{ matrix.unityVersion }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        packageName:
+          - com.andywiecko.burst.triangulator
+        projectPath:
+          - Samples~/BurstTriangulatorTestProject
+        unityVersion:
+          - 2021.2.5f1
+        targetPlatform:
+          - StandaloneWindows
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - uses: actions/cache@v2
+        with:
+          path: ${{ matrix.projectPath }}/Library
+          key: Library-${{ matrix.projectPath }}-${{ matrix.targetPlatform }}
+          restore-keys: |
+            Library-${{ matrix.projectPath }}-
+            Library-
+      - name: Preparing sample project
+        run: |
+          echo "############################"
+          echo "# Preparing sample project #"
+          echo "############################"
+          echo "Creating dir ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}"
+          mkdir ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
+          echo "Copying package data"
+          cp -r `ls -I Samples~` ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
+          ls -alF ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
+      - uses: game-ci/unity-builder@v2
+        with:
+          projectPath: ${{ matrix.projectPath }}
+          unityVersion: ${{ matrix.unityVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          allowDirtyBuild: true
+          versioning: None
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Build
+          path: build
