@@ -3,8 +3,8 @@
     "version": "1.5.0",
     "displayName": "Burst Triangulator",
     "description": "A single-file package which provides simple Delaunay triangulation of the given set of points with mesh refinement.",
-    "unity": "2021.1",
-    "unityRelease": "16f1",
+    "unity": "2022.2",
+    "unityRelease": "1f1",
     "keywords": [
         "Burst",
         "Triangulation",
@@ -20,7 +20,7 @@
         "url": "git+https://github.com/andywiecko/BurstTriangulator"
     },
     "dependencies": {
-        "com.unity.burst": "1.5.5",
-        "com.unity.jobs": "0.11.0-preview.6"
+        "com.unity.burst": "1.8.4",
+        "com.unity.collections": "2.1.1"
     }
 }

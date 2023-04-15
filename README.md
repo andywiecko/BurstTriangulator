@@ -347,9 +347,7 @@ Using Burst can provide more or less two order of magnitude faster computation.
 ## Dependencies
 
 - [`Unity.Burst`][burst]
-- [`Unity.Mathematics`](https://docs.unity3d.com/Packages/com.unity.mathematics@1.2/manual/index.html)
-- [`Unity.Collections`](https://docs.unity3d.com/Packages/com.unity.collections@1.1/manual/index.html)
-- [`Unity.Jobs`][jobs]
+- [`Unity.Collections`][collections]
 
 ## Roadmap v2.0
 
@@ -357,7 +355,7 @@ Using Burst can provide more or less two order of magnitude faster computation.
 - [ ] Update `edgeToTriangles` buffer instead rebuilding.
 - [X] ~~Remove obsoletes.~~
 - [ ] Update default `Setting`.
-- [ ] Bump packages and editor.
+- [X] ~~Bump packages and editor.~~
 - [ ] Introduce state to support runtime (build) validation.
 - [ ] "Extract" transformations.
 
@@ -370,5 +368,5 @@ Using Burst can provide more or less two order of magnitude faster computation.
 
 [bowyerwatson]: https://en.wikipedia.org/wiki/Bowyer%E2%80%93Watson_algorithm
 [rupperts]: https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm
-[burst]: https://docs.unity3d.com/Packages/com.unity.burst@1.7/manual/index.html
-[jobs]: https://docs.unity3d.com/Packages/com.unity.jobs@0.11/manual/index.html
+[burst]: https://docs.unity3d.com/Packages/com.unity.burst@1.8/manual/index.html
+[collections]: https://docs.unity3d.com/Packages/com.unity.collections@2.1/manual/index.html
