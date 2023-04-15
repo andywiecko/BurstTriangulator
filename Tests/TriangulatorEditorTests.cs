@@ -36,7 +36,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     public class TriangulatorEditorTests
     {
         private (int, int, int)[] Triangles => triangulator.Output.Triangles.ToTrisTuple();
-        private float2[] Positions => triangulator.Output.Positions.ToArray();
 
         private Triangulator triangulator;
 
@@ -174,7 +173,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(0, 1),
                 math.float2(0.5f, 0.5f)
             };
-            Assert.That(Positions, Is.EqualTo(expectedPositions));
+            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
 
             var expectedTriangles = new[]
             {
@@ -545,7 +544,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            Assert.That(Positions, Is.EqualTo(managedPositions.Union(insertedPoints)));
+            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(managedPositions.Union(insertedPoints)));
 
             return Triangles;
         }
@@ -663,7 +662,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 (6, 3, 5),
             };
             Assert.That(Triangles, Is.EqualTo(expectedTriangles));
-            Assert.That(Positions, Is.EqualTo(managedPositions.Union(new[] { math.float2(0.75f, 0.625f), math.float2(1f, 0.5f) })));
+            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(managedPositions.Union(new[] { math.float2(0.75f, 0.625f), math.float2(1f, 0.5f) })));
         }
 
         private static readonly TestCaseData[] triangulationWithHolesWithoutRefinementTestData = new[]
@@ -945,7 +944,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             };
             Assert.That(Triangles, Is.EqualTo(expectedTriangles));
 
-            Assert.That(Positions, Is.EqualTo(managedPositions.Union(new[]
+            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(managedPositions.Union(new[]
             {
                 math.float2(1.5f, 0),
                 math.float2(3, 1.5f),

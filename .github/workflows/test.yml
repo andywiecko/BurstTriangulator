@@ -20,7 +20,7 @@ jobs:
         projectPath:
           - Samples~/BurstTriangulatorTestProject
         unityVersion:
-          - 2021.2.5f1
+          - 2022.2.15f1
         testMode:
           - editmode
     steps:
