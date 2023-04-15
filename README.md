@@ -3,7 +3,8 @@
 ![logo-light-mode](Documentation~/burst-triangulator-logo-light-mode.svg#gh-light-mode-only)
 ![logo-dark-mode](Documentation~/burst-triangulator-logo-dark-mode.svg#gh-dark-mode-only)
 
-[![Editor tests](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml/badge.svg)](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml)
+[![Build](https://github.com/andywiecko/BurstTriangulator/actions/workflows/build.yml/badge.svg)](https://github.com/andywiecko/BurstTriangulator/actions/workflows/build.yml)
+[![Tests](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml/badge.svg)](https://github.com/andywiecko/BurstTriangulator/actions/workflows/test.yml)
 [![openupm](https://img.shields.io/npm/v/com.andywiecko.burst.triangulator?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.andywiecko.burst.triangulator/)
 
 A **single-file** package which provides simple Delaunay triangulation of the given set of points (`float2`) with mesh refinement.
