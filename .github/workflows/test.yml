@@ -1,4 +1,4 @@
-name: Editor tests
+name: Tests
 
 on:
   pull_request: {}
@@ -15,12 +15,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        packageName:
+          - com.andywiecko.burst.triangulator
         projectPath:
-          - ./
+          - Samples~/BurstTriangulatorTestProject
         unityVersion:
           - 2021.2.5f1
         testMode:
-          #- playmode
           - editmode
     steps:
       - uses: actions/checkout@v3
@@ -32,14 +33,23 @@ jobs:
           key: Library-${{ matrix.projectPath }}
           restore-keys: |
             Library-
-      - uses: game-ci/unity-test-runner@441ad80ded43cd93dcc230454e79089a052da7c0
+      - name: Preparing sample project
+        run: |
+          echo "############################"
+          echo "# Preparing sample project #"
+          echo "############################"
+          echo "Creating dir ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}"
+          mkdir ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
+          echo "Copying package data"
+          cp -r `ls -I Samples~` ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
+          ls -alF ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
+      - uses: game-ci/unity-test-runner@v2
         id: tests
         with:
           projectPath: ${{ matrix.projectPath }}
           unityVersion: ${{ matrix.unityVersion }}
           testMode: ${{ matrix.testMode }}
           artifactsPath: ${{ matrix.testMode }}-artifacts
-          packageMode: true
       - uses: actions/upload-artifact@v1
         with:
           name: Test results for ${{ matrix.testMode }}
