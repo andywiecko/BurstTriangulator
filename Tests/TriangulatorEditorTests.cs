@@ -1095,11 +1095,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Input = { Positions = positions }
             };
 
-            triangulator.Settings.UseLocalTransformation = false;
+            triangulator.Settings.Preprocessor = Triangulator.Preprocessor.None;
             triangulator.Run();
             var nonLocalTriangles = triangulator.GetTrisTuple();
 
-            triangulator.Settings.UseLocalTransformation = true;
+            triangulator.Settings.Preprocessor = Triangulator.Preprocessor.COM;
             triangulator.Run();
             var localTriangles = triangulator.GetTrisTuple();
 
@@ -1136,11 +1136,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 }
             };
 
-            triangulator.Settings.UseLocalTransformation = false;
+            triangulator.Settings.Preprocessor = Triangulator.Preprocessor.None;
             triangulator.Run();
             var nonLocalTriangles = triangulator.GetTrisTuple();
 
-            triangulator.Settings.UseLocalTransformation = true;
+            triangulator.Settings.Preprocessor = Triangulator.Preprocessor.COM;
             triangulator.Run();
             var localTriangles = triangulator.GetTrisTuple();
 
@@ -1197,11 +1197,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 }
             };
 
-            triangulator.Settings.UseLocalTransformation = false;
+            triangulator.Settings.Preprocessor = Triangulator.Preprocessor.None;
             triangulator.Run();
             var nonLocalTriangles = triangulator.GetTrisTuple();
 
-            triangulator.Settings.UseLocalTransformation = true;
+            triangulator.Settings.Preprocessor = Triangulator.Preprocessor.COM;
             triangulator.Run();
             var localTriangles = triangulator.GetTrisTuple();
 
@@ -1305,7 +1305,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = false,
                     ConstrainEdges = false,
                     RestoreBoundary = true,
-                    UsePCATransformation = true
+                    Preprocessor = Triangulator.Preprocessor.PCA
                 }
             };
 
@@ -1338,7 +1338,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = true,
                     ConstrainEdges = false,
                     RestoreBoundary = true,
-                    UsePCATransformation = true
+                    Preprocessor = Triangulator.Preprocessor.PCA
                 }
             };
 
@@ -1391,7 +1391,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = false,
                     ConstrainEdges = true,
                     RestoreBoundary = true,
-                    UsePCATransformation = true,
+                    Preprocessor = Triangulator.Preprocessor.PCA
                 }
             };
 
@@ -1476,7 +1476,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = false,
                     ConstrainEdges = true,
                     RestoreBoundary = true,
-                    UsePCATransformation = true
+                    Preprocessor = Triangulator.Preprocessor.PCA
                 }
             };
 
@@ -1579,7 +1579,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = true,
                     ConstrainEdges = true,
                     RestoreBoundary = true,
-                    UsePCATransformation = true
+                    Preprocessor = Triangulator.Preprocessor.PCA
                 }
             };
 
