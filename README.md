@@ -27,7 +27,6 @@ The package provides also constrained triangulation (with mesh refinement) which
     - [Input validation](#input-validation)
     - [Generating input in a job](#generating-input-in-a-job)
     - [Reduce the effect of roundoff error](#reduce-the-effect-of-roundoff-error)
-      - [Local transformation](#local-transformation)
       - [PCA transformation](#pca-transformation)
   - [Benchmark](#benchmark)
   - [Dependencies](#dependencies)
@@ -83,18 +82,18 @@ Below one can find example usage of the `Triangulator` with input set as four
 points that form the unit square:
 
 ```csharp
-var positions = new[]
+using var positions = new NativeArray<float2>(new float2[]
 {
-    math.float2(0, 0),
-    math.float2(1, 0),
-    math.float2(1, 1),
-    math.float2(0, 1)
+  new(0, 0),
+  new(1, 0),
+  new(1, 1),
+  new(0, 1)
+}, Allocator.Persistent);
+
+using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+{
+  Input = { Positions = positions }
 };
-
-using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent);
-using var inputPositions = new NativeArray<float2>(positions, Allocator.Persistent);
-
-triangulator.Input.Positions = inputPositions
 
 triangulator.Run();
 
@@ -106,26 +105,28 @@ The result of the triangulation procedure will depend on selected settings.
 There are a few settings of the triangulation, shortly described below:
 
 ```csharp
-var settings = triangulator.Settings;
-
-// Batch count used in parallel job.
-settings.BatchCount = 64;
-// Triangle is considered as bad if any of its angles is smaller than MinimumAngle. Note: radians.
-settings.MinimumAngle = math.radians(33);
-// Triangle is not considered as bad if its area is smaller than MinimumArea.
-settings.MinimumArea = 0.015f
-// Triangle is considered as bad if its area is greater than MaximumArea.
-settings.MaximumArea = 0.5f;
-// If true refines mesh using Ruppert's algorithm.
-settings.RefineMesh = true;
-// If true constrains edges defined in the Triangulator.Input.ConstraintEdges
-settings.ConstrainEdges = false;
-// If true and provided Triangulator.Input is not valid, it will throw an exception.
-settings.ValidateInput = true;
-// If true provided point positions and hole seeds are transformed into [-1, 1] box using "center of mass".
-settings.UseLocalTransformation = false;
-// If true provided point positions and hole seeds are transformed into normalized coordinate system obtained from principal component analysis.
-settings.UsePCATransformation = false;
+using var triangulator = new(1024, Allocator.Persistent)
+{
+  Settings = 
+  {
+    // Batch count used in parallel job.
+    BatchCount = 64;
+    // Triangle is considered as bad if any of its angles is smaller than MinimumAngle. Note: radians.
+    MinimumAngle = math.radians(33);
+    // Triangle is not considered as bad if its area is smaller than MinimumArea.
+    MinimumArea = 0.015f
+    // Triangle is considered as bad if its area is greater than MaximumArea.
+    MaximumArea = 0.5f;
+    // If true refines mesh using Ruppert's algorithm.
+    RefineMesh = true;
+    // If true constrains edges defined in the Triangulator.Input.ConstraintEdges
+    ConstrainEdges = false;
+    // If true and provided Triangulator.Input is not valid, it will throw an exception.
+    ValidateInput = true;
+    // Type of preprocessing algorithm, see the section below for more details.
+    Preprocessor = Triangulator.Preprocessor.None;
+  }
+};
 ```
 
 Below one can find the result of the triangulation for different selected options.
@@ -298,16 +299,23 @@ dependencies.Complete();
 
 ### Reduce the effect of roundoff error
 
-#### Local transformation
+Triangulation for *non-uniform* data can be demanding, and a few algorithm steps may get stuck if the data is not preprocessed properly.
+It is highly recommended that the user should prepare the input data on his own, however, this project provides a few built-in methods.
 
-`BurstTriangulator` has a built-in option for transforming input positions (as well as holes) into normalized local space, i.e. [-1, 1] box.
-To enable it use `Settings.UseLocalTransformation = true`.
-Converting points into normalized local space could increase numerical accuracy.
-The option is disabled by default.
+| Preprocessor | Description        |
+|--------------|--------------------|
+| None         | Default, no effect. |
+| COM          | Transforms input into normalized local space, i.e. [-1, 1] box. |
+| [PCA](#pca-transformation) | Transforms input into normalized coordinate systems obtained with *principal component analysis*. |
+
+To use one of the following preprocessors use corresponding settings
+
+```csharp
+triangulator.Settings.Preprocessor = Triangulator.Preprocessor.COM;
+```
 
 #### PCA transformation
 
-Additionally, `BurstTriangulator` has a built-in option for transforming input positions into normalized coordinate systems obtained with *principal component analysis*. To enable it use `Settings.UsePCATransformation = true`.
 The algorithm usually can help in situations when the Sloan algorithm gets stuck.
 The transformation can be applied using the following steps:
 
@@ -357,7 +365,7 @@ Using Burst can provide more or less two order of magnitude faster computation.
 - [ ] Update default `Setting`.
 - [X] ~~Bump packages and editor.~~
 - [ ] Introduce state to support runtime (build) validation.
-- [ ] "Extract" transformations.
+- [X] ~~"Extract" transformations.~~
 
 ## Bibliography
 

@@ -617,6 +617,19 @@ namespace andywiecko.BurstTriangulator
         }
         #endregion
 
+        public enum Preprocessor
+        {
+            None = 0,
+            /// <summary>
+            /// Transforms <see cref="Input"/> to local coordinate system using <em>center of mass</em>.
+            /// </summary>
+            COM,
+            /// <summary>
+            /// Transforms <see cref="Input"/> using coordinate system obtained from <em>principal component analysis</em>.
+            /// </summary>
+            PCA
+        }
+
         [Serializable]
         public class TriangulationSettings
         {
@@ -656,7 +669,7 @@ namespace andywiecko.BurstTriangulator
             [field: SerializeField]
             public bool ConstrainEdges { get; set; } = false;
             /// <summary>
-            /// If <see langword="true"/> and provided <see cref="Triangulator.Input"/> is not valid, it will throw an exception.
+            /// If <see langword="true"/> and provided <see cref="Input"/> is not valid, it will throw an exception.
             /// </summary>
             /// <remarks>
             /// Input validation is enabled only at Editor.
@@ -664,25 +677,21 @@ namespace andywiecko.BurstTriangulator
             [field: SerializeField]
             public bool ValidateInput { get; set; } = true;
             /// <summary>
-            /// If <see langword="true"/> the mesh boundary is restored using <see cref="Triangulator.Input"/> constraint edges.
+            /// If <see langword="true"/> the mesh boundary is restored using <see cref="Input"/> constraint edges.
             /// </summary>
             [field: SerializeField]
             public bool RestoreBoundary { get; set; } = false;
-            /// <summary>
-            /// Transforms <see cref="Triangulator.Input"/> to local coordinate system using "center of mass".
-            /// </summary>
-            [field: SerializeField]
-            public bool UseLocalTransformation { get; set; } = false;
-            /// <summary>
-            /// Transforms <see cref="Triangulator.Input"/> using coordinate system obtained from <em>principal component analysis</em>.
-            /// </summary>
-            public bool UsePCATransformation { get; set; } = false;
             /// <summary>
             /// Max iteration count during Sloan's algorithm (constraining edges). 
             /// <b>Modify this only if you know what you are doing.</b>
             /// </summary>
             [field: SerializeField]
-            public int SloanMaxIters = 1_000_000;
+            public int SloanMaxIters { get; set; } = 1_000_000;
+            /// <summary>
+            /// Preprocessing algorithm for the input data. Default is <see cref="Preprocessor.None"/>.
+            /// </summary>
+            [field: SerializeField]
+            public Preprocessor Preprocessor { get; set; } = Preprocessor.None;
         }
 
         public class InputData
@@ -707,7 +716,7 @@ namespace andywiecko.BurstTriangulator
         private static readonly Triangle SuperTriangle = new(0, 1, 2);
         private TriangulatorNativeData data;
 
-        // Note: Cannot hide them in the `data` due to Unity.Jobs safty restrictions
+        // Note: Cannot hide them in the `data` due to Unity.Jobs safety restrictions
         private NativeArray<float2> tmpInputPositions;
         private NativeArray<float2> tmpInputHoleSeeds;
         private NativeList<float2> localPositions;
@@ -752,14 +761,13 @@ namespace andywiecko.BurstTriangulator
 
             dependencies = new ClearDataJob(this).Schedule(dependencies);
 
-            if (Settings.UsePCATransformation)
+            dependencies = Settings.Preprocessor switch
             {
-                dependencies = SchedulePCATransformation(dependencies);
-            }
-            else if (Settings.UseLocalTransformation)
-            {
-                dependencies = ScheduleWorldToLocalTransformation(dependencies);
-            }
+                Preprocessor.PCA => SchedulePCATransformation(dependencies),
+                Preprocessor.COM => ScheduleWorldToLocalTransformation(dependencies),
+                Preprocessor.None => dependencies,
+                _ => throw new NotImplementedException()
+            };
 
             dependencies = new RegisterSuperTriangleJob(this).Schedule(dependencies);
             dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
@@ -793,14 +801,13 @@ namespace andywiecko.BurstTriangulator
             dependencies = new CleanupTrianglesJob(this).Schedule(this, dependencies);
             dependencies = new CleanupPositionsJob(this).Schedule(dependencies);
 
-            if (Settings.UsePCATransformation)
+            dependencies = Settings.Preprocessor switch
             {
-                dependencies = SchedulePCAInverseTransformation(dependencies);
-            }
-            else if (Settings.UseLocalTransformation)
-            {
-                dependencies = ScheduleLocalToWorldTransformation(dependencies);
-            }
+                Preprocessor.PCA => SchedulePCAInverseTransformation(dependencies),
+                Preprocessor.COM => ScheduleLocalToWorldTransformation(dependencies),
+                Preprocessor.None => dependencies,
+                _ => throw new NotImplementedException()
+            };
 
             return dependencies;
         }
