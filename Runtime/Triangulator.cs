@@ -17,7 +17,7 @@ namespace andywiecko.BurstTriangulator
         {
             public readonly int IdA, IdB, IdC;
             public Triangle(int idA, int idB, int idC) => (IdA, IdB, IdC) = (idA, idB, idC);
-            public static implicit operator Triangle((int a, int b, int c) ids) => new Triangle(ids.a, ids.b, ids.c);
+            public static implicit operator Triangle((int a, int b, int c) ids) => new(ids.a, ids.b, ids.c);
             public void Deconstruct(out int idA, out int idB, out int idC) => (idA, idB, idC) = (IdA, IdB, IdC);
             public bool Contains(int id) => IdA == id || IdB == id || IdC == id;
             public bool ContainsCommonPointWith(Triangle t) => Contains(t.IdA) || Contains(t.IdB) || Contains(t.IdC);
@@ -56,28 +56,16 @@ namespace andywiecko.BurstTriangulator
         private readonly struct Circle
         {
             public readonly float2 Center;
-            public readonly float Radius;
-            public readonly float RadiusSq;
-
-            public Circle(float2 center, float radius)
-            {
-                Center = center;
-                Radius = radius;
-                RadiusSq = Radius * Radius;
-            }
-
-            public void Deconstruct(out float2 center, out float radius)
-            {
-                center = Center;
-                radius = Radius;
-            }
+            public readonly float Radius, RadiusSq;
+            public Circle(float2 center, float radius) => (Center, Radius, RadiusSq) = (center, radius, radius * radius);
+            public void Deconstruct(out float2 center, out float radius) => (center, radius) = (Center, Radius);
         }
 
         private readonly struct Edge : IEquatable<Edge>, IComparable<Edge>
         {
             public readonly int IdA, IdB;
             public Edge(int idA, int idB) => (IdA, IdB) = idA < idB ? (idA, idB) : (idB, idA);
-            public static implicit operator Edge((int a, int b) ids) => new Edge(ids.a, ids.b);
+            public static implicit operator Edge((int a, int b) ids) => new(ids.a, ids.b);
             public void Deconstruct(out int idA, out int idB) => (idA, idB) = (IdA, IdB);
             public bool Equals(Edge other) => IdA == other.IdA && IdB == other.IdB;
             public bool Contains(int id) => IdA == id || IdB == id;
@@ -114,9 +102,9 @@ namespace andywiecko.BurstTriangulator
                 public bool MoveNext() => ++current < 3;
             }
 
-            public Iterator GetEnumerator() => new Iterator(this);
+            public Iterator GetEnumerator() => new(this);
             public bool Contains(Edge edge) => EdgeA.Equals(edge) || EdgeB.Equals(edge) || EdgeC.Equals(edge);
-            public static implicit operator Edge3((Edge eA, Edge eB, Edge eC) v) => new Edge3(v.eA, v.eB, v.eC);
+            public static implicit operator Edge3((Edge eA, Edge eB, Edge eC) v) => new(v.eA, v.eB, v.eC);
         }
         #endregion
 
@@ -144,25 +132,25 @@ namespace andywiecko.BurstTriangulator
             public NativeList<int> pointsToRemove;
             public NativeList<int> pointsOffset;
 
-            private static readonly DescendingComparer comparer = new DescendingComparer();
+            private static readonly DescendingComparer comparer = new();
 
             public TriangulatorNativeData(int capacity, Allocator allocator)
             {
-                outputPositions = new NativeList<float2>(capacity, allocator);
-                outputTriangles = new NativeList<int>(3 * capacity, allocator);
-                triangles = new NativeList<Triangle>(capacity, allocator);
-                circles = new NativeList<Circle>(capacity, allocator);
-                trianglesToEdges = new NativeList<Edge3>(capacity, allocator);
-                edgesToTriangles = new NativeHashMap<Edge, FixedList32Bytes<int>>(capacity, allocator);
-                constraintEdges = new NativeList<Edge>(capacity, allocator);
+                outputPositions = new(capacity, allocator);
+                outputTriangles = new(3 * capacity, allocator);
+                triangles = new(capacity, allocator);
+                circles = new(capacity, allocator);
+                trianglesToEdges = new(capacity, allocator);
+                edgesToTriangles = new(capacity, allocator);
+                constraintEdges = new(capacity, allocator);
 
-                tmpPolygon = new NativeList<Edge>(capacity, allocator);
-                badTriangles = new NativeList<int>(capacity, allocator);
-                trianglesQueue = new NativeQueue<int>(allocator);
-                visitedTriangles = new NativeList<bool>(capacity, allocator);
-                potentialPointsToRemove = new NativeHashSet<int>(capacity, allocator);
-                pointsToRemove = new NativeList<int>(capacity, allocator);
-                pointsOffset = new NativeList<int>(capacity, allocator);
+                tmpPolygon = new(capacity, allocator);
+                badTriangles = new(capacity, allocator);
+                trianglesQueue = new(allocator);
+                visitedTriangles = new(capacity, allocator);
+                potentialPointsToRemove = new(capacity, allocator);
+                pointsToRemove = new(capacity, allocator);
+                pointsOffset = new(capacity, allocator);
             }
 
             public void Dispose()
@@ -227,7 +215,7 @@ namespace andywiecko.BurstTriangulator
                 }
                 else
                 {
-                    edgesToTriangles.Add(edge, new FixedList32Bytes<int>() { triangleId });
+                    edgesToTriangles.Add(edge, new() { triangleId });
                 }
             }
 
@@ -400,7 +388,7 @@ namespace andywiecko.BurstTriangulator
                 edgesToTriangles[(e1, q0)] = eTot1;
 
                 edgesToTriangles.Remove(edge);
-                edgesToTriangles.Add((q0, q1), new FixedList32Bytes<int>() { t0, t1 });
+                edgesToTriangles.Add((q0, q1), new() { t0, t1 });
 
                 circles[t0] = CalculateCircumcenter(triangles[t0]);
                 circles[t1] = CalculateCircumcenter(triangles[t1]);
@@ -712,11 +700,11 @@ namespace andywiecko.BurstTriangulator
             public OutputData(Triangulator triangulator) => owner = triangulator;
         }
 
-        public TriangulationSettings Settings { get; } = new TriangulationSettings();
-        public InputData Input { get; set; } = new InputData();
+        public TriangulationSettings Settings { get; } = new();
+        public InputData Input { get; set; } = new();
         public OutputData Output { get; }
 
-        private static readonly Triangle SuperTriangle = new Triangle(0, 1, 2);
+        private static readonly Triangle SuperTriangle = new(0, 1, 2);
         private TriangulatorNativeData data;
 
         // Note: Cannot hide them in the `data` due to Unity.Jobs safty restrictions
@@ -731,14 +719,14 @@ namespace andywiecko.BurstTriangulator
 
         public Triangulator(int capacity, Allocator allocator)
         {
-            data = new TriangulatorNativeData(capacity, allocator);
-            localPositions = new NativeList<float2>(capacity, allocator);
-            localHoleSeeds = new NativeList<float2>(capacity, allocator);
-            com = new NativeReference<float2>(allocator);
-            scale = new NativeReference<float2>(1, allocator);
-            pcaCenter = new NativeReference<float2>(allocator);
-            pcaMatrix = new NativeReference<float2x2>(float2x2.identity, allocator);
-            Output = new OutputData(this);
+            data = new(capacity, allocator);
+            localPositions = new(capacity, allocator);
+            localHoleSeeds = new(capacity, allocator);
+            com = new(allocator);
+            scale = new(1, allocator);
+            pcaCenter = new(allocator);
+            pcaMatrix = new(float2x2.identity, allocator);
+            Output = new(this);
         }
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
 
@@ -794,12 +782,12 @@ namespace andywiecko.BurstTriangulator
             if (Settings.RestoreBoundary && Settings.ConstrainEdges)
             {
                 dependencies = holes.IsCreated ?
-                    new PlantingSeedsJob<PlantBoundaryAndHoles>(this, new PlantBoundaryAndHoles(holes)).Schedule(dependencies) :
+                    new PlantingSeedsJob<PlantBoundaryAndHoles>(this, new(holes)).Schedule(dependencies) :
                     new PlantingSeedsJob<PlantBoundary>(this, default).Schedule(dependencies);
             }
             else if (holes.IsCreated && Settings.ConstrainEdges)
             {
-                dependencies = new PlantingSeedsJob<PlantHoles>(this, new PlantHoles(holes)).Schedule(dependencies);
+                dependencies = new PlantingSeedsJob<PlantHoles>(this, new(holes)).Schedule(dependencies);
             }
 
             dependencies = new CleanupTrianglesJob(this).Schedule(this, dependencies);
@@ -1328,9 +1316,9 @@ namespace andywiecko.BurstTriangulator
                 var idC = data.InsertPoint(pC);
 
                 data.AddTriangle((idA, idB, idC));
-                data.edgesToTriangles.Add((idA, idB), new FixedList32Bytes<int> { 0 });
-                data.edgesToTriangles.Add((idB, idC), new FixedList32Bytes<int> { 0 });
-                data.edgesToTriangles.Add((idC, idA), new FixedList32Bytes<int> { 0 });
+                data.edgesToTriangles.Add((idA, idB), new() { 0 });
+                data.edgesToTriangles.Add((idB, idC), new() { 0 });
+                data.edgesToTriangles.Add((idC, idA), new() { 0 });
             }
         }
 
