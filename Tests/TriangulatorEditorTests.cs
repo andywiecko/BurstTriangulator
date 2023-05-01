@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -121,7 +120,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Settings = { RefineMesh = false },
                 Input = { Positions = positions },
             };
-            Assert.Throws<ArgumentException>(() => triangulator.Run());
+
+            LogAssert.Expect(UnityEngine.LogType.Error, new Regex(".*"));
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Triangulator.Status.ERR));
         }
 
         [Test]
@@ -419,7 +422,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 }
             };
 
-            Assert.Throws<ArgumentException>(() => triangulator.Run());
+            LogAssert.Expect(UnityEngine.LogType.Error, new Regex(".*"));
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Triangulator.Status.ERR));
         }
 
         private static readonly TestCaseData[] constraintDelaunayTriangulationWithRefinementTestData = new[]
@@ -1281,7 +1287,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 }
             };
 
-            LogAssert.Expect(UnityEngine.LogType.Exception, new Regex("Sloan max iterations exceeded.*"));
+            LogAssert.Expect(UnityEngine.LogType.Error, new Regex("Sloan max iterations exceeded.*"));
             triangulator.Run();
         }
 
