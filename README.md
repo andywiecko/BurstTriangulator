@@ -129,6 +129,40 @@ using var triangulator = new(1024, Allocator.Persistent)
 };
 ```
 
+If the triangulation algorithm fails, checking the status and handling it in the job pipeline can be considered.
+For example:
+
+```csharp
+[BurstCompile]
+private struct Job : IJob
+{
+  NativeReference<Triangulator.Status>.ReadOnly status;
+
+  public Job(Triangulator triangulator)
+  {
+    status = triangulator.Output.Status.AsReadOnly();
+  }
+
+  public void Execute()
+  {
+    if(status != Triangulator.Status.OK)
+    {
+      return;
+    }
+
+    ...
+  }
+}
+
+...
+
+var dependencies = default(JobHandle);
+dependencies = triangulator.Schedule(dependencies);
+dependencies = new Job(triangulator).Schedule(dependencies);
+
+...
+```
+
 Below one can find the result of the triangulation for different selected options.
 
 > **Note**
@@ -269,9 +303,8 @@ Input positions, as well as input constraints, have a few restrictions:
 - Zero-length constraint edges are forbidden.
 - Constraint edges cannot intersect with points other than the points for which they are defined.
 
-> **Note**
->
-> Validation is limited only for Editor!
+If one of the conditions fails, then triangulation will not be calculated.
+One could catch this as an error by using `triangulator.Output.Status` (native, can be used in jobs).
 
 ### Generating input in a job
 
@@ -361,10 +394,11 @@ Using Burst can provide more or less two order of magnitude faster computation.
 
 - [ ] Cache circles for constraint edges.
 - [ ] Update `edgeToTriangles` buffer instead rebuilding.
-- [X] ~~Remove obsoletes.~~
 - [ ] Update default `Setting`.
+- [ ] Remove native data `struct` (move logic to jobs).
+- [X] ~~Remove obsoletes.~~
 - [X] ~~Bump packages and editor.~~
-- [ ] Introduce state to support runtime (build) validation.
+- [X] ~~Introduce state to support runtime (build) validation.~~
 - [X] ~~"Extract" transformations.~~
 
 ## Bibliography

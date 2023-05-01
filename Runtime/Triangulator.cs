@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -123,6 +122,7 @@ namespace andywiecko.BurstTriangulator
             public NativeList<Edge3> trianglesToEdges;
             public NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             public NativeList<Edge> constraintEdges;
+            public NativeReference<Status> status;
 
             private NativeList<Edge> tmpPolygon;
             private NativeList<int> badTriangles;
@@ -143,6 +143,7 @@ namespace andywiecko.BurstTriangulator
                 trianglesToEdges = new(capacity, allocator);
                 edgesToTriangles = new(capacity, allocator);
                 constraintEdges = new(capacity, allocator);
+                status = new(Status.OK, allocator);
 
                 tmpPolygon = new(capacity, allocator);
                 badTriangles = new(capacity, allocator);
@@ -162,6 +163,7 @@ namespace andywiecko.BurstTriangulator
                 trianglesToEdges.Dispose();
                 edgesToTriangles.Dispose();
                 constraintEdges.Dispose();
+                status.Dispose();
 
                 tmpPolygon.Dispose();
                 badTriangles.Dispose();
@@ -617,6 +619,18 @@ namespace andywiecko.BurstTriangulator
         }
         #endregion
 
+        public enum Status
+        {
+            /// <summary>
+            /// State corresponds to triangulation completed successfully.
+            /// </summary>
+            OK = 0,
+            /// <summary>
+            /// State may suggest that some error occurs during triangulation. See console for more details.
+            /// </summary>
+            ERR = 1,
+        }
+
         public enum Preprocessor
         {
             None = 0,
@@ -705,6 +719,7 @@ namespace andywiecko.BurstTriangulator
         {
             public NativeList<float2> Positions => owner.data.outputPositions;
             public NativeList<int> Triangles => owner.data.outputTriangles;
+            public NativeReference<Status> Status => owner.data.status;
             private readonly Triangulator owner;
             public OutputData(Triangulator triangulator) => owner = triangulator;
         }
@@ -754,11 +769,6 @@ namespace andywiecko.BurstTriangulator
 
         public JobHandle Schedule(JobHandle dependencies = default)
         {
-            if (Settings.ValidateInput)
-            {
-                RunValidateInputPositions(this, dependencies);
-            }
-
             dependencies = new ClearDataJob(this).Schedule(dependencies);
 
             dependencies = Settings.Preprocessor switch
@@ -769,20 +779,22 @@ namespace andywiecko.BurstTriangulator
                 _ => throw new NotImplementedException()
             };
 
+            if (Settings.ValidateInput)
+            {
+                dependencies = new ValidateInputPositionsJob(this).Schedule(dependencies);
+                dependencies = Settings.ConstrainEdges ? new ValidateInputConstraintEdges(this).Schedule(dependencies) : dependencies;
+            }
+
             dependencies = new RegisterSuperTriangleJob(this).Schedule(dependencies);
             dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
+            dependencies = Settings.ConstrainEdges ? ScheduleConstrainEdges(dependencies) : dependencies;
 
-            if (Settings.ConstrainEdges)
+            dependencies = (Settings.RefineMesh, Settings.ConstrainEdges) switch
             {
-                dependencies = ScheduleConstrainEdges(dependencies);
-            }
-
-            if (Settings.RefineMesh)
-            {
-                dependencies = Settings.ConstrainEdges ?
-                    new RefineMeshJob<ConstraintEnable>(this).Schedule(dependencies) :
-                    new RefineMeshJob<ConstraintDisable>(this).Schedule(dependencies);
-            }
+                (true, true) => new RefineMeshJob<ConstraintEnable>(this).Schedule(dependencies),
+                (true, false) => new RefineMeshJob<ConstraintDisable>(this).Schedule(dependencies),
+                (false, _) => dependencies
+            };
 
             dependencies = new ResizePointsOffsetsJob(this).Schedule(dependencies);
 
@@ -810,41 +822,6 @@ namespace andywiecko.BurstTriangulator
             };
 
             return dependencies;
-        }
-
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        private static void RunValidateInputPositions(Triangulator @this, JobHandle dependencies)
-        {
-            using var isValid = new NativeReference<bool>(Allocator.TempJob);
-            new ValidateInputPositionsJob(@this, isValid).Schedule(dependencies).Complete();
-            if (isValid.Value == false)
-            {
-                throw new ArgumentException(
-                    $"The provided input {nameof(Triangulator.Input.Positions)} is not supported!\n" +
-                    $"1. Points count must be greater/equal 3.\n" +
-                    $"2. Input positions cannot contain duplicated entries.\n" +
-                    $"3. Input positions cannot contain NaN or infinities."
-                );
-            }
-        }
-
-        [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        private static void RunValidateConstraintEdges(Triangulator @this, JobHandle dependencies)
-        {
-            using var isValid = new NativeReference<bool>(Allocator.TempJob);
-            new ValidateInputConstraintEdges(@this, isValid).Schedule(dependencies).Complete();
-            if (isValid.Value == false)
-            {
-                throw new ArgumentException(
-                    $"The provided input {nameof(Triangulator.Input.ConstraintEdges)} is not supported!\n" +
-                    $"1. Edges mustn't intersect.\n" +
-                    $"2. Edges mustn't be duplicated, e.g. (a0, a1), (a1, a0) cannot be present.\n" +
-                    $"3. Edges mustn't intersect point other than two points which they are defined.\n" +
-                    $"4. Edges cannot be zero length, i.e. (a0, a0) is forbidden.\n" +
-                    $"5. Constraint input buffer must contain even number of elements.\n" +
-                    $"6. Constraints must be in range of Input.Positions."
-                );
-            }
         }
 
         private JobHandle SchedulePCATransformation(JobHandle dependencies)
@@ -919,16 +896,11 @@ namespace andywiecko.BurstTriangulator
 
         private JobHandle ScheduleConstrainEdges(JobHandle dependencies)
         {
-            if (Settings.ValidateInput)
-            {
-                RunValidateConstraintEdges(this, dependencies);
-            }
-
             var edges = new NativeList<Edge>(Allocator.TempJob);
             var constraints = new NativeList<Edge>(Allocator.TempJob);
             dependencies = new CopyEdgesJob(this, edges).Schedule(dependencies);
             dependencies = new ResizeEdgeConstraintsJob(this).Schedule(dependencies);
-            dependencies = new ConstructConstraintEdgesJob(this).Schedule(data.constraintEdges, Settings.BatchCount, dependencies);
+            dependencies = new ConstructConstraintEdgesJob(this).Schedule(this, dependencies);
             dependencies = new CopyConstraintsJob(this, constraints).Schedule(dependencies);
             dependencies = new FilterAlreadyConstraintEdges(edges, constraints).Schedule(dependencies);
             dependencies = new ConstrainEdgesJob(this, edges, constraints).Schedule(dependencies);
@@ -944,37 +916,34 @@ namespace andywiecko.BurstTriangulator
         {
             [ReadOnly]
             private NativeArray<float2> positions;
-            private NativeReference<bool> isValidRef;
+            private NativeReference<Status> status;
 
-            public ValidateInputPositionsJob(Triangulator triangulator, NativeReference<bool> isValid)
+            public ValidateInputPositionsJob(Triangulator triangulator)
             {
                 positions = triangulator.Input.Positions;
-                isValidRef = isValid;
+                status = triangulator.data.status;
             }
 
-            public void Execute() => isValidRef.Value = ValidatePositions();
-
-            private bool ValidatePositions()
+            public void Execute()
             {
                 if (positions.Length < 3)
                 {
-                    UnityEngine.Debug.LogWarning($"[Triangulator]: Positions.Length is less then 3!");
-                    return false;
+                    Debug.LogError($"[Triangulator]: Positions.Length is less then 3!");
+                    status.Value |= Status.ERR;
                 }
 
                 for (int i = 0; i < positions.Length; i++)
                 {
                     if (!PointValidation(i))
                     {
-                        UnityEngine.Debug.LogWarning($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
-                        return false;
+                        Debug.LogError($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
+                        status.Value |= Status.ERR;
                     }
                     if (!PointPointValidation(i))
                     {
-                        return false;
+                        status.Value |= Status.ERR;
                     }
                 }
-                return true;
             }
 
             private bool PointValidation(int i) => math.all(math.isfinite(positions[i]));
@@ -987,7 +956,7 @@ namespace andywiecko.BurstTriangulator
                     var pj = positions[j];
                     if (math.all(pi == pj))
                     {
-                        UnityEngine.Debug.LogWarning($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
+                        Debug.LogError($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
                         return false;
                     }
                 }
@@ -1279,6 +1248,7 @@ namespace andywiecko.BurstTriangulator
             public void Execute()
             {
                 data.Clear();
+                data.status.Value = Status.OK;
                 scaleRef.Value = 1;
                 comRef.Value = 0;
                 cRef.Value = 0;
@@ -1301,6 +1271,11 @@ namespace andywiecko.BurstTriangulator
 
             public void Execute()
             {
+                if (data.status.Value != Status.OK)
+                {
+                    return;
+                }
+
                 var min = (float2)float.MaxValue;
                 var max = (float2)float.MinValue;
 
@@ -1344,6 +1319,11 @@ namespace andywiecko.BurstTriangulator
 
             public void Execute()
             {
+                if (data.status.Value != Status.OK)
+                {
+                    return;
+                }
+
                 for (int i = 0; i < inputPositions.Length; i++)
                 {
                     data.InsertPoint(inputPositions[i]);
@@ -1358,23 +1338,22 @@ namespace andywiecko.BurstTriangulator
             private NativeArray<int> constraints;
             [ReadOnly]
             private NativeArray<float2> positions;
-            private NativeReference<bool> isValidRef;
+            private NativeReference<Status> status;
 
-            public ValidateInputConstraintEdges(Triangulator triangulator, NativeReference<bool> isValid)
+            public ValidateInputConstraintEdges(Triangulator triangulator)
             {
                 constraints = triangulator.Input.ConstraintEdges;
                 positions = triangulator.Input.Positions;
-                isValidRef = isValid;
+                status = triangulator.data.status;
             }
 
-            public void Execute() => isValidRef.Value = ValidateEdgeConstraint();
-
-            private bool ValidateEdgeConstraint()
+            public void Execute()
             {
                 if (constraints.Length % 2 == 1)
                 {
-                    UnityEngine.Debug.LogWarning($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
-                    return false;
+                    Debug.LogError($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
+                    status.Value |= Status.ERR;
+                    return;
                 }
 
                 for (int i = 0; i < constraints.Length / 2; i++)
@@ -1384,11 +1363,10 @@ namespace andywiecko.BurstTriangulator
                         !EdgePointValidation(i) ||
                         !EdgeEdgeValidation(i))
                     {
-                        return false;
+                        status.Value |= Status.ERR;
+                        return;
                     }
                 }
-
-                return true;
             }
 
             private bool EdgePositionsRangeValidation(int i)
@@ -1397,7 +1375,7 @@ namespace andywiecko.BurstTriangulator
                 var count = positions.Length;
                 if (a0Id >= count || a0Id < 0 || a1Id >= count || a1Id < 0)
                 {
-                    UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
+                    Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
                     return false;
                 }
 
@@ -1409,7 +1387,7 @@ namespace andywiecko.BurstTriangulator
                 var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
                 if (a0Id == a1Id)
                 {
-                    UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] is length zero!");
+                    Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] is length zero!");
                     return false;
                 }
                 return true;
@@ -1430,7 +1408,7 @@ namespace andywiecko.BurstTriangulator
                     var p = positions[j];
                     if (PointLineSegmentIntersection(p, a0, a1))
                     {
-                        UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] and Positions[{j}] are collinear!");
+                        Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] and Positions[{j}] are collinear!");
                         return false;
                     }
                 }
@@ -1460,7 +1438,7 @@ namespace andywiecko.BurstTriangulator
                 if (a0Id == b0Id && a1Id == b1Id ||
                     a0Id == b1Id && a1Id == b0Id)
                 {
-                    UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] and [{j}] are equivalent!");
+                    Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] and [{j}] are equivalent!");
                     return false;
                 }
 
@@ -1473,7 +1451,7 @@ namespace andywiecko.BurstTriangulator
                 var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
                 if (EdgeEdgeIntersection(a0, a1, b0, b1))
                 {
-                    UnityEngine.Debug.LogWarning($"[Triangulator]: ConstraintEdges[{i}] and [{j}] intersect!");
+                    Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] and [{j}] intersect!");
                     return false;
                 }
 
@@ -1487,15 +1465,22 @@ namespace andywiecko.BurstTriangulator
             [ReadOnly]
             private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             private NativeList<Edge> edges;
+            private NativeReference<Status>.ReadOnly status;
 
             public CopyEdgesJob(Triangulator triangulator, NativeList<Edge> edges)
             {
                 edgesToTriangles = triangulator.data.edgesToTriangles;
                 this.edges = edges;
+                status = triangulator.data.status.AsReadOnly();
             }
 
             public void Execute()
             {
+                if (status.Value != Status.OK)
+                {
+                    return;
+                }
+
                 using var tmp = edgesToTriangles.GetKeyArray(Allocator.Temp);
                 edges.CopyFrom(tmp);
             }
@@ -1514,10 +1499,7 @@ namespace andywiecko.BurstTriangulator
                 this.constraints = constraints;
             }
 
-            public void Execute()
-            {
-                constraints.CopyFrom(internalConstraints);
-            }
+            public void Execute() => constraints.CopyFrom(internalConstraints);
         }
 
         [BurstCompile]
@@ -1526,15 +1508,22 @@ namespace andywiecko.BurstTriangulator
             [ReadOnly]
             private NativeArray<int> inputConstraintEdges;
             private NativeList<Edge> constraintEdges;
+            private NativeReference<Status>.ReadOnly status;
 
             public ResizeEdgeConstraintsJob(Triangulator triangulator)
             {
                 inputConstraintEdges = triangulator.Input.ConstraintEdges;
                 constraintEdges = triangulator.data.constraintEdges;
+                status = triangulator.data.status.AsReadOnly();
             }
 
             public void Execute()
             {
+                if (status.Value != Status.OK)
+                {
+                    return;
+                }
+
                 constraintEdges.Length = inputConstraintEdges.Length / 2;
             }
         }
@@ -1552,6 +1541,9 @@ namespace andywiecko.BurstTriangulator
                 constraintEdges = triangulator.data.constraintEdges.AsDeferredJobArray();
             }
 
+            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies) =>
+                this.Schedule(triangulator.data.constraintEdges, triangulator.Settings.BatchCount, dependencies);
+
             public void Execute(int index)
             {
                 var i = inputConstraintEdges[2 * index];
@@ -1564,14 +1556,10 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct FilterAlreadyConstraintEdges : IJob
         {
-            private NativeList<Edge> edges;
-            private NativeList<Edge> constraints;
+            private NativeList<Edge> edges, constraints;
 
-            public FilterAlreadyConstraintEdges(NativeList<Edge> edges, NativeList<Edge> constraints)
-            {
-                this.edges = edges;
-                this.constraints = constraints;
-            }
+            public FilterAlreadyConstraintEdges(NativeList<Edge> edges, NativeList<Edge> constraints) =>
+                (this.edges, this.constraints) = (edges, constraints);
 
             public void Execute()
             {
@@ -1626,21 +1614,28 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            [Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-            private static void ThrowsOnExceededMaxIters(int iter, int maxIters)
+            private bool IsMaxItersExceeded(int iter, int maxIters)
             {
                 if (iter >= maxIters)
                 {
-                    throw new Exception(
-                        $"Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +
+                    Debug.LogError(
+                        $"[Triangulator]: Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +
                         $"It usually happens when the scale of the input positions is not uniform. " +
                         $"Please try to post-process input data or increase {nameof(Settings.SloanMaxIters)} value."
                     );
+                    data.status.Value |= Status.ERR;
+                    return true;
                 }
+                return false;
             }
 
             public void Execute()
             {
+                if (data.status.Value != Status.OK)
+                {
+                    return;
+                }
+
                 edges.Sort();
                 constraints.Sort();
                 using var intersections = new NativeQueue<Edge>(Allocator.Temp);
@@ -1654,7 +1649,10 @@ namespace andywiecko.BurstTriangulator
                     var iter = 0;
                     while (intersections.TryDequeue(out var e))
                     {
-                        ThrowsOnExceededMaxIters(iter++, maxIters);
+                        if (IsMaxItersExceeded(iter++, maxIters))
+                        {
+                            return;
+                        }
 
                         var tris = data.edgesToTriangles[e];
                         var t0 = tris[0];
@@ -1774,6 +1772,11 @@ namespace andywiecko.BurstTriangulator
 
             public void Execute()
             {
+                if (data.status.Value != Status.OK)
+                {
+                    return;
+                }
+
                 while (TrySplitEncroachedEdge() || TryRemoveBadTriangle()) { }
             }
 
@@ -1921,6 +1924,11 @@ namespace andywiecko.BurstTriangulator
 
             public void Execute()
             {
+                if (data.status.Value != Status.OK)
+                {
+                    return;
+                }
+
                 data.InitializePlantingSeeds();
                 mode.PlantBoundarySeed(data);
                 mode.PlantHoleSeeds(data);
@@ -1936,15 +1944,13 @@ namespace andywiecko.BurstTriangulator
         {
             [ReadOnly]
             private NativeList<Triangle> triangles;
-
             [ReadOnly]
             private NativeList<float2> outputPositions;
-
             [WriteOnly]
             private NativeList<int>.ParallelWriter outputTriangles;
-
             [ReadOnly]
             private NativeArray<int> pointsOffset;
+            private NativeReference<Status>.ReadOnly status;
 
             public CleanupTrianglesJob(Triangulator triangulator)
             {
@@ -1952,6 +1958,7 @@ namespace andywiecko.BurstTriangulator
                 outputPositions = triangulator.data.outputPositions;
                 outputTriangles = triangulator.data.outputTriangles.AsParallelWriter();
                 pointsOffset = triangulator.data.pointsOffset.AsDeferredJobArray();
+                status = triangulator.data.status.AsReadOnly();
             }
 
             public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
@@ -1961,6 +1968,11 @@ namespace andywiecko.BurstTriangulator
 
             public void Execute(int i)
             {
+                if (status.Value != Status.OK)
+                {
+                    return;
+                }
+
                 var t = triangles[i];
                 if (t.ContainsCommonPointWith(SuperTriangle))
                 {
@@ -1981,15 +1993,22 @@ namespace andywiecko.BurstTriangulator
             private NativeList<float2> positions;
             [ReadOnly]
             private NativeArray<int> pointsToRemove;
+            private NativeReference<Status>.ReadOnly status;
 
             public CleanupPositionsJob(Triangulator triangulator)
             {
                 positions = triangulator.data.outputPositions;
                 pointsToRemove = triangulator.data.pointsToRemove.AsDeferredJobArray();
+                status = triangulator.data.status.AsReadOnly();
             }
 
             public void Execute()
             {
+                if (status.Value != Status.OK)
+                {
+                    return;
+                }
+
                 for (int i = pointsToRemove.Length - 1; i >= 0; i--)
                 {
                     positions.RemoveAt(pointsToRemove[i]);
