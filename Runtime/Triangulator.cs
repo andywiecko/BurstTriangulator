@@ -1039,7 +1039,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<Triangle> triangles;
             private NativeList<Circle> circles;
             private NativeList<Edge3> trianglesToEdges;
-            private NativeList<Edge> constraintEdges;
 
             public DelaunayTriangulationJob(Triangulator triangluator)
             {
@@ -1050,7 +1049,6 @@ namespace andywiecko.BurstTriangulator
                 triangles = triangluator.triangles;
                 circles = triangluator.circles;
                 trianglesToEdges = triangluator.trianglesToEdges;
-                constraintEdges = triangluator.constraintEdges; // TODO remove this should not be present in this job!
             }
 
             public void Execute()
@@ -1082,7 +1080,7 @@ namespace andywiecko.BurstTriangulator
 
             private int InsertPoint(float2 p)
             {
-                return Triangulator.InsertPoint(p, initTriangles: SearchForFirstBadTriangle(p), triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
+                return Triangulator.InsertPoint(p, initTriangles: SearchForFirstBadTriangle(p), triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
             }
 
             private void RegisterSuperTriangle()
@@ -1540,7 +1538,7 @@ namespace andywiecko.BurstTriangulator
             );
         }
 
-        private struct ConstraintDisable : IRefineMeshJobMode<ConstraintDisable>
+        private readonly struct ConstraintDisable : IRefineMeshJobMode<ConstraintDisable>
         {
             public ConstraintDisable Create(Triangulator _) => new();
             public void InsertPoint(float2 p, int tId,
@@ -1582,6 +1580,7 @@ namespace andywiecko.BurstTriangulator
                 NativeList<Edge3> trianglesToEdges
                 )
             {
+                var eId = 0;
                 foreach (var e in constraintEdges)
                 {
                     var (e0, e1) = (outputPositions[e.IdA], outputPositions[e.IdB]);
@@ -1589,7 +1588,6 @@ namespace andywiecko.BurstTriangulator
                     if (math.distancesq(circle.Center, p) < circle.RadiusSq)
                     {
                         var pId = outputPositions.Length;
-                        var eId = constraintEdges.IndexOf(e);
                         constraintEdges.RemoveAt(eId);
                         constraintEdges.Add((pId, e.IdA));
                         constraintEdges.Add((pId, e.IdB));
@@ -1597,6 +1595,7 @@ namespace andywiecko.BurstTriangulator
                         Triangulator.InsertPoint(circle.Center, initTriangles: edgesToTriangles[e], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
                         return;
                     }
+                    eId++;
                 }
 
                 Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
