@@ -1521,23 +1521,113 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private interface IRefineMeshJobMode
+        private interface IRefineMeshJobMode<TSelf>
         {
-            bool Constrain { get; }
+            TSelf Create(Triangulator triangulator);
+            void SplitEdge(Edge edge,
+                NativeList<float2> outputPositions,
+                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+                NativeList<Triangle> triangles,
+                NativeList<Circle> circles,
+                NativeList<Edge3> trianglesToEdges
+            );
+            void InsertPoint(float2 p, int tId,
+                NativeList<float2> outputPositions,
+                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+                NativeList<Triangle> triangles,
+                NativeList<Circle> circles,
+                NativeList<Edge3> trianglesToEdges
+            );
         }
 
-        private readonly struct ConstraintDisable : IRefineMeshJobMode
+        private struct ConstraintDisable : IRefineMeshJobMode<ConstraintDisable>
         {
-            public bool Constrain => false;
+            public ConstraintDisable Create(Triangulator _) => new();
+            public void InsertPoint(float2 p, int tId,
+                NativeList<float2> outputPositions,
+                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+                NativeList<Triangle> triangles,
+                NativeList<Circle> circles,
+                NativeList<Edge3> trianglesToEdges)
+            {
+                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
+            }
+
+            public void SplitEdge(Edge edge,
+                NativeList<float2> outputPositions,
+                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+                NativeList<Triangle> triangles,
+                NativeList<Circle> circles,
+                NativeList<Edge3> trianglesToEdges
+            )
+            {
+                var (e0, e1) = edge;
+                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
+                var p = 0.5f * (pA + pB);
+                Triangulator.InsertPoint(p, initTriangles: edgesToTriangles[edge], triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
+            }
         }
 
-        private readonly struct ConstraintEnable : IRefineMeshJobMode
+        private struct ConstraintEnable : IRefineMeshJobMode<ConstraintEnable>
         {
-            public bool Constrain => true;
+            private NativeList<Edge> constraintEdges;
+            public ConstraintEnable(Triangulator triangulator) => constraintEdges = triangulator.constraintEdges;
+            public ConstraintEnable Create(Triangulator triangulator) => new(triangulator);
+
+            public void InsertPoint(float2 p, int tId,
+                NativeList<float2> outputPositions,
+                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+                NativeList<Triangle> triangles,
+                NativeList<Circle> circles,
+                NativeList<Edge3> trianglesToEdges
+                )
+            {
+                foreach (var e in constraintEdges)
+                {
+                    var (e0, e1) = (outputPositions[e.IdA], outputPositions[e.IdB]);
+                    var circle = new Circle(0.5f * (e0 + e1), 0.5f * math.distance(e0, e1));
+                    if (math.distancesq(circle.Center, p) < circle.RadiusSq)
+                    {
+                        var pId = outputPositions.Length;
+                        var eId = constraintEdges.IndexOf(e);
+                        constraintEdges.RemoveAt(eId);
+                        constraintEdges.Add((pId, e.IdA));
+                        constraintEdges.Add((pId, e.IdB));
+
+                        Triangulator.InsertPoint(circle.Center, initTriangles: edgesToTriangles[e], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
+                        return;
+                    }
+                }
+
+                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
+            }
+
+            public void SplitEdge(Edge edge,
+                NativeList<float2> outputPositions,
+                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+                NativeList<Triangle> triangles,
+                NativeList<Circle> circles,
+                NativeList<Edge3> trianglesToEdges
+            )
+            {
+                var (e0, e1) = edge;
+                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
+                var p = 0.5f * (pA + pB);
+
+                if (constraintEdges.Contains(edge))
+                {
+                    var pId = outputPositions.Length;
+                    var eId = constraintEdges.IndexOf(edge);
+                    constraintEdges.RemoveAt(eId);
+                    constraintEdges.Add((pId, edge.IdA));
+                    constraintEdges.Add((pId, edge.IdB));
+                }
+                Triangulator.InsertPoint(p, initTriangles: edgesToTriangles[edge], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
+            }
         }
 
         [BurstCompile]
-        private struct RefineMeshJob<T> : IJob where T : struct, IRefineMeshJobMode
+        private struct RefineMeshJob<T> : IJob where T : struct, IRefineMeshJobMode<T>
         {
             private readonly float minimumArea2;
             private readonly float maximumArea2;
@@ -1546,7 +1636,6 @@ namespace andywiecko.BurstTriangulator
             private readonly T mode;
             private NativeReference<Status>.ReadOnly status;
             private NativeList<Edge3> trianglesToEdges;
-            private NativeList<Edge> constraintEdges;
             private NativeList<Triangle> triangles;
             private NativeList<float2> outputPositions;
             private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
@@ -1558,11 +1647,10 @@ namespace andywiecko.BurstTriangulator
                 maximumArea2 = 2 * triangulator.Settings.MaximumArea;
                 minimumAngle = triangulator.Settings.MinimumAngle;
                 scaleRef = triangulator.scale.AsReadOnly();
-                mode = default;
+                mode = default(T).Create(triangulator);
 
                 status = triangulator.status.AsReadOnly();
                 trianglesToEdges = triangulator.trianglesToEdges;
-                constraintEdges = triangulator.constraintEdges;
                 triangles = triangulator.triangles;
                 outputPositions = triangulator.outputPositions;
                 edgesToTriangles = triangulator.edgesToTriangles;
@@ -1592,37 +1680,13 @@ namespace andywiecko.BurstTriangulator
                                 continue;
                             }
 
-                            SplitEdge(edge);
+                            mode.SplitEdge(edge, outputPositions, edgesToTriangles, triangles, circles, trianglesToEdges);
                             return true;
                         }
                     }
                 }
 
                 return false;
-            }
-
-            private void SplitEdge(Edge edge)
-            {
-                var (e0, e1) = edge;
-                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
-                var p = 0.5f * (pA + pB);
-
-                if (mode.Constrain)
-                {
-                    if (constraintEdges.Contains(edge))
-                    {
-                        var pId = outputPositions.Length;
-                        var eId = constraintEdges.IndexOf(edge);
-                        constraintEdges.RemoveAt(eId);
-                        constraintEdges.Add((pId, edge.IdA));
-                        constraintEdges.Add((pId, edge.IdB));
-                    }
-                    InsertPoint(p, initTriangles: edgesToTriangles[edge], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
-                }
-                else
-                {
-                    InsertPoint(p, initTriangles: edgesToTriangles[edge], triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
-                }
             }
 
             private bool AnyEdgeTriangleAreaIsTooSmall(Edge edge)
@@ -1649,40 +1713,11 @@ namespace andywiecko.BurstTriangulator
                         TriangleIsBad(triangle, minimumArea2 * s.x * s.y, maximumArea2 * s.x * s.y, minimumAngle))
                     {
                         var circle = circles[tId];
-                        InsertPointAtTriangleCircumcenter(circle.Center, tId);
+                        mode.InsertPoint(circle.Center, tId, outputPositions, edgesToTriangles, triangles, circles, trianglesToEdges);
                         return true;
                     }
                 }
                 return false;
-            }
-
-            private void InsertPointAtTriangleCircumcenter(float2 p, int tId)
-            {
-                if (mode.Constrain)
-                {
-                    foreach (var e in constraintEdges)
-                    {
-                        var (e0, e1) = (outputPositions[e.IdA], outputPositions[e.IdB]);
-                        var circle = new Circle(0.5f * (e0 + e1), 0.5f * math.distance(e0, e1));
-                        if (math.distancesq(circle.Center, p) < circle.RadiusSq)
-                        {
-                            var pId = outputPositions.Length;
-                            var eId = constraintEdges.IndexOf(e);
-                            constraintEdges.RemoveAt(eId);
-                            constraintEdges.Add((pId, e.IdA));
-                            constraintEdges.Add((pId, e.IdB));
-
-                            InsertPoint(circle.Center, initTriangles: edgesToTriangles[e], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
-                            return;
-                        }
-                    }
-
-                    InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
-                }
-                else
-                {
-                    InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
-                }
             }
 
             private bool TriangleIsBad(Triangle triangle, float minimumArea2, float maximumArea2, float minimumAngle)
