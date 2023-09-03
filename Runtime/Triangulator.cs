@@ -122,27 +122,23 @@ namespace andywiecko.BurstTriangulator
 
         private static int InsertPoint(float2 p,
             FixedList128Bytes<int> initTriangles,
-            NativeList<int> badTriangles,
             NativeList<Triangle> triangles,
             NativeList<Circle> circles,
             NativeList<Edge3> trianglesToEdges,
             NativeList<float2> outputPositions,
-            NativeQueue<int> trianglesQueue,
-            NativeList<bool> visitedTriangles,
             NativeList<Edge> constraintEdges,
             NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
-            NativeList<Edge> tmpPolygon,
             bool constraint = false
         )
         {
             var pId = outputPositions.Length;
             outputPositions.Add(p);
 
-            visitedTriangles.Clear();
-            visitedTriangles.Length = triangles.Length;
+            var visitedTriangles = new NativeArray<bool>(triangles.Length, Allocator.Temp);
+            using var badTriangles = new NativeList<int>(triangles.Length, Allocator.Temp);
+            using var trianglesQueue = new NativeQueue<int>(Allocator.Temp);
+            using var tmpPolygon = new NativeList<Edge>(Allocator.Temp);
 
-            badTriangles.Clear();
-            trianglesQueue.Clear();
             foreach (var tId in initTriangles)
             {
                 if (!visitedTriangles[tId])
@@ -154,6 +150,8 @@ namespace andywiecko.BurstTriangulator
             }
 
             ProcessBadTriangles(pId);
+
+            visitedTriangles.Dispose();
             return pId;
 
             void RecalculateBadTriangles(float2 p)
@@ -195,7 +193,7 @@ namespace andywiecko.BurstTriangulator
 
                 void CreatePolygonTriangles(int pId)
                 {
-                    foreach (var (e1, e2) in tmpPolygon)
+                    foreach (var (e1, e2) in tmpPolygon.AsReadOnly())
                     {
                         AddTriangle((pId, e1, e2), triangles, outputPositions, circles, trianglesToEdges, edgesToTriangles);
                     }
@@ -204,7 +202,7 @@ namespace andywiecko.BurstTriangulator
                 void CalculateStarPolygon()
                 {
                     tmpPolygon.Clear();
-                    foreach (var t1 in badTriangles)
+                    foreach (var t1 in badTriangles.AsReadOnly())
                     {
                         foreach (var edge in trianglesToEdges[t1])
                         {
@@ -430,11 +428,6 @@ namespace andywiecko.BurstTriangulator
         private NativeList<Edge> constraintEdges;
         private NativeReference<Status> status;
 
-        private NativeList<Edge> tmpPolygon;
-        private NativeList<int> badTriangles;
-        private NativeQueue<int> trianglesQueue;
-        private NativeList<bool> visitedTriangles;
-        private NativeHashSet<int> potentialPointsToRemove;
         private NativeList<int> pointsToRemove;
         private NativeList<int> pointsOffset;
 
@@ -458,11 +451,6 @@ namespace andywiecko.BurstTriangulator
             constraintEdges = new(capacity, allocator);
             status = new(Status.OK, allocator);
 
-            tmpPolygon = new(capacity, allocator);
-            badTriangles = new(capacity, allocator);
-            trianglesQueue = new(allocator);
-            visitedTriangles = new(capacity, allocator);
-            potentialPointsToRemove = new(capacity, allocator);
             pointsToRemove = new(capacity, allocator);
             pointsOffset = new(capacity, allocator);
 
@@ -487,11 +475,6 @@ namespace andywiecko.BurstTriangulator
             constraintEdges.Dispose();
             status.Dispose();
 
-            tmpPolygon.Dispose();
-            badTriangles.Dispose();
-            trianglesQueue.Dispose();
-            visitedTriangles.Dispose();
-            potentialPointsToRemove.Dispose();
             pointsToRemove.Dispose();
             pointsOffset.Dispose();
 
@@ -983,11 +966,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<Edge3> trianglesToEdges;
             private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             private NativeList<Edge> constraintEdges;
-            private NativeList<Edge> tmpPolygon;
-            private NativeList<int> badTriangles;
-            private NativeQueue<int> trianglesQueue;
-            private NativeList<bool> visitedTriangles;
-            private NativeHashSet<int> potentialPointsToRemove;
             private NativeList<int> pointsToRemove;
             private NativeList<int> pointsOffset;
             private NativeReference<Status> status;
@@ -1001,11 +979,6 @@ namespace andywiecko.BurstTriangulator
                 trianglesToEdges = triangulator.trianglesToEdges;
                 edgesToTriangles = triangulator.edgesToTriangles;
                 constraintEdges = triangulator.constraintEdges;
-                tmpPolygon = triangulator.tmpPolygon;
-                badTriangles = triangulator.badTriangles;
-                trianglesQueue = triangulator.trianglesQueue;
-                visitedTriangles = triangulator.visitedTriangles;
-                potentialPointsToRemove = triangulator.potentialPointsToRemove;
                 pointsToRemove = triangulator.pointsToRemove;
                 pointsOffset = triangulator.pointsOffset;
 
@@ -1025,11 +998,6 @@ namespace andywiecko.BurstTriangulator
                 edgesToTriangles.Clear();
                 constraintEdges.Clear();
 
-                tmpPolygon.Clear();
-                badTriangles.Clear();
-                trianglesQueue.Clear();
-                visitedTriangles.Clear();
-                potentialPointsToRemove.Clear();
                 pointsToRemove.Clear();
                 pointsOffset.Clear();
 
@@ -1049,14 +1017,10 @@ namespace andywiecko.BurstTriangulator
             private NativeReference<Status>.ReadOnly status;
             private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             private NativeList<float2> outputPositions;
-            private NativeList<int> badTriangles;
-            private NativeList<bool> visitedTriangles;
             private NativeList<Triangle> triangles;
             private NativeList<Circle> circles;
-            private NativeQueue<int> trianglesQueue;
             private NativeList<Edge3> trianglesToEdges;
             private NativeList<Edge> constraintEdges;
-            private NativeList<Edge> tmpPolygon;
 
             public DelaunayTriangulationJob(Triangulator triangluator)
             {
@@ -1064,14 +1028,10 @@ namespace andywiecko.BurstTriangulator
                 status = triangluator.status.AsReadOnly();
                 edgesToTriangles = triangluator.edgesToTriangles;
                 outputPositions = triangluator.outputPositions;
-                badTriangles = triangluator.badTriangles;
-                visitedTriangles = triangluator.visitedTriangles;
                 triangles = triangluator.triangles;
                 circles = triangluator.circles;
-                trianglesQueue = triangluator.trianglesQueue;
                 trianglesToEdges = triangluator.trianglesToEdges;
                 constraintEdges = triangluator.constraintEdges; // TODO remove this should not be present in this job!
-                tmpPolygon = triangluator.tmpPolygon;
             }
 
             public void Execute()
@@ -1103,7 +1063,7 @@ namespace andywiecko.BurstTriangulator
 
             private int InsertPoint(float2 p)
             {
-                return Triangulator.InsertPoint(p, initTriangles: SearchForFirstBadTriangle(p), badTriangles, triangles, circles, trianglesToEdges, outputPositions, trianglesQueue, visitedTriangles, constraintEdges, edgesToTriangles, tmpPolygon);
+                return Triangulator.InsertPoint(p, initTriangles: SearchForFirstBadTriangle(p), triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
             }
 
             private void RegisterSuperTriangle()
@@ -1572,10 +1532,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<float2> outputPositions;
             private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             private NativeList<Circle> circles;
-            private NativeList<int> badTriangles;
-            private NativeList<Edge> tmpPolygon;
-            private NativeQueue<int> trianglesQueue;
-            private NativeList<bool> visitedTriangles;
 
             public RefineMeshJob(Triangulator triangulator)
             {
@@ -1592,10 +1548,6 @@ namespace andywiecko.BurstTriangulator
                 outputPositions = triangulator.outputPositions;
                 edgesToTriangles = triangulator.edgesToTriangles;
                 circles = triangulator.circles;
-                badTriangles = triangulator.badTriangles;
-                tmpPolygon = triangulator.tmpPolygon;
-                trianglesQueue = triangulator.trianglesQueue;
-                visitedTriangles = triangulator.visitedTriangles;
             }
 
             public void Execute()
@@ -1705,7 +1657,7 @@ namespace andywiecko.BurstTriangulator
 
             public int InsertPointAtTriangleCircumcenter2(float2 p, int tId, bool constraint = false)
             {
-                return Triangulator.InsertPoint(p, initTriangles: new() { tId }, badTriangles, triangles, circles, trianglesToEdges, outputPositions, trianglesQueue, visitedTriangles, constraintEdges, edgesToTriangles, tmpPolygon, constraint);
+                return Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles, constraint);
             }
 
             private int SplitEdge2(Edge edge, bool constraint = false)
@@ -1714,7 +1666,7 @@ namespace andywiecko.BurstTriangulator
                 var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
                 var p = 0.5f * (pA + pB);
 
-                return Triangulator.InsertPoint(p, initTriangles: edgesToTriangles[edge], badTriangles, triangles, circles, trianglesToEdges, outputPositions, trianglesQueue, visitedTriangles, constraintEdges, edgesToTriangles, tmpPolygon, constraint);
+                return Triangulator.InsertPoint(p, initTriangles: edgesToTriangles[edge], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles, constraint);
             }
 
             private int SplitConstraint2(Edge edge)
@@ -1837,17 +1789,13 @@ namespace andywiecko.BurstTriangulator
             private readonly T mode;
             private NativeArray<float2> seeds;
             private NativeReference<Status>.ReadOnly status;
-            private NativeList<int> badTriangles;
-            private NativeList<bool> visitedTriangles;
             private NativeList<Triangle> triangles;
             private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             private NativeList<float2> outputPositions;
-            private NativeHashSet<int> potentialPointsToRemove;
             private NativeList<Circle> circles;
             private NativeList<Edge3> trianglesToEdges;
             private NativeList<int> pointsToRemove;
             private NativeList<int> pointsOffset;
-            private NativeQueue<int> trianglesQueue;
             private NativeList<Edge> constraintEdges;
 
             public PlantingSeedsJob(Triangulator triangulator, T mode, NativeArray<float2> seeds)
@@ -1857,17 +1805,13 @@ namespace andywiecko.BurstTriangulator
                 this.seeds = seeds;
 
                 status = triangulator.status.AsReadOnly();
-                badTriangles = triangulator.badTriangles;
-                visitedTriangles = triangulator.visitedTriangles;
                 triangles = triangulator.triangles;
                 edgesToTriangles = triangulator.edgesToTriangles;
                 outputPositions = triangulator.outputPositions;
-                potentialPointsToRemove = triangulator.potentialPointsToRemove;
                 circles = triangulator.circles;
                 trianglesToEdges = triangulator.trianglesToEdges;
                 pointsToRemove = triangulator.pointsToRemove;
                 pointsOffset = triangulator.pointsOffset;
-                trianglesQueue = triangulator.trianglesQueue;
                 constraintEdges = triangulator.constraintEdges;
             }
 
@@ -1878,53 +1822,59 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                InitializePlantingSeeds();
+                var badTriangles = new NativeList<int>(triangles.Length, Allocator.Temp);
+                using var visitedTriangles = new NativeArray<bool>(triangles.Length, Allocator.Temp);
+                using var trianglesQueue = new NativeQueue<int>(Allocator.Temp);
 
                 if (mode.PlantBoundarySeed)
                 {
-                    PlantBoundary();
+                    var seed = edgesToTriangles[(0, 1)][0];
+                    PlantSeed(seed, visitedTriangles, badTriangles, trianglesQueue);
                 }
 
                 if (mode.PlantHolesSeed)
                 {
-                    PlantHolesSeed();
+                    foreach (var s in seeds)
+                    {
+                        var tId = FindTriangle(s);
+                        if (tId != -1)
+                        {
+                            PlantSeed(tId, visitedTriangles, badTriangles, trianglesQueue);
+                        }
+                    }
                 }
 
-                GeneratePotentialPointsToRemove(initialPointsCount: positions.Length);
+                using var potentialPointsToRemove = new NativeHashSet<int>(initialCapacity: 3 * badTriangles.Length, Allocator.Temp);
+                GeneratePotentialPointsToRemove(initialPointsCount: positions.Length, triangles);
 
                 RemoveBadTriangles(badTriangles, triangles, circles, trianglesToEdges, edgesToTriangles);
 
-                GeneratePointsToRemove();
+                GeneratePointsToRemove(potentialPointsToRemove);
                 GeneratePointsOffset();
-            }
 
-            public void InitializePlantingSeeds()
-            {
-                badTriangles.Clear();
-                visitedTriangles.Clear();
-                visitedTriangles.Length = triangles.Length;
-            }
+                badTriangles.Dispose();
 
-            private void GeneratePotentialPointsToRemove(int initialPointsCount)
-            {
-                foreach (var tId in badTriangles)
+                void GeneratePotentialPointsToRemove(int initialPointsCount, NativeList<Triangle> triangles)
                 {
-                    var (idA, idB, idC) = triangles[tId];
-                    TryAddPotentialPointToRemove(idA, initialPointsCount);
-                    TryAddPotentialPointToRemove(idB, initialPointsCount);
-                    TryAddPotentialPointToRemove(idC, initialPointsCount);
+                    foreach (var tId in badTriangles.AsReadOnly())
+                    {
+                        var (idA, idB, idC) = triangles[tId];
+                        TryAddPotentialPointToRemove(idA, initialPointsCount);
+                        TryAddPotentialPointToRemove(idB, initialPointsCount);
+                        TryAddPotentialPointToRemove(idC, initialPointsCount);
+                    }
+
+                    void TryAddPotentialPointToRemove(int id, int initialPointsCount)
+                    {
+                        if (id >= initialPointsCount + 3 /* super triangle */)
+                        {
+                            potentialPointsToRemove.Add(id);
+                        }
+                    }
                 }
             }
 
-            private void TryAddPotentialPointToRemove(int id, int initialPointsCount)
-            {
-                if (id >= initialPointsCount + 3 /* super triangle */)
-                {
-                    potentialPointsToRemove.Add(id);
-                }
-            }
-
-            public void GeneratePointsToRemove()
+            public void GeneratePointsToRemove(NativeHashSet<int> potentialPointsToRemove)
             {
                 var tmp = potentialPointsToRemove.ToNativeArray(Allocator.Temp);
                 tmp.Sort();
@@ -1960,24 +1910,6 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private void PlantBoundary()
-            {
-                var seed = edgesToTriangles[(0, 1)][0];
-                PlantSeed(seed);
-            }
-
-            private void PlantHolesSeed()
-            {
-                foreach (var s in seeds)
-                {
-                    var tId = FindTriangle(s);
-                    if (tId != -1)
-                    {
-                        PlantSeed(tId);
-                    }
-                }
-            }
-
             private int FindTriangle(float2 p)
             {
                 var tId = 0;
@@ -1994,7 +1926,7 @@ namespace andywiecko.BurstTriangulator
                 return -1;
             }
 
-            public void PlantSeed(int tId)
+            public void PlantSeed(int tId, NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
             {
                 if (visitedTriangles[tId])
                 {
