@@ -107,226 +107,6 @@ namespace andywiecko.BurstTriangulator
         }
         #endregion
 
-        private struct DescendingComparer : IComparer<int>
-        {
-            public int Compare(int x, int y) => x < y ? 1 : -1;
-        }
-        private static readonly DescendingComparer comparer = new();
-
-        private static Circle CalculateCircumcenter(Triangle triangle, NativeArray<float2> outputPositions)
-        {
-            var (idA, idB, idC) = triangle;
-            var (pA, pB, pC) = (outputPositions[idA], outputPositions[idB], outputPositions[idC]);
-            return GetCircumcenter(pA, pB, pC);
-        }
-
-        private static int InsertPoint(float2 p,
-            FixedList128Bytes<int> initTriangles,
-            NativeList<Triangle> triangles,
-            NativeList<Circle> circles,
-            NativeList<Edge3> trianglesToEdges,
-            NativeList<float2> outputPositions,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
-        ) => UnsafeInsertPoint(p, initTriangles, triangles, circles, trianglesToEdges, outputPositions, constraintEdges: default, edgesToTriangles, constraint: false);
-
-        private static int InsertPoint(float2 p,
-            FixedList128Bytes<int> initTriangles,
-            NativeList<Triangle> triangles,
-            NativeList<Circle> circles,
-            NativeList<Edge3> trianglesToEdges,
-            NativeList<float2> outputPositions,
-            NativeList<Edge> constraintEdges,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
-        ) => UnsafeInsertPoint(p, initTriangles, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles, constraint: true);
-
-        private static int UnsafeInsertPoint(float2 p,
-            FixedList128Bytes<int> initTriangles,
-            NativeList<Triangle> triangles,
-            NativeList<Circle> circles,
-            NativeList<Edge3> trianglesToEdges,
-            NativeList<float2> outputPositions,
-            NativeList<Edge> constraintEdges,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
-            bool constraint = false
-        )
-        {
-            var pId = outputPositions.Length;
-            outputPositions.Add(p);
-
-            var visitedTriangles = new NativeArray<bool>(triangles.Length, Allocator.Temp);
-            using var badTriangles = new NativeList<int>(triangles.Length, Allocator.Temp);
-            using var trianglesQueue = new NativeQueue<int>(Allocator.Temp);
-            using var tmpPolygon = new NativeList<Edge>(Allocator.Temp);
-
-            foreach (var tId in initTriangles)
-            {
-                if (!visitedTriangles[tId])
-                {
-                    trianglesQueue.Enqueue(tId);
-                    badTriangles.Add(tId);
-                    RecalculateBadTriangles(p);
-                }
-            }
-
-            ProcessBadTriangles(pId);
-
-            visitedTriangles.Dispose();
-            return pId;
-
-            void RecalculateBadTriangles(float2 p)
-            {
-                while (trianglesQueue.TryDequeue(out var tId))
-                {
-                    visitedTriangles[tId] = true;
-
-                    foreach (var e in trianglesToEdges[tId])
-                    {
-                        if (constraint && constraintEdges.Contains(e))
-                        {
-                            continue;
-                        }
-
-                        foreach (var otherId in edgesToTriangles[e])
-                        {
-                            if (visitedTriangles[otherId])
-                            {
-                                continue;
-                            }
-
-                            var circle = circles[otherId];
-                            if (math.distancesq(circle.Center, p) <= circle.RadiusSq)
-                            {
-                                badTriangles.Add(otherId);
-                                trianglesQueue.Enqueue(otherId);
-                            }
-                        }
-                    }
-                }
-            }
-
-            void ProcessBadTriangles(int pId)
-            {
-                CalculateStarPolygon();
-                RemoveBadTriangles(badTriangles, triangles, circles, trianglesToEdges, edgesToTriangles);
-                CreatePolygonTriangles(pId);
-
-                void CreatePolygonTriangles(int pId)
-                {
-                    foreach (var (e1, e2) in tmpPolygon.AsReadOnly())
-                    {
-                        AddTriangle((pId, e1, e2), triangles, outputPositions, circles, trianglesToEdges, edgesToTriangles);
-                    }
-                }
-
-                void CalculateStarPolygon()
-                {
-                    tmpPolygon.Clear();
-                    foreach (var t1 in badTriangles.AsReadOnly())
-                    {
-                        foreach (var edge in trianglesToEdges[t1])
-                        {
-                            if (tmpPolygon.Contains(edge))
-                            {
-                                continue;
-                            }
-
-                            var edgeFound = false;
-                            foreach (var t2 in badTriangles)
-                            {
-                                if (t1 == t2)
-                                {
-                                    continue;
-                                }
-
-                                if (trianglesToEdges[t2].Contains(edge))
-                                {
-                                    edgeFound = true;
-                                    break;
-                                }
-                            }
-
-                            if (edgeFound == false)
-                            {
-                                tmpPolygon.Add(edge);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private static void RemoveBadTriangles(
-            NativeList<int> badTriangles,
-            NativeList<Triangle> triangles,
-            NativeList<Circle> circles,
-            NativeList<Edge3> trianglesToEdges,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
-        )
-        {
-            badTriangles.Sort(comparer);
-            foreach (var tId in badTriangles)
-            {
-                triangles.RemoveAt(tId);
-                circles.RemoveAt(tId);
-                trianglesToEdges.RemoveAt(tId);
-            }
-
-            edgesToTriangles.Clear();
-            for (int tId = 0; tId < triangles.Length; tId++)
-            {
-                foreach (var edge in trianglesToEdges[tId])
-                {
-                    RegisterEdgeData(edge, tId);
-                }
-            }
-
-            void RegisterEdgeData(Edge edge, int triangleId)
-            {
-                if (edgesToTriangles.TryGetValue(edge, out var tris))
-                {
-                    tris.Add(triangleId);
-                    edgesToTriangles[edge] = tris;
-                }
-                else
-                {
-                    edgesToTriangles.Add(edge, new() { triangleId });
-                }
-            }
-        }
-
-        private static void AddTriangle(Triangle t,
-            NativeList<Triangle> triangles,
-            NativeList<float2> outputPositions,
-            NativeList<Circle> circles,
-            NativeList<Edge3> trianglesToEdges,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
-        )
-        {
-            var tId = triangles.Length;
-            triangles.Add(t);
-            var (idA, idB, idC) = t;
-            var circle = CalculateCircumcenter(t, outputPositions.AsArray());
-            circles.Add(circle);
-            trianglesToEdges.Add(((idA, idB), (idA, idC), (idB, idC)));
-
-            RegisterEdgeData((idA, idB), tId);
-            RegisterEdgeData((idB, idC), tId);
-            RegisterEdgeData((idC, idA), tId);
-
-            void RegisterEdgeData(Edge edge, int triangleId)
-            {
-                if (edgesToTriangles.TryGetValue(edge, out var tris))
-                {
-                    tris.Add(triangleId);
-                    edgesToTriangles[edge] = tris;
-                }
-                else
-                {
-                    edgesToTriangles.Add(edge, new() { triangleId });
-                }
-            }
-        }
-
         public enum Status
         {
             /// <summary>
@@ -1036,15 +816,15 @@ namespace andywiecko.BurstTriangulator
             private NativeList<Circle> circles;
             private NativeList<Edge3> trianglesToEdges;
 
-            public DelaunayTriangulationJob(Triangulator triangluator)
+            public DelaunayTriangulationJob(Triangulator triangulator)
             {
-                inputPositions = triangluator.Input.Positions;
-                status = triangluator.status.AsReadOnly();
-                edgesToTriangles = triangluator.edgesToTriangles;
-                outputPositions = triangluator.outputPositions;
-                triangles = triangluator.triangles;
-                circles = triangluator.circles;
-                trianglesToEdges = triangluator.trianglesToEdges;
+                inputPositions = triangulator.Input.Positions;
+                status = triangulator.status.AsReadOnly();
+                edgesToTriangles = triangulator.edgesToTriangles;
+                outputPositions = triangulator.outputPositions;
+                triangles = triangulator.triangles;
+                circles = triangulator.circles;
+                trianglesToEdges = triangulator.trianglesToEdges;
             }
 
             public void Execute()
@@ -1059,24 +839,6 @@ namespace andywiecko.BurstTriangulator
                 {
                     InsertPoint(inputPositions[i]);
                 }
-            }
-
-            private FixedList128Bytes<int> SearchForFirstBadTriangle(float2 p)
-            {
-                for (int tId = 0; tId < triangles.Length; tId++)
-                {
-                    var circle = circles[tId];
-                    if (math.distancesq(circle.Center, p) <= circle.RadiusSq)
-                    {
-                        return new() { tId };
-                    }
-                }
-                return new();
-            }
-
-            private int InsertPoint(float2 p)
-            {
-                return Triangulator.InsertPoint(p, initTriangles: SearchForFirstBadTriangle(p), triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
             }
 
             private void RegisterSuperTriangle()
@@ -1099,6 +861,22 @@ namespace andywiecko.BurstTriangulator
                 var pC = center + r * math.float2(+math.sqrt(3), -1);
 
                 AddTriangle(t: (InsertPoint(pA), InsertPoint(pB), InsertPoint(pC)), triangles, outputPositions, circles, trianglesToEdges, edgesToTriangles);
+            }
+
+            private int InsertPoint(float2 p) => Triangulator
+                .InsertPoint(p, initTriangles: SearchForFirstBadTriangle(p), triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
+
+            private FixedList128Bytes<int> SearchForFirstBadTriangle(float2 p)
+            {
+                for (int tId = 0; tId < triangles.Length; tId++)
+                {
+                    var circle = circles[tId];
+                    if (math.distancesq(circle.Center, p) <= circle.RadiusSq)
+                    {
+                        return new() { tId };
+                    }
+                }
+                return new();
             }
         }
 
@@ -1740,7 +1518,7 @@ namespace andywiecko.BurstTriangulator
                 return math.any(math.abs(angles) < minimumAngle);
             }
 
-            public bool EdgeIsEncroached(Edge edge)
+            private bool EdgeIsEncroached(Edge edge)
             {
                 var (e1, e2) = edge;
                 var (pA, pB) = (outputPositions[e1], outputPositions[e2]);
@@ -1758,7 +1536,7 @@ namespace andywiecko.BurstTriangulator
                 return false;
             }
 
-            public bool TriangleIsEncroached(int triangleId)
+            private bool TriangleIsEncroached(int triangleId)
             {
                 var edges = trianglesToEdges[triangleId];
                 foreach (var e in edges)
@@ -1813,8 +1591,7 @@ namespace andywiecko.BurstTriangulator
             public readonly bool PlantHolesSeed => true;
             public readonly NativeArray<float2> HoleSeeds => holeSeeds;
             private NativeArray<float2> holeSeeds;
-            public PlantHoles Create(Triangulator triangulator) =>
-                new() { holeSeeds = triangulator.Input.HoleSeeds };
+            public PlantHoles Create(Triangulator triangulator) => new() { holeSeeds = triangulator.Input.HoleSeeds };
         }
 
         private struct PlantBoundaryAndHoles : IPlantingSeedJobMode<PlantBoundaryAndHoles>
@@ -1823,8 +1600,7 @@ namespace andywiecko.BurstTriangulator
             public readonly bool PlantHolesSeed => true;
             public readonly NativeArray<float2> HoleSeeds => holeSeeds;
             private NativeArray<float2> holeSeeds;
-            public PlantBoundaryAndHoles Create(Triangulator triangulator) =>
-                new() { holeSeeds = triangulator.Input.HoleSeeds };
+            public PlantBoundaryAndHoles Create(Triangulator triangulator) => new() { holeSeeds = triangulator.Input.HoleSeeds };
         }
 
         [BurstCompile]
@@ -1866,10 +1642,22 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                var badTriangles = new NativeList<int>(triangles.Length, Allocator.Temp);
                 using var visitedTriangles = new NativeArray<bool>(triangles.Length, Allocator.Temp);
+                using var badTriangles = new NativeList<int>(triangles.Length, Allocator.Temp);
                 using var trianglesQueue = new NativeQueue<int>(Allocator.Temp);
 
+                PlantSeeds(visitedTriangles, badTriangles, trianglesQueue);
+
+                using var potentialPointsToRemove = new NativeHashSet<int>(initialCapacity: 3 * badTriangles.Length, Allocator.Temp);
+
+                GeneratePotentialPointsToRemove(initialPointsCount: positions.Length, potentialPointsToRemove, badTriangles);
+                RemoveBadTriangles(badTriangles, triangles, circles, trianglesToEdges, edgesToTriangles);
+                GeneratePointsToRemove(potentialPointsToRemove);
+                GeneratePointsOffset();
+            }
+
+            private void PlantSeeds(NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
+            {
                 if (mode.PlantBoundarySeed)
                 {
                     var seed = edgesToTriangles[(0, 1)][0];
@@ -1887,90 +1675,9 @@ namespace andywiecko.BurstTriangulator
                         }
                     }
                 }
-
-                using var potentialPointsToRemove = new NativeHashSet<int>(initialCapacity: 3 * badTriangles.Length, Allocator.Temp);
-                GeneratePotentialPointsToRemove(initialPointsCount: positions.Length, triangles);
-
-                RemoveBadTriangles(badTriangles, triangles, circles, trianglesToEdges, edgesToTriangles);
-
-                GeneratePointsToRemove(potentialPointsToRemove);
-                GeneratePointsOffset();
-
-                badTriangles.Dispose();
-
-                void GeneratePotentialPointsToRemove(int initialPointsCount, NativeList<Triangle> triangles)
-                {
-                    foreach (var tId in badTriangles.AsReadOnly())
-                    {
-                        var (idA, idB, idC) = triangles[tId];
-                        TryAddPotentialPointToRemove(idA, initialPointsCount);
-                        TryAddPotentialPointToRemove(idB, initialPointsCount);
-                        TryAddPotentialPointToRemove(idC, initialPointsCount);
-                    }
-
-                    void TryAddPotentialPointToRemove(int id, int initialPointsCount)
-                    {
-                        if (id >= initialPointsCount + 3 /* super triangle */)
-                        {
-                            potentialPointsToRemove.Add(id);
-                        }
-                    }
-                }
             }
 
-            public void GeneratePointsToRemove(NativeHashSet<int> potentialPointsToRemove)
-            {
-                var tmp = potentialPointsToRemove.ToNativeArray(Allocator.Temp);
-                tmp.Sort();
-                foreach (var pId in tmp)
-                {
-                    if (!AnyTriangleContainsPoint(pId, triangles))
-                    {
-                        pointsToRemove.Add(pId);
-                    }
-                }
-
-                bool AnyTriangleContainsPoint(int pId, NativeList<Triangle> triangles)
-                {
-                    foreach (var t in triangles)
-                    {
-                        if (t.Contains(pId))
-                        {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }
-
-            public void GeneratePointsOffset()
-            {
-                foreach (var pId in pointsToRemove)
-                {
-                    for (int i = pId; i < pointsOffset.Length; i++)
-                    {
-                        pointsOffset[i]--;
-                    }
-                }
-            }
-
-            private int FindTriangle(float2 p)
-            {
-                var tId = 0;
-                foreach (var (idA, idB, idC) in triangles)
-                {
-                    var (a, b, c) = (outputPositions[idA], outputPositions[idB], outputPositions[idC]);
-                    if (PointInsideTriangle(p, a, b, c))
-                    {
-                        return tId;
-                    }
-                    tId++;
-                }
-
-                return -1;
-            }
-
-            public void PlantSeed(int tId, NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
+            private void PlantSeed(int tId, NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
             {
                 if (visitedTriangles[tId])
                 {
@@ -1999,6 +1706,77 @@ namespace andywiecko.BurstTriangulator
                                 badTriangles.Add(otherId);
                             }
                         }
+                    }
+                }
+            }
+
+            private int FindTriangle(float2 p)
+            {
+                var tId = 0;
+                foreach (var (idA, idB, idC) in triangles)
+                {
+                    var (a, b, c) = (outputPositions[idA], outputPositions[idB], outputPositions[idC]);
+                    if (PointInsideTriangle(p, a, b, c))
+                    {
+                        return tId;
+                    }
+                    tId++;
+                }
+
+                return -1;
+            }
+
+            private void GeneratePotentialPointsToRemove(int initialPointsCount, NativeHashSet<int> potentialPointsToRemove, NativeList<int> badTriangles)
+            {
+                foreach (var tId in badTriangles.AsReadOnly())
+                {
+                    var (idA, idB, idC) = triangles[tId];
+                    TryAddPotentialPointToRemove(idA, initialPointsCount);
+                    TryAddPotentialPointToRemove(idB, initialPointsCount);
+                    TryAddPotentialPointToRemove(idC, initialPointsCount);
+                }
+
+                void TryAddPotentialPointToRemove(int id, int initialPointsCount)
+                {
+                    if (id >= initialPointsCount + 3 /* super triangle */)
+                    {
+                        potentialPointsToRemove.Add(id);
+                    }
+                }
+            }
+
+            private void GeneratePointsToRemove(NativeHashSet<int> potentialPointsToRemove)
+            {
+                using var tmp = potentialPointsToRemove.ToNativeArray(Allocator.Temp);
+                tmp.Sort();
+                foreach (var pId in tmp)
+                {
+                    if (!AnyTriangleContainsPoint(pId))
+                    {
+                        pointsToRemove.Add(pId);
+                    }
+                }
+            }
+
+            private bool AnyTriangleContainsPoint(int pId)
+            {
+                foreach (var t in triangles)
+                {
+                    if (t.Contains(pId))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            private void GeneratePointsOffset()
+            {
+                foreach (var pId in pointsToRemove)
+                {
+                    for (int i = pId; i < pointsOffset.Length; i++)
+                    {
+                        pointsOffset[i]--;
                     }
                 }
             }
@@ -2088,6 +1866,226 @@ namespace andywiecko.BurstTriangulator
         #endregion
 
         #region Utils
+        private readonly struct DescendingComparer : IComparer<int>
+        {
+            public int Compare(int x, int y) => x < y ? 1 : -1;
+        }
+        private static readonly DescendingComparer comparer = new();
+
+        private static Circle CalculateCircumcenter(Triangle triangle, NativeArray<float2> outputPositions)
+        {
+            var (idA, idB, idC) = triangle;
+            var (pA, pB, pC) = (outputPositions[idA], outputPositions[idB], outputPositions[idC]);
+            return GetCircumcenter(pA, pB, pC);
+        }
+
+        private static int InsertPoint(float2 p,
+            FixedList128Bytes<int> initTriangles,
+            NativeList<Triangle> triangles,
+            NativeList<Circle> circles,
+            NativeList<Edge3> trianglesToEdges,
+            NativeList<float2> outputPositions,
+            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
+        ) => UnsafeInsertPoint(p, initTriangles, triangles, circles, trianglesToEdges, outputPositions, constraintEdges: default, edgesToTriangles, constraint: false);
+
+        private static int InsertPoint(float2 p,
+            FixedList128Bytes<int> initTriangles,
+            NativeList<Triangle> triangles,
+            NativeList<Circle> circles,
+            NativeList<Edge3> trianglesToEdges,
+            NativeList<float2> outputPositions,
+            NativeList<Edge> constraintEdges,
+            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
+        ) => UnsafeInsertPoint(p, initTriangles, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles, constraint: true);
+
+        private static int UnsafeInsertPoint(float2 p,
+            FixedList128Bytes<int> initTriangles,
+            NativeList<Triangle> triangles,
+            NativeList<Circle> circles,
+            NativeList<Edge3> trianglesToEdges,
+            NativeList<float2> outputPositions,
+            NativeList<Edge> constraintEdges,
+            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+            bool constraint = false
+        )
+        {
+            var pId = outputPositions.Length;
+            outputPositions.Add(p);
+
+            var visitedTriangles = new NativeArray<bool>(triangles.Length, Allocator.Temp);
+            using var badTriangles = new NativeList<int>(triangles.Length, Allocator.Temp);
+            using var trianglesQueue = new NativeQueue<int>(Allocator.Temp);
+            using var tmpPolygon = new NativeList<Edge>(Allocator.Temp);
+
+            foreach (var tId in initTriangles)
+            {
+                if (!visitedTriangles[tId])
+                {
+                    trianglesQueue.Enqueue(tId);
+                    badTriangles.Add(tId);
+                    RecalculateBadTriangles(p);
+                }
+            }
+
+            ProcessBadTriangles(pId);
+
+            visitedTriangles.Dispose();
+            return pId;
+
+            void RecalculateBadTriangles(float2 p)
+            {
+                while (trianglesQueue.TryDequeue(out var tId))
+                {
+                    visitedTriangles[tId] = true;
+
+                    foreach (var e in trianglesToEdges[tId])
+                    {
+                        if (constraint && constraintEdges.Contains(e))
+                        {
+                            continue;
+                        }
+
+                        foreach (var otherId in edgesToTriangles[e])
+                        {
+                            if (visitedTriangles[otherId])
+                            {
+                                continue;
+                            }
+
+                            var circle = circles[otherId];
+                            if (math.distancesq(circle.Center, p) <= circle.RadiusSq)
+                            {
+                                badTriangles.Add(otherId);
+                                trianglesQueue.Enqueue(otherId);
+                            }
+                        }
+                    }
+                }
+            }
+
+            void ProcessBadTriangles(int pId)
+            {
+                CalculateStarPolygon();
+                RemoveBadTriangles(badTriangles, triangles, circles, trianglesToEdges, edgesToTriangles);
+                CreatePolygonTriangles(pId);
+
+                void CreatePolygonTriangles(int pId)
+                {
+                    foreach (var (e1, e2) in tmpPolygon.AsReadOnly())
+                    {
+                        AddTriangle((pId, e1, e2), triangles, outputPositions, circles, trianglesToEdges, edgesToTriangles);
+                    }
+                }
+
+                void CalculateStarPolygon()
+                {
+                    tmpPolygon.Clear();
+                    foreach (var t1 in badTriangles.AsReadOnly())
+                    {
+                        foreach (var edge in trianglesToEdges[t1])
+                        {
+                            if (tmpPolygon.Contains(edge))
+                            {
+                                continue;
+                            }
+
+                            var edgeFound = false;
+                            foreach (var t2 in badTriangles)
+                            {
+                                if (t1 == t2)
+                                {
+                                    continue;
+                                }
+
+                                if (trianglesToEdges[t2].Contains(edge))
+                                {
+                                    edgeFound = true;
+                                    break;
+                                }
+                            }
+
+                            if (edgeFound == false)
+                            {
+                                tmpPolygon.Add(edge);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void RemoveBadTriangles(
+            NativeList<int> badTriangles,
+            NativeList<Triangle> triangles,
+            NativeList<Circle> circles,
+            NativeList<Edge3> trianglesToEdges,
+            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
+        )
+        {
+            badTriangles.Sort(comparer);
+            foreach (var tId in badTriangles)
+            {
+                triangles.RemoveAt(tId);
+                circles.RemoveAt(tId);
+                trianglesToEdges.RemoveAt(tId);
+            }
+
+            edgesToTriangles.Clear();
+            for (int tId = 0; tId < triangles.Length; tId++)
+            {
+                foreach (var edge in trianglesToEdges[tId])
+                {
+                    RegisterEdgeData(edge, tId);
+                }
+            }
+
+            void RegisterEdgeData(Edge edge, int triangleId)
+            {
+                if (edgesToTriangles.TryGetValue(edge, out var tris))
+                {
+                    tris.Add(triangleId);
+                    edgesToTriangles[edge] = tris;
+                }
+                else
+                {
+                    edgesToTriangles.Add(edge, new() { triangleId });
+                }
+            }
+        }
+
+        private static void AddTriangle(Triangle t,
+            NativeList<Triangle> triangles,
+            NativeList<float2> outputPositions,
+            NativeList<Circle> circles,
+            NativeList<Edge3> trianglesToEdges,
+            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
+        )
+        {
+            var tId = triangles.Length;
+            triangles.Add(t);
+            var (idA, idB, idC) = t;
+            var circle = CalculateCircumcenter(t, outputPositions.AsArray());
+            circles.Add(circle);
+            trianglesToEdges.Add(((idA, idB), (idA, idC), (idB, idC)));
+
+            RegisterEdgeData((idA, idB), tId);
+            RegisterEdgeData((idB, idC), tId);
+            RegisterEdgeData((idC, idA), tId);
+
+            void RegisterEdgeData(Edge edge, int triangleId)
+            {
+                if (edgesToTriangles.TryGetValue(edge, out var tris))
+                {
+                    tris.Add(triangleId);
+                    edgesToTriangles[edge] = tris;
+                }
+                else
+                {
+                    edgesToTriangles.Add(edge, new() { triangleId });
+                }
+            }
+        }
+
         private static float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
         private static float Cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
         private static Circle GetCircumcenter(float2 a, float2 b, float2 c)
