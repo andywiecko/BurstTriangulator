@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Unity.Burst;
@@ -1590,6 +1591,58 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             };
 
             triangulator.Run();
+        }
+
+        private static readonly TestCaseData[] refineMeshBenchmarkTestData =
+        {
+            new((area: 10.000f, N: 100)),
+            new((area: 05.000f, N: 100)),
+            new((area: 01.000f, N: 100)),
+            new((area: 0.5000f, N: 100)),
+            new((area: 0.1000f, N: 100)),
+            new((area: 0.0500f, N: 100)),
+            new((area: 0.0100f, N: 100)),
+            new((area: 0.0050f, N: 100)),
+            new((area: 0.0010f, N: 100)),
+            new((area: 0.0005f, N: 010)),
+            new((area: 0.0003f, N: 010)),
+            new((area: 0.0002f, N: 005)),
+        };
+
+        [Test, TestCaseSource(nameof(refineMeshBenchmarkTestData)), Explicit]
+        public void RefineMeshBenchmarkTest((float area, int N) input)
+        {
+            var (area, N) = input;
+            var debuggerInitialValue = Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled;
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
+
+            var stopwatch = Stopwatch.StartNew();
+            using var points = new NativeArray<float2>(new[]
+            {
+                math.float2(-1, -1),
+                math.float2(+1, -1),
+                math.float2(+1, +1),
+                math.float2(-1, +1),
+            }, Allocator.Persistent);
+            using var triangulator = new Triangulator(capacity: 64 * 1024, Allocator.Persistent)
+            {
+                Input = { Positions = points },
+                Settings = {
+                    RefineMesh = true,
+                    ConstrainEdges = false,
+                    RestoreBoundary = false,
+                    MinimumArea = area,
+                    MaximumArea = area,
+                },
+            };
+
+            var dependencies = default(JobHandle);
+            for (int i = 0; i < N; i++) dependencies = triangulator.Schedule(dependencies);
+            dependencies.Complete();
+            stopwatch.Stop();
+            UnityEngine.Debug.Log($"{triangulator.Output.Triangles.Length} {stopwatch.Elapsed.TotalMilliseconds / N}");
+
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
         }
     }
 }
