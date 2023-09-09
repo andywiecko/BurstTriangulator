@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [2.0.0] - 2023-09-09
+
+### Added
+
+- Introduced the `Preprocessor` enum with the following options: `None`, `COM`, and `PCA`. This enum replaces the previous transformation settings (`UseLocalTransformation`/`UsePCATransformation`).
+- Introduced the `Status` (with values `OK`, `ERR`) enum along with corresponding native data. This enum is now utilized for input validation, with functionality extending beyond the Unity editor to encompass validation in builds as well.
+- Added a benchmark test for mesh refinement, which will be used for future performance measurement.
+
+### Changed
+
+- Default values for `TriangulationSettings`.
+- Updated Unity Editor to version `2022.2.1f1`.
+- Bumped dependencies: Burst to `1.8.7`, Collections to `2.2.0`.
+
+### Removed
+
+- Removed the following deprecated methods: `Schedule(NativeArray<float2>, ...)`.
+- Removed the following deprecated properties: `Positions`, `Triangles`, `PositionsDeferred`, `PositionsDeferred`.
+- Removed the internal `TriangulatorNativeData` as part of a significant refactor to simplify the code structure. Internal implementations were cleaned up, and code structure was simplified.
+
 ## [1.5.0] - 2023-04-12
 
 ### Added
@@ -39,7 +59,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 - Support for holes in the mesh.
 - Upload project's logo generated using the above features.
 
-### Changes
+### Changed
 
 - More verbose warnings during input validation.
 
@@ -49,7 +69,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 - Add support for the Constraint Delaunay Triangulation with mesh refinement.
 
-### Changes
+### Changed
 
 - Performance: Bower-Watson point insertion algorithm has been optimised and is based on the breadth-first search.
 - Refactor: moved a few methods from jobs into `TriangulatorNativeData`.
@@ -80,6 +100,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 - Initial release version
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
+[2.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.0.0
 [1.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.5.0
 [1.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.4.0
 [1.3.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.3.0
