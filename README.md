@@ -30,7 +30,7 @@ The package provides also constrained triangulation (with mesh refinement) which
       - [PCA transformation](#pca-transformation)
   - [Benchmark](#benchmark)
   - [Dependencies](#dependencies)
-  - [Roadmap v2.0](#roadmap-v20)
+  - [Things to consider](#things-to-consider)
   - [Bibliography](#bibliography)
 
 ## Getting started
@@ -55,7 +55,7 @@ Add or modify scoped registries in the manifest
 and in the dependencies provide selected version of the package
 <pre>
 "dependencies": {
-    "com.andywiecko.burst.triangulator": "1.5.0",
+    "com.andywiecko.burst.triangulator": "2.0.0",
     ...
 </pre>
 See Unity docs for more details https://docs.unity3d.com/2021.1/Documentation/Manual/upm-scoped.html
@@ -383,23 +383,25 @@ The package uses [`Burst`][burst] compiler, which produces highly optimized nati
 Below one can see a log-log plot of elapsed time as a function of the final triangles count after mesh refinement.
 Using Burst can provide more or less two order of magnitude faster computation.
 
+> **Note**  
+> The following figure was obtained with `v1.0`.
+
 ![Burst Triangulator benchmark](Documentation~/burst-benchmark.png "Burst Triangulator benchmark")
+
+Below, you'll find a performance comparison (Burst enabled) between `v1.0.0` and `v2.0.0` (for the refinement task).
+
+![benchmark-v1-v2](Documentation~/benchmark-v1-v2.png)
 
 ## Dependencies
 
 - [`Unity.Burst`][burst]
 - [`Unity.Collections`][collections]
 
-## Roadmap v2.0
+## Things to consider
 
-- [ ] Cache circles for constraint edges.
-- [ ] Update `edgeToTriangles` buffer instead rebuilding.
-- [ ] Update default `Setting`.
-- [ ] Remove native data `struct` (move logic to jobs).
-- [X] ~~Remove obsoletes.~~
-- [X] ~~Bump packages and editor.~~
-- [X] ~~Introduce state to support runtime (build) validation.~~
-- [X] ~~"Extract" transformations.~~
+- [ ] Consider using BVT (or another data structure) to accelerate computing.
+- [ ] Consider caching circles for constraint edges.
+- [ ] Consider refactoring the data structure to update the `edgeToTriangles` buffer instead of rebuilding it.
 
 ## Bibliography
 
@@ -410,5 +412,5 @@ Using Burst can provide more or less two order of magnitude faster computation.
 
 [bowyerwatson]: https://en.wikipedia.org/wiki/Bowyer%E2%80%93Watson_algorithm
 [rupperts]: https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm
-[burst]: https://docs.unity3d.com/Packages/com.unity.burst@1.8/manual/index.html
-[collections]: https://docs.unity3d.com/Packages/com.unity.collections@2.1/manual/index.html
+[burst]: https://docs.unity3d.com/Packages/com.unity.burst@1.8
+[collections]: https://docs.unity3d.com/Packages/com.unity.collections@2.2
