@@ -163,7 +163,7 @@ namespace andywiecko.BurstTriangulator
             /// <see href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</see>.
             /// </summary>
             [field: SerializeField]
-            public bool RefineMesh { get; set; } = true;
+            public bool RefineMesh { get; set; } = false;
             /// <summary>
             /// If <see langword="true"/> constrains edges defined in <see cref="Input"/> using
             /// <see href="https://www.sciencedirect.com/science/article/abs/pii/004579499390239A">Sloan's algorithm</see>.
