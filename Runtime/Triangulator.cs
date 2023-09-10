@@ -242,7 +242,7 @@ namespace andywiecko.BurstTriangulator
         public Triangulator(int capacity, Allocator allocator)
         {
             outputPositions = new(capacity, allocator);
-            outputTriangles = new(3 * capacity, allocator);
+            outputTriangles = new(6 * capacity, allocator);
             triangles = new(capacity, allocator);
             circles = new(capacity, allocator);
             trianglesToEdges = new(capacity, allocator);
@@ -306,6 +306,7 @@ namespace andywiecko.BurstTriangulator
             }
 
             dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
+            dependencies = Settings.RefineMesh || Settings.ConstrainEdges ? new RecalculateTriangleMappingsJob(this).Schedule(dependencies) : dependencies;
             dependencies = Settings.ConstrainEdges ? ScheduleConstrainEdges(dependencies) : dependencies;
 
             dependencies = (Settings.RefineMesh, Settings.ConstrainEdges) switch
@@ -807,41 +808,81 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct DelaunayTriangulationJob : IJob
         {
+            private struct DistComparer : IComparer<int>
+            {
+                private NativeArray<float> dist;
+                public DistComparer(NativeArray<float> dist) => this.dist = dist;
+                public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
+            }
+
+            private NativeReference<Status> status;
             [ReadOnly]
             private NativeArray<float2> inputPositions;
-            private NativeReference<Status>.ReadOnly status;
-            private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             private NativeList<float2> outputPositions;
-            private NativeList<Triangle> triangles;
-            private NativeList<Circle> circles;
-            private NativeList<Edge3> trianglesToEdges;
+            private NativeList<Triangle> trianglesRaw;
+
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<float2> positions;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<int> ids;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<float> dists;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<int> hullNext;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<int> hullPrev;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<int> hullTri;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<int> hullHash;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<int> triangles;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<int> halfedges;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<int> EDGE_STACK;
+
+            private int hullStart;
+            private int trianglesLen;
+            private int hashSize;
+            private float2 c;
 
             public DelaunayTriangulationJob(Triangulator triangulator)
             {
+                status = triangulator.status;
                 inputPositions = triangulator.Input.Positions;
-                status = triangulator.status.AsReadOnly();
-                edgesToTriangles = triangulator.edgesToTriangles;
                 outputPositions = triangulator.outputPositions;
-                triangles = triangulator.triangles;
-                circles = triangulator.circles;
-                trianglesToEdges = triangulator.trianglesToEdges;
+                trianglesRaw = triangulator.triangles;
+
+                positions = default;
+                ids = default;
+                dists = default;
+                hullNext = default;
+                hullPrev = default;
+                hullTri = default;
+                hullHash = default;
+                triangles = default;
+                halfedges = default;
+                EDGE_STACK = default;
+
+                hullStart = int.MaxValue;
+                trianglesLen = 0;
+                hashSize = 0;
+                c = float.MaxValue;
             }
 
-            public void Execute()
+            private readonly int HashKey(float2 p)
             {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
+                return (int)math.floor(pseudoAngle(p.x - c.x, p.y - c.y) * hashSize) % hashSize;
 
-                RegisterSuperTriangle();
-                for (int i = 0; i < inputPositions.Length; i++)
+                static float pseudoAngle(float dx, float dy)
                 {
-                    InsertPoint(inputPositions[i]);
+                    var p = dx / (math.abs(dx) + math.abs(dy));
+                    return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
                 }
             }
 
-            private void RegisterSuperTriangle()
+            private void RegisterPointsWithSupertriangle()
             {
                 var min = (float2)float.MaxValue;
                 var max = (float2)float.MinValue;
@@ -860,23 +901,393 @@ namespace andywiecko.BurstTriangulator
                 var pB = center + r * math.float2(-math.sqrt(3), -1);
                 var pC = center + r * math.float2(+math.sqrt(3), -1);
 
-                AddTriangle(t: (InsertPoint(pA), InsertPoint(pB), InsertPoint(pC)), triangles, outputPositions, circles, trianglesToEdges, edgesToTriangles);
+                outputPositions.Add(pA);
+                outputPositions.Add(pB);
+                outputPositions.Add(pC);
+                outputPositions.AddRange(inputPositions);
             }
 
-            private int InsertPoint(float2 p) => Triangulator
-                .InsertPoint(p, initTriangles: SearchForFirstBadTriangle(p), triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
-
-            private FixedList128Bytes<int> SearchForFirstBadTriangle(float2 p)
+            public void Execute()
             {
-                for (int tId = 0; tId < triangles.Length; tId++)
+                if (status.Value == Status.ERR)
                 {
-                    var circle = circles[tId];
-                    if (math.distancesq(circle.Center, p) <= circle.RadiusSq)
+                    return;
+                }
+
+                RegisterPointsWithSupertriangle();
+                positions = outputPositions.AsArray();
+
+                var n = positions.Length;
+                var maxTriangles = math.max(2 * n - 5, 0);
+                trianglesRaw.Length = maxTriangles;
+                triangles = trianglesRaw.AsArray().Reinterpret<int>(3 * sizeof(int));
+
+                using var _halfedges = halfedges = new(3 * maxTriangles, Allocator.Temp);
+
+                hashSize = (int)math.ceil(math.sqrt(n));
+                using var _hullPrev = hullPrev = new(n, Allocator.Temp);
+                using var _hullNext = hullNext = new(n, Allocator.Temp);
+                using var _hullTri = hullTri = new(n, Allocator.Temp);
+                using var _hullHash = hullHash = new(hashSize, Allocator.Temp);
+
+                using var _ids = ids = new(n, Allocator.Temp);
+                using var _dists = dists = new(n, Allocator.Temp);
+
+                using var _EDGE_STACK = EDGE_STACK = new(512, Allocator.Temp);
+
+                var min = (float2)float.MaxValue;
+                var max = (float2)float.MinValue;
+
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    var p = positions[i];
+                    min = math.min(min, p);
+                    max = math.max(max, p);
+                    ids[i] = i;
+                }
+
+                var center = 0.5f * (min + max);
+
+                int i0 = int.MaxValue, i1 = int.MaxValue, i2 = int.MaxValue;
+                var minDistSq = float.MaxValue;
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    var distSq = math.distancesq(center, positions[i]);
+                    if (distSq < minDistSq)
                     {
-                        return new() { tId };
+                        i0 = i;
+                        minDistSq = distSq;
                     }
                 }
-                return new();
+                var p0 = positions[i0];
+
+                minDistSq = float.MaxValue;
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    if (i == i0) continue;
+                    var distSq = math.distancesq(p0, positions[i]);
+                    if (distSq < minDistSq)
+                    {
+                        i1 = i;
+                        minDistSq = distSq;
+                    }
+                }
+                var p1 = positions[i1];
+
+                var minRadius = float.MaxValue;
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    if (i == i0 || i == i1) continue;
+                    var p = positions[i];
+                    var r = CircumRadius(p0, p1, p);
+                    if (r < minRadius)
+                    {
+                        i2 = i;
+                        minRadius = r;
+                    }
+                }
+                var p2 = positions[i2];
+
+                if (minRadius == float.MaxValue)
+                {
+                    Debug.LogError("[Triangulator]: Provided input is not supported!");
+                    status.Value = Status.ERR;
+                    return;
+                }
+
+                if (Orient2dFast(p0, p1, p2) < 0)
+                {
+                    (i1, i2) = (i2, i1);
+                    (p1, p2) = (p2, p1);
+                }
+
+                c = CircumCenter(p0, p1, p2);
+                for (int i = 0; i < positions.Length; i++)
+                {
+                    dists[i] = math.distancesq(c, positions[i]);
+                }
+
+                ids.Sort(new DistComparer(dists));
+
+                hullStart = i0;
+
+                hullNext[i0] = hullPrev[i2] = i1;
+                hullNext[i1] = hullPrev[i0] = i2;
+                hullNext[i2] = hullPrev[i1] = i0;
+
+                hullTri[i0] = 0;
+                hullTri[i1] = 1;
+                hullTri[i2] = 2;
+
+                hullHash[HashKey(p0)] = i0;
+                hullHash[HashKey(p1)] = i1;
+                hullHash[HashKey(p2)] = i2;
+
+                AddTriangle(i0, i1, i2, -1, -1, -1);
+
+                for (var k = 0; k < ids.Length; k++)
+                {
+                    var i = ids[k];
+                    if (i == i0 || i == i1 || i == i2) continue;
+
+                    var p = positions[i];
+
+                    var start = 0;
+                    for (var j = 0; j < hashSize; j++)
+                    {
+                        var key = HashKey(p);
+                        start = hullHash[(key + j) % hashSize];
+                        if (start != -1 && start != hullNext[start]) break;
+                    }
+
+                    start = hullPrev[start];
+                    var e = start;
+                    var q = hullNext[e];
+
+                    while (Orient2dFast(p, positions[e], positions[q]) >= 0)
+                    {
+                        e = q;
+                        if (e == start)
+                        {
+                            e = int.MaxValue;
+                            break;
+                        }
+
+                        q = hullNext[e];
+                    }
+
+                    if (e == int.MaxValue) continue;
+
+                    var t = AddTriangle(e, i, hullNext[e], -1, -1, hullTri[e]);
+                    hullTri[i] = Legalize(t + 2);
+                    hullTri[e] = t;
+
+                    var next = hullNext[e];
+                    q = hullNext[next];
+
+                    while (Orient2dFast(p, positions[next], positions[q]) < 0)
+                    {
+                        t = AddTriangle(next, i, q, hullTri[i], -1, hullTri[next]);
+                        hullTri[i] = Legalize(t + 2);
+                        hullNext[next] = next;
+                        next = q;
+
+                        q = hullNext[next];
+                    }
+
+                    if (e == start)
+                    {
+                        q = hullPrev[e];
+
+                        while (Orient2dFast(p, positions[q], positions[e]) < 0)
+                        {
+                            t = AddTriangle(q, i, e, -1, hullTri[e], hullTri[q]);
+                            Legalize(t + 2);
+                            hullTri[q] = t;
+                            hullNext[e] = e;
+                            e = q;
+                            q = hullPrev[e];
+                        }
+                    }
+
+                    hullStart = hullPrev[i] = e;
+                    hullNext[e] = hullPrev[next] = i;
+                    hullNext[i] = next;
+
+                    hullHash[HashKey(p)] = i;
+                    hullHash[HashKey(positions[e])] = e;
+                }
+
+                trianglesRaw.Length = trianglesLen / 3;
+            }
+
+            private int Legalize(int a)
+            {
+                var i = 0;
+                int ar;
+
+                while (true)
+                {
+                    var b = halfedges[a];
+                    int a0 = a - a % 3;
+                    ar = a0 + (a + 2) % 3;
+
+                    if (b == -1)
+                    {
+                        if (i == 0) break;
+                        a = EDGE_STACK[--i];
+                        continue;
+                    }
+
+                    var b0 = b - b % 3;
+                    var al = a0 + (a + 1) % 3;
+                    var bl = b0 + (b + 2) % 3;
+
+                    var p0 = triangles[ar];
+                    var pr = triangles[a];
+                    var pl = triangles[al];
+                    var p1 = triangles[bl];
+
+                    var illegal = InCircle(positions[p0], positions[pr], positions[pl], positions[p1]);
+
+                    if (illegal)
+                    {
+                        triangles[a] = p1;
+                        triangles[b] = p0;
+
+                        var hbl = halfedges[bl];
+
+                        if (hbl == -1)
+                        {
+                            var e = hullStart;
+                            do
+                            {
+                                if (hullTri[e] == bl)
+                                {
+                                    hullTri[e] = a;
+                                    break;
+                                }
+                                e = hullPrev[e];
+                            } while (e != hullStart);
+                        }
+                        Link(a, hbl);
+                        Link(b, halfedges[ar]);
+                        Link(ar, bl);
+
+                        var br = b0 + (b + 1) % 3;
+
+                        if (i < EDGE_STACK.Length)
+                        {
+                            EDGE_STACK[i++] = br;
+                        }
+                    }
+                    else
+                    {
+                        if (i == 0) break;
+                        a = EDGE_STACK[--i];
+                    }
+                }
+
+                return ar;
+            }
+
+            private int AddTriangle(int i0, int i1, int i2, int a, int b, int c)
+            {
+                var t = trianglesLen;
+
+                triangles[t + 0] = i0;
+                triangles[t + 1] = i1;
+                triangles[t + 2] = i2;
+
+                Link(t + 0, a);
+                Link(t + 1, b);
+                Link(t + 2, c);
+
+                trianglesLen += 3;
+
+                return t;
+            }
+
+            private void Link(int a, int b)
+            {
+                halfedges[a] = b;
+                if (b != -1) halfedges[b] = a;
+            }
+
+            private static float CircumRadius(float2 a, float2 b, float2 c) => math.distancesq(CircumCenter(a, b, c), a);
+
+            private static float2 CircumCenter(float2 a, float2 b, float2 c)
+            {
+                var dx = b.x - a.x;
+                var dy = b.y - a.y;
+                var ex = c.x - a.x;
+                var ey = c.y - a.y;
+
+                var bl = dx * dx + dy * dy;
+                var cl = ex * ex + ey * ey;
+
+                var d = 0.5f / (dx * ey - dy * ex);
+
+                var x = a.x + (ey * bl - dy * cl) * d;
+                var y = a.y + (dx * cl - ex * bl) * d;
+
+                return new(x, y);
+            }
+
+            private static float Orient2dFast(float2 a, float2 b, float2 c) => (a.y - c.y) * (b.x - c.x) - (a.x - c.x) * (b.y - c.y);
+
+            private static bool InCircle(float2 a, float2 b, float2 c, float2 p)
+            {
+                var dx = a.x - p.x;
+                var dy = a.y - p.y;
+                var ex = b.x - p.x;
+                var ey = b.y - p.y;
+                var fx = c.x - p.x;
+                var fy = c.y - p.y;
+
+                var ap = dx * dx + dy * dy;
+                var bp = ex * ex + ey * ey;
+                var cp = fx * fx + fy * fy;
+
+                return dx * (ey * cp - bp * fy) -
+                       dy * (ex * cp - bp * fx) +
+                       ap * (ex * fy - ey * fx) < 0;
+            }
+        }
+
+        [BurstCompile]
+        private struct RecalculateTriangleMappingsJob : IJob
+        {
+            [ReadOnly]
+            private NativeArray<Triangle> triangles;
+            private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
+            private NativeList<Edge3> trianglesToEdges;
+            private NativeList<Circle> circles;
+            private NativeList<float2> positions;
+
+            public RecalculateTriangleMappingsJob(Triangulator triangulator)
+            {
+                triangles = triangulator.triangles.AsDeferredJobArray();
+                edgesToTriangles = triangulator.edgesToTriangles;
+                trianglesToEdges = triangulator.trianglesToEdges;
+                circles = triangulator.circles;
+                positions = triangulator.outputPositions;
+            }
+
+            public void Execute()
+            {
+                trianglesToEdges.Length = triangles.Length;
+                circles.Length = triangles.Length;
+
+                for (int i = 0; i < triangles.Length; i++)
+                {
+                    Execute(i);
+                }
+            }
+
+            private void Execute(int t)
+            {
+                var (i, j, k) = triangles[t];
+
+                circles[t] = CalculateCircumcenter((i, j, k), positions.AsArray());
+                trianglesToEdges[t] = ((i, j), (i, k), (j, k));
+
+                RegisterEdgeData((i, j), t);
+                RegisterEdgeData((j, k), t);
+                RegisterEdgeData((k, i), t);
+            }
+
+            private void RegisterEdgeData(Edge edge, int triangleId)
+            {
+                if (edgesToTriangles.TryGetValue(edge, out var tris))
+                {
+                    tris.Add(triangleId);
+                    edgesToTriangles[edge] = tris;
+                }
+                else
+                {
+                    edgesToTriangles.Add(edge, new() { triangleId });
+                }
             }
         }
 
