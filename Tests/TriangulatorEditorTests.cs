@@ -1631,6 +1631,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = true,
                     ConstrainEdges = false,
                     RestoreBoundary = false,
+                    ValidateInput = false,
                     MinimumArea = area,
                     MaximumArea = area,
                 },
@@ -1641,6 +1642,64 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             dependencies.Complete();
             stopwatch.Stop();
             UnityEngine.Debug.Log($"{triangulator.Output.Triangles.Length} {stopwatch.Elapsed.TotalMilliseconds / N}");
+
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
+        }
+
+        static TestCaseData DelaunayCase(int count, int N) => new((count: count, N: N))
+        {
+            TestName = $"Points: {count * count}"
+        };
+        private static readonly TestCaseData[] delaunayBenchmarkTestData =
+        {
+            DelaunayCase(count: 10, N: 100),
+            DelaunayCase(count: 20, N: 100),
+            DelaunayCase(count: 30, N: 100),
+            DelaunayCase(count: 40, N: 100),
+            DelaunayCase(count: 50, N: 100),
+            DelaunayCase(count: 60, N: 10),
+            DelaunayCase(count: 70, N: 10),
+            DelaunayCase(count: 80, N: 10),
+            DelaunayCase(count: 90, N: 10),
+            DelaunayCase(count: 100, N: 10),
+        };
+
+        [Test, TestCaseSource(nameof(delaunayBenchmarkTestData)), Explicit]
+        public void DelaunayBenchmarkTest((int count, int N) input)
+        {
+            var (count, N) = input;
+            var debuggerInitialValue = Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled;
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
+
+            var points = new List<float2>(count * count);
+            for (int i = 0; i < count; i++)
+            {
+                for (int j = 0; j < count; j++)
+                {
+                    var p = math.float2(i / (float)(count - 1), j / (float)(count - 1));
+                    points.Add(p);
+                }
+            }
+
+            using var positions = new NativeArray<float2>(points.ToArray(), Allocator.Persistent);
+
+            var stopwatch = Stopwatch.StartNew();
+            using var triangulator = new Triangulator(capacity: 64 * 1024, Allocator.Persistent)
+            {
+                Input = { Positions = positions },
+                Settings = {
+                    RefineMesh = false,
+                    ConstrainEdges = false,
+                    RestoreBoundary = false,
+                    ValidateInput = false,
+                },
+            };
+
+            var dependencies = default(JobHandle);
+            for (int i = 0; i < N; i++) dependencies = triangulator.Schedule(dependencies);
+            dependencies.Complete();
+            stopwatch.Stop();
+            UnityEngine.Debug.Log($"{count * count} {stopwatch.Elapsed.TotalMilliseconds / N}");
 
             Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
         }
