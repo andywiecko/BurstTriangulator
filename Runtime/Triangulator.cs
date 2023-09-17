@@ -979,7 +979,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     if (i == i0 || i == i1) continue;
                     var p = positions[i];
-                    var r = CircumRadius(p0, p1, p);
+                    var r = CircumRadiusSq(p0, p1, p);
                     if (r < minRadius)
                     {
                         i2 = i;
@@ -991,7 +991,7 @@ namespace andywiecko.BurstTriangulator
                 if (minRadius == float.MaxValue)
                 {
                     Debug.LogError("[Triangulator]: Provided input is not supported!");
-                    status.Value = Status.ERR;
+                    status.Value |= Status.ERR;
                     return;
                 }
 
@@ -1193,46 +1193,6 @@ namespace andywiecko.BurstTriangulator
                 halfedges[a] = b;
                 if (b != -1) halfedges[b] = a;
             }
-
-            private static float CircumRadius(float2 a, float2 b, float2 c) => math.distancesq(CircumCenter(a, b, c), a);
-
-            private static float2 CircumCenter(float2 a, float2 b, float2 c)
-            {
-                var dx = b.x - a.x;
-                var dy = b.y - a.y;
-                var ex = c.x - a.x;
-                var ey = c.y - a.y;
-
-                var bl = dx * dx + dy * dy;
-                var cl = ex * ex + ey * ey;
-
-                var d = 0.5f / (dx * ey - dy * ex);
-
-                var x = a.x + (ey * bl - dy * cl) * d;
-                var y = a.y + (dx * cl - ex * bl) * d;
-
-                return new(x, y);
-            }
-
-            private static float Orient2dFast(float2 a, float2 b, float2 c) => (a.y - c.y) * (b.x - c.x) - (a.x - c.x) * (b.y - c.y);
-
-            private static bool InCircle(float2 a, float2 b, float2 c, float2 p)
-            {
-                var dx = a.x - p.x;
-                var dy = a.y - p.y;
-                var ex = b.x - p.x;
-                var ey = b.y - p.y;
-                var fx = c.x - p.x;
-                var fy = c.y - p.y;
-
-                var ap = dx * dx + dy * dy;
-                var bp = ex * ex + ey * ey;
-                var cp = fx * fx + fy * fy;
-
-                return dx * (ey * cp - bp * fy) -
-                       dy * (ex * cp - bp * fx) +
-                       ap * (ex * fy - ey * fx) < 0;
-            }
         }
 
         [BurstCompile]
@@ -1269,7 +1229,7 @@ namespace andywiecko.BurstTriangulator
             {
                 var (i, j, k) = triangles[t];
 
-                circles[t] = CalculateCircumcenter((i, j, k), positions.AsArray());
+                circles[t] = CalculateCircumCircle((i, j, k), positions.AsArray());
                 trianglesToEdges[t] = ((i, j), (i, k), (j, k));
 
                 RegisterEdgeData((i, j), t);
@@ -1629,8 +1589,8 @@ namespace andywiecko.BurstTriangulator
                 edgesToTriangles.Remove(edge);
                 edgesToTriangles.Add((q0, q1), new() { t0, t1 });
 
-                circles[t0] = CalculateCircumcenter(triangles[t0], outputPositions);
-                circles[t1] = CalculateCircumcenter(triangles[t1], outputPositions);
+                circles[t0] = CalculateCircumCircle(triangles[t0], outputPositions);
+                circles[t1] = CalculateCircumCircle(triangles[t1], outputPositions);
             }
 
             public void Execute()
@@ -2283,13 +2243,6 @@ namespace andywiecko.BurstTriangulator
         }
         private static readonly DescendingComparer comparer = new();
 
-        private static Circle CalculateCircumcenter(Triangle triangle, NativeArray<float2> outputPositions)
-        {
-            var (idA, idB, idC) = triangle;
-            var (pA, pB, pC) = (outputPositions[idA], outputPositions[idB], outputPositions[idC]);
-            return GetCircumcenter(pA, pB, pC);
-        }
-
         private static int InsertPoint(float2 p,
             FixedList128Bytes<int> initTriangles,
             NativeList<Triangle> triangles,
@@ -2475,7 +2428,7 @@ namespace andywiecko.BurstTriangulator
             var tId = triangles.Length;
             triangles.Add(t);
             var (idA, idB, idC) = t;
-            var circle = CalculateCircumcenter(t, outputPositions.AsArray());
+            var circle = CalculateCircumCircle(t, outputPositions.AsArray());
             circles.Add(circle);
             trianglesToEdges.Add(((idA, idB), (idA, idC), (idB, idC)));
 
@@ -2499,21 +2452,48 @@ namespace andywiecko.BurstTriangulator
 
         private static float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
         private static float Cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
-        private static Circle GetCircumcenter(float2 a, float2 b, float2 c)
+        private static Circle CalculateCircumCircle(Triangle triangle, NativeArray<float2> outputPositions)
         {
-            var aLenSq = math.lengthsq(a);
-            var bLenSq = math.lengthsq(b);
-            var cLenSq = math.lengthsq(c);
+            var (idA, idB, idC) = triangle;
+            var (pA, pB, pC) = (outputPositions[idA], outputPositions[idB], outputPositions[idC]);
+            return new(CircumCenter(pA, pB, pC), CircumRadius(pA, pB, pC));
+        }
+        private static float CircumRadius(float2 a, float2 b, float2 c) => math.distance(CircumCenter(a, b, c), a);
+        private static float CircumRadiusSq(float2 a, float2 b, float2 c) => math.distancesq(CircumCenter(a, b, c), a);
+        private static float2 CircumCenter(float2 a, float2 b, float2 c)
+        {
+            var dx = b.x - a.x;
+            var dy = b.y - a.y;
+            var ex = c.x - a.x;
+            var ey = c.y - a.y;
 
-            var d = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
-            var p = math.float2
-            (
-                x: aLenSq * (b.y - c.y) + bLenSq * (c.y - a.y) + cLenSq * (a.y - b.y),
-                y: aLenSq * (c.x - b.x) + bLenSq * (a.x - c.x) + cLenSq * (b.x - a.x)
-            ) / d;
-            var r = math.distance(p, a);
+            var bl = dx * dx + dy * dy;
+            var cl = ex * ex + ey * ey;
 
-            return new Circle(center: p, radius: r);
+            var d = 0.5f / (dx * ey - dy * ex);
+
+            var x = a.x + (ey * bl - dy * cl) * d;
+            var y = a.y + (dx * cl - ex * bl) * d;
+
+            return new(x, y);
+        }
+        private static float Orient2dFast(float2 a, float2 b, float2 c) => (a.y - c.y) * (b.x - c.x) - (a.x - c.x) * (b.y - c.y);
+        private static bool InCircle(float2 a, float2 b, float2 c, float2 p)
+        {
+            var dx = a.x - p.x;
+            var dy = a.y - p.y;
+            var ex = b.x - p.x;
+            var ey = b.y - p.y;
+            var fx = c.x - p.x;
+            var fy = c.y - p.y;
+
+            var ap = dx * dx + dy * dy;
+            var bp = ex * ex + ey * ey;
+            var cp = fx * fx + fy * fy;
+
+            return dx * (ey * cp - bp * fy) -
+                   dy * (ex * cp - bp * fx) +
+                   ap * (ex * fy - ey * fx) < 0;
         }
         private static float3 Barycentric(float2 a, float2 b, float2 c, float2 p)
         {
