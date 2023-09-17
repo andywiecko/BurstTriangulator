@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [2.1.0] - 2023-09-17
+
+### Changed
+
+- Replaced the *classic* Delaunay algorithm (without refinement/constraints) with an implementation based on `half-edges` (see [`delaunator`](https://github.com/mapbox/delaunator) and [`delaunator-sharp`](https://github.com/nol1fe/delaunator-sharp/) for more details). This change has led to a significant performance boost in unconstrained triangulation. See [`README.md`](README.md#benchmark) for more details.
+- Refactored some internal math utilities.
+
 ## [2.0.0] - 2023-09-09
 
 ### Added
@@ -100,6 +107,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 - Initial release version
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
+[2.1.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.1.0
 [2.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.0.0
 [1.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.5.0
 [1.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.4.0
