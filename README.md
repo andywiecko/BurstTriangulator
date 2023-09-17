@@ -8,8 +8,10 @@
 [![openupm](https://img.shields.io/npm/v/com.andywiecko.burst.triangulator?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.andywiecko.burst.triangulator/)
 
 A **single-file** package which provides simple Delaunay triangulation of the given set of points (`float2`) with mesh refinement.
-Implemented triangulation is based on [Bowyer–Watson algorithm][bowyerwatson][^bowyer.1981] [^watson.1981] and refinement on [Ruppert's algorithm][rupperts][^ruppert.1995].
 
+Implemented *classic* Delaunay triangulation is based on
+[`delaunator`](https://github.com/mapbox/delaunator) and [`delaunator-sharp`](https://github.com/nol1fe/delaunator-sharp/).
+Refinement algorithm is based on [Ruppert's algorithm][rupperts][^ruppert.1995] with [Bowyer–Watson algorithm][bowyerwatson][^bowyer.1981] [^watson.1981] point insertion.
 The package provides also constrained triangulation (with mesh refinement) which is based on Sloan's algorithm[^sloan.1993].
 
 ## Table of contents
@@ -30,7 +32,7 @@ The package provides also constrained triangulation (with mesh refinement) which
       - [PCA transformation](#pca-transformation)
   - [Benchmark](#benchmark)
   - [Dependencies](#dependencies)
-  - [Things to consider](#things-to-consider)
+  - [Roadmap v3.0](#roadmap-v30)
   - [Bibliography](#bibliography)
 
 ## Getting started
@@ -379,29 +381,27 @@ $$
 
 ## Benchmark
 
-The package uses [`Burst`][burst] compiler, which produces highly optimized native code using LLVM.
-Below one can see a log-log plot of elapsed time as a function of the final triangles count after mesh refinement.
-Using Burst can provide more or less two order of magnitude faster computation.
+The package utilizes the [`Burst`][burst] compiler, which generates highly optimized native code using LLVM.
 
-> **Note**  
-> The following figure was obtained with `v1.0`.
+Below, you'll find a performance comparison (with Burst enabled) between `v2.0.0` and `v2.1.0`, as well as a comparison with [`delaunator-sharp`](https://github.com/nol1fe/delaunator-sharp/) for *classic* Delaunay triangulation (without refinement or constraints).
 
-![Burst Triangulator benchmark](Documentation~/burst-benchmark.png "Burst Triangulator benchmark")
+![Delaunay Benchmark](Documentation~/benchmark-delaunay.png)
 
-Below, you'll find a performance comparison (Burst enabled) between `v1.0.0` and `v2.0.0` (for the refinement task).
+Furthermore, we present a performance comparison (with Burst enabled) between `v1.0.0` and `v2.0.0` for the refinement task.
 
-![benchmark-v1-v2](Documentation~/benchmark-v1-v2.png)
+![Refinement Benchmark](Documentation~/benchmark-refinement.png)
 
 ## Dependencies
 
 - [`Unity.Burst`][burst]
 - [`Unity.Collections`][collections]
 
-## Things to consider
+## Roadmap v3.0
 
-- [ ] Consider using BVT (or another data structure) to accelerate computing.
-- [ ] Consider caching circles for constraint edges.
-- [ ] Consider refactoring the data structure to update the `edgeToTriangles` buffer instead of rebuilding it.
+- [x] ~~Remove supertriangle approach.~~
+- [ ] Adapt constraints and refinement algorithm to `halfedges` approach.
+- [ ] Improve performance of the constraint algorithm.
+- [ ] Improve performance of the refinement algorithm.
 
 ## Bibliography
 
