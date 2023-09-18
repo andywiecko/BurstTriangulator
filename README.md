@@ -398,7 +398,8 @@ Furthermore, we present a performance comparison (with Burst enabled) between `v
 
 ## Roadmap v3.0
 
-- [x] ~~Remove supertriangle approach.~~
+- [X] ~~Adapt Delaunay triangluation to `halfedges` approach.~~
+- [ ] Remove super-triangle approach.
 - [ ] Adapt constraints and refinement algorithm to `halfedges` approach.
 - [ ] Improve performance of the constraint algorithm.
 - [ ] Improve performance of the refinement algorithm.
