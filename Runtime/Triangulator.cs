@@ -307,7 +307,7 @@ namespace andywiecko.BurstTriangulator
 
             dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
             dependencies = Settings.RefineMesh || Settings.ConstrainEdges ? new RecalculateTriangleMappingsJob(this).Schedule(dependencies) : dependencies;
-            dependencies = Settings.ConstrainEdges ? ScheduleConstrainEdges(dependencies) : dependencies;
+            dependencies = Settings.ConstrainEdges ? new ConstrainEdgesJob(this).Schedule(dependencies) : dependencies;
 
             dependencies = (Settings.RefineMesh, Settings.ConstrainEdges) switch
             {
@@ -410,22 +410,6 @@ namespace andywiecko.BurstTriangulator
                 Input.HoleSeeds = tmpInputHoleSeeds;
                 tmpInputHoleSeeds = default;
             }
-
-            return dependencies;
-        }
-
-        private JobHandle ScheduleConstrainEdges(JobHandle dependencies)
-        {
-            var edges = new NativeList<Edge>(Allocator.TempJob);
-            var constraints = new NativeList<Edge>(Allocator.TempJob);
-            dependencies = new CopyEdgesJob(this, edges).Schedule(dependencies);
-            dependencies = new ResizeEdgeConstraintsJob(this).Schedule(dependencies);
-            dependencies = new ConstructConstraintEdgesJob(this).Schedule(this, dependencies);
-            dependencies = new CopyConstraintsJob(this, constraints).Schedule(dependencies);
-            dependencies = new FilterAlreadyConstraintEdges(edges, constraints).Schedule(dependencies);
-            dependencies = new ConstrainEdgesJob(this, edges, constraints).Schedule(dependencies);
-            dependencies = constraints.Dispose(dependencies);
-            dependencies = edges.Dispose(dependencies);
 
             return dependencies;
         }
@@ -1380,61 +1364,42 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
-        private struct CopyEdgesJob : IJob
+        private struct ConstrainEdgesJob : IJob
         {
+            private NativeReference<Status> status;
             [ReadOnly]
+            private NativeArray<float2> outputPositions;
+            private NativeList<Triangle> triangles;
             private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
-            private NativeList<Edge> edges;
-            private NativeReference<Status>.ReadOnly status;
-
-            public CopyEdgesJob(Triangulator triangulator, NativeList<Edge> edges)
-            {
-                edgesToTriangles = triangulator.edgesToTriangles;
-                this.edges = edges;
-                status = triangulator.status.AsReadOnly();
-            }
-
-            public void Execute()
-            {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
-                using var tmp = edgesToTriangles.GetKeyArray(Allocator.Temp);
-                edges.CopyFrom(tmp);
-            }
-        }
-
-        [BurstCompile]
-        private struct CopyConstraintsJob : IJob
-        {
+            private NativeList<Edge3> trianglesToEdges;
+            private NativeList<Circle> circles;
             [ReadOnly]
-            private NativeArray<Edge> internalConstraints;
+            private NativeArray<int> inputConstraintEdges;
+            private NativeList<Edge> internalConstraints;
+            private readonly int maxIters;
+
+            [NativeDisableContainerSafetyRestriction]
+            private NativeQueue<Edge> intersections;
+            [NativeDisableContainerSafetyRestriction]
             private NativeList<Edge> constraints;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<Edge> edges;
 
-            public CopyConstraintsJob(Triangulator triangulator, NativeList<Edge> constraints)
+            public ConstrainEdgesJob(Triangulator triangluator)
             {
-                internalConstraints = triangulator.constraintEdges.AsDeferredJobArray();
-                this.constraints = constraints;
-            }
+                status = triangluator.status;
+                outputPositions = triangluator.outputPositions.AsDeferredJobArray();
+                triangles = triangluator.triangles;
+                edgesToTriangles = triangluator.edgesToTriangles;
+                trianglesToEdges = triangluator.trianglesToEdges;
+                circles = triangluator.circles;
+                maxIters = triangluator.Settings.SloanMaxIters;
+                inputConstraintEdges = triangluator.Input.ConstraintEdges;
+                internalConstraints = triangluator.constraintEdges;
 
-            public void Execute() => constraints.CopyFrom(internalConstraints);
-        }
-
-        [BurstCompile]
-        private struct ResizeEdgeConstraintsJob : IJob
-        {
-            [ReadOnly]
-            private NativeArray<int> inputConstraintEdges;
-            private NativeList<Edge> constraintEdges;
-            private NativeReference<Status>.ReadOnly status;
-
-            public ResizeEdgeConstraintsJob(Triangulator triangulator)
-            {
-                inputConstraintEdges = triangulator.Input.ConstraintEdges;
-                constraintEdges = triangulator.constraintEdges;
-                status = triangulator.status.AsReadOnly();
+                intersections = default;
+                constraints = default;
+                edges = default;
             }
 
             public void Execute()
@@ -1444,44 +1409,36 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                constraintEdges.Length = inputConstraintEdges.Length / 2;
+                BuildInternalConstraints();
+
+                using var _edges = edges = edgesToTriangles.GetKeyArray(Allocator.Temp);
+                using var _constraints = constraints = new NativeList<Edge>(internalConstraints.Length, Allocator.Temp);
+                using var _intersections = intersections = new NativeQueue<Edge>(Allocator.Temp);
+
+                constraints.CopyFrom(internalConstraints);
+                FilterAlreadyConstraintEdges();
+
+                edges.Sort();
+                constraints.Sort();
+                for (int i = constraints.Length - 1; i >= 0; i--)
+                {
+                    TryApplyConstraint(i);
+                }
             }
-        }
 
-        [BurstCompile]
-        private struct ConstructConstraintEdgesJob : IJobParallelForDefer
-        {
-            [ReadOnly]
-            private NativeArray<int> inputConstraintEdges;
-            private NativeArray<Edge> constraintEdges;
-
-            public ConstructConstraintEdgesJob(Triangulator triangulator)
+            private void BuildInternalConstraints()
             {
-                inputConstraintEdges = triangulator.Input.ConstraintEdges;
-                constraintEdges = triangulator.constraintEdges.AsDeferredJobArray();
+                internalConstraints.Length = inputConstraintEdges.Length / 2;
+                for (int index = 0; index < internalConstraints.Length; index++)
+                {
+                    var i = inputConstraintEdges[2 * index + 0];
+                    var j = inputConstraintEdges[2 * index + 1];
+                    // Note: +3 due to supertriangle points
+                    internalConstraints[index] = new Edge(i + 3, j + 3);
+                }
             }
 
-            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies) =>
-                this.Schedule(triangulator.constraintEdges, triangulator.Settings.BatchCount, dependencies);
-
-            public void Execute(int index)
-            {
-                var i = inputConstraintEdges[2 * index];
-                var j = inputConstraintEdges[2 * index + 1];
-                // Note: +3 due to supertriangle points
-                constraintEdges[index] = new Edge(i + 3, j + 3);
-            }
-        }
-
-        [BurstCompile]
-        private struct FilterAlreadyConstraintEdges : IJob
-        {
-            private NativeList<Edge> edges, constraints;
-
-            public FilterAlreadyConstraintEdges(NativeList<Edge> edges, NativeList<Edge> constraints) =>
-                (this.edges, this.constraints) = (edges, constraints);
-
-            public void Execute()
+            private void FilterAlreadyConstraintEdges()
             {
                 edges.Sort();
                 for (int i = constraints.Length - 1; i >= 0; i--)
@@ -1493,33 +1450,64 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
             }
-        }
 
-        [BurstCompile]
-        private struct ConstrainEdgesJob : IJob
-        {
-            private NativeReference<Status> status;
-            [ReadOnly]
-            private NativeArray<float2> outputPositions;
-            private NativeList<Triangle> triangles;
-            private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
-            private NativeList<Edge3> trianglesToEdges;
-            private NativeList<Circle> circles;
-            private NativeList<Edge> edges;
-            private NativeList<Edge> constraints;
-            private readonly int maxIters;
-
-            public ConstrainEdgesJob(Triangulator triangluator, NativeList<Edge> edges, NativeList<Edge> constraints)
+            private void TryApplyConstraint(int i)
             {
-                status = triangluator.status;
-                outputPositions = triangluator.outputPositions.AsDeferredJobArray();
-                triangles = triangluator.triangles;
-                edgesToTriangles = triangluator.edgesToTriangles;
-                trianglesToEdges = triangluator.trianglesToEdges;
-                circles = triangluator.circles;
-                this.edges = edges;
-                this.constraints = constraints;
-                maxIters = triangluator.Settings.SloanMaxIters;
+                intersections.Clear();
+
+                var c = constraints[i];
+                CollectIntersections(c, intersections);
+
+                var iter = 0;
+                while (intersections.TryDequeue(out var e))
+                {
+                    if (IsMaxItersExceeded(iter++, maxIters))
+                    {
+                        return;
+                    }
+
+                    var tris = edgesToTriangles[e];
+                    var t0 = tris[0];
+                    var t1 = tris[1];
+
+                    var q0 = triangles[t0].UnsafeOtherPoint(e);
+                    var q1 = triangles[t1].UnsafeOtherPoint(e);
+                    var swapped = new Edge(q0, q1);
+
+                    if (!intersections.IsEmpty())
+                    {
+                        if (!c.ContainsCommonPointWith(swapped))
+                        {
+                            if (EdgeEdgeIntersection(c, swapped))
+                            {
+                                intersections.Enqueue(e);
+                                continue;
+                            }
+                        }
+
+                        var (e0, e1) = e;
+                        var (p0, p1, p2, p3) = (outputPositions[e0], outputPositions[q0], outputPositions[e1], outputPositions[q1]);
+                        if (!IsConvexQuadrilateral(p0, p1, p2, p3))
+                        {
+                            intersections.Enqueue(e);
+                            continue;
+                        }
+
+                        var id = constraints.BinarySearch(swapped);
+                        if (id >= 0)
+                        {
+                            constraints.RemoveAt(id);
+                            i--;
+                        }
+                    }
+
+                    UnsafeSwapEdge(e);
+                    var eId = edges.BinarySearch(e);
+                    edges[eId] = swapped;
+                    edges.Sort();
+                }
+
+                constraints.RemoveAtSwapBack(i);
             }
 
             private bool EdgeEdgeIntersection(Edge e1, Edge e2)
@@ -1591,76 +1579,6 @@ namespace andywiecko.BurstTriangulator
 
                 circles[t0] = CalculateCircumCircle(triangles[t0], outputPositions);
                 circles[t1] = CalculateCircumCircle(triangles[t1], outputPositions);
-            }
-
-            public void Execute()
-            {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
-                edges.Sort();
-                constraints.Sort();
-                using var intersections = new NativeQueue<Edge>(Allocator.Temp);
-                for (int i = constraints.Length - 1; i >= 0; i--)
-                {
-                    intersections.Clear();
-
-                    var c = constraints[i];
-                    CollectIntersections(c, intersections);
-
-                    var iter = 0;
-                    while (intersections.TryDequeue(out var e))
-                    {
-                        if (IsMaxItersExceeded(iter++, maxIters))
-                        {
-                            return;
-                        }
-
-                        var tris = edgesToTriangles[e];
-                        var t0 = tris[0];
-                        var t1 = tris[1];
-
-                        var q0 = triangles[t0].UnsafeOtherPoint(e);
-                        var q1 = triangles[t1].UnsafeOtherPoint(e);
-                        var swapped = new Edge(q0, q1);
-
-                        if (!intersections.IsEmpty())
-                        {
-                            if (!c.ContainsCommonPointWith(swapped))
-                            {
-                                if (EdgeEdgeIntersection(c, swapped))
-                                {
-                                    intersections.Enqueue(e);
-                                    continue;
-                                }
-                            }
-
-                            var (e0, e1) = e;
-                            var (p0, p1, p2, p3) = (outputPositions[e0], outputPositions[q0], outputPositions[e1], outputPositions[q1]);
-                            if (!IsConvexQuadrilateral(p0, p1, p2, p3))
-                            {
-                                intersections.Enqueue(e);
-                                continue;
-                            }
-
-                            var id = constraints.BinarySearch(swapped);
-                            if (id >= 0)
-                            {
-                                constraints.RemoveAt(id);
-                                i--;
-                            }
-                        }
-
-                        UnsafeSwapEdge(e);
-                        var eId = edges.BinarySearch(e);
-                        edges[eId] = swapped;
-                        edges.Sort();
-                    }
-
-                    constraints.RemoveAtSwapBack(i);
-                }
             }
         }
 
