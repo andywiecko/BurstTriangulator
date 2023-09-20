@@ -1379,11 +1379,11 @@ namespace andywiecko.BurstTriangulator
             private readonly int maxIters;
 
             [NativeDisableContainerSafetyRestriction]
-            private NativeQueue<Edge> intersections;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<Edge> constraints;
+            private NativeQueue<int> intersections;
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<Edge> edges;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<bool> satisfied;
 
             public ConstrainEdgesJob(Triangulator triangluator)
             {
@@ -1398,8 +1398,8 @@ namespace andywiecko.BurstTriangulator
                 internalConstraints = triangluator.constraintEdges;
 
                 intersections = default;
-                constraints = default;
                 edges = default;
+                satisfied = default;
             }
 
             public void Execute()
@@ -1409,18 +1409,14 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                BuildInternalConstraints();
-
                 using var _edges = edges = edgesToTriangles.GetKeyArray(Allocator.Temp);
-                using var _constraints = constraints = new NativeList<Edge>(internalConstraints.Length, Allocator.Temp);
-                using var _intersections = intersections = new NativeQueue<Edge>(Allocator.Temp);
+                using var _intersections = intersections = new NativeQueue<int>(Allocator.Temp);
+                using var _satisfied = satisfied = new NativeArray<bool>(inputConstraintEdges.Length / 2, Allocator.Temp);
 
-                constraints.CopyFrom(internalConstraints);
+                BuildInternalConstraints();
                 FilterAlreadyConstraintEdges();
 
-                edges.Sort();
-                constraints.Sort();
-                for (int i = constraints.Length - 1; i >= 0; i--)
+                for (int i = internalConstraints.Length - 1; i >= 0; i--) // Reverse order for backward compatibility
                 {
                     TryApplyConstraint(i);
                 }
@@ -1436,31 +1432,39 @@ namespace andywiecko.BurstTriangulator
                     // Note: +3 due to supertriangle points
                     internalConstraints[index] = new Edge(i + 3, j + 3);
                 }
+                internalConstraints.Sort();
             }
 
+            // TODO: with half-edges this can be embeded into intersection checks
             private void FilterAlreadyConstraintEdges()
             {
                 edges.Sort();
-                for (int i = constraints.Length - 1; i >= 0; i--)
+                for (int i = 0; i < internalConstraints.Length; i++)
                 {
-                    var id = edges.BinarySearch(constraints[i]);
+                    var id = edges.BinarySearch(internalConstraints[i]);
                     if (id >= 0)
                     {
-                        constraints.RemoveAtSwapBack(i);
+                        satisfied[i] = true;
                     }
                 }
             }
 
             private void TryApplyConstraint(int i)
             {
+                if (satisfied[i])
+                {
+                    return;
+                }
+
                 intersections.Clear();
 
-                var c = constraints[i];
-                CollectIntersections(c, intersections);
+                var c = internalConstraints[i];
+                CollectIntersections(c);
 
                 var iter = 0;
-                while (intersections.TryDequeue(out var e))
+                while (intersections.TryDequeue(out var eId))
                 {
+                    var e = edges[eId];
                     if (IsMaxItersExceeded(iter++, maxIters))
                     {
                         return;
@@ -1476,38 +1480,32 @@ namespace andywiecko.BurstTriangulator
 
                     if (!intersections.IsEmpty())
                     {
-                        if (!c.ContainsCommonPointWith(swapped))
+                        if (!c.ContainsCommonPointWith(swapped) && EdgeEdgeIntersection(c, swapped))
                         {
-                            if (EdgeEdgeIntersection(c, swapped))
-                            {
-                                intersections.Enqueue(e);
-                                continue;
-                            }
+                            intersections.Enqueue(eId);
+                            continue;
                         }
 
                         var (e0, e1) = e;
                         var (p0, p1, p2, p3) = (outputPositions[e0], outputPositions[q0], outputPositions[e1], outputPositions[q1]);
                         if (!IsConvexQuadrilateral(p0, p1, p2, p3))
                         {
-                            intersections.Enqueue(e);
+                            intersections.Enqueue(eId);
                             continue;
                         }
 
-                        var id = constraints.BinarySearch(swapped);
+                        var id = internalConstraints.BinarySearch(swapped);
                         if (id >= 0)
                         {
-                            constraints.RemoveAt(id);
-                            i--;
+                            satisfied[id] = true;
                         }
                     }
 
                     UnsafeSwapEdge(e);
-                    var eId = edges.BinarySearch(e);
                     edges[eId] = swapped;
-                    edges.Sort();
                 }
 
-                constraints.RemoveAtSwapBack(i);
+                satisfied[i] = true;
             }
 
             private bool EdgeEdgeIntersection(Edge e1, Edge e2)
@@ -1517,10 +1515,14 @@ namespace andywiecko.BurstTriangulator
                 return Triangulator.EdgeEdgeIntersection(a0, a1, b0, b1);
             }
 
-            private void CollectIntersections(Edge edge, NativeQueue<Edge> intersections)
+            // TODO: this can be reduced to O(log n). Iterate through triangles,
+            // construct mapping point -> index in any triangle
+            // or just find the first one! Then "BFS" to collect only potential intersections.
+            private void CollectIntersections(Edge edge)
             {
-                foreach (var otherEdge in edges)
+                for (int oId = 0; oId < edges.Length; oId++)
                 {
+                    var otherEdge = edges[oId];
                     if (otherEdge.ContainsCommonPointWith(edge))
                     {
                         continue;
@@ -1528,7 +1530,7 @@ namespace andywiecko.BurstTriangulator
 
                     if (EdgeEdgeIntersection(otherEdge, edge))
                     {
-                        intersections.Enqueue(otherEdge);
+                        intersections.Enqueue(oId);
                     }
                 }
             }
