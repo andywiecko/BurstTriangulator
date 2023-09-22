@@ -283,6 +283,81 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     (9, 8, 3),
                 }
             },
+            // 4   5   6   7
+            // *   *   *  ,*
+            //         ..;
+            //      ..;
+            //   ..;
+            //  ;
+            // *   *   *   *
+            // 0   1   2   3
+            new(new[]
+            {
+                math.float2(0, 0),
+                math.float2(1, 0),
+                math.float2(2, 0),
+                math.float2(3, 0),
+                math.float2(0, 3),
+                math.float2(1, 3),
+                math.float2(2, 3),
+                math.float2(3, 3),
+            },
+            new[] { 0, 7 }
+            )
+            {
+                TestName = "Test case 4",
+                ExpectedResult = new[]
+                {
+                    (0, 5, 6),
+                    (0, 6, 7),
+                    (5, 0, 4),
+                    (7, 1, 0),
+                    (7, 2, 1),
+                    (7, 3, 2),
+                }
+            },
+            //    8   9   10  11
+            //    *   *   *   *
+            //             ..;
+            //  5 *      ..;  * 7
+            //         ..;
+            //  4 *  ..;      * 6
+            //     ..;
+            //    *   *   *   *
+            //    0   1   2   3
+            new(new[]
+            {
+                math.float2(0, 0),
+                math.float2(1, 0),
+                math.float2(2, 0),
+                math.float2(3, 0),
+                math.float2(0, 1),
+                math.float2(0, 2),
+                math.float2(3, 1),
+                math.float2(3, 2),
+                math.float2(0, 3),
+                math.float2(1, 3),
+                math.float2(2, 3),
+                math.float2(3, 3),
+            },
+            new[]{ 0, 11 }
+            )
+            {
+                TestName = "Test case 5",
+                ExpectedResult = new[]
+                {
+                    (0, 4, 10),
+                    (0, 10, 11),
+                    (6, 3, 2),
+                    (7, 1, 0),
+                    (7, 2, 1),
+                    (7, 6, 2),
+                    (9, 4, 5),
+                    (9, 5, 8),
+                    (9, 10, 4),
+                    (11, 7, 0)
+                }
+            }
         };
 
         [Test, TestCaseSource(nameof(edgeConstraintsTestData))]
@@ -1280,6 +1355,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             // Input for this test is grabbed from issue #30 from @mduvergey user.
             // https://github.com/andywiecko/BurstTriangulator/issues/30
             // This test tests editor hanging problem reported in issue #30 and #31.
+            //
+            // UPDATE: Thanks to the recent fix, this input will no longer cause the algorithm to hang,
+            //         unless "max iters" are intentionally reduced.
             float2[] points =
             {
                 new float2(14225.59f, -2335.27f), new float2(13380.24f, -2344.72f), new float2(13197.35f, -2119.65f),
@@ -1338,6 +1416,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = false,
                     ConstrainEdges = true,
                     RestoreBoundary = true,
+                    SloanMaxIters = 10,
                 },
                 Input =
                 {
