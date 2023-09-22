@@ -1844,5 +1844,68 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
         }
+
+        private static readonly TestCaseData[] constraintBenchmarkTestData = Enumerable
+            .Range(0, 80)
+            .Select(i => new TestCaseData((100, 3 * (i + 1))))
+            .ToArray();
+
+        [Test, TestCaseSource(nameof(constraintBenchmarkTestData)), Explicit]
+        public void ConstraintBenchmarkTest((int count, int N) input)
+        {
+            var (count, N) = input;
+            var debuggerInitialValue = Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled;
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
+
+            var points = new List<float2>(count * count);
+            for (int i = 0; i < count; i++)
+            {
+                for (int j = 0; j < count; j++)
+                {
+                    var p = math.float2(i / (float)(count - 1), j / (float)(count - 1));
+                    points.Add(p);
+                }
+            }
+
+            var offset = points.Count;
+            var constraints = new List<int>(N + 1);
+            for (int i = 0; i < N; i++)
+            {
+                var phi = 2 * math.PI / N * i + 0.1452f;
+                var p = 0.2f * math.float2(math.cos(phi), math.sin(phi)) + 0.5f;
+                points.Add(p);
+                constraints.Add(offset + i);
+                constraints.Add(offset + (i + 1) % N);
+            }
+
+            using var positions = new NativeArray<float2>(points.ToArray(), Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraints.ToArray(), Allocator.Persistent);
+
+            var stopwatch = Stopwatch.StartNew();
+            using var triangulator = new Triangulator(capacity: count * count + N, Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraintEdges },
+                Settings = {
+                    RefineMesh = false,
+                    ConstrainEdges = true,
+                    RestoreBoundary = false,
+                    ValidateInput = false
+                },
+            };
+
+            var dependencies = default(JobHandle);
+            var rep = 300;
+            for (int i = 0; i < rep; i++) dependencies = triangulator.Schedule(dependencies);
+            dependencies.Complete();
+            stopwatch.Stop();
+            var log = $"{N} {stopwatch.Elapsed.TotalMilliseconds / rep}";
+            UnityEngine.Debug.Log(log);
+
+            // NOTE: Uncomment this to write all the test cases into a file.
+            //using var writer = new System.IO.StreamWriter("tmp.txt", true);
+            //writer.WriteLine(log);
+
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
+        }
     }
 }
