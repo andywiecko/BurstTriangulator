@@ -1478,31 +1478,27 @@ namespace andywiecko.BurstTriangulator
                     var q1 = triangles[t1].UnsafeOtherPoint(e);
                     var swapped = new Edge(q0, q1);
 
-                    if (!intersections.IsEmpty())
+                    var (e0, e1) = e;
+                    var (p0, p1, p2, p3) = (outputPositions[e0], outputPositions[q0], outputPositions[e1], outputPositions[q1]);
+                    if (!IsConvexQuadrilateral(p0, p1, p2, p3))
                     {
-                        if (!c.ContainsCommonPointWith(swapped) && EdgeEdgeIntersection(c, swapped))
-                        {
-                            intersections.Enqueue(eId);
-                            continue;
-                        }
-
-                        var (e0, e1) = e;
-                        var (p0, p1, p2, p3) = (outputPositions[e0], outputPositions[q0], outputPositions[e1], outputPositions[q1]);
-                        if (!IsConvexQuadrilateral(p0, p1, p2, p3))
-                        {
-                            intersections.Enqueue(eId);
-                            continue;
-                        }
-
-                        var id = internalConstraints.BinarySearch(swapped);
-                        if (id >= 0)
-                        {
-                            satisfied[id] = true;
-                        }
+                        intersections.Enqueue(eId);
+                        continue;
                     }
 
                     UnsafeSwapEdge(e);
                     edges[eId] = swapped;
+
+                    if (!c.ContainsCommonPointWith(swapped) && EdgeEdgeIntersection(c, swapped))
+                    {
+                        intersections.Enqueue(eId);
+                    }
+
+                    var id = internalConstraints.BinarySearch(swapped);
+                    if (id >= 0)
+                    {
+                        satisfied[id] = true;
+                    }
                 }
 
                 satisfied[i] = true;
