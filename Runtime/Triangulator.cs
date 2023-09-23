@@ -171,11 +171,12 @@ namespace andywiecko.BurstTriangulator
             [field: SerializeField]
             public bool ConstrainEdges { get; set; } = false;
             /// <summary>
-            /// If <see langword="true"/> and provided <see cref="Input"/> is not valid, it will throw an exception.
+            /// If is set to <see langword="true"/>, the provided data will be validated before running the triangulation procedure.
+            /// Input positions, as well as input constraints, have a few restrictions, 
+            /// see <seealso href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md">README.md</seealso> for more details.
+            /// If one of the conditions fails, then triangulation will not be calculated. 
+            /// One could catch this as an error by using <see cref="OutputData.Status"/> (native, can be used in jobs).
             /// </summary>
-            /// <remarks>
-            /// Input validation is enabled only at Editor.
-            /// </remarks>
             [field: SerializeField]
             public bool ValidateInput { get; set; } = true;
             /// <summary>
