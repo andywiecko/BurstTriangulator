@@ -222,6 +222,7 @@ namespace andywiecko.BurstTriangulator
         private NativeList<float2> outputPositions;
         private NativeList<int> outputTriangles;
         private NativeList<Triangle> triangles;
+        private NativeList<int> halfedges;
         private NativeList<Circle> circles;
         private NativeList<Edge3> trianglesToEdges;
         private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
@@ -245,6 +246,7 @@ namespace andywiecko.BurstTriangulator
             outputPositions = new(capacity, allocator);
             outputTriangles = new(6 * capacity, allocator);
             triangles = new(capacity, allocator);
+            halfedges = new(6 * capacity, allocator);
             circles = new(capacity, allocator);
             trianglesToEdges = new(capacity, allocator);
             edgesToTriangles = new(capacity, allocator);
@@ -269,6 +271,7 @@ namespace andywiecko.BurstTriangulator
             outputPositions.Dispose();
             outputTriangles.Dispose();
             triangles.Dispose();
+            halfedges.Dispose();
             circles.Dispose();
             trianglesToEdges.Dispose();
             edgesToTriangles.Dispose();
@@ -743,6 +746,7 @@ namespace andywiecko.BurstTriangulator
             private NativeList<float2> outputPositions;
             private NativeList<int> outputTriangles;
             private NativeList<Triangle> triangles;
+            private NativeList<int> halfedges;
             private NativeList<Circle> circles;
             private NativeList<Edge3> trianglesToEdges;
             private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
@@ -756,6 +760,7 @@ namespace andywiecko.BurstTriangulator
                 outputPositions = triangulator.outputPositions;
                 outputTriangles = triangulator.outputTriangles;
                 triangles = triangulator.triangles;
+                halfedges = triangulator.halfedges;
                 circles = triangulator.circles;
                 trianglesToEdges = triangulator.trianglesToEdges;
                 edgesToTriangles = triangulator.edgesToTriangles;
@@ -774,6 +779,7 @@ namespace andywiecko.BurstTriangulator
                 outputPositions.Clear();
                 outputTriangles.Clear();
                 triangles.Clear();
+                halfedges.Clear();
                 circles.Clear();
                 trianglesToEdges.Clear();
                 edgesToTriangles.Clear();
@@ -805,6 +811,7 @@ namespace andywiecko.BurstTriangulator
             private NativeArray<float2> inputPositions;
             private NativeList<float2> outputPositions;
             private NativeList<Triangle> trianglesRaw;
+            private NativeList<int> halfedgesRaw;
 
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<float2> positions;
@@ -838,6 +845,7 @@ namespace andywiecko.BurstTriangulator
                 inputPositions = triangulator.Input.Positions;
                 outputPositions = triangulator.outputPositions;
                 trianglesRaw = triangulator.triangles;
+                halfedgesRaw = triangulator.halfedges;
 
                 positions = default;
                 ids = default;
@@ -906,8 +914,8 @@ namespace andywiecko.BurstTriangulator
                 var maxTriangles = math.max(2 * n - 5, 0);
                 trianglesRaw.Length = maxTriangles;
                 triangles = trianglesRaw.AsArray().Reinterpret<int>(3 * sizeof(int));
-
-                using var _halfedges = halfedges = new(3 * maxTriangles, Allocator.Temp);
+                halfedgesRaw.Length = 3 * maxTriangles;
+                halfedges = halfedgesRaw.AsArray();
 
                 hashSize = (int)math.ceil(math.sqrt(n));
                 using var _hullPrev = hullPrev = new(n, Allocator.Temp);
@@ -1084,6 +1092,7 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 trianglesRaw.Length = trianglesLen / 3;
+                halfedgesRaw.Length = trianglesLen;
             }
 
             private int Legalize(int a)
