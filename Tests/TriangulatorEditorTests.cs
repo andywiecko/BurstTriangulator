@@ -1746,7 +1746,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             new((area: 0.0002f, N: 005)),
         };
 
-        [Test, TestCaseSource(nameof(refineMeshBenchmarkTestData)), Explicit]
+        [Test, TestCaseSource(nameof(refineMeshBenchmarkTestData)), Explicit, Category("Benchmark")]
         public void RefineMeshBenchmarkTest((float area, int N) input)
         {
             var (area, N) = input;
@@ -1805,7 +1805,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             DelaunayCase(count: 1000, N: 10),
         };
 
-        [Test, TestCaseSource(nameof(delaunayBenchmarkTestData)), Explicit]
+        [Test, TestCaseSource(nameof(delaunayBenchmarkTestData)), Explicit, Category("Benchmark")]
         public void DelaunayBenchmarkTest((int count, int N) input)
         {
             var (count, N) = input;
@@ -1850,7 +1850,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             .Select(i => new TestCaseData((100, 3 * (i + 1))))
             .ToArray();
 
-        [Test, TestCaseSource(nameof(constraintBenchmarkTestData)), Explicit]
+        [Test, TestCaseSource(nameof(constraintBenchmarkTestData)), Explicit, Category("Benchmark")]
         public void ConstraintBenchmarkTest((int count, int N) input)
         {
             var (count, N) = input;
