@@ -178,6 +178,23 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         private static readonly TestCaseData[] edgeConstraintsTestData = new[]
         {
             new TestCaseData(
+                new[]
+                {
+                    math.float2(0, 0),
+                    math.float2(1, 0),
+                    math.float2(1, 1),
+                    math.float2(0, 1),
+                }, new int[]{ }
+            )
+            {
+                TestName = "Test case 0",
+                ExpectedResult = new[]
+                {
+                    (0, 3, 2),
+                    (2, 1, 0),
+                }
+            },
+            new TestCaseData(
                 //   6 ----- 5 ----- 4
                 //   |    .`   `.    |
                 //   | .`         `. |
@@ -233,10 +250,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 ExpectedResult = new[]
                 {
                     (1, 0, 7),
-                    (1, 5, 4),
                     (1, 7, 5),
+                    (3, 1, 4),
                     (3, 2, 1),
-                    (4, 3, 1),
+                    (5, 4, 1),
                     (7, 6, 5),
                 }
             },
@@ -274,13 +291,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     (1, 0, 11),
                     (1, 11, 10),
                     (2, 1, 10),
-                    (3, 2, 10),
-                    (3, 10, 9),
-                    (5, 4, 8),
+                    (2, 10, 3),
+                    (3, 9, 8),
+                    (4, 3, 8),
+                    (4, 8, 5),
+                    (5, 8, 7),
                     (7, 6, 5),
-                    (8, 4, 3),
-                    (8, 7, 5),
-                    (9, 8, 3),
+                    (10, 9, 3),
                 }
             },
             // 4   5   6   7
@@ -308,9 +325,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 4",
                 ExpectedResult = new[]
                 {
-                    (0, 5, 6),
-                    (0, 6, 7),
                     (5, 0, 4),
+                    (5, 6, 0),
+                    (6, 7, 0),
                     (7, 1, 0),
                     (7, 2, 1),
                     (7, 3, 2),
@@ -346,16 +363,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 5",
                 ExpectedResult = new[]
                 {
-                    (0, 4, 10),
-                    (0, 10, 11),
+                    (1, 0, 7),
                     (6, 3, 2),
-                    (7, 1, 0),
                     (7, 2, 1),
                     (7, 6, 2),
                     (9, 4, 5),
                     (9, 5, 8),
                     (9, 10, 4),
-                    (11, 7, 0)
+                    (10, 0, 4),
+                    (10, 11, 0),
+                    (11, 7, 0),
                 }
             }
         };
@@ -380,6 +397,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             };
 
             triangulator.Run();
+
+            foreach (var t in triangulator.GetTrisTuple())
+            {
+                UnityEngine.Debug.Log(t);
+            }
 
             return triangulator.GetTrisTuple();
         }
@@ -570,24 +592,25 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 },
                 new []
                 {
-                    math.float2(1, 0.5f),
-                    math.float2(0.5f, 0),
+                    math.float2(1f, 0.5f),
+                    math.float2(0.5f, 0f),
                     math.float2(0.5f, 0.25f),
                     math.float2(0.75f, 0.625f),
-                    math.float2(0.5f, 1),
-                    math.float2(1.5f, 1),
+                    math.float2(0.5f, 1f),
+                    math.float2(2f, 0.5f),
+                    math.float2(1.5f, 1f),
                     math.float2(1.5f, 0.75f),
                     math.float2(1.25f, 0.375f),
-                    math.float2(1.5f, 0),
+                    math.float2(1.5f, 0f),
+                    math.float2(1.625f, 0.4375f),
                 }
             )
             {
                 TestName = "Test case 2 (rectangle)",
                 ExpectedResult = new []
                 {
-                    (3, 2, 12),
                     (6, 1, 8),
-                    (6, 4, 12),
+                    (6, 4, 13),
                     (7, 0, 8),
                     (8, 0, 5),
                     (8, 1, 7),
@@ -596,13 +619,17 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     (9, 6, 8),
                     (9, 8, 10),
                     (10, 4, 9),
-                    (11, 3, 12),
-                    (12, 2, 14),
-                    (12, 4, 11),
-                    (13, 1, 6),
-                    (13, 6, 12),
-                    (13, 12, 14),
-                    (14, 1, 13)
+                    (11, 2, 16),
+                    (12, 3, 13),
+                    (13, 3, 11),
+                    (13, 4, 12),
+                    (13, 11, 16),
+                    (14, 1, 6),
+                    (14, 6, 13),
+                    (14, 13, 16),
+                    (15, 1, 14),
+                    (15, 14, 16),
+                    (16, 2, 15),
                 }
             },
         };
@@ -1244,7 +1271,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var localTriangles = triangulator.GetTrisTuple();
 
             Assert.That(nonLocalTriangles, Has.Length.LessThanOrEqualTo(2));
-            Assert.That(localTriangles, Is.EqualTo(new[] { (1, 0, 3), (3, 2, 1) }));
+            Assert.That(localTriangles, Is.EqualTo(new[] { (0, 3, 1), (2, 1, 3) }));
         }
 
         [Test]
