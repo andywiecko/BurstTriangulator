@@ -124,6 +124,7 @@ using var triangulator = new(1024, Allocator.Persistent)
     // If true constrains edges defined in the Triangulator.Input.ConstraintEdges
     ConstrainEdges = false;
     // If true and provided Triangulator.Input is not valid, it will throw an exception.
+    // The error can be catch by using the `Triangulator.Output.Status`.
     ValidateInput = true;
     // Type of preprocessing algorithm, see the section below for more details.
     Preprocessor = Triangulator.Preprocessor.None;
@@ -387,6 +388,11 @@ Below, you'll find a performance comparison (with Burst enabled) between `v2.0.0
 
 ![Delaunay Benchmark](Documentation~/benchmark-delaunay.png)
 
+Below, you can find a benchmark for constrained triangulation for both `v2.1` and `v2.2`. The test specimen consists of a 100×100 grid with additional `#constraints`-points distributed in a circle at the center of the grid. In some cases of `v2.1`, the algorithm gets stuck. Reference timings for non-constrained triangulation are marked with a gray line.
+In the figure below, you can also see example test cases: red represents resulting triangles, and blue represents constrained edges.
+
+![Constraint Benchmark](Documentation~/benchmark-constraint.png)
+
 Furthermore, we present a performance comparison (with Burst enabled) between `v1.0.0` and `v2.0.0` for the refinement task.
 
 ![Refinement Benchmark](Documentation~/benchmark-refinement.png)
@@ -399,10 +405,11 @@ Furthermore, we present a performance comparison (with Burst enabled) between `v
 ## Roadmap v3.0
 
 - [X] ~~Adapt Delaunay triangluation to `halfedges` approach.~~
-- [ ] Remove super-triangle approach.
-- [ ] Adapt constraints and refinement algorithm to `halfedges` approach.
-- [ ] Improve performance of the constraint algorithm.
+- [X] ~~Adapt constrained triangulation to `halfedges` approach.~~
+- [X] ~~Improve performance of the constraint algorithm.~~
+- [ ] Adapt refinement algorithm to `halfedges` approach.
 - [ ] Improve performance of the refinement algorithm.
+- [ ] Remove super-triangle approach.
 
 ## Bibliography
 
