@@ -7,14 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
-## [2.1.0] - 2023-09-17
+## [2.2.0] ⁠– 2023-10-03
+
+### Changed
+
+- Simplified constrained triangulation scheduling jobs pipeline.
+- Adapted constrained triangulation for `half-edges` approach, which significantly improved performance. The algorithm no longer relies on triangulation mappings, such as edge-to-triangle and triangle-to-edge relationships (or circles). The complexity of the intersection searching algorithm has been reduced from a naive `O(n^2)` solution to `O(n log n)`.
+
+### Fixed
+
+- Resolved Sloan algorithm corner cases. In previous releases, constrained triangulation may get stuck. Constrained triangulation is now more robust.
+
+### Added
+
+- Added constrained triangulation benchmark test. The results may be found at [`README.md`](README.md#benchmark).
+
+## [2.1.0] ⁠– 2023-09-17
 
 ### Changed
 
 - Replaced the *classic* Delaunay algorithm (without refinement/constraints) with an implementation based on `half-edges` (see [`delaunator`](https://github.com/mapbox/delaunator) and [`delaunator-sharp`](https://github.com/nol1fe/delaunator-sharp/) for more details). This change has led to a significant performance boost in unconstrained triangulation. See [`README.md`](README.md#benchmark) for more details.
 - Refactored some internal math utilities.
 
-## [2.0.0] - 2023-09-09
+## [2.0.0] ⁠– 2023-09-09
 
 ### Added
 
@@ -34,7 +49,7 @@ For online version see [Github Releases].
 - Removed the following deprecated properties: `Positions`, `Triangles`, `PositionsDeferred`, `PositionsDeferred`.
 - Removed the internal `TriangulatorNativeData` as part of a significant refactor to simplify the code structure. Internal implementations were cleaned up, and code structure was simplified.
 
-## [1.5.0] - 2023-04-12
+## [1.5.0] ⁠– 2023-04-12
 
 ### Added
 
@@ -44,7 +59,7 @@ For online version see [Github Releases].
 
 - Editor hangs during Sloan algorithm for specific input data (issues [#30] and [#31]).
 
-## [1.4.0] - 2022-11-01
+## [1.4.0] ⁠– 2022-11-01
 
 ### Added
 
@@ -56,7 +71,7 @@ For online version see [Github Releases].
 - Add missing constraint position range validation.
 - Fix whitespaces in code and `README.md`.
 
-## [1.3.0] - 2022-04-09
+## [1.3.0] ⁠– 2022-04-09
 
 ### Added
 
@@ -70,7 +85,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 - More verbose warnings during input validation.
 
-## [1.2.0] - 2022-04-02
+## [1.2.0] ⁠– 2022-04-02
 
 ### Added
 
@@ -82,7 +97,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 - Refactor: moved a few methods from jobs into `TriangulatorNativeData`.
 - Refactor: structures have more compact layout.
 
-## [1.1.0] - 2022-03-27
+## [1.1.0] ⁠– 2022-03-27
 
 ### Added
 
@@ -93,7 +108,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 - Refactor of input/output data buffers, some of them are marked as obsoletes.
 
-## [1.0.1] - 2021-11-24
+## [1.0.1] ⁠– 2021-11-24
 
 ### Changed
 
@@ -107,6 +122,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 - Initial release version
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
+[2.2.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.2.0
 [2.1.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.1.0
 [2.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.0.0
 [1.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.5.0
