@@ -1692,42 +1692,37 @@ namespace andywiecko.BurstTriangulator
         private interface IRefineMeshJobMode<TSelf>
         {
             TSelf Create(Triangulator triangulator);
-            void SplitEdge(Edge edge,
-                NativeList<float2> outputPositions,
-                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
-                NativeList<Triangle> triangles,
-                NativeList<Circle> circles,
-                NativeList<Edge3> trianglesToEdges
-            );
-            void InsertPoint(float2 p, int tId,
-                NativeList<float2> outputPositions,
-                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
-                NativeList<Triangle> triangles,
-                NativeList<Circle> circles,
-                NativeList<Edge3> trianglesToEdges
-            );
+            void SplitEdge(Edge edge);
+            void InsertPoint(float2 p, int tId);
         }
 
-        private readonly struct ConstraintDisable : IRefineMeshJobMode<ConstraintDisable>
+        private struct ConstraintDisable : IRefineMeshJobMode<ConstraintDisable>
         {
-            public ConstraintDisable Create(Triangulator _) => new();
-            public void InsertPoint(float2 p, int tId,
-                NativeList<float2> outputPositions,
-                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
-                NativeList<Triangle> triangles,
-                NativeList<Circle> circles,
-                NativeList<Edge3> trianglesToEdges)
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<float2> outputPositions;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<Triangle> triangles;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<Circle> circles;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<Edge3> trianglesToEdges;
+
+            public ConstraintDisable Create(Triangulator triangulator) => new()
+            {
+                outputPositions = triangulator.outputPositions,
+                edgesToTriangles = triangulator.edgesToTriangles,
+                triangles = triangulator.triangles,
+                circles = triangulator.circles,
+                trianglesToEdges = triangulator.trianglesToEdges,
+            };
+            public void InsertPoint(float2 p, int tId)
             {
                 Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
             }
 
-            public void SplitEdge(Edge edge,
-                NativeList<float2> outputPositions,
-                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
-                NativeList<Triangle> triangles,
-                NativeList<Circle> circles,
-                NativeList<Edge3> trianglesToEdges
-            )
+            public void SplitEdge(Edge edge)
             {
                 var (e0, e1) = edge;
                 var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
@@ -1738,17 +1733,30 @@ namespace andywiecko.BurstTriangulator
 
         private struct ConstraintEnable : IRefineMeshJobMode<ConstraintEnable>
         {
-            private NativeList<Edge> constraintEdges;
-            public ConstraintEnable(Triangulator triangulator) => constraintEdges = triangulator.constraintEdges;
-            public ConstraintEnable Create(Triangulator triangulator) => new(triangulator);
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<float2> outputPositions;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<Triangle> triangles;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<Circle> circles;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<Edge3> trianglesToEdges;
 
-            public void InsertPoint(float2 p, int tId,
-                NativeList<float2> outputPositions,
-                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
-                NativeList<Triangle> triangles,
-                NativeList<Circle> circles,
-                NativeList<Edge3> trianglesToEdges
-                )
+            private NativeList<Edge> constraintEdges;
+
+            public ConstraintEnable Create(Triangulator triangulator) => new()
+            {
+                outputPositions = triangulator.outputPositions,
+                edgesToTriangles = triangulator.edgesToTriangles,
+                triangles = triangulator.triangles,
+                circles = triangulator.circles,
+                trianglesToEdges = triangulator.trianglesToEdges,
+                constraintEdges = triangulator.constraintEdges
+            };
+
+            public void InsertPoint(float2 p, int tId)
             {
                 var eId = 0;
                 foreach (var e in constraintEdges)
@@ -1771,13 +1779,7 @@ namespace andywiecko.BurstTriangulator
                 Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
             }
 
-            public void SplitEdge(Edge edge,
-                NativeList<float2> outputPositions,
-                NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
-                NativeList<Triangle> triangles,
-                NativeList<Circle> circles,
-                NativeList<Edge3> trianglesToEdges
-            )
+            public void SplitEdge(Edge edge)
             {
                 var (e0, e1) = edge;
                 var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
@@ -1849,7 +1851,7 @@ namespace andywiecko.BurstTriangulator
                                 continue;
                             }
 
-                            mode.SplitEdge(edge, outputPositions, edgesToTriangles, triangles, circles, trianglesToEdges);
+                            mode.SplitEdge(edge);
                             return true;
                         }
                     }
@@ -1882,7 +1884,7 @@ namespace andywiecko.BurstTriangulator
                         TriangleIsBad(triangle, minimumArea2 * s.x * s.y, maximumArea2 * s.x * s.y, minimumAngle))
                     {
                         var circle = circles[tId];
-                        mode.InsertPoint(circle.Center, tId, outputPositions, edgesToTriangles, triangles, circles, trianglesToEdges);
+                        mode.InsertPoint(circle.Center, tId);
                         return true;
                     }
                 }
