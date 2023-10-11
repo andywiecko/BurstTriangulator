@@ -1709,6 +1709,8 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private NativeList<Edge3> trianglesToEdges;
 
+            private NativeList<int> halfedges;
+
             public ConstraintDisable Create(Triangulator triangulator) => new()
             {
                 outputPositions = triangulator.outputPositions,
@@ -1716,10 +1718,11 @@ namespace andywiecko.BurstTriangulator
                 triangles = triangulator.triangles,
                 circles = triangulator.circles,
                 trianglesToEdges = triangulator.trianglesToEdges,
+                halfedges = triangulator.halfedges
             };
             public void InsertPoint(float2 p, int tId)
             {
-                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
+                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles, halfedges);
             }
 
             public void SplitEdge(Edge edge)
@@ -1727,7 +1730,7 @@ namespace andywiecko.BurstTriangulator
                 var (e0, e1) = edge;
                 var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
                 var p = 0.5f * (pA + pB);
-                Triangulator.InsertPoint(p, initTriangles: edgesToTriangles[edge], triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles);
+                Triangulator.InsertPoint(p, initTriangles: edgesToTriangles[edge], triangles, circles, trianglesToEdges, outputPositions, edgesToTriangles, halfedges);
             }
         }
 
@@ -1744,6 +1747,7 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private NativeList<Edge3> trianglesToEdges;
 
+            private NativeList<int> halfedges;
             private NativeList<Edge> constraintEdges;
 
             public ConstraintEnable Create(Triangulator triangulator) => new()
@@ -1753,7 +1757,8 @@ namespace andywiecko.BurstTriangulator
                 triangles = triangulator.triangles,
                 circles = triangulator.circles,
                 trianglesToEdges = triangulator.trianglesToEdges,
-                constraintEdges = triangulator.constraintEdges
+                constraintEdges = triangulator.constraintEdges,
+                halfedges = triangulator.halfedges
             };
 
             public void InsertPoint(float2 p, int tId)
@@ -1770,13 +1775,13 @@ namespace andywiecko.BurstTriangulator
                         constraintEdges.Add((pId, e.IdA));
                         constraintEdges.Add((pId, e.IdB));
 
-                        Triangulator.InsertPoint(circle.Center, initTriangles: edgesToTriangles[e], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
+                        Triangulator.InsertPoint(circle.Center, initTriangles: edgesToTriangles[e], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles, halfedges);
                         return;
                     }
                     eId++;
                 }
 
-                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
+                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles, halfedges);
             }
 
             public void SplitEdge(Edge edge)
@@ -1793,7 +1798,7 @@ namespace andywiecko.BurstTriangulator
                     constraintEdges.Add((pId, edge.IdA));
                     constraintEdges.Add((pId, edge.IdB));
                 }
-                Triangulator.InsertPoint(p, initTriangles: edgesToTriangles[edge], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles);
+                Triangulator.InsertPoint(p, initTriangles: edgesToTriangles[edge], triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles, halfedges);
             }
         }
 
@@ -2016,6 +2021,7 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> pointsToRemove;
             private NativeList<int> pointsOffset;
             private NativeList<Edge> constraintEdges;
+            private NativeList<int> halfedges;
 
             public PlantingSeedsJob(Triangulator triangulator)
             {
@@ -2031,6 +2037,7 @@ namespace andywiecko.BurstTriangulator
                 pointsToRemove = triangulator.pointsToRemove;
                 pointsOffset = triangulator.pointsOffset;
                 constraintEdges = triangulator.constraintEdges;
+                halfedges = triangulator.halfedges;
             }
 
             public void Execute()
@@ -2049,7 +2056,7 @@ namespace andywiecko.BurstTriangulator
                 using var potentialPointsToRemove = new NativeHashSet<int>(initialCapacity: 3 * badTriangles.Length, Allocator.Temp);
 
                 GeneratePotentialPointsToRemove(initialPointsCount: positions.Length, potentialPointsToRemove, badTriangles);
-                RemoveBadTriangles(badTriangles, triangles, circles, trianglesToEdges, edgesToTriangles);
+                RemoveBadTriangles(badTriangles, triangles, circles, trianglesToEdges, edgesToTriangles, halfedges);
                 GeneratePointsToRemove(potentialPointsToRemove);
                 GeneratePointsOffset();
             }
@@ -2276,8 +2283,9 @@ namespace andywiecko.BurstTriangulator
             NativeList<Circle> circles,
             NativeList<Edge3> trianglesToEdges,
             NativeList<float2> outputPositions,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
-        ) => UnsafeInsertPoint(p, initTriangles, triangles, circles, trianglesToEdges, outputPositions, constraintEdges: default, edgesToTriangles, constraint: false);
+            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+            NativeList<int> halfedges
+        ) => UnsafeInsertPoint(p, initTriangles, triangles, circles, trianglesToEdges, outputPositions, constraintEdges: default, edgesToTriangles, halfedges, constraint: false);
 
         private static int InsertPoint(float2 p,
             FixedList128Bytes<int> initTriangles,
@@ -2286,8 +2294,9 @@ namespace andywiecko.BurstTriangulator
             NativeList<Edge3> trianglesToEdges,
             NativeList<float2> outputPositions,
             NativeList<Edge> constraintEdges,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
-        ) => UnsafeInsertPoint(p, initTriangles, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles, constraint: true);
+            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+            NativeList<int> halfedges
+        ) => UnsafeInsertPoint(p, initTriangles, triangles, circles, trianglesToEdges, outputPositions, constraintEdges, edgesToTriangles, halfedges, constraint: true);
 
         private static int UnsafeInsertPoint(float2 p,
             FixedList128Bytes<int> initTriangles,
@@ -2297,6 +2306,7 @@ namespace andywiecko.BurstTriangulator
             NativeList<float2> outputPositions,
             NativeList<Edge> constraintEdges,
             NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+            NativeList<int> halfedges,
             bool constraint = false
         )
         {
@@ -2325,30 +2335,41 @@ namespace andywiecko.BurstTriangulator
 
             void RecalculateBadTriangles(float2 p)
             {
+                var itriangles = triangles.AsArray().Reinterpret<int>(3 * sizeof(int));
                 while (trianglesQueue.TryDequeue(out var tId))
                 {
                     visitedTriangles[tId] = true;
 
-                    foreach (var e in trianglesToEdges[tId])
+                    VisitEdge(3 * tId + 0, 3 * tId + 1);
+                    VisitEdge(3 * tId + 1, 3 * tId + 2);
+                    VisitEdge(3 * tId + 2, 3 * tId + 0);
+
+
+                    void VisitEdge(int t0, int t1)
                     {
+                        var e = new Edge(itriangles[t0], itriangles[t1]);
                         if (constraint && constraintEdges.Contains(e))
                         {
-                            continue;
+                            return;
                         }
 
-                        foreach (var otherId in edgesToTriangles[e])
+                        var he = halfedges[t0];
+                        if (he == -1)
                         {
-                            if (visitedTriangles[otherId])
-                            {
-                                continue;
-                            }
+                            return;
+                        }
 
-                            var circle = circles[otherId];
-                            if (math.distancesq(circle.Center, p) <= circle.RadiusSq)
-                            {
-                                badTriangles.Add(otherId);
-                                trianglesQueue.Enqueue(otherId);
-                            }
+                        var otherId = he / 3;
+                        if (visitedTriangles[otherId])
+                        {
+                            return;
+                        }
+
+                        var circle = circles[otherId];
+                        if (math.distancesq(circle.Center, p) <= circle.RadiusSq)
+                        {
+                            badTriangles.Add(otherId);
+                            trianglesQueue.Enqueue(otherId);
                         }
                     }
                 }
@@ -2357,14 +2378,14 @@ namespace andywiecko.BurstTriangulator
             void ProcessBadTriangles(int pId)
             {
                 CalculateStarPolygon();
-                RemoveBadTriangles(badTriangles, triangles, circles, trianglesToEdges, edgesToTriangles);
+                RemoveBadTriangles(badTriangles, triangles, circles, trianglesToEdges, edgesToTriangles, halfedges);
                 CreatePolygonTriangles(pId);
 
                 void CreatePolygonTriangles(int pId)
                 {
                     foreach (var (e1, e2) in tmpPolygon.AsReadOnly())
                     {
-                        AddTriangle((pId, e1, e2), triangles, outputPositions, circles, trianglesToEdges, edgesToTriangles);
+                        AddTriangle((pId, e1, e2), triangles, outputPositions, circles, trianglesToEdges, edgesToTriangles, halfedges);
                     }
                 }
 
@@ -2410,7 +2431,8 @@ namespace andywiecko.BurstTriangulator
             NativeList<Triangle> triangles,
             NativeList<Circle> circles,
             NativeList<Edge3> trianglesToEdges,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
+            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+            NativeList<int> halfedges
         )
         {
             badTriangles.Sort(comparer);
@@ -2419,6 +2441,37 @@ namespace andywiecko.BurstTriangulator
                 triangles.RemoveAt(tId);
                 circles.RemoveAt(tId);
                 trianglesToEdges.RemoveAt(tId);
+                rm_he(3 * tId + 2, 0);
+                rm_he(3 * tId + 1, 1);
+                rm_he(3 * tId + 0, 2);
+
+                for (int i = 3 * tId; i < halfedges.Length; i++)
+                {
+                    var he = halfedges[i];
+                    if (he == -1)
+                    {
+                        continue;
+                    }
+                    else if (he < 3 * tId)
+                    {
+                        halfedges[he] -= 3;
+                    }
+                    else
+                    {
+                        halfedges[i] -= 3;
+                    }
+                }
+
+                void rm_he(int i, int offset)
+                {
+                    var he = halfedges[i];
+                    var o = he > 3 * tId ? he - offset : he;
+                    if (o > -1)
+                    {
+                        halfedges[o] = -1;
+                    }
+                    halfedges.RemoveAt(i);
+                }
             }
 
             edgesToTriangles.Clear();
@@ -2449,19 +2502,58 @@ namespace andywiecko.BurstTriangulator
             NativeList<float2> outputPositions,
             NativeList<Circle> circles,
             NativeList<Edge3> trianglesToEdges,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles
+            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
+            NativeList<int> halfedges
         )
         {
             var tId = triangles.Length;
             triangles.Add(t);
+            halfedges.Add(-1);
+            halfedges.Add(-1);
+            halfedges.Add(-1);
             var (idA, idB, idC) = t;
             var circle = CalculateCircumCircle(t, outputPositions.AsArray());
             circles.Add(circle);
             trianglesToEdges.Add(((idA, idB), (idA, idC), (idB, idC)));
 
+            FillHalfEdges(t.IdA, t.IdB, 0);
+            FillHalfEdges(t.IdB, t.IdC, 1);
+            FillHalfEdges(t.IdC, t.IdA, 2);
+
             RegisterEdgeData((idA, idB), tId);
             RegisterEdgeData((idB, idC), tId);
             RegisterEdgeData((idC, idA), tId);
+
+            void FillHalfEdges(int t0, int t1, int i)
+            {
+                var he = 3 * tId + i;
+
+                var e = new Edge(t0, t1);
+                if (edgesToTriangles.TryGetValue(e, out var tris))
+                {
+                    var otherId = tris[0];
+                    var ot = triangles[otherId];
+                    if (e.Equals(new(ot.IdA, ot.IdB)))
+                    {
+                        halfedges[he] = 3 * otherId + 0;
+                        halfedges[3 * otherId + 0] = he;
+                    }
+                    else if (e.Equals(new(ot.IdB, ot.IdC)))
+                    {
+                        halfedges[he] = 3 * otherId + 1;
+                        halfedges[3 * otherId + 1] = he;
+                    }
+                    else if (e.Equals(new(ot.IdC, ot.IdA)))
+                    {
+                        halfedges[he] = 3 * otherId + 2;
+                        halfedges[3 * otherId + 2] = he;
+                    }
+                    else
+                    {
+                        halfedges[he] = -1;
+                    }
+                }
+            }
 
             void RegisterEdgeData(Edge edge, int triangleId)
             {
