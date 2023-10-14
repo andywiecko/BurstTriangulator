@@ -2041,9 +2041,10 @@ namespace andywiecko.BurstTriangulator
 
             private void RemoveBadTriangles(NativeList<int> badTriangles, NativeList<Triangle> triangles, NativeList<Circle> circles, NativeList<int> halfedges)
             {
-                badTriangles.Sort(comparer);
-                foreach (var tId in badTriangles)
+                badTriangles.Sort();
+                for (int t = badTriangles.Length - 1; t >= 0; t--)
                 {
+                    var tId = badTriangles[t];
                     triangles.RemoveAt(tId);
                     circles.RemoveAt(tId);
                     rm_he(3 * tId + 2, 0);
@@ -2304,12 +2305,6 @@ namespace andywiecko.BurstTriangulator
         #endregion
 
         #region Utils
-        private readonly struct DescendingComparer : IComparer<int>
-        {
-            public int Compare(int x, int y) => x < y ? 1 : -1;
-        }
-        private static readonly DescendingComparer comparer = new();
-
         private static int InsertPoint(float2 p,
             FixedList128Bytes<int> initTriangles,
             NativeList<Triangle> triangles,
