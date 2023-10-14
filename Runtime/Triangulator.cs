@@ -2299,7 +2299,8 @@ namespace andywiecko.BurstTriangulator
             var visitedTriangles = new NativeArray<bool>(triangles.Length, Allocator.Temp);
             using var badTriangles = new NativeList<int>(triangles.Length, Allocator.Temp);
             using var trianglesQueue = new NativeQueue<int>(Allocator.Temp);
-            using var tmpPolygon = new NativeList<Edge>(Allocator.Temp);
+            using var pathPoints = new NativeList<int>(Allocator.Temp);
+            var pathHalfedges = new NativeList<int>(Allocator.Temp);
 
             foreach (var tId in initTriangles)
             {
@@ -2314,6 +2315,8 @@ namespace andywiecko.BurstTriangulator
             ProcessBadTriangles(pId);
 
             visitedTriangles.Dispose();
+            pathHalfedges.Dispose();
+
             return pId;
 
             void RecalculateBadTriangles(float2 p)
@@ -2357,59 +2360,160 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
             }
+            static int NextHalfedge(int i) => i % 3 == 2 ? i - 2 : i + 1;
 
             void ProcessBadTriangles(int pId)
             {
-                CalculateStarPolygon();
-                RemoveBadTriangles(badTriangles, triangles, circles, edgesToTriangles, halfedges);
-                CreatePolygonTriangles(pId);
-
-                void CreatePolygonTriangles(int pId)
+                // 1. find start
+                var id = 3 * badTriangles[0];
+                var initHe = -1;
+                var itriangles = triangles.AsArray().Reinterpret<int>(3 * sizeof(int));
+                while (initHe == -1)
                 {
-                    foreach (var (e1, e2) in tmpPolygon.AsReadOnly())
+                    id = NextHalfedge(id);
+                    var he = halfedges[id];
+                    if (he == -1 || !badTriangles.Contains(he / 3))
                     {
-                        AddTriangle((pId, e1, e2), triangles, outputPositions, circles, edgesToTriangles, halfedges);
+                        initHe = id;
+                        pathPoints.Add(itriangles[id]);
+                        pathHalfedges.Add(he);
+                        break;
+                    }
+                    id = he;
+                }
+
+                id = initHe;
+                var initPoint = pathPoints[0];
+
+                var maxIter = 1000000;
+                var it = 0;
+                while (it++ < maxIter)
+                {
+                    id = NextHalfedge(id);
+                    if (itriangles[id] == initPoint)
+                    {
+                        break;
+                    }
+
+                    var he = halfedges[id];
+                    if (he == -1 || !badTriangles.Contains(he / 3))
+                    {
+                        pathPoints.Add(itriangles[id]);
+                        pathHalfedges.Add(he);
+                        continue;
+                    }
+                    id = he;
+                }
+
+                // 2. remove bad triangles
+                badTriangles.Sort();
+                for (int t = badTriangles.Length - 1; t >= 0; t--)
+                {
+                    var tId = badTriangles[t];
+                    //triangles.RemoveAt(3 * tId + 2);
+                    //triangles.RemoveAt(3 * tId + 1);
+                    //triangles.RemoveAt(3 * tId + 0);
+                    triangles.RemoveAt(tId);
+                    circles.RemoveAt(tId);
+                    rm_he(3 * tId + 2, 0);
+                    rm_he(3 * tId + 1, 1);
+                    rm_he(3 * tId + 0, 2);
+
+                    for (int i = 3 * tId; i < halfedges.Length; i++)
+                    {
+                        var he = halfedges[i];
+                        if (he == -1)
+                        {
+                            continue;
+                        }
+                        else if (he < 3 * tId)
+                        {
+                            halfedges[he] -= 3;
+                        }
+                        else
+                        {
+                            halfedges[i] -= 3;
+                        }
+                    }
+
+                    for (int i = 0; i < pathHalfedges.Length; i++)
+                    {
+                        if (pathHalfedges[i] > 3 * tId + 2)
+                        {
+                            pathHalfedges[i] -= 3;
+                        }
+                    }
+
+                    void rm_he(int i, int offset)
+                    {
+                        var he = halfedges[i];
+                        var o = he > 3 * tId ? he - offset : he;
+                        if (o > -1)
+                        {
+                            halfedges[o] = -1;
+                        }
+                        halfedges.RemoveAt(i);
                     }
                 }
 
-                void CalculateStarPolygon()
+                // 3. Insert point create triangles
+                for (int i = 0; i < pathPoints.Length - 1; i++)
                 {
-                    tmpPolygon.Clear();
-                    foreach (var t1 in badTriangles.AsReadOnly())
+                    //triangles.Add(pId);
+                    //triangles.Add(pathPoints[i]);
+                    //triangles.Add(pathPoints[i + 1]);
+                    triangles.Add(new(pId, pathPoints[i], pathPoints[i + 1]));
+                    circles.Add(CalculateCircumCircle((pId, pathPoints[i], pathPoints[i + 1]), outputPositions.AsArray()));
+                }
+                //triangles.Add(pId);
+                //triangles.Add(pathPoints[^1]);
+                //triangles.Add(pathPoints[0]);
+                triangles.Add(new(pId, pathPoints[^1], pathPoints[0]));
+                circles.Add(CalculateCircumCircle((pId, pathPoints[^1], pathPoints[0]), outputPositions.AsArray()));
+
+                var heOffset = halfedges.Length;
+                halfedges.Length += 3 * pathPoints.Length;
+                for (int i = 0; i < pathPoints.Length - 1; i++)
+                {
+                    var he = pathHalfedges[i];
+                    halfedges[3 * i + 1 + heOffset] = pathHalfedges[i];
+                    if (he != -1)
                     {
-                        var (p0, p1, p2) = triangles[t1];
-                        Apply(new(p0, p1));
-                        Apply(new(p1, p2));
-                        Apply(new(p2, p0));
+                        halfedges[pathHalfedges[i]] = 3 * i + 1 + heOffset;
+                    }
+                    halfedges[3 * i + 2 + heOffset] = 3 * i + 3 + heOffset;
+                    halfedges[3 * i + 3 + heOffset] = 3 * i + 2 + heOffset;
+                }
 
-                        void Apply(Edge edge)
-                        {
-                            if (tmpPolygon.Contains(edge))
-                            {
-                                return;
-                            }
+                var phe = pathHalfedges[^1];
+                halfedges[heOffset + 3 * (pathPoints.Length - 1) + 1] = phe;
+                if (phe != -1)
+                {
+                    halfedges[phe] = heOffset + 3 * (pathPoints.Length - 1) + 1;
+                }
+                halfedges[heOffset] = heOffset + 3 * (pathPoints.Length - 1) + 2;
+                halfedges[heOffset + 3 * (pathPoints.Length - 1) + 2] = heOffset;
 
-                            var edgeFound = false;
-                            foreach (var t2 in badTriangles)
-                            {
-                                if (t1 == t2)
-                                {
-                                    continue;
-                                }
+                // 4. (TMP) recalculate mapping
+                edgesToTriangles.Clear();
+                for (int tId = 0; tId < triangles.Length; tId++)
+                {
+                    var t = triangles[tId];
+                    RegisterEdgeData(new(t.IdA, t.IdB), tId);
+                    RegisterEdgeData(new(t.IdB, t.IdC), tId);
+                    RegisterEdgeData(new(t.IdC, t.IdA), tId);
+                }
 
-                                var (q0, q1, q2) = triangles[t2];
-                                if (edge.Equals(new(q0, q1)) || edge.Equals(new(q1, q2)) || edge.Equals((q2, q0)))
-                                {
-                                    edgeFound = true;
-                                    break;
-                                }
-                            }
-
-                            if (edgeFound == false)
-                            {
-                                tmpPolygon.Add(edge);
-                            }
-                        }
+                void RegisterEdgeData(Edge edge, int triangleId)
+                {
+                    if (edgesToTriangles.TryGetValue(edge, out var tris))
+                    {
+                        tris.Add(triangleId);
+                        edgesToTriangles[edge] = tris;
+                    }
+                    else
+                    {
+                        edgesToTriangles.Add(edge, new() { triangleId });
                     }
                 }
             }
@@ -2468,76 +2572,6 @@ namespace andywiecko.BurstTriangulator
                 RegisterEdgeData(new(t.IdA, t.IdB), tId);
                 RegisterEdgeData(new(t.IdB, t.IdC), tId);
                 RegisterEdgeData(new(t.IdC, t.IdA), tId);
-            }
-
-            void RegisterEdgeData(Edge edge, int triangleId)
-            {
-                if (edgesToTriangles.TryGetValue(edge, out var tris))
-                {
-                    tris.Add(triangleId);
-                    edgesToTriangles[edge] = tris;
-                }
-                else
-                {
-                    edgesToTriangles.Add(edge, new() { triangleId });
-                }
-            }
-        }
-
-        private static void AddTriangle(Triangle t,
-            NativeList<Triangle> triangles,
-            NativeList<float2> outputPositions,
-            NativeList<Circle> circles,
-            NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles,
-            NativeList<int> halfedges
-        )
-        {
-            var tId = triangles.Length;
-            triangles.Add(t);
-            halfedges.Add(-1);
-            halfedges.Add(-1);
-            halfedges.Add(-1);
-            var (idA, idB, idC) = t;
-            var circle = CalculateCircumCircle(t, outputPositions.AsArray());
-            circles.Add(circle);
-
-            FillHalfEdges(t.IdA, t.IdB, 0);
-            FillHalfEdges(t.IdB, t.IdC, 1);
-            FillHalfEdges(t.IdC, t.IdA, 2);
-
-            RegisterEdgeData((idA, idB), tId);
-            RegisterEdgeData((idB, idC), tId);
-            RegisterEdgeData((idC, idA), tId);
-
-            void FillHalfEdges(int t0, int t1, int i)
-            {
-                var he = 3 * tId + i;
-
-                var e = new Edge(t0, t1);
-                if (edgesToTriangles.TryGetValue(e, out var tris))
-                {
-                    var otherId = tris[0];
-                    var ot = triangles[otherId];
-                    if (e.Equals(new(ot.IdA, ot.IdB)))
-                    {
-                        halfedges[he] = 3 * otherId + 0;
-                        halfedges[3 * otherId + 0] = he;
-                    }
-                    else if (e.Equals(new(ot.IdB, ot.IdC)))
-                    {
-                        halfedges[he] = 3 * otherId + 1;
-                        halfedges[3 * otherId + 1] = he;
-                    }
-                    else if (e.Equals(new(ot.IdC, ot.IdA)))
-                    {
-                        halfedges[he] = 3 * otherId + 2;
-                        halfedges[3 * otherId + 2] = he;
-                    }
-                    else
-                    {
-                        halfedges[he] = -1;
-                    }
-                }
             }
 
             void RegisterEdgeData(Edge edge, int triangleId)

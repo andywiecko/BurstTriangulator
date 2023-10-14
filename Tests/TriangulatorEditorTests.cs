@@ -170,7 +170,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             var expectedTriangles = new[]
             {
-                (1, 0, 4), (2, 1, 4), (3, 2, 4), (4, 0, 3)
+                (4, 0, 3), (4, 1, 0), (4, 2, 1), (4, 3, 2),
             };
             Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
         }
@@ -558,10 +558,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 1 (square)",
                 ExpectedResult = new []
                 {
-                    (1, 0, 4),
-                    (2, 1, 4),
-                    (3, 2, 4),
                     (4, 0, 3),
+                    (4, 1, 0),
+                    (4, 2, 1),
+                    (4, 3, 2),
                 }
             },
 
@@ -597,39 +597,34 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(0.5f, 0.25f),
                     math.float2(0.75f, 0.625f),
                     math.float2(0.5f, 1f),
-                    math.float2(2f, 0.5f),
                     math.float2(1.5f, 1f),
                     math.float2(1.5f, 0.75f),
                     math.float2(1.25f, 0.375f),
                     math.float2(1.5f, 0f),
-                    math.float2(1.625f, 0.4375f),
                 }
             )
             {
                 TestName = "Test case 2 (rectangle)",
                 ExpectedResult = new []
                 {
-                    (6, 1, 8),
-                    (6, 4, 13),
-                    (7, 0, 8),
                     (8, 0, 5),
                     (8, 1, 7),
-                    (8, 5, 10),
+                    (8, 6, 1),
+                    (8, 7, 0),
                     (9, 4, 6),
                     (9, 6, 8),
-                    (9, 8, 10),
                     (10, 4, 9),
-                    (11, 2, 16),
-                    (12, 3, 13),
-                    (13, 3, 11),
-                    (13, 4, 12),
-                    (13, 11, 16),
-                    (14, 1, 6),
-                    (14, 6, 13),
-                    (14, 13, 16),
-                    (15, 1, 14),
-                    (15, 14, 16),
-                    (16, 2, 15),
+                    (10, 8, 5),
+                    (10, 9, 8),
+                    (12, 3, 2),
+                    (12, 4, 11),
+                    (12, 6, 4),
+                    (12, 11, 3),
+                    (13, 1, 6),
+                    (13, 6, 12),
+                    (14, 1, 13),
+                    (14, 12, 2),
+                    (14, 13, 12),
                 }
             },
         };
@@ -790,9 +785,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 (0, 4, 3),
                 (1, 0, 3),
-                (5, 2, 6),
                 (6, 1, 3),
                 (6, 3, 5),
+                (6, 5, 2),
             };
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
             Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
@@ -1083,26 +1078,26 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             });
             var expectedTriangles = new[]
             {
-                (7, 3, 12),
-                (7, 4, 9),
-                (8, 0, 9),
                 (8, 4, 5),
-                (8, 5, 13),
-                (9, 0, 14),
                 (9, 4, 8),
-                (10, 1, 13),
+                (9, 7, 4),
+                (9, 8, 0),
                 (10, 5, 6),
-                (10, 6, 15),
-                (11, 2, 15),
                 (11, 6, 7),
-                (11, 7, 12),
                 (12, 2, 11),
+                (12, 7, 3),
+                (12, 11, 7),
                 (13, 0, 8),
                 (13, 5, 10),
+                (13, 8, 5),
+                (13, 10, 1),
                 (14, 3, 7),
                 (14, 7, 9),
+                (14, 9, 0),
                 (15, 1, 10),
                 (15, 6, 11),
+                (15, 10, 6),
+                (15, 11, 2),
             };
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
             Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
@@ -1209,25 +1204,25 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var expectedTriangles = new[]
             {
                 (8, 4, 5),
-                (7, 4, 9),
-                (8, 0, 9),
                 (9, 4, 8),
+                (9, 7, 4),
+                (9, 8, 0),
                 (10, 5, 6),
                 (11, 6, 7),
                 (12, 2, 11),
-                (11, 7, 12),
-                (7, 3, 12),
+                (12, 7, 3),
+                (12, 11, 7),
                 (13, 0, 8),
-                (8, 5, 13),
-                (10, 1, 13),
                 (13, 5, 10),
-                (9, 0, 14),
-                (14, 7, 9),
+                (13, 8, 5),
+                (13, 10, 1),
                 (14, 3, 7),
+                (14, 7, 9),
+                (14, 9, 0),
                 (15, 1, 10),
-                (10, 6, 15),
-                (11, 2, 15),
                 (15, 6, 11),
+                (15, 10, 6),
+                (15, 11, 2),
             };
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
             Assert.That(triangulator.GetTrisTuple(), Is.EquivalentTo(expectedTriangles));
@@ -1312,7 +1307,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var localTriangles = triangulator.GetTrisTuple();
 
             Assert.That(localTriangles, Is.EqualTo(nonLocalTriangles));
-            Assert.That(localTriangles, Has.Length.EqualTo(36));
+            Assert.That(localTriangles, Has.Length.EqualTo(34));
         }
 
         [Test]
