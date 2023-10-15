@@ -1696,7 +1696,7 @@ namespace andywiecko.BurstTriangulator
             private NativeList<Triangle> triangles;
             [NativeDisableContainerSafetyRestriction]
             private NativeList<Circle> circles;
-
+            [NativeDisableContainerSafetyRestriction]
             private NativeList<int> halfedges;
 
             public ConstraintDisable Create(Triangulator triangulator) => new()
@@ -1731,8 +1731,9 @@ namespace andywiecko.BurstTriangulator
             private NativeList<Triangle> triangles;
             [NativeDisableContainerSafetyRestriction]
             private NativeList<Circle> circles;
-
+            [NativeDisableContainerSafetyRestriction]
             private NativeList<int> halfedges;
+
             private NativeList<Edge> constraintEdges;
 
             public ConstraintEnable Create(Triangulator triangulator) => new()
@@ -1797,8 +1798,8 @@ namespace andywiecko.BurstTriangulator
             private NativeReference<Status>.ReadOnly status;
             private NativeList<Triangle> triangles;
             private NativeList<float2> outputPositions;
-            private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             private NativeList<Circle> circles;
+            private NativeList<int> halfedges;
 
             public RefineMeshJob(Triangulator triangulator)
             {
@@ -1811,8 +1812,8 @@ namespace andywiecko.BurstTriangulator
                 status = triangulator.status.AsReadOnly();
                 triangles = triangulator.triangles;
                 outputPositions = triangulator.outputPositions;
-                edgesToTriangles = triangulator.edgesToTriangles;
                 circles = triangulator.circles;
+                halfedges = triangulator.halfedges;
             }
 
             public void Execute()
@@ -1827,9 +1828,10 @@ namespace andywiecko.BurstTriangulator
 
             private bool TrySplitEncroachedEdge()
             {
-                foreach (var (t0, t1, t2) in triangles)
+                for (int i = 0; i < triangles.Length; i++)
                 {
-                    if (TrySplit(new(t0, t1)) || TrySplit(new(t1, t2)) || TrySplit(new(t2, t0)))
+                    var (t0, t1, t2) = triangles[i];
+                    if (TrySplit(new(t0, t1), 3 * i + 0) || TrySplit(new(t1, t2), 3 * i + 1) || TrySplit(new(t2, t0), 3 * i + 2))
                     {
                         return true;
                     }
@@ -1837,11 +1839,11 @@ namespace andywiecko.BurstTriangulator
                 return false;
             }
 
-            private bool TrySplit(Edge edge)
+            private bool TrySplit(Edge edge, int he)
             {
-                if (!SuperTriangle.ContainsCommonPointWith(edge) && EdgeIsEncroached(edge))
+                if (!SuperTriangle.ContainsCommonPointWith(edge) && EdgeIsEncroached(edge, he))
                 {
-                    if (AnyEdgeTriangleAreaIsTooSmall(edge))
+                    if (AnyEdgeTriangleAreaIsTooSmall(he))
                     {
                         return false;
                     }
@@ -1852,18 +1854,17 @@ namespace andywiecko.BurstTriangulator
                 return false;
             }
 
-            private bool AnyEdgeTriangleAreaIsTooSmall(Edge edge)
+            private bool AnyEdgeTriangleAreaIsTooSmall(int he)
+            {
+                var ohe = halfedges[he];
+                return AreaTooSmall(tId: he / 3) || (ohe != -1 && AreaTooSmall(tId: ohe / 3));
+            }
+
+            private bool AreaTooSmall(int tId)
             {
                 var s = scaleRef.Value;
-                foreach (var tId in edgesToTriangles[edge])
-                {
-                    var area2 = triangles[tId].GetArea2(outputPositions);
-                    if (area2 < minimumArea2 * s.x * s.y)
-                    {
-                        return true;
-                    }
-                }
-                return false;
+                var area2 = triangles[tId].GetArea2(outputPositions);
+                return area2 < minimumArea2 * s.x * s.y;
             }
 
             private bool TryRemoveBadTriangle()
@@ -1908,30 +1909,30 @@ namespace andywiecko.BurstTriangulator
                 return math.any(math.abs(angles) < minimumAngle);
             }
 
-            private bool EdgeIsEncroached(Edge edge)
+            private bool EdgeIsEncroached(Edge edge, int he)
             {
                 var (e1, e2) = edge;
                 var (pA, pB) = (outputPositions[e1], outputPositions[e2]);
                 var circle = new Circle(0.5f * (pA + pB), 0.5f * math.distance(pA, pB));
-                foreach (var tId in edgesToTriangles[edge])
-                {
-                    var triangle = triangles[tId];
-                    var pointId = triangle.UnsafeOtherPoint(edge);
-                    var pC = outputPositions[pointId];
-                    if (math.distancesq(circle.Center, pC) < circle.RadiusSq)
-                    {
-                        return true;
-                    }
-                }
-                return false;
+
+                var ohe = halfedges[he];
+                return IsEncroached(circle, edge, tId: he / 3) || (ohe != -1 && IsEncroached(circle, edge, tId: ohe / 3));
             }
 
-            private bool TriangleIsEncroached(int triangleId)
+            private bool IsEncroached(Circle circle, Edge edge, int tId)
             {
-                var t = triangles[triangleId];
-                return EdgeIsEncroached(new(t.IdA, t.IdB))
-                    || EdgeIsEncroached(new(t.IdB, t.IdC))
-                    || EdgeIsEncroached(new(t.IdC, t.IdA));
+                var triangle = triangles[tId];
+                var pointId = triangle.UnsafeOtherPoint(edge);
+                var pC = outputPositions[pointId];
+                return math.distancesq(circle.Center, pC) < circle.RadiusSq;
+            }
+
+            private bool TriangleIsEncroached(int tId)
+            {
+                var t = triangles[tId];
+                return EdgeIsEncroached(new(t.IdA, t.IdB), 3 * tId + 0)
+                    || EdgeIsEncroached(new(t.IdB, t.IdC), 3 * tId + 1)
+                    || EdgeIsEncroached(new(t.IdC, t.IdA), 3 * tId + 2);
             }
         }
 
