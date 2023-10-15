@@ -74,37 +74,6 @@ namespace andywiecko.BurstTriangulator
             public int CompareTo(Edge other) => IdA != other.IdA ? IdA.CompareTo(other.IdA) : IdB.CompareTo(other.IdB);
             public override string ToString() => $"({IdA}, {IdB})";
         }
-
-        private readonly struct Edge3
-        {
-            public readonly Edge EdgeA, EdgeB, EdgeC;
-            public Edge3(Edge edgeA, Edge edgeB, Edge edgeC) => (EdgeA, EdgeB, EdgeC) = (edgeA, edgeB, edgeC);
-
-            public struct Iterator
-            {
-                private readonly Edge3 owner;
-                private int current;
-                public Iterator(Edge3 owner)
-                {
-                    this.owner = owner;
-                    current = -1;
-                }
-
-                public Edge Current => current switch
-                {
-                    0 => owner.EdgeA,
-                    1 => owner.EdgeB,
-                    2 => owner.EdgeC,
-                    _ => throw new Exception()
-                };
-
-                public bool MoveNext() => ++current < 3;
-            }
-
-            public Iterator GetEnumerator() => new(this);
-            public bool Contains(Edge edge) => EdgeA.Equals(edge) || EdgeB.Equals(edge) || EdgeC.Equals(edge);
-            public static implicit operator Edge3((Edge eA, Edge eB, Edge eC) v) => new(v.eA, v.eB, v.eC);
-        }
         #endregion
 
         public enum Status
