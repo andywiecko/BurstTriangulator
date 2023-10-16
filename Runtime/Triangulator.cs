@@ -193,7 +193,6 @@ namespace andywiecko.BurstTriangulator
         private NativeList<Triangle> triangles;
         private NativeList<int> halfedges;
         private NativeList<Circle> circles;
-        private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
         private NativeList<Edge> constraintEdges;
         private NativeReference<Status> status;
 
@@ -217,7 +216,6 @@ namespace andywiecko.BurstTriangulator
             triangles = new(capacity, allocator);
             halfedges = new(6 * capacity, allocator);
             circles = new(capacity, allocator);
-            edgesToTriangles = new(capacity, allocator);
             constraintEdges = new(capacity, allocator);
             status = new(Status.OK, allocator);
 
@@ -242,7 +240,6 @@ namespace andywiecko.BurstTriangulator
             triangles.Dispose();
             halfedges.Dispose();
             circles.Dispose();
-            edgesToTriangles.Dispose();
             constraintEdges.Dispose();
             status.Dispose();
 
@@ -717,7 +714,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<Triangle> triangles;
             private NativeList<int> halfedges;
             private NativeList<Circle> circles;
-            private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             private NativeList<Edge> constraintEdges;
             private NativeList<int> pointsToRemove;
             private NativeList<int> pointsOffset;
@@ -730,7 +726,6 @@ namespace andywiecko.BurstTriangulator
                 triangles = triangulator.triangles;
                 halfedges = triangulator.halfedges;
                 circles = triangulator.circles;
-                edgesToTriangles = triangulator.edgesToTriangles;
                 constraintEdges = triangulator.constraintEdges;
                 pointsToRemove = triangulator.pointsToRemove;
                 pointsOffset = triangulator.pointsOffset;
@@ -748,7 +743,6 @@ namespace andywiecko.BurstTriangulator
                 triangles.Clear();
                 halfedges.Clear();
                 circles.Clear();
-                edgesToTriangles.Clear();
                 constraintEdges.Clear();
 
                 pointsToRemove.Clear();
@@ -1160,14 +1154,12 @@ namespace andywiecko.BurstTriangulator
         {
             [ReadOnly]
             private NativeArray<Triangle> triangles;
-            private NativeHashMap<Edge, FixedList32Bytes<int>> edgesToTriangles;
             private NativeList<Circle> circles;
             private NativeList<float2> positions;
 
             public RecalculateTriangleMappingsJob(Triangulator triangulator)
             {
                 triangles = triangulator.triangles.AsDeferredJobArray();
-                edgesToTriangles = triangulator.edgesToTriangles;
                 circles = triangulator.circles;
                 positions = triangulator.outputPositions;
             }
@@ -1175,34 +1167,9 @@ namespace andywiecko.BurstTriangulator
             public void Execute()
             {
                 circles.Length = triangles.Length;
-                edgesToTriangles.Clear();
                 for (int i = 0; i < triangles.Length; i++)
                 {
-                    Execute(i);
-                }
-            }
-
-            private void Execute(int t)
-            {
-                var (i, j, k) = triangles[t];
-
-                circles[t] = CalculateCircumCircle((i, j, k), positions.AsArray());
-
-                RegisterEdgeData((i, j), t);
-                RegisterEdgeData((j, k), t);
-                RegisterEdgeData((k, i), t);
-            }
-
-            private void RegisterEdgeData(Edge edge, int triangleId)
-            {
-                if (edgesToTriangles.TryGetValue(edge, out var tris))
-                {
-                    tris.Add(triangleId);
-                    edgesToTriangles[edge] = tris;
-                }
-                else
-                {
-                    edgesToTriangles.Add(edge, new() { triangleId });
+                    circles[i] = CalculateCircumCircle(triangles[i], positions.AsArray());
                 }
             }
         }
