@@ -1357,9 +1357,6 @@ namespace andywiecko.BurstTriangulator
                 internalConstraints.Sort();
             }
 
-            static int NextHalfedge(int i) => i % 3 == 2 ? i - 2 : i + 1;
-            static int PrevHalfedge(int i) => i % 3 == 0 ? i + 2 : i - 1;
-
             private void TryApplyConstraint(int i)
             {
                 intersections.Clear();
@@ -1712,7 +1709,6 @@ namespace andywiecko.BurstTriangulator
                     }
                     eId++;
                 }
-                static int NextHalfedge(int i) => i % 3 == 2 ? i - 2 : i + 1;
 
                 Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, outputPositions, constraintEdges, halfedges, pointToHalfedge);
             }
@@ -2381,7 +2377,6 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
             }
-            static int NextHalfedge(int i) => i % 3 == 2 ? i - 2 : i + 1;
 
             void ProcessBadTriangles(int pId)
             {
@@ -2508,7 +2503,7 @@ namespace andywiecko.BurstTriangulator
                 halfedges[heOffset + 3 * (pathPoints.Length - 1) + 2] = heOffset;
             }
         }
-
+        private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         private static float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
         private static float Cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
         private static Circle CalculateCircumCircle(Triangle triangle, NativeArray<float2> outputPositions)
