@@ -277,7 +277,6 @@ namespace andywiecko.BurstTriangulator
 
             dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
             dependencies = Settings.ConstrainEdges ? new ConstrainEdgesJob(this).Schedule(dependencies) : dependencies;
-            dependencies = Settings.RefineMesh || Settings.ConstrainEdges ? new RecalculateTriangleMappingsJob(this).Schedule(dependencies) : dependencies;
 
             dependencies = (Settings.RefineMesh, Settings.ConstrainEdges) switch
             {
@@ -715,6 +714,7 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> halfedges;
             private NativeList<Circle> circles;
             private NativeList<Edge> constraintEdges;
+            private NativeList<int> pointToHalfedge;
             private NativeList<int> pointsToRemove;
             private NativeList<int> pointsOffset;
             private NativeReference<Status> status;
@@ -727,6 +727,7 @@ namespace andywiecko.BurstTriangulator
                 halfedges = triangulator.halfedges;
                 circles = triangulator.circles;
                 constraintEdges = triangulator.constraintEdges;
+                pointToHalfedge = triangulator.pointToHalfedge;
                 pointsToRemove = triangulator.pointsToRemove;
                 pointsOffset = triangulator.pointsOffset;
 
@@ -745,6 +746,7 @@ namespace andywiecko.BurstTriangulator
                 circles.Clear();
                 constraintEdges.Clear();
 
+                pointToHalfedge.Clear();
                 pointsToRemove.Clear();
                 pointsOffset.Clear();
 
@@ -1146,31 +1148,6 @@ namespace andywiecko.BurstTriangulator
             {
                 halfedges[a] = b;
                 if (b != -1) halfedges[b] = a;
-            }
-        }
-
-        [BurstCompile]
-        private struct RecalculateTriangleMappingsJob : IJob
-        {
-            [ReadOnly]
-            private NativeArray<Triangle> triangles;
-            private NativeList<Circle> circles;
-            private NativeList<float2> positions;
-
-            public RecalculateTriangleMappingsJob(Triangulator triangulator)
-            {
-                triangles = triangulator.triangles.AsDeferredJobArray();
-                circles = triangulator.circles;
-                positions = triangulator.outputPositions;
-            }
-
-            public void Execute()
-            {
-                circles.Length = triangles.Length;
-                for (int i = 0; i < triangles.Length; i++)
-                {
-                    circles[i] = CalculateCircumCircle(triangles[i], positions.AsArray());
-                }
             }
         }
 
@@ -1796,6 +1773,12 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
+                circles.Length = triangles.Length;
+                for (int i = 0; i < triangles.Length; i++)
+                {
+                    circles[i] = CalculateCircumCircle(triangles[i], outputPositions.AsArray());
+                }
+
                 var itriangles = triangles.AsArray().Reinterpret<int>(3 * sizeof(int));
                 pointToHalfedge.Length = outputPositions.Length;
                 for (int i = 0; i < itriangles.Length; i++)
@@ -2004,6 +1987,15 @@ namespace andywiecko.BurstTriangulator
                 if (status.Value != Status.OK)
                 {
                     return;
+                }
+
+                if (circles.Length != triangles.Length)
+                {
+                    circles.Length = triangles.Length;
+                    for (int i = 0; i < triangles.Length; i++)
+                    {
+                        circles[i] = CalculateCircumCircle(triangles[i], outputPositions.AsArray());
+                    }
                 }
 
                 using var visitedTriangles = new NativeArray<bool>(triangles.Length, Allocator.Temp);
