@@ -1595,140 +1595,26 @@ namespace andywiecko.BurstTriangulator
         private interface IRefineMeshJobMode<TSelf>
         {
             TSelf Create(Triangulator triangulator);
-            void SplitEdge(Edge edge, int tId);
-            void InsertPoint(float2 p, int tId);
+            bool ConstrainEdges { get; }
+            NativeList<Edge> ConstraintEdges { get; }
         }
 
-        private struct ConstraintDisable : IRefineMeshJobMode<ConstraintDisable>
+        private readonly struct ConstraintDisable : IRefineMeshJobMode<ConstraintDisable>
         {
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<float2> outputPositions;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<Triangle> triangles;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<Circle> circles;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<int> halfedges;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<int> pointToHalfedge;
-
-            public ConstraintDisable Create(Triangulator triangulator) => new()
-            {
-                outputPositions = triangulator.outputPositions,
-                triangles = triangulator.triangles,
-                circles = triangulator.circles,
-                halfedges = triangulator.halfedges,
-                pointToHalfedge = triangulator.pointToHalfedge
-            };
-            public void InsertPoint(float2 p, int tId)
-            {
-                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, outputPositions, halfedges, pointToHalfedge);
-            }
-
-            public void SplitEdge(Edge edge, int tId)
-            {
-                var (e0, e1) = edge;
-                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
-                var p = 0.5f * (pA + pB);
-                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, outputPositions, halfedges, pointToHalfedge);
-            }
+            public readonly bool ConstrainEdges => false;
+            public readonly NativeList<Edge> ConstraintEdges => default;
+            public ConstraintDisable Create(Triangulator triangulator) => new();
         }
 
         private struct ConstraintEnable : IRefineMeshJobMode<ConstraintEnable>
         {
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<float2> outputPositions;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<Triangle> triangles;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<Circle> circles;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<int> halfedges;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<int> pointToHalfedge;
-
+            public readonly bool ConstrainEdges => true;
+            public readonly NativeList<Edge> ConstraintEdges => constraintEdges;
             private NativeList<Edge> constraintEdges;
-
             public ConstraintEnable Create(Triangulator triangulator) => new()
             {
-                outputPositions = triangulator.outputPositions,
-                triangles = triangulator.triangles,
-                circles = triangulator.circles,
                 constraintEdges = triangulator.constraintEdges,
-                halfedges = triangulator.halfedges,
-                pointToHalfedge = triangulator.pointToHalfedge
             };
-
-            public void InsertPoint(float2 p, int tId)
-            {
-                var eId = 0;
-                foreach (var e in constraintEdges)
-                {
-                    var (e0, e1) = (outputPositions[e.IdA], outputPositions[e.IdB]);
-                    var circle = new Circle(0.5f * (e0 + e1), 0.5f * math.distance(e0, e1));
-                    if (math.distancesq(circle.Center, p) < circle.RadiusSq)
-                    {
-                        var pId = outputPositions.Length;
-                        constraintEdges.RemoveAt(eId);
-                        constraintEdges.Add((pId, e.IdA));
-                        constraintEdges.Add((pId, e.IdB));
-
-                        // Star-search algorithm:
-                        // 0. Initial h0 -> pointToHalfedge[e.IdA]
-                        // 1. Check if h1 is e.IdB, then h0 / 3 is the target triangle.
-                        // 2. Go to next triangle with h0' = halfedge[h2]
-                        // 3. After each iteration: h0 <- h0'
-                        //
-                        //          h1
-                        //       .^ |
-                        //     .'   |
-                        //   .'     v
-                        // h0 <---- h2
-                        // h0'----> h1'
-                        //   ^.     |
-                        //     '.   |
-                        //       '. v
-                        //          h2'
-                        var h0 = pointToHalfedge[e.IdA];
-                        var itriangles = triangles.AsArray().Reinterpret<int>(3 * sizeof(int));
-                        var target = -1;
-                        while (target == -1)
-                        {
-                            var h1 = NextHalfedge(h0);
-                            if (itriangles[h1] == e.IdB)
-                            {
-                                target = h0 / 3;
-                                break;
-                            }
-                            var h2 = NextHalfedge(h1);
-                            h0 = halfedges[h2];
-                        }
-
-                        Triangulator.InsertPoint(circle.Center, initTriangles: new() { target }, triangles, circles, outputPositions, constraintEdges, halfedges, pointToHalfedge);
-                        return;
-                    }
-                    eId++;
-                }
-
-                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, outputPositions, constraintEdges, halfedges, pointToHalfedge);
-            }
-
-            public void SplitEdge(Edge edge, int tId)
-            {
-                var (e0, e1) = edge;
-                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
-                var p = 0.5f * (pA + pB);
-
-                if (constraintEdges.Contains(edge))
-                {
-                    var pId = outputPositions.Length;
-                    var eId = constraintEdges.IndexOf(edge);
-                    constraintEdges.RemoveAt(eId);
-                    constraintEdges.Add((pId, edge.IdA));
-                    constraintEdges.Add((pId, edge.IdB));
-                }
-                Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, outputPositions, constraintEdges, halfedges, pointToHalfedge);
-            }
         }
 
         [BurstCompile]
@@ -1807,7 +1693,7 @@ namespace andywiecko.BurstTriangulator
                         return false;
                     }
 
-                    mode.SplitEdge(edge, tId: he / 3);
+                    SplitEdge(edge, tId: he / 3);
                     return true;
                 }
                 return false;
@@ -1836,7 +1722,7 @@ namespace andywiecko.BurstTriangulator
                         TriangleIsBad(triangle, minimumArea2 * s.x * s.y, maximumArea2 * s.x * s.y, minimumAngle))
                     {
                         var circle = circles[tId];
-                        mode.InsertPoint(circle.Center, tId);
+                        InsertPoint(circle.Center, tId);
                         return true;
                     }
                 }
@@ -1892,6 +1778,101 @@ namespace andywiecko.BurstTriangulator
                 return EdgeIsEncroached(new(t.IdA, t.IdB), 3 * tId + 0)
                     || EdgeIsEncroached(new(t.IdB, t.IdC), 3 * tId + 1)
                     || EdgeIsEncroached(new(t.IdC, t.IdA), 3 * tId + 2);
+            }
+
+            private void SplitEdge(Edge edge, int tId) => _ = mode.ConstrainEdges switch
+            {
+                false => UnconstrainedSplitEdge(edge, tId),
+                true => ConstrainedSplitEdge(edge, tId),
+            };
+
+            private int UnconstrainedSplitEdge(Edge edge, int tId)
+            {
+                var (e0, e1) = edge;
+                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
+                var p = 0.5f * (pA + pB);
+                return Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, outputPositions, halfedges, pointToHalfedge);
+            }
+
+            private int ConstrainedSplitEdge(Edge edge, int tId)
+            {
+                var (e0, e1) = edge;
+                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
+                var p = 0.5f * (pA + pB);
+
+                if (mode.ConstraintEdges.Contains(edge))
+                {
+                    var pId = outputPositions.Length;
+                    var eId = mode.ConstraintEdges.IndexOf(edge);
+                    mode.ConstraintEdges.RemoveAt(eId);
+                    mode.ConstraintEdges.Add((pId, edge.IdA));
+                    mode.ConstraintEdges.Add((pId, edge.IdB));
+                }
+                return Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, outputPositions, mode.ConstraintEdges, halfedges, pointToHalfedge);
+            }
+
+            private void InsertPoint(float2 p, int tId) => _ = mode.ConstrainEdges switch
+            {
+                false => UnconstrainedInsertPoint(p, tId),
+                true => ConstrainedInsertPoint(p, tId),
+            };
+
+            private int UnconstrainedInsertPoint(float2 p, int tId)
+            {
+                return Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, outputPositions, halfedges, pointToHalfedge);
+            }
+
+            private int ConstrainedInsertPoint(float2 p, int tId)
+            {
+                var eId = 0;
+                foreach (var e in mode.ConstraintEdges)
+                {
+                    var (e0, e1) = (outputPositions[e.IdA], outputPositions[e.IdB]);
+                    var circle = new Circle(0.5f * (e0 + e1), 0.5f * math.distance(e0, e1));
+                    if (math.distancesq(circle.Center, p) < circle.RadiusSq)
+                    {
+                        var pId = outputPositions.Length;
+                        mode.ConstraintEdges.RemoveAt(eId);
+                        mode.ConstraintEdges.Add((pId, e.IdA));
+                        mode.ConstraintEdges.Add((pId, e.IdB));
+
+                        // Star-search algorithm:
+                        // 0. Initial h0 -> pointToHalfedge[e.IdA]
+                        // 1. Check if h1 is e.IdB, then h0 / 3 is the target triangle.
+                        // 2. Go to next triangle with h0' = halfedge[h2]
+                        // 3. After each iteration: h0 <- h0'
+                        //
+                        //          h1
+                        //       .^ |
+                        //     .'   |
+                        //   .'     v
+                        // h0 <---- h2
+                        // h0'----> h1'
+                        //   ^.     |
+                        //     '.   |
+                        //       '. v
+                        //          h2'
+                        var h0 = pointToHalfedge[e.IdA];
+                        var itriangles = triangles.AsArray().Reinterpret<int>(3 * sizeof(int));
+                        var target = -1;
+                        while (target == -1)
+                        {
+                            var h1 = NextHalfedge(h0);
+                            if (itriangles[h1] == e.IdB)
+                            {
+                                target = h0 / 3;
+                                break;
+                            }
+                            var h2 = NextHalfedge(h1);
+                            h0 = halfedges[h2];
+                        }
+
+                        return Triangulator.InsertPoint(circle.Center, initTriangles: new() { target }, triangles, circles, outputPositions, mode.ConstraintEdges, halfedges, pointToHalfedge);
+                    }
+                    eId++;
+                }
+
+                return Triangulator.InsertPoint(p, initTriangles: new() { tId }, triangles, circles, outputPositions, mode.ConstraintEdges, halfedges, pointToHalfedge);
             }
         }
 
