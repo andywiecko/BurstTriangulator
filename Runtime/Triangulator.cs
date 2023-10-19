@@ -18,38 +18,7 @@ namespace andywiecko.BurstTriangulator
             public Triangle(int idA, int idB, int idC) => (IdA, IdB, IdC) = (idA, idB, idC);
             public static implicit operator Triangle((int a, int b, int c) ids) => new(ids.a, ids.b, ids.c);
             public void Deconstruct(out int idA, out int idB, out int idC) => (idA, idB, idC) = (IdA, IdB, IdC);
-            public bool Contains(int id) => IdA == id || IdB == id || IdC == id;
-            public bool ContainsCommonPointWith(Triangle t) => Contains(t.IdA) || Contains(t.IdB) || Contains(t.IdC);
-            public bool ContainsCommonPointWith(Edge e) => Contains(e.IdA) || Contains(e.IdB);
             public bool Equals(Triangle other) => IdA == other.IdA && IdB == other.IdB && IdC == other.IdC;
-            public int UnsafeOtherPoint(Edge edge)
-            {
-                if (!edge.Contains(IdA))
-                {
-                    return IdA;
-                }
-                else if (!edge.Contains(IdB))
-                {
-                    return IdB;
-                }
-                else
-                {
-                    return IdC;
-                }
-            }
-
-            public Triangle Flip() => (IdC, IdB, IdA);
-            public Triangle WithShift(int i) => (IdA + i, IdB + i, IdC + i);
-            public Triangle WithShift(int i, int j, int k) => (IdA + i, IdB + j, IdC + k);
-            public float GetSignedArea2(NativeList<float2> positions)
-            {
-                var (pA, pB, pC) = (positions[IdA], positions[IdB], positions[IdC]);
-                var pAB = pB - pA;
-                var pAC = pC - pA;
-                return Cross(pAB, pAC);
-            }
-            public float GetArea2(NativeList<float2> positions) => math.abs(GetSignedArea2(positions));
-            public override string ToString() => $"({IdA}, {IdB}, {IdC})";
         }
 
         private readonly struct Circle
@@ -185,8 +154,6 @@ namespace andywiecko.BurstTriangulator
         public TriangulationSettings Settings { get; } = new();
         public InputData Input { get; set; } = new();
         public OutputData Output { get; }
-
-        private static readonly Triangle SuperTriangle = new(0, 1, 2);
 
         private NativeList<float2> outputPositions;
         private NativeList<int> outputTriangles;
@@ -1708,7 +1675,7 @@ namespace andywiecko.BurstTriangulator
 
             private bool TrySplit(Edge edge, int he)
             {
-                if (!SuperTriangle.ContainsCommonPointWith(edge) && EdgeIsEncroached(edge, he))
+                if (!edge.Contains(0) && !edge.Contains(1) && !edge.Contains(2) && EdgeIsEncroached(edge, he))
                 {
                     if (AnyEdgeTriangleAreaIsTooSmall(he))
                     {
@@ -1730,8 +1697,8 @@ namespace andywiecko.BurstTriangulator
             private bool AreaTooSmall(int tId)
             {
                 var s = scaleRef.Value;
-                var area2 = triangles[tId].GetArea2(outputPositions);
-                return area2 < minimumArea2 * s.x * s.y;
+                var (i, j, k) = triangles[tId];
+                return Area2(i, j, k, outputPositions.AsArray()) < minimumArea2 * s.x * s.y;
             }
 
             private bool TryRemoveBadTriangle()
@@ -1739,9 +1706,10 @@ namespace andywiecko.BurstTriangulator
                 var s = scaleRef.Value;
                 for (int tId = 0; tId < triangles.Length; tId++)
                 {
-                    var triangle = triangles[tId];
-                    if (!SuperTriangle.ContainsCommonPointWith(triangle) && !TriangleIsEncroached(tId) &&
-                        TriangleIsBad(triangle, minimumArea2 * s.x * s.y, maximumArea2 * s.x * s.y, minimumAngle))
+                    var t = triangles[tId];
+                    var (i, j, k) = t;
+                    if (i != 0 && i != 1 && i != 2 && j != 0 && j != 1 && j != 2 && k != 0 && k != 1 && k != 2 &&
+                        !TriangleIsEncroached(tId) && TriangleIsBad(t, minimumArea2 * s.x * s.y, maximumArea2 * s.x * s.y, minimumAngle))
                     {
                         var circle = circles[tId];
                         InsertPoint(circle.Center, tId);
@@ -1753,7 +1721,8 @@ namespace andywiecko.BurstTriangulator
 
             private bool TriangleIsBad(Triangle triangle, float minimumArea2, float maximumArea2, float minimumAngle)
             {
-                var area2 = triangle.GetArea2(outputPositions);
+                var (i, j, k) = triangle;
+                var area2 = Area2(i, j, k, outputPositions.AsArray());
                 return area2 >= minimumArea2 && (area2 > maximumArea2 || AngleIsTooSmall(triangle, minimumAngle));
             }
 
@@ -1788,8 +1757,13 @@ namespace andywiecko.BurstTriangulator
 
             private bool IsEncroached(Circle circle, Edge edge, int tId)
             {
-                var triangle = triangles[tId];
-                var pointId = triangle.UnsafeOtherPoint(edge);
+                var (i, j, k) = triangles[tId];
+                var pointId = (i, j, k) switch
+                {
+                    _ when i != edge.IdA && i != edge.IdB => i,
+                    _ when j != edge.IdA && j != edge.IdB => j,
+                    _ => k
+                };
                 var pC = outputPositions[pointId];
                 return math.distancesq(circle.Center, pC) < circle.RadiusSq;
             }
@@ -2368,7 +2342,7 @@ namespace andywiecko.BurstTriangulator
             {
                 foreach (var t in triangles)
                 {
-                    if (t.Contains(pId))
+                    if (t.IdA == pId || t.IdB == pId || t.IdC == pId)
                     {
                         return true;
                     }
@@ -2388,12 +2362,12 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        [BurstCompile]
+        //[BurstCompile]
         private unsafe struct CleanupJob : IJob
         {
             private NativeReference<Status>.ReadOnly status;
             [ReadOnly]
-            private NativeList<Triangle> triangles;
+            private NativeArray<Triangle> triangles;
             [WriteOnly]
             private NativeList<int> outputTriangles;
             [ReadOnly]
@@ -2406,7 +2380,7 @@ namespace andywiecko.BurstTriangulator
             public CleanupJob(Triangulator triangulator)
             {
                 status = triangulator.status.AsReadOnly();
-                triangles = triangulator.triangles;
+                triangles = triangulator.triangles.AsDeferredJobArray();
                 outputTriangles = triangulator.outputTriangles;
                 pointsOffset = triangulator.pointsOffset.AsDeferredJobArray();
 
@@ -2427,19 +2401,19 @@ namespace andywiecko.BurstTriangulator
 
             private void CleanupTriangles()
             {
-                for (int i = 0; i < triangles.Length; i++)
+                var itriangles = triangles.Reinterpret<int>(3 * sizeof(int));
+                for (int i = 0; i < itriangles.Length / 3; i++)
                 {
-                    var t = triangles[i];
-                    if (t.ContainsCommonPointWith(SuperTriangle))
+                    var t0 = itriangles[3 * i + 0];
+                    var t1 = itriangles[3 * i + 1];
+                    var t2 = itriangles[3 * i + 2];
+                    if (t0 == 0 || t0 == 1 || t0 == 2 || t1 == 0 || t1 == 1 || t1 == 2 || t2 == 0 || t2 == 1 || t2 == 2)
                     {
                         continue;
                     }
-                    t = t.GetSignedArea2(positions) < 0 ? t : t.Flip();
-                    var (idA, idB, idC) = t;
-                    t = t.WithShift(-3); // Due to supertriangle verticies.
-                    t = t.WithShift(pointsOffset[idA], pointsOffset[idB], pointsOffset[idC]);
-                    var ptr = UnsafeUtility.AddressOf(ref t);
-                    outputTriangles.AddRangeNoResize(ptr, 3);
+                    outputTriangles.Add(t0 - 3 - pointsOffset[t0]);
+                    outputTriangles.Add(t1 - 3 - pointsOffset[t1]);
+                    outputTriangles.Add(t2 - 3 - pointsOffset[t2]);
                 }
             }
 
@@ -2461,6 +2435,13 @@ namespace andywiecko.BurstTriangulator
         #region Utils
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         private static float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
+        private static float Area2(int i, int j, int k, ReadOnlySpan<float2> positions)
+        {
+            var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
+            var pAB = pB - pA;
+            var pAC = pC - pA;
+            return math.abs(Cross(pAB, pAC));
+        }
         private static float Cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
         private static Circle CalculateCircumCircle(Triangle triangle, NativeArray<float2> outputPositions)
         {
