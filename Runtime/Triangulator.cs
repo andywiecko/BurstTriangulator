@@ -299,8 +299,7 @@ namespace andywiecko.BurstTriangulator
                 dependencies = new PlantingSeedsJob<PlantHoles>(this).Schedule(dependencies);
             }
 
-            dependencies = new CleanupTrianglesJob(this).Schedule(this, dependencies);
-            dependencies = new CleanupPositionsJob(this).Schedule(dependencies);
+            dependencies = new CleanupJob(this).Schedule(dependencies);
 
             dependencies = Settings.Preprocessor switch
             {
@@ -2390,66 +2389,29 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
-        private unsafe struct CleanupTrianglesJob : IJobParallelForDefer
+        private unsafe struct CleanupJob : IJob
         {
+            private NativeReference<Status>.ReadOnly status;
             [ReadOnly]
             private NativeList<Triangle> triangles;
-            [ReadOnly]
-            private NativeList<float2> outputPositions;
             [WriteOnly]
-            private NativeList<int>.ParallelWriter outputTriangles;
+            private NativeList<int> outputTriangles;
             [ReadOnly]
             private NativeArray<int> pointsOffset;
-            private NativeReference<Status>.ReadOnly status;
 
-            public CleanupTrianglesJob(Triangulator triangulator)
-            {
-                triangles = triangulator.triangles;
-                outputPositions = triangulator.outputPositions;
-                outputTriangles = triangulator.outputTriangles.AsParallelWriter();
-                pointsOffset = triangulator.pointsOffset.AsDeferredJobArray();
-                status = triangulator.status.AsReadOnly();
-            }
-
-            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
-            {
-                return this.Schedule(triangulator.triangles, triangulator.Settings.BatchCount, dependencies);
-            }
-
-            public void Execute(int i)
-            {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
-                var t = triangles[i];
-                if (t.ContainsCommonPointWith(SuperTriangle))
-                {
-                    return;
-                }
-                t = t.GetSignedArea2(outputPositions) < 0 ? t : t.Flip();
-                var (idA, idB, idC) = t;
-                t = t.WithShift(-3); // Due to supertriangle verticies.
-                t = t.WithShift(pointsOffset[idA], pointsOffset[idB], pointsOffset[idC]);
-                var ptr = UnsafeUtility.AddressOf(ref t);
-                outputTriangles.AddRangeNoResize(ptr, 3);
-            }
-        }
-
-        [BurstCompile]
-        private struct CleanupPositionsJob : IJob
-        {
             private NativeList<float2> positions;
             [ReadOnly]
             private NativeArray<int> pointsToRemove;
-            private NativeReference<Status>.ReadOnly status;
 
-            public CleanupPositionsJob(Triangulator triangulator)
+            public CleanupJob(Triangulator triangulator)
             {
+                status = triangulator.status.AsReadOnly();
+                triangles = triangulator.triangles;
+                outputTriangles = triangulator.outputTriangles;
+                pointsOffset = triangulator.pointsOffset.AsDeferredJobArray();
+
                 positions = triangulator.outputPositions;
                 pointsToRemove = triangulator.pointsToRemove.AsDeferredJobArray();
-                status = triangulator.status.AsReadOnly();
             }
 
             public void Execute()
@@ -2459,14 +2421,38 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
+                CleanupTriangles();
+                CleanupPositions();
+            }
+
+            private void CleanupTriangles()
+            {
+                for (int i = 0; i < triangles.Length; i++)
+                {
+                    var t = triangles[i];
+                    if (t.ContainsCommonPointWith(SuperTriangle))
+                    {
+                        continue;
+                    }
+                    t = t.GetSignedArea2(positions) < 0 ? t : t.Flip();
+                    var (idA, idB, idC) = t;
+                    t = t.WithShift(-3); // Due to supertriangle verticies.
+                    t = t.WithShift(pointsOffset[idA], pointsOffset[idB], pointsOffset[idC]);
+                    var ptr = UnsafeUtility.AddressOf(ref t);
+                    outputTriangles.AddRangeNoResize(ptr, 3);
+                }
+            }
+
+            private void CleanupPositions()
+            {
                 for (int i = pointsToRemove.Length - 1; i >= 0; i--)
                 {
                     positions.RemoveAt(pointsToRemove[i]);
                 }
 
                 // Remove Super Triangle positions
-                positions.RemoveAt(0);
-                positions.RemoveAt(0);
+                positions.RemoveAt(2);
+                positions.RemoveAt(1);
                 positions.RemoveAt(0);
             }
         }
