@@ -2362,7 +2362,7 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        //[BurstCompile]
+        [BurstCompile]
         private unsafe struct CleanupJob : IJob
         {
             private NativeReference<Status>.ReadOnly status;
