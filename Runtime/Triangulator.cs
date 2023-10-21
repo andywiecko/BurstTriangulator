@@ -154,7 +154,6 @@ namespace andywiecko.BurstTriangulator
         private NativeList<Edge> constraintEdges;
         private NativeReference<Status> status;
 
-        private NativeList<int> pointToHalfedge;
         private NativeList<int> pointsToRemove;
         private NativeList<int> pointsOffset;
 
@@ -177,7 +176,6 @@ namespace andywiecko.BurstTriangulator
             constraintEdges = new(capacity, allocator);
             status = new(Status.OK, allocator);
 
-            pointToHalfedge = new(capacity, allocator);
             pointsToRemove = new(capacity, allocator);
             pointsOffset = new(capacity, allocator);
 
@@ -201,7 +199,6 @@ namespace andywiecko.BurstTriangulator
             constraintEdges.Dispose();
             status.Dispose();
 
-            pointToHalfedge.Dispose();
             pointsToRemove.Dispose();
             pointsOffset.Dispose();
 
@@ -671,7 +668,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> halfedges;
             private NativeList<Circle> circles;
             private NativeList<Edge> constraintEdges;
-            private NativeList<int> pointToHalfedge;
             private NativeList<int> pointsToRemove;
             private NativeList<int> pointsOffset;
             private NativeReference<Status> status;
@@ -684,7 +680,6 @@ namespace andywiecko.BurstTriangulator
                 halfedges = triangulator.halfedges;
                 circles = triangulator.circles;
                 constraintEdges = triangulator.constraintEdges;
-                pointToHalfedge = triangulator.pointToHalfedge;
                 pointsToRemove = triangulator.pointsToRemove;
                 pointsOffset = triangulator.pointsOffset;
 
@@ -703,7 +698,6 @@ namespace andywiecko.BurstTriangulator
                 circles.Clear();
                 constraintEdges.Clear();
 
-                pointToHalfedge.Clear();
                 pointsToRemove.Clear();
                 pointsOffset.Clear();
 
@@ -1574,7 +1568,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<float2> outputPositions;
             private NativeList<Circle> circles;
             private NativeList<int> halfedges;
-            private NativeList<int> pointToHalfedge;
 
             [NativeDisableContainerSafetyRestriction]
             private NativeQueue<int> trianglesQueue;
@@ -1600,7 +1593,6 @@ namespace andywiecko.BurstTriangulator
                 outputPositions = triangulator.outputPositions;
                 circles = triangulator.circles;
                 halfedges = triangulator.halfedges;
-                pointToHalfedge = triangulator.pointToHalfedge;
 
                 trianglesQueue = default;
                 badTriangles = default;
@@ -1621,12 +1613,6 @@ namespace andywiecko.BurstTriangulator
                 {
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     circles[tId] = CalculateCircumCircle(i, j, k, outputPositions.AsArray());
-                }
-
-                pointToHalfedge.Length = outputPositions.Length;
-                for (int i = 0; i < triangles.Length; i++)
-                {
-                    pointToHalfedge[triangles[i]] = i;
                 }
 
                 using var _trianglesQueue = trianglesQueue = new NativeQueue<int>(Allocator.Temp);
@@ -1810,7 +1796,7 @@ namespace andywiecko.BurstTriangulator
                         mode.ConstraintEdges.Add((pId, e.IdB));
 
                         // Star-search algorithm:
-                        // 0. Initial h0 -> pointToHalfedge[e.IdA]
+                        // 0. Initial h0 -> naive search in triangles
                         // 1. Check if h1 is e.IdB, then h0 / 3 is the target triangle.
                         // 2. Go to next triangle with h0' = halfedge[h2]
                         // 3. After each iteration: h0 <- h0'
@@ -1825,7 +1811,17 @@ namespace andywiecko.BurstTriangulator
                         //     '.   |
                         //       '. v
                         //          h2'
-                        var h0 = pointToHalfedge[e.IdA];
+
+                        var h0 = -1;
+                        for (int i = 0; i < triangles.Length; i++)
+                        {
+                            if (triangles[i] == e.IdA)
+                            {
+                                h0 = i;
+                                break;
+                            }
+                        }
+
                         var target = -1;
                         while (target == -1)
                         {
@@ -1851,7 +1847,6 @@ namespace andywiecko.BurstTriangulator
             {
                 var pId = outputPositions.Length;
                 outputPositions.Add(p);
-                pointToHalfedge.Add(-1);
 
                 badTriangles.Clear();
                 trianglesQueue.Clear();
@@ -1866,11 +1861,6 @@ namespace andywiecko.BurstTriangulator
                 RecalculateBadTriangles(p);
 
                 ProcessBadTriangles(pId);
-
-                for (int i = triangles.Length - 3 * pathPoints.Length; i < triangles.Length; i++)
-                {
-                    pointToHalfedge[triangles[i]] = i;
-                }
 
                 return pId;
             }
