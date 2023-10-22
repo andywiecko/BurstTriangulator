@@ -154,9 +154,6 @@ namespace andywiecko.BurstTriangulator
         private NativeList<Edge> constraintEdges;
         private NativeReference<Status> status;
 
-        private NativeList<int> pointsToRemove;
-        private NativeList<int> pointsOffset;
-
         private NativeArray<float2> tmpInputPositions;
         private NativeArray<float2> tmpInputHoleSeeds;
         private NativeList<float2> localPositions;
@@ -175,9 +172,6 @@ namespace andywiecko.BurstTriangulator
             circles = new(capacity, allocator);
             constraintEdges = new(capacity, allocator);
             status = new(Status.OK, allocator);
-
-            pointsToRemove = new(capacity, allocator);
-            pointsOffset = new(capacity, allocator);
 
             localPositions = new(capacity, allocator);
             localHoleSeeds = new(capacity, allocator);
@@ -198,9 +192,6 @@ namespace andywiecko.BurstTriangulator
             circles.Dispose();
             constraintEdges.Dispose();
             status.Dispose();
-
-            pointsToRemove.Dispose();
-            pointsOffset.Dispose();
 
             localPositions.Dispose();
             localHoleSeeds.Dispose();
@@ -239,8 +230,6 @@ namespace andywiecko.BurstTriangulator
                 (true, false) => new RefineMeshJob<ConstraintDisable>(this).Schedule(dependencies),
                 (false, _) => dependencies
             };
-
-            dependencies = new ResizePointsOffsetsJob(this).Schedule(dependencies);
 
             var holes = Input.HoleSeeds;
             if (Settings.RestoreBoundary && Settings.ConstrainEdges)
@@ -668,8 +657,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> halfedges;
             private NativeList<Circle> circles;
             private NativeList<Edge> constraintEdges;
-            private NativeList<int> pointsToRemove;
-            private NativeList<int> pointsOffset;
             private NativeReference<Status> status;
 
             public ClearDataJob(Triangulator triangulator)
@@ -680,8 +667,6 @@ namespace andywiecko.BurstTriangulator
                 halfedges = triangulator.halfedges;
                 circles = triangulator.circles;
                 constraintEdges = triangulator.constraintEdges;
-                pointsToRemove = triangulator.pointsToRemove;
-                pointsOffset = triangulator.pointsOffset;
 
                 status = triangulator.status;
                 scaleRef = triangulator.scale;
@@ -697,9 +682,6 @@ namespace andywiecko.BurstTriangulator
                 halfedges.Clear();
                 circles.Clear();
                 constraintEdges.Clear();
-
-                pointsToRemove.Clear();
-                pointsOffset.Clear();
 
                 status.Value = Status.OK;
                 scaleRef.Value = 1;
@@ -2037,25 +2019,6 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        [BurstCompile]
-        private struct ResizePointsOffsetsJob : IJob
-        {
-            private NativeList<int> pointsOffset;
-            [ReadOnly]
-            private NativeArray<float2> outputPositions;
-
-            public ResizePointsOffsetsJob(Triangulator triangulator)
-            {
-                pointsOffset = triangulator.pointsOffset;
-                outputPositions = triangulator.outputPositions.AsDeferredJobArray();
-            }
-            public void Execute()
-            {
-                pointsOffset.Clear();
-                pointsOffset.Length = outputPositions.Length;
-            }
-        }
-
         private interface IPlantingSeedJobMode<TSelf>
         {
             TSelf Create(Triangulator triangulator);
@@ -2100,8 +2063,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> triangles;
             private NativeList<float2> outputPositions;
             private NativeList<Circle> circles;
-            private NativeList<int> pointsToRemove;
-            private NativeList<int> pointsOffset;
             private NativeList<Edge> constraintEdges;
             private NativeList<int> halfedges;
 
@@ -2114,8 +2075,6 @@ namespace andywiecko.BurstTriangulator
                 triangles = triangulator.triangles;
                 outputPositions = triangulator.outputPositions;
                 circles = triangulator.circles;
-                pointsToRemove = triangulator.pointsToRemove;
-                pointsOffset = triangulator.pointsOffset;
                 constraintEdges = triangulator.constraintEdges;
                 halfedges = triangulator.halfedges;
             }
@@ -2147,52 +2106,7 @@ namespace andywiecko.BurstTriangulator
 
                 GeneratePotentialPointsToRemove(initialPointsCount: positions.Length, potentialPointsToRemove, badTriangles);
                 RemoveBadTriangles(badTriangles, triangles, circles, halfedges);
-                GeneratePointsToRemove(potentialPointsToRemove);
-                GeneratePointsOffset();
-            }
-
-            private void RemoveBadTriangles(NativeList<int> badTriangles, NativeList<int> triangles, NativeList<Circle> circles, NativeList<int> halfedges)
-            {
-                badTriangles.Sort();
-                for (int t = badTriangles.Length - 1; t >= 0; t--)
-                {
-                    var tId = badTriangles[t];
-                    triangles.RemoveAt(3 * tId + 2);
-                    triangles.RemoveAt(3 * tId + 1);
-                    triangles.RemoveAt(3 * tId + 0);
-                    circles.RemoveAt(tId);
-                    RemoveHalfedge(3 * tId + 2, 0);
-                    RemoveHalfedge(3 * tId + 1, 1);
-                    RemoveHalfedge(3 * tId + 0, 2);
-
-                    for (int i = 3 * tId; i < halfedges.Length; i++)
-                    {
-                        var he = halfedges[i];
-                        if (he == -1)
-                        {
-                            continue;
-                        }
-                        else if (he < 3 * tId)
-                        {
-                            halfedges[he] -= 3;
-                        }
-                        else
-                        {
-                            halfedges[i] -= 3;
-                        }
-                    }
-
-                    void RemoveHalfedge(int he, int offset)
-                    {
-                        var ohe = halfedges[he];
-                        var o = ohe > 3 * tId ? ohe - offset : ohe;
-                        if (o > -1)
-                        {
-                            halfedges[o] = -1;
-                        }
-                        halfedges.RemoveAt(he);
-                    }
-                }
+                RemovePoints(potentialPointsToRemove);
             }
 
             private void PlantSeeds(NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
@@ -2295,40 +2209,90 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private void GeneratePointsToRemove(NativeHashSet<int> potentialPointsToRemove)
+            private void RemoveBadTriangles(NativeList<int> badTriangles, NativeList<int> triangles, NativeList<Circle> circles, NativeList<int> halfedges)
             {
-                using var tmp = potentialPointsToRemove.ToNativeArray(Allocator.Temp);
-                tmp.Sort();
-                foreach (var pId in tmp)
+                badTriangles.Sort();
+                for (int t = badTriangles.Length - 1; t >= 0; t--)
                 {
-                    if (!AnyTriangleContainsPoint(pId))
+                    var tId = badTriangles[t];
+                    triangles.RemoveAt(3 * tId + 2);
+                    triangles.RemoveAt(3 * tId + 1);
+                    triangles.RemoveAt(3 * tId + 0);
+                    circles.RemoveAt(tId);
+                    RemoveHalfedge(3 * tId + 2, 0);
+                    RemoveHalfedge(3 * tId + 1, 1);
+                    RemoveHalfedge(3 * tId + 0, 2);
+
+                    for (int i = 3 * tId; i < halfedges.Length; i++)
                     {
-                        pointsToRemove.Add(pId);
+                        var he = halfedges[i];
+                        if (he == -1)
+                        {
+                            continue;
+                        }
+                        else if (he < 3 * tId)
+                        {
+                            halfedges[he] -= 3;
+                        }
+                        else
+                        {
+                            halfedges[i] -= 3;
+                        }
+                    }
+
+                    void RemoveHalfedge(int he, int offset)
+                    {
+                        var ohe = halfedges[he];
+                        var o = ohe > 3 * tId ? ohe - offset : ohe;
+                        if (o > -1)
+                        {
+                            halfedges[o] = -1;
+                        }
+                        halfedges.RemoveAt(he);
                     }
                 }
             }
 
-            private bool AnyTriangleContainsPoint(int pId)
+            private void RemovePoints(NativeHashSet<int> potentialPointsToRemove)
             {
+                var pointToHalfedge = new NativeArray<int>(outputPositions.Length, Allocator.Temp);
+                var pointsOffset = new NativeArray<int>(outputPositions.Length, Allocator.Temp);
+
+                for (int i = 0; i < pointToHalfedge.Length; i++)
+                {
+                    pointToHalfedge[i] = -1;
+                }
+
                 for (int i = 0; i < triangles.Length; i++)
                 {
-                    if (triangles[i] == pId)
-                    {
-                        return true;
-                    }
+                    pointToHalfedge[triangles[i]] = i;
                 }
-                return false;
-            }
 
-            private void GeneratePointsOffset()
-            {
-                foreach (var pId in pointsToRemove)
+                using var tmp = potentialPointsToRemove.ToNativeArray(Allocator.Temp);
+                tmp.Sort();
+
+                for (int p = tmp.Length - 1; p >= 0; p--)
                 {
+                    var pId = tmp[p];
+                    if (pointToHalfedge[pId] != -1)
+                    {
+                        continue;
+                    }
+
+                    outputPositions.RemoveAt(pId);
                     for (int i = pId; i < pointsOffset.Length; i++)
                     {
                         pointsOffset[i]--;
                     }
                 }
+
+                for (int i = 0; i < triangles.Length; i++)
+                {
+                    triangles[i] += pointsOffset[triangles[i]];
+                }
+
+                pointToHalfedge.Dispose();
+                pointsOffset.Dispose();
             }
         }
 
@@ -2340,22 +2304,14 @@ namespace andywiecko.BurstTriangulator
             private NativeArray<int> triangles;
             [WriteOnly]
             private NativeList<int> outputTriangles;
-            [ReadOnly]
-            private NativeArray<int> pointsOffset;
-
             private NativeList<float2> positions;
-            [ReadOnly]
-            private NativeArray<int> pointsToRemove;
 
             public CleanupJob(Triangulator triangulator)
             {
                 status = triangulator.status.AsReadOnly();
                 triangles = triangulator.triangles.AsDeferredJobArray();
                 outputTriangles = triangulator.outputTriangles;
-                pointsOffset = triangulator.pointsOffset.AsDeferredJobArray();
-
                 positions = triangulator.outputPositions;
-                pointsToRemove = triangulator.pointsToRemove.AsDeferredJobArray();
             }
 
             public void Execute()
@@ -2365,12 +2321,6 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                CleanupTriangles();
-                CleanupPositions();
-            }
-
-            private void CleanupTriangles()
-            {
                 for (int i = 0; i < triangles.Length / 3; i++)
                 {
                     var t0 = triangles[3 * i + 0];
@@ -2380,17 +2330,9 @@ namespace andywiecko.BurstTriangulator
                     {
                         continue;
                     }
-                    outputTriangles.Add(t0 - 3 + pointsOffset[t0]);
-                    outputTriangles.Add(t1 - 3 + pointsOffset[t1]);
-                    outputTriangles.Add(t2 - 3 + pointsOffset[t2]);
-                }
-            }
-
-            private void CleanupPositions()
-            {
-                for (int i = pointsToRemove.Length - 1; i >= 0; i--)
-                {
-                    positions.RemoveAt(pointsToRemove[i]);
+                    outputTriangles.Add(t0 - 3);
+                    outputTriangles.Add(t1 - 3);
+                    outputTriangles.Add(t2 - 3);
                 }
 
                 // Remove Super Triangle positions

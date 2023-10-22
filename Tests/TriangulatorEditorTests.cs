@@ -1929,5 +1929,43 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
         }
+
+        [Test]
+        public void CleanupPointsWithHolesTest()
+        {
+            using var positions = new NativeArray<float2>(new float2[]
+            {
+                new(0, 0),
+                new(8, 0),
+                new(8, 8),
+                new(0, 8),
+
+                new(2, 2),
+                new(6, 2),
+                new(6, 6),
+                new(2, 6),
+            }, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(new[]
+            {
+                0, 1, 1, 2, 2, 3, 3, 0,
+                4, 5, 5, 6, 6, 7, 7, 4,
+            }, Allocator.Persistent);
+            using var holes = new NativeArray<float2>(new[] { math.float2(4) }, Allocator.Persistent);
+            using var triangulator = new Triangulator(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraintEdges, HoleSeeds = holes },
+                Settings = {
+                    RefineMesh = true,
+                    ConstrainEdges = true,
+                    RestoreBoundary = false,
+                    MaximumArea = 1,
+                    MinimumArea = 1,
+                },
+            };
+
+            triangulator.Schedule().Complete();
+
+            Assert.That(triangulator.Output.Triangles.AsArray(), Has.All.LessThan(triangulator.Output.Positions.Length));
+        }
     }
 }
