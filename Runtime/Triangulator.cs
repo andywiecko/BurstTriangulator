@@ -2380,9 +2380,9 @@ namespace andywiecko.BurstTriangulator
                     {
                         continue;
                     }
-                    outputTriangles.Add(t0 - 3 - pointsOffset[t0]);
-                    outputTriangles.Add(t1 - 3 - pointsOffset[t1]);
-                    outputTriangles.Add(t2 - 3 - pointsOffset[t2]);
+                    outputTriangles.Add(t0 - 3 + pointsOffset[t0]);
+                    outputTriangles.Add(t1 - 3 + pointsOffset[t1]);
+                    outputTriangles.Add(t2 - 3 + pointsOffset[t2]);
                 }
             }
 
