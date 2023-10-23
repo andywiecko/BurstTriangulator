@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -1619,6 +1620,7 @@ namespace andywiecko.BurstTriangulator
                 return false;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool TrySplit(Edge edge, int he)
             {
                 if (!edge.Contains(0) && !edge.Contains(1) && !edge.Contains(2) && EdgeIsEncroached(edge, he))
@@ -1634,12 +1636,14 @@ namespace andywiecko.BurstTriangulator
                 return false;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool AnyEdgeTriangleAreaIsTooSmall(int he)
             {
                 var ohe = halfedges[he];
                 return AreaTooSmall(tId: he / 3) || (ohe != -1 && AreaTooSmall(tId: ohe / 3));
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool AreaTooSmall(int tId)
             {
                 var s = scaleRef.Value;
@@ -1664,6 +1668,7 @@ namespace andywiecko.BurstTriangulator
                 return false;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool TriangleIsBad(int tId, float minimumArea2, float maximumArea2, float minimumAngle)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
@@ -1671,6 +1676,7 @@ namespace andywiecko.BurstTriangulator
                 return area2 >= minimumArea2 && (area2 > maximumArea2 || AngleIsTooSmall(tId, minimumAngle));
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool AngleIsTooSmall(int tId, float minimumAngle)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
@@ -1690,6 +1696,7 @@ namespace andywiecko.BurstTriangulator
                 return math.any(math.abs(angles) < minimumAngle);
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool EdgeIsEncroached(Edge edge, int he)
             {
                 var (e1, e2) = edge;
@@ -1700,6 +1707,7 @@ namespace andywiecko.BurstTriangulator
                 return IsEncroached(circle, edge, tId: he / 3) || (ohe != -1 && IsEncroached(circle, edge, tId: ohe / 3));
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool IsEncroached(Circle circle, Edge edge, int tId)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
@@ -1713,6 +1721,7 @@ namespace andywiecko.BurstTriangulator
                 return math.distancesq(circle.Center, pC) < circle.RadiusSq;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool TriangleIsEncroached(int tId)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
