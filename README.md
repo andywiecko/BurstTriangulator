@@ -393,7 +393,7 @@ In the figure below, you can also see example test cases: red represents resulti
 
 ![Constraint Benchmark](Documentation~/benchmark-constraint.png)
 
-Furthermore, we present a performance comparison (with Burst enabled) between `v1.0.0` and `v2.0.0` for the refinement task.
+Furthermore, we present a performance comparison (with Burst enabled) between `v1.0`, `v2.0`, and `v2.3` for the refinement task.
 
 ![Refinement Benchmark](Documentation~/benchmark-refinement.png)
 
@@ -407,9 +407,11 @@ Furthermore, we present a performance comparison (with Burst enabled) between `v
 - [X] ~~Adapt Delaunay triangluation to `halfedges` approach.~~
 - [X] ~~Adapt constrained triangulation to `halfedges` approach.~~
 - [X] ~~Improve performance of the constraint algorithm.~~
-- [ ] Adapt refinement algorithm to `halfedges` approach.
+- [X] ~~Adapt refinement algorithm to `halfedges` approach.~~
 - [ ] Improve performance of the refinement algorithm.
 - [ ] Remove super-triangle approach.
+- [ ] (?) Partially restore Delaunay property after Sloan's algorithm.
+- [ ] (?) Add mesh coarsening algorithm.
 
 ## Bibliography
 
