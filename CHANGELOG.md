@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [2.3.0] - 2023-10-25
+
+### Changed
+
+- Improved performance by adapting triangulation with mesh refinement to a `half-edges` approach.
+- Simplified the refinement job contract.
+- Merged several internal jobs for better efficiency.
+- General project simplification for enhanced maintainability.
+
+### Removed
+
+- Eliminated `edgeToTriangles` and `triangleToEdges` mappings.
+- Removed the internal `Triangle` struct.
+
 ## [2.2.0] ⁠– 2023-10-03
 
 ### Changed
@@ -122,6 +136,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 - Initial release version
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
+[2.3.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.3.0
 [2.2.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.2.0
 [2.1.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.1.0
 [2.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.0.0
