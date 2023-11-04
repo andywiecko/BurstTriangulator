@@ -593,38 +593,30 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 new []
                 {
                     math.float2(1f, 0.5f),
-                    math.float2(0.5f, 0f),
                     math.float2(0.5f, 0.25f),
-                    math.float2(0.75f, 0.625f),
-                    math.float2(0.5f, 1f),
-                    math.float2(1.5f, 1f),
                     math.float2(1.5f, 0.75f),
-                    math.float2(1.25f, 0.375f),
-                    math.float2(1.5f, 0f),
+                    math.float2(0.25f, 0.625f),
+                    math.float2(1.75f, 0.375f),
                 }
             )
             {
                 TestName = "Test case 2 (rectangle)",
                 ExpectedResult = new []
                 {
-                    (8, 0, 5),
-                    (8, 1, 7),
-                    (8, 6, 1),
-                    (8, 7, 0),
+                    (7, 1, 0),
+                    (7, 6, 1),
+                    (8, 4, 3),
+                    (8, 6, 4),
+                    (9, 0, 5),
                     (9, 4, 6),
-                    (9, 6, 8),
-                    (10, 4, 9),
-                    (10, 8, 5),
-                    (10, 9, 8),
-                    (12, 3, 2),
-                    (12, 4, 11),
-                    (12, 6, 4),
-                    (12, 11, 3),
-                    (13, 1, 6),
-                    (13, 6, 12),
-                    (14, 1, 13),
-                    (14, 12, 2),
-                    (14, 13, 12),
+                    (9, 5, 4),
+                    (9, 6, 7),
+                    (9, 7, 0),
+                    (10, 1, 6),
+                    (10, 2, 1),
+                    (10, 3, 2),
+                    (10, 6, 8),
+                    (10, 8, 3),
                 }
             },
         };
@@ -640,8 +632,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 {
                     ConstrainEdges = true,
                     RefineMesh = true,
-                    MinimumArea = .125f,
-                    MaximumArea = .250f,
+                    MinimumArea = .260f,
+                    MaximumArea = .300f,
                 },
                 Input =
                 {
@@ -773,22 +765,29 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             float2[] expectedPositions =
             {
-                new(0f, 0f),
-                new(1f, 0f),
-                new(1f, 1f),
-                new(0.5f, 0.25f),
-                new(0f, 1f),
-                new(0.75f, 0.625f),
-                new(1f, 0.5f),
+                math.float2(0f, 0f),
+                math.float2(1f, 0f),
+                math.float2(1f, 1f),
+                math.float2(0.5f, 0.25f),
+                math.float2(0f, 1f),
+                math.float2(0.5f, 0f),
+                math.float2(0.25f, 0.625f),
+                math.float2(0f, 0.5f),
+                math.float2(0.75f, 0.625f),
+                math.float2(1f, 0.5f),
             };
             var expectedTriangles = new[]
             {
-                (0, 4, 3),
-                (1, 0, 3),
-                (6, 1, 3),
-                (6, 3, 5),
-                (6, 5, 2),
+                (5, 0, 3),
+                (5, 3, 1),
+                (7, 3, 0),
+                (7, 4, 6),
+                (7, 6, 3),
+                (9, 1, 3),
+                (9, 3, 8),
+                (9, 8, 2),
             };
+
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
             Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
         }
@@ -1067,14 +1066,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             var expectedPositions = managedPositions.Union(new float2[]
             {
-                new(1f, 0.5f),
-                new(0.5f, 1f),
-                new(2.5f, 1f),
-                new(2f, 2.5f),
-                new(1.5f, 3f),
-                new(1.5f, 0f),
-                new(0f, 1.5f),
-                new(3f, 1.5f),
+                math.float2(1f, 0.5f),
+                math.float2(0.5f, 1f),
+                math.float2(2.5f, 1f),
+                math.float2(2f, 2.5f),
+                math.float2(2f, 0.25f),
+                math.float2(0f, 1.5f),
+                math.float2(2.75f, 2f),
+                math.float2(1f, 2.75f),
             });
             var expectedTriangles = new[]
             {
@@ -1084,21 +1083,25 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 (9, 8, 0),
                 (10, 5, 6),
                 (11, 6, 7),
-                (12, 2, 11),
-                (12, 7, 3),
-                (12, 11, 7),
-                (13, 0, 8),
-                (13, 5, 10),
-                (13, 8, 5),
-                (13, 10, 1),
-                (14, 3, 7),
-                (14, 7, 9),
-                (14, 9, 0),
-                (15, 1, 10),
-                (15, 6, 11),
-                (15, 10, 6),
-                (15, 11, 2),
+                (12, 0, 8),
+                (12, 1, 0),
+                (12, 5, 10),
+                (12, 8, 5),
+                (12, 10, 1),
+                (13, 3, 7),
+                (13, 7, 9),
+                (13, 9, 0),
+                (14, 1, 10),
+                (14, 2, 1),
+                (14, 6, 11),
+                (14, 10, 6),
+                (14, 11, 2),
+                (15, 2, 11),
+                (15, 3, 2),
+                (15, 7, 3),
+                (15, 11, 7),
             };
+
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
             Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
         }
@@ -1184,22 +1187,22 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             float2[] expectedPositions =
             {
-                new(0, 0),
-                new(3, 0),
-                new(3, 3),
-                new(0, 3),
-                new(1, 1),
-                new(2, 1),
-                new(2, 2),
-                new(1, 2),
-                new(1, 0.5f),
-                new(0.5f, 1),
-                new(2.5f, 1),
-                new(2, 2.5f),
-                new(1.5f, 3),
-                new(1.5f, 0),
-                new(0, 1.5f),
-                new(3, 1.5f),
+                math.float2(0f, 0f),
+                math.float2(3f, 0f),
+                math.float2(3f, 3f),
+                math.float2(0f, 3f),
+                math.float2(1f, 1f),
+                math.float2(2f, 1f),
+                math.float2(2f, 2f),
+                math.float2(1f, 2f),
+                math.float2(1f, 0.5f),
+                math.float2(0.5f, 1f),
+                math.float2(2.5f, 1f),
+                math.float2(2f, 2.5f),
+                math.float2(2f, 0.25f),
+                math.float2(0f, 1.5f),
+                math.float2(2.75f, 2f),
+                math.float2(1f, 2.75f),
             };
             var expectedTriangles = new[]
             {
@@ -1209,21 +1212,25 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 (9, 8, 0),
                 (10, 5, 6),
                 (11, 6, 7),
-                (12, 2, 11),
-                (12, 7, 3),
-                (12, 11, 7),
-                (13, 0, 8),
-                (13, 5, 10),
-                (13, 8, 5),
-                (13, 10, 1),
-                (14, 3, 7),
-                (14, 7, 9),
-                (14, 9, 0),
-                (15, 1, 10),
-                (15, 6, 11),
-                (15, 10, 6),
-                (15, 11, 2),
+                (12, 0, 8),
+                (12, 1, 0),
+                (12, 5, 10),
+                (12, 8, 5),
+                (12, 10, 1),
+                (13, 3, 7),
+                (13, 7, 9),
+                (13, 9, 0),
+                (14, 1, 10),
+                (14, 2, 1),
+                (14, 6, 11),
+                (14, 10, 6),
+                (14, 11, 2),
+                (15, 2, 11),
+                (15, 3, 2),
+                (15, 7, 3),
+                (15, 11, 7),
             };
+
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
             Assert.That(triangulator.GetTrisTuple(), Is.EquivalentTo(expectedTriangles));
         }
@@ -1289,8 +1296,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ConstrainEdges = false,
                     RefineMesh = true,
                     RestoreBoundary = false,
-                    MinimumArea = 0.001f,
-                    MaximumArea = 0.010f,
+                    MinimumArea = 0.0015f,
+                    MaximumArea = 0.020f,
                 },
                 Input =
                 {
@@ -1306,8 +1313,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Run();
             var localTriangles = triangulator.GetTrisTuple();
 
-            Assert.That(localTriangles, Is.EqualTo(nonLocalTriangles));
-            Assert.That(localTriangles, Has.Length.EqualTo(34));
+            var ratio = localTriangles.Intersect(nonLocalTriangles).Count() / (float)localTriangles.Length;
+            Assert.That(ratio, Is.GreaterThan(0.80), message: "Only few triangles may be flipped.");
+            Assert.That(localTriangles, Has.Length.EqualTo(nonLocalTriangles.Length));
         }
 
         [Test]

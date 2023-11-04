@@ -1604,43 +1604,187 @@ namespace andywiecko.BurstTriangulator
                 using var _pathHalfedges = pathHalfedges = new NativeList<int>(Allocator.Temp);
                 using var _visitedTriangles = visitedTriangles = new NativeList<bool>(triangles.Length / 3, Allocator.Temp);
 
-                while (TrySplitEncroachedEdge() || TryRemoveBadTriangle()) { }
-            }
+                using var heQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
+                using var tQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
 
-            private bool TrySplitEncroachedEdge()
-            {
+                // Collect encroached half-edges.
+                for (int he = 0; he < triangles.Length; he++)
+                {
+                    if (IsEncroached(he))
+                    {
+                        heQueue.Add(he);
+                    }
+                }
+
+                SplitEncroachedEdges(heQueue, tQueue: default); // ignore bad triangles in this run
+
+                // Collect encroached triangles
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
                 {
-                    var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                    if (TrySplit(new(i, j), 3 * tId + 0) || TrySplit(new(j, k), 3 * tId + 1) || TrySplit(new(k, i), 3 * tId + 2))
+                    if (IsBadTriangle(tId))
                     {
-                        return true;
+                        tQueue.Add(tId);
                     }
                 }
-                return false;
-            }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool TrySplit(Edge edge, int he)
-            {
-                if (!edge.Contains(0) && !edge.Contains(1) && !edge.Contains(2) && EdgeIsEncroached(edge, he))
+                // Split triangles
+                for (int i = 0; i < tQueue.Length; i++)
                 {
-                    if (AnyEdgeTriangleAreaIsTooSmall(he))
+                    var tId = tQueue[i];
+                    if (tId != -1)
                     {
-                        return false;
+                        SplitTriangle(tId, heQueue, tQueue);
                     }
-
-                    SplitEdge(edge, tId: he / 3);
-                    return true;
                 }
-                return false;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool AnyEdgeTriangleAreaIsTooSmall(int he)
+            private void SplitEncroachedEdges(NativeList<int> heQueue, NativeList<int> tQueue)
             {
-                var ohe = halfedges[he];
-                return AreaTooSmall(tId: he / 3) || (ohe != -1 && AreaTooSmall(tId: ohe / 3));
+                for (int i = 0; i < heQueue.Length; i++)
+                {
+                    var he = heQueue[i];
+                    if (he != -1)
+                    {
+                        SplitEdge(he, heQueue, tQueue);
+                    }
+                }
+                heQueue.Clear();
+            }
+
+            private bool IsEncroached(int he0)
+            {
+                var he1 = NextHalfedge(he0);
+                var he2 = NextHalfedge(he1);
+
+                var (i, j) = (triangles[he0], triangles[he1]);
+                var ohe = halfedges[he0];
+                if (i <= 2 || j <= 2 || AreaTooSmall(tId: he0 / 3) || (ohe != -1 && AreaTooSmall(tId: ohe / 3)))
+                {
+                    return false;
+                }
+
+                var p0 = outputPositions[triangles[he0]];
+                var p1 = outputPositions[triangles[he1]];
+                var p2 = outputPositions[triangles[he2]];
+                return math.distancesq(0.5f * (p0 + p1), p2) <= math.lengthsq(0.5f * (p0 - p1));
+            }
+
+            private void SplitEdge(int he, NativeList<int> heQueue, NativeList<int> tQueue)
+            {
+                var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
+                var (e0, e1) = (outputPositions[i], outputPositions[j]);
+                var p = 0.5f * (e0 + e1);
+
+                var edge = new Edge(i, j);
+                if (mode.ConstrainEdges && mode.ConstraintEdges.Contains(edge))
+                {
+                    var pId = outputPositions.Length;
+                    var eId = mode.ConstraintEdges.IndexOf(edge);
+                    mode.ConstraintEdges.RemoveAt(eId);
+                    mode.ConstraintEdges.Add((pId, i));
+                    mode.ConstraintEdges.Add((pId, j));
+                }
+
+                UnsafeInsertPoint(p, initTriangle: he / 3, heQueue, tQueue);
+
+                var h0 = triangles.Length - 3;
+                var hi = -1;
+                var hj = -1;
+                while (hi == -1 || hj == -1)
+                {
+                    var h1 = NextHalfedge(h0);
+                    if (triangles[h1] == i)
+                    {
+                        hi = h0;
+                    }
+                    if (triangles[h1] == j)
+                    {
+                        hj = h0;
+                    }
+
+                    var h2 = NextHalfedge(h1);
+                    h0 = halfedges[h2];
+                }
+
+                if (IsEncroached(hi))
+                {
+                    heQueue.Add(hi);
+                }
+                var ohi = halfedges[hi];
+                if (IsEncroached(ohi))
+                {
+                    heQueue.Add(ohi);
+                }
+                if (IsEncroached(hj))
+                {
+                    heQueue.Add(hj);
+                }
+                var ohj = halfedges[hj];
+                if (IsEncroached(ohj))
+                {
+                    heQueue.Add(ohj);
+                }
+            }
+
+            private bool IsBadTriangle(int tId)
+            {
+                var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
+                if (i <= 2 || j <= 2 || k <= 2)
+                {
+                    return false;
+                }
+
+                var s = scaleRef.Value;
+                var area2 = Area2(i, j, k, outputPositions.AsArray());
+                return area2 >= minimumArea2 * s.x * s.y && (area2 > maximumArea2 * s.x * s.y || AngleIsTooSmall(tId, minimumAngle));
+            }
+
+            private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue)
+            {
+                var c = circles[tId];
+                var edges = new FixedList32Bytes<int>();
+
+                var (h0, h1, h2) = (3 * tId + 0, 3 * tId + 1, 3 * tId + 2);
+                var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
+                var (p0, p1, p2) = (outputPositions[i], outputPositions[j], outputPositions[k]);
+                if (math.distancesq(0.5f * (p0 + p1), c.Center) <= math.lengthsq(0.5f * (p0 - p1)))
+                {
+                    edges.Add(h0);
+                }
+                if (math.distancesq(0.5f * (p1 + p2), c.Center) <= math.lengthsq(0.5f * (p1 - p2)))
+                {
+                    edges.Add(h1);
+                }
+                if (math.distancesq(0.5f * (p2 + p0), c.Center) <= math.lengthsq(0.5f * (p2 - p0)))
+                {
+                    edges.Add(h2);
+                }
+
+                if (edges.IsEmpty)
+                {
+                    // insert point at c, check for triangles and edges.
+                    if (mode.ConstrainEdges)
+                    {
+                        ConstrainedInsertPoint(c.Center, tId, heQueue, tQueue);
+                    }
+                    else
+                    {
+                        UnsafeInsertPoint(c.Center, initTriangle: tId, heQueue, tQueue);
+                    }
+                }
+                else
+                {
+                    if (!AreaTooSmall(tId))
+                    {
+                        foreach (var he in edges)
+                        {
+                            heQueue.Add(he);
+                        }
+                    }
+
+                    // enqueue tId?
+                    SplitEncroachedEdges(heQueue, tQueue);
+                }
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1649,31 +1793,6 @@ namespace andywiecko.BurstTriangulator
                 var s = scaleRef.Value;
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 return Area2(i, j, k, outputPositions.AsArray()) < minimumArea2 * s.x * s.y;
-            }
-
-            private bool TryRemoveBadTriangle()
-            {
-                var s = scaleRef.Value;
-                for (int tId = 0; tId < triangles.Length / 3; tId++)
-                {
-                    var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                    if (i != 0 && i != 1 && i != 2 && j != 0 && j != 1 && j != 2 && k != 0 && k != 1 && k != 2 &&
-                        !TriangleIsEncroached(tId) && TriangleIsBad(tId, minimumArea2 * s.x * s.y, maximumArea2 * s.x * s.y, minimumAngle))
-                    {
-                        var circle = circles[tId];
-                        InsertPoint(circle.Center, tId);
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool TriangleIsBad(int tId, float minimumArea2, float maximumArea2, float minimumAngle)
-            {
-                var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                var area2 = Area2(i, j, k, outputPositions.AsArray());
-                return area2 >= minimumArea2 && (area2 > maximumArea2 || AngleIsTooSmall(tId, minimumAngle));
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1692,87 +1811,10 @@ namespace andywiecko.BurstTriangulator
                     Angle(pBC, -pAB),
                     Angle(pCA, -pBC)
                 );
-
                 return math.any(math.abs(angles) < minimumAngle);
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool EdgeIsEncroached(Edge edge, int he)
-            {
-                var (e1, e2) = edge;
-                var (pA, pB) = (outputPositions[e1], outputPositions[e2]);
-                var circle = new Circle(0.5f * (pA + pB), 0.5f * math.distance(pA, pB));
-
-                var ohe = halfedges[he];
-                return IsEncroached(circle, edge, tId: he / 3) || (ohe != -1 && IsEncroached(circle, edge, tId: ohe / 3));
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool IsEncroached(Circle circle, Edge edge, int tId)
-            {
-                var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                var pointId = (i, j, k) switch
-                {
-                    _ when i != edge.IdA && i != edge.IdB => i,
-                    _ when j != edge.IdA && j != edge.IdB => j,
-                    _ => k
-                };
-                var pC = outputPositions[pointId];
-                return math.distancesq(circle.Center, pC) < circle.RadiusSq;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool TriangleIsEncroached(int tId)
-            {
-                var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                return EdgeIsEncroached(new(i, j), 3 * tId + 0)
-                    || EdgeIsEncroached(new(j, k), 3 * tId + 1)
-                    || EdgeIsEncroached(new(k, i), 3 * tId + 2);
-            }
-
-            private void SplitEdge(Edge edge, int tId) => _ = mode.ConstrainEdges switch
-            {
-                false => UnconstrainedSplitEdge(edge, tId),
-                true => ConstrainedSplitEdge(edge, tId),
-            };
-
-            private int UnconstrainedSplitEdge(Edge edge, int tId)
-            {
-                var (e0, e1) = edge;
-                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
-                var p = 0.5f * (pA + pB);
-                return UnsafeInsertPoint(p, initTriangle: tId);
-            }
-
-            private int ConstrainedSplitEdge(Edge edge, int tId)
-            {
-                var (e0, e1) = edge;
-                var (pA, pB) = (outputPositions[e0], outputPositions[e1]);
-                var p = 0.5f * (pA + pB);
-
-                if (mode.ConstraintEdges.Contains(edge))
-                {
-                    var pId = outputPositions.Length;
-                    var eId = mode.ConstraintEdges.IndexOf(edge);
-                    mode.ConstraintEdges.RemoveAt(eId);
-                    mode.ConstraintEdges.Add((pId, edge.IdA));
-                    mode.ConstraintEdges.Add((pId, edge.IdB));
-                }
-                return UnsafeInsertPoint(p, initTriangle: tId);
-            }
-
-            private void InsertPoint(float2 p, int tId) => _ = mode.ConstrainEdges switch
-            {
-                false => UnconstrainedInsertPoint(p, tId),
-                true => ConstrainedInsertPoint(p, tId),
-            };
-
-            private int UnconstrainedInsertPoint(float2 p, int tId)
-            {
-                return UnsafeInsertPoint(p, initTriangle: tId);
-            }
-
-            private int ConstrainedInsertPoint(float2 p, int tId)
+            private int ConstrainedInsertPoint(float2 p, int tId, NativeList<int> heQueue, NativeList<int> tQueue)
             {
                 var eId = 0;
                 foreach (var e in mode.ConstraintEdges)
@@ -1826,15 +1868,15 @@ namespace andywiecko.BurstTriangulator
                             h0 = halfedges[h2];
                         }
 
-                        return UnsafeInsertPoint(circle.Center, initTriangle: target);
+                        return UnsafeInsertPoint(circle.Center, initTriangle: target, heQueue, tQueue);
                     }
                     eId++;
                 }
 
-                return UnsafeInsertPoint(p, initTriangle: tId);
+                return UnsafeInsertPoint(p, initTriangle: tId, heQueue, tQueue);
             }
 
-            private int UnsafeInsertPoint(float2 p, int initTriangle)
+            private int UnsafeInsertPoint(float2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
             {
                 var pId = outputPositions.Length;
                 outputPositions.Add(p);
@@ -1851,7 +1893,7 @@ namespace andywiecko.BurstTriangulator
                 badTriangles.Add(initTriangle);
                 RecalculateBadTriangles(p);
 
-                ProcessBadTriangles(pId);
+                ProcessBadTriangles(pId, heQueue, tQueue);
 
                 return pId;
             }
@@ -1896,7 +1938,7 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private void ProcessBadTriangles(int pId)
+            private void ProcessBadTriangles(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
             {
                 // 1. Find the "first" halfedge of the polygon.
                 var id = 3 * badTriangles[0];
@@ -1966,6 +2008,39 @@ namespace andywiecko.BurstTriangulator
                             pathHalfedges[i] -= 3;
                         }
                     }
+
+                    for (int i = 0; i < heQueue.Length; i++)
+                    {
+                        var he = heQueue[i];
+                        if (he == 3 * tId + 0 || he == 3 * tId + 1 || he == 3 * tId + 2)
+                        {
+                            heQueue[i] = -1;
+                            continue;
+                        }
+
+                        if (he > 3 * tId + 2)
+                        {
+                            heQueue[i] -= 3;
+                        }
+                    }
+
+                    if (tQueue.IsCreated)
+                    {
+                        for (int i = 0; i < tQueue.Length; i++)
+                        {
+                            var q = tQueue[i];
+                            if (q == tId)
+                            {
+                                tQueue[i] = -1;
+                                continue;
+                            }
+
+                            if (q > tId)
+                            {
+                                tQueue[i]--;
+                            }
+                        }
+                    }
                 }
 
                 // 4. Create triangles, circles, and halfedges for inserted point pId.
@@ -1999,6 +2074,14 @@ namespace andywiecko.BurstTriangulator
                     halfedges[3 * i + 3 + heOffset] = 3 * i + 2 + heOffset;
                 }
 
+                for (int i = heOffset; i < halfedges.Length; i++)
+                {
+                    if (IsEncroached(i))
+                    {
+                        heQueue.Add(i);
+                    }
+                }
+
                 var phe = pathHalfedges[^1];
                 halfedges[heOffset + 3 * (pathPoints.Length - 1) + 1] = phe;
                 if (phe != -1)
@@ -2007,6 +2090,17 @@ namespace andywiecko.BurstTriangulator
                 }
                 halfedges[heOffset] = heOffset + 3 * (pathPoints.Length - 1) + 2;
                 halfedges[heOffset + 3 * (pathPoints.Length - 1) + 2] = heOffset;
+
+                if (tQueue.IsCreated)
+                {
+                    for (int i = initTriangles / 3; i < circles.Length; i++)
+                    {
+                        if (IsBadTriangle(i))
+                        {
+                            tQueue.Add(i);
+                        }
+                    }
+                }
             }
 
             private void RemoveHalfedge(int he, int offset)
