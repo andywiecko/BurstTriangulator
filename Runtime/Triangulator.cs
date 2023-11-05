@@ -1941,24 +1941,30 @@ namespace andywiecko.BurstTriangulator
             private void ProcessBadTriangles(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
             {
                 // 1. Find the "first" halfedge of the polygon.
-                var id = 3 * badTriangles[0];
                 var initHe = -1;
-                while (true)
+                for (int i = 0; i < badTriangles.Length; i++)
                 {
-                    id = NextHalfedge(id);
-                    var he = halfedges[id];
-                    if (he == -1 || !badTriangles.Contains(he / 3))
+                    var tId = badTriangles[i];
+                    for (int t = 0; t < 3; t++)
                     {
-                        initHe = id;
-                        pathPoints.Add(triangles[id]);
-                        pathHalfedges.Add(he);
+                        var he = 3 * tId + t;
+                        var ohe = halfedges[he];
+                        if (ohe == -1 || !badTriangles.Contains(ohe / 3))
+                        {
+                            pathPoints.Add(triangles[he]);
+                            pathHalfedges.Add(ohe);
+                            initHe = he;
+                            break;
+                        }
+                    }
+                    if (initHe != -1)
+                    {
                         break;
                     }
-                    id = he;
                 }
 
                 // 2. Build polygon path from halfedges and points.
-                id = initHe;
+                var id = initHe;
                 var initPoint = pathPoints[0];
                 while (true)
                 {
