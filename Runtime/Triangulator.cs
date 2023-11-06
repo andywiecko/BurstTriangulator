@@ -1891,6 +1891,7 @@ namespace andywiecko.BurstTriangulator
 
                 trianglesQueue.Enqueue(initTriangle);
                 badTriangles.Add(initTriangle);
+                visitedTriangles[initTriangle] = true;
                 RecalculateBadTriangles(p);
 
                 ProcessBadTriangles(pId, heQueue, tQueue);
@@ -1902,8 +1903,6 @@ namespace andywiecko.BurstTriangulator
             {
                 while (trianglesQueue.TryDequeue(out var tId))
                 {
-                    visitedTriangles[tId] = true;
-
                     VisitEdge(p, 3 * tId + 0, 3 * tId + 1);
                     VisitEdge(p, 3 * tId + 1, 3 * tId + 2);
                     VisitEdge(p, 3 * tId + 2, 3 * tId + 0);
@@ -1935,6 +1934,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     badTriangles.Add(otherId);
                     trianglesQueue.Enqueue(otherId);
+                    visitedTriangles[otherId] = true;
                 }
             }
 
