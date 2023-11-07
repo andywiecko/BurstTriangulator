@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Unity.Burst;
@@ -1894,7 +1895,9 @@ namespace andywiecko.BurstTriangulator
                 visitedTriangles[initTriangle] = true;
                 RecalculateBadTriangles(p);
 
+                BuildStarPolygon();
                 ProcessBadTriangles(pId, heQueue, tQueue);
+                BuildNewTriangles(pId, heQueue, tQueue);
 
                 return pId;
             }
@@ -1938,9 +1941,9 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private void ProcessBadTriangles(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
+            private void BuildStarPolygon()
             {
-                // 1. Find the "first" halfedge of the polygon.
+                // Find the "first" halfedge of the polygon.
                 var initHe = -1;
                 for (int i = 0; i < badTriangles.Length; i++)
                 {
@@ -1963,7 +1966,7 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
 
-                // 2. Build polygon path from halfedges and points.
+                // Build polygon path from halfedges and points.
                 var id = initHe;
                 var initPoint = pathPoints[0];
                 while (true)
@@ -1983,8 +1986,11 @@ namespace andywiecko.BurstTriangulator
                     }
                     id = he;
                 }
+            }
 
-                // 3. Remove bad triangles and recalculate polygon path halfedges.
+            private void ProcessBadTriangles(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
+            {
+                // Remove bad triangles and recalculate polygon path halfedges.
                 badTriangles.Sort();
                 for (int t = badTriangles.Length - 1; t >= 0; t--)
                 {
@@ -2048,12 +2054,25 @@ namespace andywiecko.BurstTriangulator
                         }
                     }
                 }
+            }
 
-                // 4. Create triangles, circles, and halfedges for inserted point pId.
+            private void RemoveHalfedge(int he, int offset)
+            {
+                var ohe = halfedges[he];
+                var o = ohe > he ? ohe - offset : ohe;
+                if (o > -1)
+                {
+                    halfedges[o] = -1;
+                }
+                halfedges.RemoveAt(he);
+            }
+
+            private void BuildNewTriangles(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
+            {
+                // Build triangles/circles for inserted point pId.
                 var initTriangles = triangles.Length;
                 triangles.Length += 3 * pathPoints.Length;
                 circles.Length += pathPoints.Length;
-
                 for (int i = 0; i < pathPoints.Length - 1; i++)
                 {
                     triangles[initTriangles + 3 * i + 0] = pId;
@@ -2066,6 +2085,7 @@ namespace andywiecko.BurstTriangulator
                 triangles[^1] = pathPoints[0];
                 circles[^1] = CalculateCircumCircle(pId, pathPoints[^1], pathPoints[0], outputPositions.AsArray());
 
+                // Build half-edges for inserted point pId.
                 var heOffset = halfedges.Length;
                 halfedges.Length += 3 * pathPoints.Length;
                 for (int i = 0; i < pathPoints.Length - 1; i++)
@@ -2079,15 +2099,6 @@ namespace andywiecko.BurstTriangulator
                     halfedges[3 * i + 2 + heOffset] = 3 * i + 3 + heOffset;
                     halfedges[3 * i + 3 + heOffset] = 3 * i + 2 + heOffset;
                 }
-
-                for (int i = heOffset; i < halfedges.Length; i++)
-                {
-                    if (IsEncroached(i))
-                    {
-                        heQueue.Add(i);
-                    }
-                }
-
                 var phe = pathHalfedges[^1];
                 halfedges[heOffset + 3 * (pathPoints.Length - 1) + 1] = phe;
                 if (phe != -1)
@@ -2097,6 +2108,16 @@ namespace andywiecko.BurstTriangulator
                 halfedges[heOffset] = heOffset + 3 * (pathPoints.Length - 1) + 2;
                 halfedges[heOffset + 3 * (pathPoints.Length - 1) + 2] = heOffset;
 
+                // Enqueue created edges.
+                for (int i = heOffset; i < halfedges.Length; i++)
+                {
+                    if (IsEncroached(i))
+                    {
+                        heQueue.Add(i);
+                    }
+                }
+
+                // Enqueue created triangles.
                 if (tQueue.IsCreated)
                 {
                     for (int i = initTriangles / 3; i < circles.Length; i++)
@@ -2107,17 +2128,6 @@ namespace andywiecko.BurstTriangulator
                         }
                     }
                 }
-            }
-
-            private void RemoveHalfedge(int he, int offset)
-            {
-                var ohe = halfedges[he];
-                var o = ohe > he ? ohe - offset : ohe;
-                if (o > -1)
-                {
-                    halfedges[o] = -1;
-                }
-                halfedges.RemoveAt(he);
             }
         }
 
