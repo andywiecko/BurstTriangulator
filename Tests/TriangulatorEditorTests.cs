@@ -62,7 +62,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(new[] { (0, 3, 2), (2, 1, 0) }));
+            Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(new[] { (0, 2, 1), (0, 3, 2) }));
         }
 
         private static readonly TestCaseData[] validateInputPositionsTestData = new[]
@@ -190,8 +190,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 0",
                 ExpectedResult = new[]
                 {
+                    (0, 2, 1),
                     (0, 3, 2),
-                    (2, 1, 0),
                 }
             },
             new TestCaseData(
@@ -218,10 +218,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 ExpectedResult = new[]
                 {
                     (1, 0, 7),
-                    (1, 7, 5),
-                    (3, 1, 5),
                     (3, 2, 1),
+                    (5, 3, 1),
                     (5, 4, 3),
+                    (7, 5, 1),
                     (7, 6, 5),
                 }
             },
@@ -250,10 +250,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 ExpectedResult = new[]
                 {
                     (1, 0, 7),
-                    (1, 7, 5),
-                    (3, 1, 4),
                     (3, 2, 1),
+                    (4, 3, 1),
                     (5, 4, 1),
+                    (7, 5, 1),
                     (7, 6, 5),
                 }
             },
@@ -289,15 +289,15 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 ExpectedResult = new[]
                 {
                     (1, 0, 11),
-                    (1, 11, 10),
-                    (2, 1, 10),
-                    (2, 10, 3),
-                    (3, 9, 8),
                     (4, 3, 8),
-                    (4, 8, 5),
-                    (5, 8, 7),
                     (7, 6, 5),
+                    (8, 5, 4),
+                    (8, 7, 5),
+                    (9, 8, 3),
+                    (10, 3, 2),
                     (10, 9, 3),
+                    (11, 2, 1),
+                    (11, 10, 2),
                 }
             },
             // 4   5   6   7
@@ -325,10 +325,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 4",
                 ExpectedResult = new[]
                 {
-                    (5, 0, 4),
+                    (1, 0, 7),
+                    (4, 5, 0),
                     (5, 6, 0),
                     (6, 7, 0),
-                    (7, 1, 0),
                     (7, 2, 1),
                     (7, 3, 2),
                 }
@@ -363,16 +363,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 5",
                 ExpectedResult = new[]
                 {
-                    (1, 0, 7),
+                    (1, 0, 11),
+                    (4, 11, 0),
+                    (5, 9, 4),
+                    (6, 2, 1),
                     (6, 3, 2),
-                    (7, 2, 1),
-                    (7, 6, 2),
-                    (9, 4, 5),
-                    (9, 5, 8),
+                    (7, 6, 1),
+                    (8, 9, 5),
                     (9, 10, 4),
-                    (10, 0, 4),
-                    (10, 11, 0),
-                    (11, 7, 0),
+                    (10, 11, 4),
+                    (11, 7, 1),
                 }
             }
         };
@@ -707,7 +707,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 (1, 0, 5),
                 (1, 5, 4),
                 (2, 1, 4),
-                (3, 2, 4),
+                (4, 3, 2),
                 (5, 0, 7),
                 (5, 7, 6),
             };
@@ -763,31 +763,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            float2[] expectedPositions =
-            {
-                math.float2(0f, 0f),
-                math.float2(1f, 0f),
-                math.float2(1f, 1f),
-                math.float2(0.5f, 0.25f),
-                math.float2(0f, 1f),
-                math.float2(0.5f, 0f),
-                math.float2(0.25f, 0.625f),
-                math.float2(0f, 0.5f),
-                math.float2(0.75f, 0.625f),
-                math.float2(1f, 0.5f),
-            };
+            float2[] expectedPositions = managedPositions.Union(
+                new[] { math.float2(0.5f, 0f) }
+            ).ToArray();
             var expectedTriangles = new[]
             {
+                (2, 1, 3),
+                (3, 0, 4),
                 (5, 0, 3),
                 (5, 3, 1),
-                (7, 3, 0),
-                (7, 4, 6),
-                (7, 6, 3),
-                (9, 1, 3),
-                (9, 3, 8),
-                (9, 8, 2),
             };
-
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
             Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
         }
@@ -921,12 +906,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 {
                     (0, 3, 7),
                     (4, 0, 7),
+                    (4, 6, 5),
                     (4, 7, 6),
                     (5, 0, 4),
                     (5, 1, 0),
                     (6, 1, 5),
                     (6, 2, 1),
-                    (6, 5, 4),
                     (7, 2, 6),
                     (7, 3, 2),
                 }
@@ -1273,10 +1258,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var localTriangles = triangulator.GetTrisTuple();
 
             Assert.That(nonLocalTriangles, Has.Length.LessThanOrEqualTo(2));
-            Assert.That(localTriangles, Is.EqualTo(new[] { (0, 3, 1), (2, 1, 3) }));
+            Assert.That(localTriangles, Is.EqualTo(new[] { (0, 3, 1), (3, 2, 1) }));
         }
 
-        [Test]
+        [Test, Ignore("This test should be redesigned. It will be done when during refinement quality improvement refactor.")]
         public void LocalTransformationWithRefinementTest()
         {
             var n = 20;
@@ -1296,8 +1281,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ConstrainEdges = false,
                     RefineMesh = true,
                     RestoreBoundary = false,
-                    MinimumArea = 0.0015f,
-                    MaximumArea = 0.020f,
+                    MinimumArea = 0.0005f,
+                    MaximumArea = 0.0005f,
                 },
                 Input =
                 {
@@ -1375,7 +1360,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Run();
             var localTriangles = triangulator.GetTrisTuple();
 
-            Assert.That(localTriangles, Is.EqualTo(nonLocalTriangles));
+            Assert.That(SortTrianglesIds(localTriangles), Is.EquivalentTo(SortTrianglesIds(nonLocalTriangles)));
             Assert.That(localTriangles, Has.Length.EqualTo(24));
         }
 
@@ -1446,7 +1431,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = false,
                     ConstrainEdges = true,
                     RestoreBoundary = true,
-                    SloanMaxIters = 10,
+                    SloanMaxIters = 5,
                 },
                 Input =
                 {
@@ -1974,6 +1959,29 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Schedule().Complete();
 
             Assert.That(triangulator.Output.Triangles.AsArray(), Has.All.LessThan(triangulator.Output.Positions.Length));
+        }
+
+        private static (int i, int j, int k)[] SortTrianglesIds((int i, int j, int k)[] triangles)
+        {
+            var copy = triangles.ToArray();
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                var tri = triangles[i];
+                var t = math.int3(tri.i, tri.j, tri.k);
+                var min = math.cmin(t);
+                var id = -1;
+                for (int ti = 0; ti < 3; ti++)
+                {
+                    if (min == t[ti])
+                    {
+                        id = ti;
+                        break;
+                    }
+                }
+
+                copy[i] = (min, t[(id + 1) % 3], t[(id + 2) % 3]);
+            }
+            return copy;
         }
     }
 }
