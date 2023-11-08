@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Unity.Burst;
@@ -138,7 +137,7 @@ namespace andywiecko.BurstTriangulator
         public class OutputData
         {
             public NativeList<float2> Positions => owner.outputPositions;
-            public NativeList<int> Triangles => owner.outputTriangles;
+            public NativeList<int> Triangles => owner.triangles;
             public NativeReference<Status> Status => owner.status;
             private readonly Triangulator owner;
             public OutputData(Triangulator triangulator) => owner = triangulator;
@@ -149,7 +148,6 @@ namespace andywiecko.BurstTriangulator
         public OutputData Output { get; }
 
         private NativeList<float2> outputPositions;
-        private NativeList<int> outputTriangles;
         private NativeList<int> triangles;
         private NativeList<int> halfedges;
         private NativeList<Circle> circles;
@@ -168,7 +166,6 @@ namespace andywiecko.BurstTriangulator
         public Triangulator(int capacity, Allocator allocator)
         {
             outputPositions = new(capacity, allocator);
-            outputTriangles = new(6 * capacity, allocator);
             triangles = new(6 * capacity, allocator);
             halfedges = new(6 * capacity, allocator);
             circles = new(capacity, allocator);
@@ -188,7 +185,6 @@ namespace andywiecko.BurstTriangulator
         public void Dispose()
         {
             outputPositions.Dispose();
-            outputTriangles.Dispose();
             triangles.Dispose();
             halfedges.Dispose();
             circles.Dispose();
@@ -226,13 +222,6 @@ namespace andywiecko.BurstTriangulator
             dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
             dependencies = Settings.ConstrainEdges ? new ConstrainEdgesJob(this).Schedule(dependencies) : dependencies;
 
-            dependencies = (Settings.RefineMesh, Settings.ConstrainEdges) switch
-            {
-                (true, true) => new RefineMeshJob<ConstraintEnable>(this).Schedule(dependencies),
-                (true, false) => new RefineMeshJob<ConstraintDisable>(this).Schedule(dependencies),
-                (false, _) => dependencies
-            };
-
             var holes = Input.HoleSeeds;
             if (Settings.RestoreBoundary && Settings.ConstrainEdges)
             {
@@ -245,7 +234,12 @@ namespace andywiecko.BurstTriangulator
                 dependencies = new PlantingSeedsJob<PlantHoles>(this).Schedule(dependencies);
             }
 
-            dependencies = new CleanupJob(this).Schedule(dependencies);
+            dependencies = (Settings.RefineMesh, Settings.ConstrainEdges) switch
+            {
+                (true, true) => new RefineMeshJob<ConstraintEnable>(this).Schedule(dependencies),
+                (true, false) => new RefineMeshJob<ConstraintDisable>(this).Schedule(dependencies),
+                (false, _) => dependencies
+            };
 
             dependencies = Settings.Preprocessor switch
             {
@@ -654,7 +648,6 @@ namespace andywiecko.BurstTriangulator
             private NativeReference<float2> cRef;
             private NativeReference<float2x2> URef;
             private NativeList<float2> outputPositions;
-            private NativeList<int> outputTriangles;
             private NativeList<int> triangles;
             private NativeList<int> halfedges;
             private NativeList<Circle> circles;
@@ -664,7 +657,6 @@ namespace andywiecko.BurstTriangulator
             public ClearDataJob(Triangulator triangulator)
             {
                 outputPositions = triangulator.outputPositions;
-                outputTriangles = triangulator.outputTriangles;
                 triangles = triangulator.triangles;
                 halfedges = triangulator.halfedges;
                 circles = triangulator.circles;
@@ -679,7 +671,6 @@ namespace andywiecko.BurstTriangulator
             public void Execute()
             {
                 outputPositions.Clear();
-                outputTriangles.Clear();
                 triangles.Clear();
                 halfedges.Clear();
                 circles.Clear();
@@ -766,31 +757,6 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private void RegisterPointsWithSupertriangle()
-            {
-                var min = (float2)float.MaxValue;
-                var max = (float2)float.MinValue;
-
-                for (int i = 0; i < inputPositions.Length; i++)
-                {
-                    var p = inputPositions[i];
-                    min = math.min(min, p);
-                    max = math.max(max, p);
-                }
-
-                var center = 0.5f * (min + max);
-                var r = 0.5f * math.distance(min, max);
-
-                var pA = center + r * math.float2(0, 2);
-                var pB = center + r * math.float2(-math.sqrt(3), -1);
-                var pC = center + r * math.float2(+math.sqrt(3), -1);
-
-                outputPositions.Add(pA);
-                outputPositions.Add(pB);
-                outputPositions.Add(pC);
-                outputPositions.AddRange(inputPositions);
-            }
-
             public void Execute()
             {
                 if (status.Value == Status.ERR)
@@ -798,7 +764,7 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                RegisterPointsWithSupertriangle();
+                outputPositions.CopyFrom(inputPositions);
                 positions = outputPositions.AsArray();
 
                 var n = positions.Length;
@@ -1260,9 +1226,9 @@ namespace andywiecko.BurstTriangulator
 
                 BuildInternalConstraints();
 
-                for (int i = internalConstraints.Length - 1; i >= 0; i--) // Reverse order for backward compatibility
+                foreach (var c in internalConstraints)
                 {
-                    TryApplyConstraint(i);
+                    TryApplyConstraint(c);
                 }
             }
 
@@ -1271,25 +1237,28 @@ namespace andywiecko.BurstTriangulator
                 internalConstraints.Length = inputConstraintEdges.Length / 2;
                 for (int index = 0; index < internalConstraints.Length; index++)
                 {
-                    var i = inputConstraintEdges[2 * index + 0];
-                    var j = inputConstraintEdges[2 * index + 1];
-                    // Note: +3 due to supertriangle points
-                    internalConstraints[index] = new Edge(i + 3, j + 3);
+                    internalConstraints[index] = new(
+                        idA: inputConstraintEdges[2 * index + 0],
+                        idB: inputConstraintEdges[2 * index + 1]
+                    );
                 }
-                internalConstraints.Sort();
             }
 
-            private void TryApplyConstraint(int i)
+            private void TryApplyConstraint(Edge c)
             {
                 intersections.Clear();
                 unresolvedIntersections.Clear();
 
-                var c = internalConstraints[i];
                 CollectIntersections(c);
 
                 var iter = 0;
                 do
                 {
+                    if ((status.Value & Status.ERR) == Status.ERR)
+                    {
+                        return;
+                    }
+
                     (intersections, unresolvedIntersections) = (unresolvedIntersections, intersections);
                     TryResolveIntersections(c, ref iter);
                 } while (!unresolvedIntersections.IsEmpty);
@@ -1368,16 +1337,16 @@ namespace andywiecko.BurstTriangulator
                     pointToHalfedge[_p] = h3;
 
                     var h5p = halfedges[h5];
+                    halfedges[h0] = h5p;
                     if (h5p != -1)
                     {
-                        halfedges[h0] = h5p;
                         halfedges[h5p] = h0;
                     }
 
                     var h2p = halfedges[h2];
+                    halfedges[h3] = h2p;
                     if (h2p != -1)
                     {
-                        halfedges[h3] = h2p;
                         halfedges[h2p] = h3;
                     }
 
@@ -1450,13 +1419,43 @@ namespace andywiecko.BurstTriangulator
 
                     h0 = halfedges[h2];
 
-                    // TODO: go up and down, to resolve boundaries.
-                    // This should be done before super-triangle removal.
+                    // Boundary reached check other side
                     if (h0 == -1)
                     {
+                        // possible that triangles[h2] == cj, not need to check
                         break;
                     }
                 } while (h0 != h0init);
+
+                h0 = halfedges[h0init];
+                if (tunnelInit == -1 && h0 != -1)
+                {
+                    h0 = NextHalfedge(h0);
+                    // Same but reversed
+                    do
+                    {
+                        var h1 = NextHalfedge(h0);
+                        if (triangles[h1] == cj)
+                        {
+                            break;
+                        }
+                        var h2 = NextHalfedge(h1);
+                        if (EdgeEdgeIntersection(edge, new(triangles[h1], triangles[h2])))
+                        {
+                            unresolvedIntersections.Add(h1);
+                            tunnelInit = halfedges[h1];
+                            break;
+                        }
+
+                        h0 = halfedges[h0];
+                        // Boundary reached
+                        if (h0 == -1)
+                        {
+                            break;
+                        }
+                        h0 = NextHalfedge(h0);
+                    } while (h0 != h0init);
+                }
 
                 // Tunnel algorithm
                 //
@@ -1657,9 +1656,8 @@ namespace andywiecko.BurstTriangulator
                 var he1 = NextHalfedge(he0);
                 var he2 = NextHalfedge(he1);
 
-                var (i, j) = (triangles[he0], triangles[he1]);
                 var ohe = halfedges[he0];
-                if (i <= 2 || j <= 2 || AreaTooSmall(tId: he0 / 3) || (ohe != -1 && AreaTooSmall(tId: ohe / 3)))
+                if (AreaTooSmall(tId: he0 / 3) || (ohe != -1 && AreaTooSmall(tId: ohe / 3)))
                 {
                     return false;
                 }
@@ -1686,55 +1684,72 @@ namespace andywiecko.BurstTriangulator
                     mode.ConstraintEdges.Add((pId, j));
                 }
 
-                UnsafeInsertPoint(p, initTriangle: he / 3, heQueue, tQueue);
-
-                var h0 = triangles.Length - 3;
-                var hi = -1;
-                var hj = -1;
-                while (hi == -1 || hj == -1)
+                if (halfedges[he] != -1)
                 {
-                    var h1 = NextHalfedge(h0);
-                    if (triangles[h1] == i)
+                    UnsafeInsertPoint(p, initTriangle: he / 3, heQueue, tQueue);
+
+                    var h0 = triangles.Length - 3;
+                    var hi = -1;
+                    var hj = -1;
+                    while (hi == -1 || hj == -1)
                     {
-                        hi = h0;
+                        var h1 = NextHalfedge(h0);
+                        if (triangles[h1] == i)
+                        {
+                            hi = h0;
+                        }
+                        if (triangles[h1] == j)
+                        {
+                            hj = h0;
+                        }
+
+                        var h2 = NextHalfedge(h1);
+                        h0 = halfedges[h2];
                     }
-                    if (triangles[h1] == j)
+
+                    if (IsEncroached(hi))
                     {
-                        hj = h0;
+                        heQueue.Add(hi);
+                    }
+                    var ohi = halfedges[hi];
+                    if (IsEncroached(ohi))
+                    {
+                        heQueue.Add(ohi);
+                    }
+                    if (IsEncroached(hj))
+                    {
+                        heQueue.Add(hj);
+                    }
+                    var ohj = halfedges[hj];
+                    if (IsEncroached(ohj))
+                    {
+                        heQueue.Add(ohj);
+                    }
+                }
+                else
+                {
+                    UnsafeSplitBoundary(p, initHe: he, heQueue, tQueue);
+
+                    //var h0 = triangles.Length - 3;
+                    var id = 3 * (pathPoints.Length - 1);
+                    var hi = halfedges.Length - 1;
+                    var hj = halfedges.Length - id;
+
+                    if (IsEncroached(hi))
+                    {
+                        heQueue.Add(hi);
                     }
 
-                    var h2 = NextHalfedge(h1);
-                    h0 = halfedges[h2];
-                }
-
-                if (IsEncroached(hi))
-                {
-                    heQueue.Add(hi);
-                }
-                var ohi = halfedges[hi];
-                if (IsEncroached(ohi))
-                {
-                    heQueue.Add(ohi);
-                }
-                if (IsEncroached(hj))
-                {
-                    heQueue.Add(hj);
-                }
-                var ohj = halfedges[hj];
-                if (IsEncroached(ohj))
-                {
-                    heQueue.Add(ohj);
+                    if (IsEncroached(hj))
+                    {
+                        heQueue.Add(hj);
+                    }
                 }
             }
 
             private bool IsBadTriangle(int tId)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                if (i <= 2 || j <= 2 || k <= 2)
-                {
-                    return false;
-                }
-
                 var s = scaleRef.Value;
                 var area2 = Area2(i, j, k, outputPositions.AsArray());
                 return area2 >= minimumArea2 * s.x * s.y && (area2 > maximumArea2 * s.x * s.y || AngleIsTooSmall(tId, minimumAngle));
@@ -1829,47 +1844,28 @@ namespace andywiecko.BurstTriangulator
                         mode.ConstraintEdges.Add((pId, e.IdA));
                         mode.ConstraintEdges.Add((pId, e.IdB));
 
-                        // Star-search algorithm:
-                        // 0. Initial h0 -> naive search in triangles
-                        // 1. Check if h1 is e.IdB, then h0 / 3 is the target triangle.
-                        // 2. Go to next triangle with h0' = halfedge[h2]
-                        // 3. After each iteration: h0 <- h0'
-                        //
-                        //          h1
-                        //       .^ |
-                        //     .'   |
-                        //   .'     v
-                        // h0 <---- h2
-                        // h0'----> h1'
-                        //   ^.     |
-                        //     '.   |
-                        //       '. v
-                        //          h2'
-
-                        var h0 = -1;
-                        for (int i = 0; i < triangles.Length; i++)
-                        {
-                            if (triangles[i] == e.IdA)
-                            {
-                                h0 = i;
-                                break;
-                            }
-                        }
-
                         var target = -1;
-                        while (target == -1)
+                        for (int he = 0; he < triangles.Length; he++)
                         {
-                            var h1 = NextHalfedge(h0);
-                            if (triangles[h1] == e.IdB)
+                            var nhe = NextHalfedge(he);
+                            var i = triangles[he];
+                            var j = triangles[nhe];
+                            (i, j) = i < j ? (i, j) : (j, i);
+                            if (i == e.IdA && j == e.IdB)
                             {
-                                target = h0 / 3;
+                                target = he;
                                 break;
                             }
-                            var h2 = NextHalfedge(h1);
-                            h0 = halfedges[h2];
                         }
 
-                        return UnsafeInsertPoint(circle.Center, initTriangle: target, heQueue, tQueue);
+                        if (halfedges[target] != -1)
+                        {
+                            return UnsafeInsertPoint(circle.Center, initTriangle: target / 3, heQueue, tQueue);
+                        }
+                        else
+                        {
+                            return UnsafeSplitBoundary(circle.Center, target, heQueue, tQueue);
+                        }
                     }
                     eId++;
                 }
@@ -1898,6 +1894,32 @@ namespace andywiecko.BurstTriangulator
                 BuildStarPolygon();
                 ProcessBadTriangles(pId, heQueue, tQueue);
                 BuildNewTriangles(pId, heQueue, tQueue);
+
+                return pId;
+            }
+
+            private int UnsafeSplitBoundary(float2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+            {
+                var pId = outputPositions.Length;
+                outputPositions.Add(p);
+
+                badTriangles.Clear();
+                trianglesQueue.Clear();
+                pathPoints.Clear();
+                pathHalfedges.Clear();
+
+                visitedTriangles.Clear();
+                visitedTriangles.Length = triangles.Length / 3;
+
+                var initTriangle = initHe / 3;
+                trianglesQueue.Enqueue(initTriangle);
+                badTriangles.Add(initTriangle);
+                visitedTriangles[initTriangle] = true;
+                RecalculateBadTriangles(p);
+
+                BuildAmphitheaterPolygon(initHe);
+                ProcessBadTriangles(pId, heQueue, tQueue);
+                BuildNewTrianglesForAmphitheater(pId, heQueue, tQueue);
 
                 return pId;
             }
@@ -1939,6 +1961,31 @@ namespace andywiecko.BurstTriangulator
                     trianglesQueue.Enqueue(otherId);
                     visitedTriangles[otherId] = true;
                 }
+            }
+
+            private void BuildAmphitheaterPolygon(int initHe)
+            {
+                var id = initHe;
+                var initPoint = triangles[id];
+                while (true)
+                {
+                    id = NextHalfedge(id);
+                    if (triangles[id] == initPoint)
+                    {
+                        break;
+                    }
+
+                    var he = halfedges[id];
+                    if (he == -1 || !badTriangles.Contains(he / 3))
+                    {
+                        pathPoints.Add(triangles[id]);
+                        pathHalfedges.Add(he);
+                        continue;
+                    }
+                    id = he;
+                }
+                pathPoints.Add(triangles[initHe]);
+                pathHalfedges.Add(-1);
             }
 
             private void BuildStarPolygon()
@@ -2129,6 +2176,66 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
             }
+
+            private void BuildNewTrianglesForAmphitheater(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
+            {
+                // Build triangles/circles for inserted point pId.
+                var initTriangles = triangles.Length;
+                triangles.Length += 3 * (pathPoints.Length - 1);
+                circles.Length += pathPoints.Length - 1;
+                for (int i = 0; i < pathPoints.Length - 1; i++)
+                {
+                    triangles[initTriangles + 3 * i + 0] = pId;
+                    triangles[initTriangles + 3 * i + 1] = pathPoints[i];
+                    triangles[initTriangles + 3 * i + 2] = pathPoints[i + 1];
+                    circles[initTriangles / 3 + i] = CalculateCircumCircle(pId, pathPoints[i], pathPoints[i + 1], outputPositions.AsArray());
+                }
+
+                // Build half-edges for inserted point pId.
+                var heOffset = halfedges.Length;
+                halfedges.Length += 3 * (pathPoints.Length - 1);
+                for (int i = 0; i < pathPoints.Length - 2; i++)
+                {
+                    var he = pathHalfedges[i];
+                    halfedges[3 * i + 1 + heOffset] = pathHalfedges[i];
+                    if (he != -1)
+                    {
+                        halfedges[pathHalfedges[i]] = 3 * i + 1 + heOffset;
+                    }
+                    halfedges[3 * i + 2 + heOffset] = 3 * i + 3 + heOffset;
+                    halfedges[3 * i + 3 + heOffset] = 3 * i + 2 + heOffset;
+                }
+
+                var phe = pathHalfedges[^2];
+                halfedges[heOffset + 3 * (pathPoints.Length - 2) + 1] = phe;
+                if (phe != -1)
+                {
+                    halfedges[phe] = heOffset + 3 * (pathPoints.Length - 2) + 1;
+                }
+                halfedges[heOffset] = -1;
+                halfedges[heOffset + 3 * (pathPoints.Length - 2) + 2] = -1;
+
+                // Enqueue created edges.
+                for (int i = heOffset; i < halfedges.Length; i++)
+                {
+                    if (IsEncroached(i))
+                    {
+                        heQueue.Add(i);
+                    }
+                }
+
+                // Enqueue created triangles.
+                if (tQueue.IsCreated)
+                {
+                    for (int i = initTriangles / 3; i < circles.Length; i++)
+                    {
+                        if (IsBadTriangle(i))
+                        {
+                            tQueue.Add(i);
+                        }
+                    }
+                }
+            }
         }
 
         private interface IPlantingSeedJobMode<TSelf>
@@ -2225,16 +2332,15 @@ namespace andywiecko.BurstTriangulator
             {
                 if (mode.PlantBoundarySeed)
                 {
-                    var seed = -1;
-                    for (int i = 0; i < triangles.Length; i++)
+                    for (int he = 0; he < halfedges.Length; he++)
                     {
-                        if (triangles[i] == 0)
+                        if (halfedges[he] == -1 &&
+                            !visitedTriangles[he / 3] &&
+                            !constraintEdges.Contains(new Edge(triangles[he], triangles[NextHalfedge(he)])))
                         {
-                            seed = i / 3;
-                            break;
+                            PlantSeed(he / 3, visitedTriangles, badTriangles, trianglesQueue);
                         }
                     }
-                    PlantSeed(seed, visitedTriangles, badTriangles, trianglesQueue);
                 }
 
                 if (mode.PlantHolesSeed)
@@ -2309,7 +2415,7 @@ namespace andywiecko.BurstTriangulator
                     for (int t = 0; t < 3; t++)
                     {
                         var id = triangles[3 * tId + t];
-                        if (id >= initialPointsCount + 3 /* super triangle */)
+                        if (id >= initialPointsCount)
                         {
                             potentialPointsToRemove.Add(id);
                         }
@@ -2394,58 +2500,6 @@ namespace andywiecko.BurstTriangulator
 
                 pointToHalfedge.Dispose();
                 pointsOffset.Dispose();
-            }
-        }
-
-        [BurstCompile]
-        private unsafe struct CleanupJob : IJob
-        {
-            private NativeReference<Status>.ReadOnly status;
-            [ReadOnly]
-            private NativeArray<int> triangles;
-            [WriteOnly]
-            private NativeList<int> outputTriangles;
-            private NativeList<float2> positions;
-
-            public CleanupJob(Triangulator triangulator)
-            {
-                status = triangulator.status.AsReadOnly();
-                triangles = triangulator.triangles.AsDeferredJobArray();
-                outputTriangles = triangulator.outputTriangles;
-                positions = triangulator.outputPositions;
-            }
-
-            public void Execute()
-            {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
-                var tId = 0;
-                outputTriangles.Length = triangles.Length;
-                for (int i = 0; i < triangles.Length / 3; i++)
-                {
-                    var t0 = triangles[3 * i + 0];
-                    var t1 = triangles[3 * i + 1];
-                    var t2 = triangles[3 * i + 2];
-                    if (t0 == 0 || t0 == 1 || t0 == 2 || t1 == 0 || t1 == 1 || t1 == 2 || t2 == 0 || t2 == 1 || t2 == 2)
-                    {
-                        continue;
-                    }
-
-                    outputTriangles[tId + 0] = t0 - 3;
-                    outputTriangles[tId + 1] = t1 - 3;
-                    outputTriangles[tId + 2] = t2 - 3;
-
-                    tId += 3;
-                }
-                outputTriangles.Length = tId;
-
-                // Remove Super Triangle positions
-                positions.RemoveAt(2);
-                positions.RemoveAt(1);
-                positions.RemoveAt(0);
             }
         }
         #endregion
