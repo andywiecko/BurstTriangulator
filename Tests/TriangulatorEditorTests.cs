@@ -132,9 +132,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public void DelaunayTriangulationWithRefinementTest()
         {
             ///  3 ------- 2
-            ///  |` .   . `|
-            ///  |    4    |
-            ///  |. `   ` .|
+            ///  |         |
+            ///  |         |
+            ///  |         |
             ///  0 ------- 1
             using var positions = new NativeArray<float2>(new[]
             {
@@ -149,9 +149,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Settings =
                 {
                     RefineMesh = true,
-                    MinimumAngle = math.radians(30),
-                    MinimumArea = 0.3f,
-                    MaximumArea = 0.3f
+                    RefinementThresholds = { Area = 0.3f, Angle = math.radians(20f) }
                 },
                 Input = { Positions = positions },
             };
@@ -164,14 +162,17 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(1, 0),
                 math.float2(1, 1),
                 math.float2(0, 1),
-                math.float2(0.5f, 0.5f)
+                math.float2(1, 0.5f),
+                math.float2(0, 0.5f),
             };
-            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
-
             var expectedTriangles = new[]
             {
-                (4, 0, 3), (4, 1, 0), (4, 2, 1), (4, 3, 2),
+                (5, 1, 0),
+                (5, 2, 4),
+                (5, 3, 2),
+                (5, 4, 1),
             };
+            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
             Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
         }
 
@@ -398,11 +399,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            foreach (var t in triangulator.GetTrisTuple())
-            {
-                UnityEngine.Debug.Log(t);
-            }
-
             return triangulator.GetTrisTuple();
         }
 
@@ -526,14 +522,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Triangulator.Status.ERR));
         }
 
-        private static readonly TestCaseData[] constraintDelaunayTriangulationWithRefinementTestData = new[]
+        private static readonly TestCaseData[] constraintDelaunayTriangulationWithRefinementTestData =
         {
             //  3 -------- 2
             //  | ' .      |
             //  |    ' .   |
             //  |       ' .|
             //  0 -------- 1
-            new TestCaseData(
+            new TestCaseData((
                 new []
                 {
                     math.float2(0, 0),
@@ -551,17 +547,37 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 },
                 new []
                 {
-                    math.float2(0.5f, 0.5f)
+                    math.float2(0.5f, 0.5f),
+                    math.float2(1f, 0.5f),
+                    math.float2(0.5f, 0f),
+                    math.float2(0f, 0.5f),
+                    math.float2(0.8189806f, 0.8189806f),
+                    math.float2(0.1810194f, 0.1810194f),
+                    math.float2(0.5f, 1f),
+                    math.float2(0.256f, 0f),
+                    math.float2(0f, 0.256f),
+                    math.float2(0.744f, 1f),
                 }
-            )
+            ))
             {
                 TestName = "Test case 1 (square)",
                 ExpectedResult = new []
                 {
-                    (4, 0, 3),
-                    (4, 1, 0),
-                    (4, 2, 1),
-                    (4, 3, 2),
+                    (5, 1, 4),
+                    (6, 4, 1),
+                    (7, 3, 4),
+                    (8, 2, 5),
+                    (8, 5, 4),
+                    (9, 4, 6),
+                    (9, 7, 4),
+                    (10, 4, 3),
+                    (10, 8, 4),
+                    (11, 0, 9),
+                    (11, 9, 6),
+                    (12, 7, 9),
+                    (12, 9, 0),
+                    (13, 2, 8),
+                    (13, 8, 10),
                 }
             },
 
@@ -570,7 +586,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             //  |    . '   |   . '    |
             //  |. '      .|. '       |
             //  0 -------- 1 -------- 2
-            new TestCaseData(
+            new TestCaseData((
                 new []
                 {
                     math.float2(0, 0),
@@ -593,47 +609,78 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 new []
                 {
                     math.float2(1f, 0.5f),
-                    math.float2(0.5f, 0.25f),
-                    math.float2(1.5f, 0.75f),
-                    math.float2(0.25f, 0.625f),
-                    math.float2(1.75f, 0.375f),
+                    math.float2(0.4579467f, 0.2289734f),
+                    math.float2(1.542053f, 0.7710266f),
+                    math.float2(0.5f, 0f),
+                    math.float2(1.5f, 1f),
                 }
-            )
+            ))
             {
                 TestName = "Test case 2 (rectangle)",
                 ExpectedResult = new []
                 {
-                    (7, 1, 0),
+                    (7, 0, 5),
+                    (7, 4, 6),
+                    (7, 5, 4),
                     (7, 6, 1),
-                    (8, 4, 3),
+                    (8, 1, 6),
+                    (8, 2, 1),
+                    (8, 3, 2),
                     (8, 6, 4),
-                    (9, 0, 5),
-                    (9, 4, 6),
-                    (9, 5, 4),
-                    (9, 6, 7),
-                    (9, 7, 0),
-                    (10, 1, 6),
-                    (10, 2, 1),
-                    (10, 3, 2),
-                    (10, 6, 8),
-                    (10, 8, 3),
+                    (9, 0, 7),
+                    (9, 7, 1),
+                    (10, 3, 8),
+                    (10, 8, 4),
+                }
+            },
+            new((
+                managedPositions: new[]
+                {
+                    math.float2(0, 0),
+                    math.float2(1, 0),
+                    math.float2(1, 1),
+                    math.float2(0.75f, 0.75f),
+                    math.float2(0, 1),
+                },
+                constraints: new[]
+                {
+                    0, 1,
+                    1, 2,
+                    2, 3,
+                    3, 4,
+                    4, 0,
+                },
+                insertedPoints: new[]
+                {
+                    math.float2(1f, 0.5f),
+                    math.float2(1f, 0.744f),
+                }
+            )){
+                TestName = "Test case 3 (strange box)",
+                ExpectedResult = new[]
+                {
+                    (0, 4, 3),
+                    (5, 0, 3),
+                    (5, 1, 0),
+                    (6, 3, 2),
+                    (6, 5, 3),
                 }
             },
         };
 
         [Test, TestCaseSource(nameof(constraintDelaunayTriangulationWithRefinementTestData))]
-        public (int, int, int)[] ConstraintDelaunayTriangulationWithRefinementTest(float2[] managedPositions, int[] constraints, float2[] insertedPoints)
+        public (int, int, int)[] ConstraintDelaunayTriangulationWithRefinementTest((float2[] managedPositions, int[] constraints, float2[] insertedPoints) input)
         {
-            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
-            using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
+            using var positions = new NativeArray<float2>(input.managedPositions, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(input.constraints, Allocator.Persistent);
             using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
                     ConstrainEdges = true,
                     RefineMesh = true,
-                    MinimumArea = .260f,
-                    MaximumArea = .300f,
+                    RestoreBoundary = true,
+                    RefinementThresholds = { Area = 10.3f, Angle = 0 },
                 },
                 Input =
                 {
@@ -644,7 +691,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(managedPositions.Union(insertedPoints)));
+            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(input.managedPositions.Union(input.insertedPoints)).Using(Float2Comparer.Instance));
 
             return triangulator.GetTrisTuple();
         }
@@ -751,8 +798,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ConstrainEdges = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
-                    MinimumArea = 0.125f,
-                    MaximumArea = 0.25f,
+                    RefinementThresholds = { Area = 0.25f }
                 },
                 Input =
                 {
@@ -1036,8 +1082,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ConstrainEdges = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
-                    MinimumArea = 0.5f,
-                    MaximumArea = 1.0f,
+                    RefinementThresholds = { Area = 1.0f },
                 },
                 Input =
                 {
@@ -1051,40 +1096,25 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             var expectedPositions = managedPositions.Union(new float2[]
             {
-                math.float2(1f, 0.5f),
-                math.float2(0.5f, 1f),
-                math.float2(2.5f, 1f),
-                math.float2(2f, 2.5f),
-                math.float2(2f, 0.25f),
+                math.float2(1.5f, 0f),
+                math.float2(3f, 1.5f),
+                math.float2(1.5f, 3f),
                 math.float2(0f, 1.5f),
-                math.float2(2.75f, 2f),
-                math.float2(1f, 2.75f),
             });
             var expectedTriangles = new[]
             {
+                (8, 0, 4),
                 (8, 4, 5),
-                (9, 4, 8),
-                (9, 7, 4),
-                (9, 8, 0),
-                (10, 5, 6),
-                (11, 6, 7),
-                (12, 0, 8),
-                (12, 1, 0),
-                (12, 5, 10),
-                (12, 8, 5),
-                (12, 10, 1),
-                (13, 3, 7),
-                (13, 7, 9),
-                (13, 9, 0),
-                (14, 1, 10),
-                (14, 2, 1),
-                (14, 6, 11),
-                (14, 10, 6),
-                (14, 11, 2),
-                (15, 2, 11),
-                (15, 3, 2),
-                (15, 7, 3),
-                (15, 11, 7),
+                (8, 5, 1),
+                (9, 1, 5),
+                (9, 5, 6),
+                (9, 6, 2),
+                (10, 2, 6),
+                (10, 6, 7),
+                (10, 7, 3),
+                (11, 3, 7),
+                (11, 4, 0),
+                (11, 7, 4),
             };
 
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
@@ -1149,8 +1179,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ConstrainEdges = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
-                    MinimumArea = 0.5f,
-                    MaximumArea = 1.0f,
+                    RefinementThresholds = { Area = 1.0f },
                 },
                 Input =
                 {
@@ -1180,40 +1209,25 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(2f, 1f),
                 math.float2(2f, 2f),
                 math.float2(1f, 2f),
-                math.float2(1f, 0.5f),
-                math.float2(0.5f, 1f),
-                math.float2(2.5f, 1f),
-                math.float2(2f, 2.5f),
-                math.float2(2f, 0.25f),
+                math.float2(1.5f, 0f),
+                math.float2(3f, 1.5f),
+                math.float2(1.5f, 3f),
                 math.float2(0f, 1.5f),
-                math.float2(2.75f, 2f),
-                math.float2(1f, 2.75f),
             };
             var expectedTriangles = new[]
             {
+                (8, 0, 4),
                 (8, 4, 5),
-                (9, 4, 8),
-                (9, 7, 4),
-                (9, 8, 0),
-                (10, 5, 6),
-                (11, 6, 7),
-                (12, 0, 8),
-                (12, 1, 0),
-                (12, 5, 10),
-                (12, 8, 5),
-                (12, 10, 1),
-                (13, 3, 7),
-                (13, 7, 9),
-                (13, 9, 0),
-                (14, 1, 10),
-                (14, 2, 1),
-                (14, 6, 11),
-                (14, 10, 6),
-                (14, 11, 2),
-                (15, 2, 11),
-                (15, 3, 2),
-                (15, 7, 3),
-                (15, 11, 7),
+                (8, 5, 1),
+                (9, 1, 5),
+                (9, 5, 6),
+                (9, 6, 2),
+                (10, 2, 6),
+                (10, 6, 7),
+                (10, 7, 3),
+                (11, 3, 7),
+                (11, 4, 0),
+                (11, 7, 4),
             };
 
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
@@ -1281,8 +1295,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ConstrainEdges = false,
                     RefineMesh = true,
                     RestoreBoundary = false,
-                    MinimumArea = 0.0005f,
-                    MaximumArea = 0.0005f,
+                    RefinementThresholds = { Area = 0.0005f },
                 },
                 Input =
                 {
@@ -1491,9 +1504,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
                 Settings =
                 {
-                    MinimumArea = 0.01f,
-                    MaximumArea = 0.01f,
-
+                    RefinementThresholds = { Area = 0.01f },
                     RefineMesh = true,
                     ConstrainEdges = false,
                     RestoreBoundary = true,
@@ -1730,9 +1741,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
                 Settings =
                 {
-                    MinimumAngle = math.radians(33),
-                    MinimumArea = 0.5f,
-                    MaximumArea = 4.0f,
+                    RefinementThresholds = {
+                        Angle = math.radians(15),
+                        Area = 4f
+                    },
 
                     ValidateInput = true,
                     RefineMesh = true,
@@ -1784,8 +1796,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ConstrainEdges = false,
                     RestoreBoundary = false,
                     ValidateInput = false,
-                    MinimumArea = area,
-                    MaximumArea = area,
+                    RefinementThresholds = { Area = area },
                 },
             };
 
@@ -1951,14 +1962,97 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = true,
                     ConstrainEdges = true,
                     RestoreBoundary = false,
-                    MaximumArea = 1,
-                    MinimumArea = 1,
+                    RefinementThresholds = { Area = 1f },
                 },
             };
 
             triangulator.Schedule().Complete();
 
             Assert.That(triangulator.Output.Triangles.AsArray(), Has.All.LessThan(triangulator.Output.Positions.Length));
+        }
+
+        [Test]
+        public void RefinementWithoutConstraintsTest()
+        {
+            var n = 20;
+
+            using var positions = new NativeArray<float2>(Enumerable
+                .Range(0, n)
+                .Select(i => math.float2(
+                    math.sin(i / (float)n * 2 * math.PI),
+                    math.cos(i / (float)n * 2 * math.PI)))
+                .ToArray(), Allocator.Persistent);
+            using var constraints = new NativeArray<int>(Enumerable
+                .Range(0, n)
+                .SelectMany(i => new[] { i, (i + 1) % n })
+                .ToArray(), Allocator.Persistent);
+            using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    RefineMesh = true,
+                    RestoreBoundary = true,
+                    ConstrainEdges = false,
+                    RefinementThresholds =
+                    {
+                        Area = .10f,
+                        Angle = math.radians(22f),
+                    }
+                },
+                Input =
+                {
+                    Positions = positions,
+                    ConstraintEdges = constraints,
+                }
+            };
+
+            triangulator.Run();
+
+            var trianglesWithConstraints = triangulator.GetTrisTuple();
+
+            triangulator.Settings.ConstrainEdges = false;
+            triangulator.Run();
+            var trianglesWithoutConstraints = triangulator.GetTrisTuple();
+
+            Assert.That(trianglesWithConstraints, Is.EqualTo(trianglesWithoutConstraints));
+        }
+
+        [Test(Description = "Checks if triangulator passes for `very` accute angle input")]
+        public void AccuteInputAngleTest()
+        {
+            using var positions = new NativeArray<float2>(new[] {
+                math.float2(0, 0),
+                math.float2(1, 0),
+                math.float2(1, .1f),
+            }, Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new[] {
+                0, 1,
+                1, 2,
+                2, 0,
+            }, Allocator.Persistent);
+            using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    RefineMesh = true,
+                    RestoreBoundary = true,
+                    ConstrainEdges = true,
+                    RefinementThresholds =
+                    {
+                        Area = 1f,
+                        Angle = math.radians(20f),
+                    }
+                },
+                Input =
+                {
+                    Positions = positions,
+                    ConstraintEdges = constraints,
+                }
+            };
+
+            triangulator.Run();
         }
 
         private static (int i, int j, int k)[] SortTrianglesIds((int i, int j, int k)[] triangles)

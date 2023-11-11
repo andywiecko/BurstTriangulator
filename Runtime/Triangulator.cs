@@ -63,31 +63,63 @@ namespace andywiecko.BurstTriangulator
         }
 
         [Serializable]
+        public class RefinementThresholds
+        {
+            /// <summary>
+            /// Specifies the maximum area constraint for triangles in the resulting mesh refinement.
+            /// Ensures that no triangle in the mesh has an area larger than the specified value.
+            /// </summary>
+            [field: SerializeField]
+            public float Area { get; set; } = 1f;
+            /// <summary>
+            /// Specifies the refinement angle constraint for triangles in the resulting mesh.
+            /// Ensures that no triangle in the mesh has an angle smaller than the specified value.
+            /// </summary>
+            /// <remarks>
+            /// Expressed in <em>radians</em>.
+            /// </remarks>
+            [field: SerializeField]
+            public float Angle { get; set; } = math.radians(5);
+        }
+
+        [Serializable]
         public class TriangulationSettings
         {
+            [field: SerializeField]
+            public RefinementThresholds RefinementThresholds { get; } = new();
             /// <summary>
             /// Batch count used in parallel jobs.
             /// </summary>
             [field: SerializeField]
             public int BatchCount { get; set; } = 64;
             /// <summary>
-            /// Triangle is considered as <em>bad</em> if any of its angles is smaller than <see cref="MinimumAngle"/>.
+            /// Specifies the refinement angle constraint for triangles in the resulting mesh.
+            /// Ensures that no triangle in the mesh has an angle smaller than the specified value.
+            /// <para>Expressed in <em>radians</em>.</para>
             /// </summary>
             /// <remarks>
-            /// Expressed in <em>radians</em>.
+            /// <b>Obsolete:</b> use <see cref="RefinementThresholds.Angle"/> instead.
             /// </remarks>
-            [field: SerializeField]
-            public float MinimumAngle { get; set; } = math.radians(33);
+            [Obsolete]
+            public float MinimumAngle { get => RefinementThresholds.Angle; set => RefinementThresholds.Angle = value; }
             /// <summary>
-            /// Triangle is <b>not</b> considered as <em>bad</em> if its area is smaller than <see cref="MinimumArea"/>.
+            /// Specifies the maximum area constraint for triangles in the resulting mesh refinement.
+            /// Ensures that no triangle in the mesh has an area larger than the specified value.
             /// </summary>
-            [field: SerializeField]
-            public float MinimumArea { get; set; } = 0.015f;
+            /// <remarks>
+            /// <b>Obsolete:</b> use <see cref="RefinementThresholds.Area"/> instead.
+            /// </remarks>
+            [Obsolete]
+            public float MinimumArea { get => RefinementThresholds.Area; set => RefinementThresholds.Area = value; }
             /// <summary>
-            /// Triangle is considered as <em>bad</em> if its area is greater than <see cref="MaximumArea"/>.
+            /// Specifies the maximum area constraint for triangles in the resulting mesh refinement.
+            /// Ensures that no triangle in the mesh has an area larger than the specified value.
             /// </summary>
-            [field: SerializeField]
-            public float MaximumArea { get; set; } = 0.5f;
+            /// <remarks>
+            /// <b>Obsolete:</b> use <see cref="RefinementThresholds.Area"/> instead.
+            /// </remarks>
+            [Obsolete]
+            public float MaximumArea { get => RefinementThresholds.Area; set => RefinementThresholds.Area = value; }
             /// <summary>
             /// If <see langword="true"/> refines mesh using 
             /// <see href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</see>.
@@ -120,6 +152,12 @@ namespace andywiecko.BurstTriangulator
             /// </summary>
             [field: SerializeField]
             public int SloanMaxIters { get; set; } = 1_000_000;
+            /// <summary>
+            /// Constant used in <em>concentric shells</em> segment splitting.
+            /// <b>Modify this only if you know what you are doing!</b>
+            /// </summary>
+            [field: SerializeField]
+            public float ConcentricShellsParameter { get; set; } = 0.001f;
             /// <summary>
             /// Preprocessing algorithm for the input data. Default is <see cref="Preprocessor.None"/>.
             /// </summary>
@@ -234,12 +272,8 @@ namespace andywiecko.BurstTriangulator
                 dependencies = new PlantingSeedsJob<PlantHoles>(this).Schedule(dependencies);
             }
 
-            dependencies = (Settings.RefineMesh, Settings.ConstrainEdges) switch
-            {
-                (true, true) => new RefineMeshJob<ConstraintEnable>(this).Schedule(dependencies),
-                (true, false) => new RefineMeshJob<ConstraintDisable>(this).Schedule(dependencies),
-                (false, _) => dependencies
-            };
+            dependencies = Settings.RefineMesh ?
+                new RefineMeshJob(this, Settings.ConstrainEdges ? constraintEdges : default).Schedule(dependencies) : dependencies;
 
             dependencies = Settings.Preprocessor switch
             {
@@ -1513,39 +1547,14 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private interface IRefineMeshJobMode<TSelf>
-        {
-            TSelf Create(Triangulator triangulator);
-            bool ConstrainEdges { get; }
-            NativeList<Edge> ConstraintEdges { get; }
-        }
-
-        private readonly struct ConstraintDisable : IRefineMeshJobMode<ConstraintDisable>
-        {
-            public readonly bool ConstrainEdges => false;
-            public readonly NativeList<Edge> ConstraintEdges => default;
-            public ConstraintDisable Create(Triangulator triangulator) => new();
-        }
-
-        private struct ConstraintEnable : IRefineMeshJobMode<ConstraintEnable>
-        {
-            public readonly bool ConstrainEdges => true;
-            public readonly NativeList<Edge> ConstraintEdges => constraintEdges;
-            private NativeList<Edge> constraintEdges;
-            public ConstraintEnable Create(Triangulator triangulator) => new()
-            {
-                constraintEdges = triangulator.constraintEdges,
-            };
-        }
-
         [BurstCompile]
-        private struct RefineMeshJob<T> : IJob where T : struct, IRefineMeshJobMode<T>
+        private struct RefineMeshJob : IJob
         {
-            private readonly float minimumArea2;
+            private int initialPointsCount;
             private readonly float maximumArea2;
             private readonly float minimumAngle;
+            private readonly float D;
             private NativeReference<float2>.ReadOnly scaleRef;
-            private readonly T mode;
             private NativeReference<Status>.ReadOnly status;
             private NativeList<int> triangles;
             private NativeList<float2> outputPositions;
@@ -1562,14 +1571,15 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> pathHalfedges;
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> visitedTriangles;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<Edge> constraints;
 
-            public RefineMeshJob(Triangulator triangulator)
+            public RefineMeshJob(Triangulator triangulator, NativeList<Edge> constraints)
             {
-                minimumArea2 = 2 * triangulator.Settings.MinimumArea;
-                maximumArea2 = 2 * triangulator.Settings.MaximumArea;
-                minimumAngle = triangulator.Settings.MinimumAngle;
+                maximumArea2 = 2 * triangulator.Settings.RefinementThresholds.Area;
+                minimumAngle = triangulator.Settings.RefinementThresholds.Angle;
+                D = triangulator.Settings.ConcentricShellsParameter;
                 scaleRef = triangulator.scale.AsReadOnly();
-                mode = default(T).Create(triangulator);
 
                 status = triangulator.status.AsReadOnly();
                 triangles = triangulator.triangles;
@@ -1577,11 +1587,14 @@ namespace andywiecko.BurstTriangulator
                 circles = triangulator.circles;
                 halfedges = triangulator.halfedges;
 
+                initialPointsCount = default;
                 trianglesQueue = default;
                 badTriangles = default;
                 pathPoints = default;
                 pathHalfedges = default;
                 visitedTriangles = default;
+
+                this.constraints = constraints;
             }
 
             public void Execute()
@@ -1591,6 +1604,7 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
+                initialPointsCount = outputPositions.Length;
                 circles.Length = triangles.Length / 3;
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
                 {
@@ -1607,12 +1621,43 @@ namespace andywiecko.BurstTriangulator
                 using var heQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
                 using var tQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
 
-                // Collect encroached half-edges.
-                for (int he = 0; he < triangles.Length; he++)
+                var tempConstraints = default(NativeList<Edge>);
+                if (!constraints.IsCreated)
                 {
-                    if (IsEncroached(he))
+                    tempConstraints = constraints = new NativeList<Edge>(Allocator.Temp);
+                    for (int he = 0; he < halfedges.Length; he++)
                     {
-                        heQueue.Add(he);
+                        if (halfedges[he] == -1)
+                        {
+                            constraints.Add(new(triangles[he], triangles[NextHalfedge(he)]));
+                        }
+                    }
+                }
+
+                // Collect encroached half-edges.
+                for (int id = 0; id < constraints.Length; id++)
+                {
+                    var (ci, cj) = constraints[id];
+                    var h = -1;
+                    for (int he = 0; he < triangles.Length; he++)
+                    {
+                        var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
+                        (i, j) = i < j ? (i, j) : (j, i);
+                        if (ci == i && cj == j)
+                        {
+                            h = he;
+                            break;
+                        }
+                    }
+
+                    var oh = halfedges[h];
+                    if (IsEncroached(h))
+                    {
+                        heQueue.Add(h);
+                    }
+                    else if (oh != -1 && IsEncroached(oh))
+                    {
+                        heQueue.Add(oh);
                     }
                 }
 
@@ -1636,6 +1681,11 @@ namespace andywiecko.BurstTriangulator
                         SplitTriangle(tId, heQueue, tQueue);
                     }
                 }
+
+                if (tempConstraints.IsCreated)
+                {
+                    tempConstraints.Dispose();
+                }
             }
 
             private void SplitEncroachedEdges(NativeList<int> heQueue, NativeList<int> tQueue)
@@ -1651,38 +1701,50 @@ namespace andywiecko.BurstTriangulator
                 heQueue.Clear();
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool IsEncroached(int he0)
             {
                 var he1 = NextHalfedge(he0);
                 var he2 = NextHalfedge(he1);
 
-                var ohe = halfedges[he0];
-                if (AreaTooSmall(tId: he0 / 3) || (ohe != -1 && AreaTooSmall(tId: ohe / 3)))
-                {
-                    return false;
-                }
-
                 var p0 = outputPositions[triangles[he0]];
                 var p1 = outputPositions[triangles[he1]];
                 var p2 = outputPositions[triangles[he2]];
-                return math.distancesq(0.5f * (p0 + p1), p2) <= math.lengthsq(0.5f * (p0 - p1));
+
+                return math.dot(p0 - p2, p1 - p2) <= 0;
             }
 
             private void SplitEdge(int he, NativeList<int> heQueue, NativeList<int> tQueue)
             {
                 var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
                 var (e0, e1) = (outputPositions[i], outputPositions[j]);
-                var p = 0.5f * (e0 + e1);
+
+                float2 p;
+                // Use midpoint method for:
+                // - the first segment split,
+                // - subsegment not made of input vertices.
+                // Otherwise, use "concentric circular shells".
+                if (i < initialPointsCount && j < initialPointsCount ||
+                    i >= initialPointsCount && j >= initialPointsCount)
+                {
+                    p = 0.5f * (e0 + e1);
+                }
+                else
+                {
+                    var d = math.distance(e0, e1);
+                    var k = (int)math.round(math.log2(0.5f * d / D));
+                    var alpha = D / d * (1 << k);
+                    alpha = i < initialPointsCount ? alpha : 1 - alpha;
+                    p = (1 - alpha) * e0 + alpha * e1;
+                }
 
                 var edge = new Edge(i, j);
-                if (mode.ConstrainEdges && mode.ConstraintEdges.Contains(edge))
-                {
-                    var pId = outputPositions.Length;
-                    var eId = mode.ConstraintEdges.IndexOf(edge);
-                    mode.ConstraintEdges.RemoveAt(eId);
-                    mode.ConstraintEdges.Add((pId, i));
-                    mode.ConstraintEdges.Add((pId, j));
-                }
+                var pId = outputPositions.Length;
+                var eId = constraints.IndexOf(edge);
+
+                constraints.RemoveAt(eId);
+                constraints.Add((pId, i));
+                constraints.Add((pId, j));
 
                 if (halfedges[he] != -1)
                 {
@@ -1747,68 +1809,64 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private bool IsBadTriangle(int tId)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 var s = scaleRef.Value;
                 var area2 = Area2(i, j, k, outputPositions.AsArray());
-                return area2 >= minimumArea2 * s.x * s.y && (area2 > maximumArea2 * s.x * s.y || AngleIsTooSmall(tId, minimumAngle));
+                return area2 > maximumArea2 * s.x * s.y || AngleIsTooSmall(tId, minimumAngle);
             }
 
             private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue)
             {
                 var c = circles[tId];
-                var edges = new FixedList32Bytes<int>();
+                var edges = new NativeList<int>(Allocator.Temp);
 
-                var (h0, h1, h2) = (3 * tId + 0, 3 * tId + 1, 3 * tId + 2);
-                var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                var (p0, p1, p2) = (outputPositions[i], outputPositions[j], outputPositions[k]);
-                if (math.distancesq(0.5f * (p0 + p1), c.Center) <= math.lengthsq(0.5f * (p0 - p1)))
+                for (int id = 0; id < constraints.Length; id++)
                 {
-                    edges.Add(h0);
-                }
-                if (math.distancesq(0.5f * (p1 + p2), c.Center) <= math.lengthsq(0.5f * (p1 - p2)))
-                {
-                    edges.Add(h1);
-                }
-                if (math.distancesq(0.5f * (p2 + p0), c.Center) <= math.lengthsq(0.5f * (p2 - p0)))
-                {
-                    edges.Add(h2);
+                    var (ci, cj) = constraints[id];
+                    var h = -1;
+                    for (int he = 0; he < triangles.Length; he++)
+                    {
+                        var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
+                        (i, j) = i < j ? (i, j) : (j, i);
+                        if (ci == i && cj == j)
+                        {
+                            h = he;
+                            break;
+                        }
+                    }
+
+                    var (p0, p1) = (outputPositions[ci], outputPositions[cj]);
+                    if (math.dot(p0 - c.Center, p1 - c.Center) <= 0)
+                    {
+                        edges.Add(h);
+                    }
                 }
 
                 if (edges.IsEmpty)
                 {
-                    // insert point at c, check for triangles and edges.
-                    if (mode.ConstrainEdges)
-                    {
-                        ConstrainedInsertPoint(c.Center, tId, heQueue, tQueue);
-                    }
-                    else
-                    {
-                        UnsafeInsertPoint(c.Center, initTriangle: tId, heQueue, tQueue);
-                    }
+                    UnsafeInsertPoint(c.Center, initTriangle: tId, heQueue, tQueue);
                 }
                 else
                 {
-                    if (!AreaTooSmall(tId))
+                    var s = scaleRef.Value;
+                    var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
+                    var area2 = Area2(i, j, k, outputPositions.AsArray());
+                    if (area2 > maximumArea2 * s.x * s.y) // TODO split permited
                     {
-                        foreach (var he in edges)
+                        foreach (var he in edges.AsReadOnly())
                         {
                             heQueue.Add(he);
                         }
                     }
-
-                    // enqueue tId?
-                    SplitEncroachedEdges(heQueue, tQueue);
+                    if (!heQueue.IsEmpty)
+                    {
+                        tQueue.Add(tId);
+                        SplitEncroachedEdges(heQueue, tQueue);
+                    }
                 }
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool AreaTooSmall(int tId)
-            {
-                var s = scaleRef.Value;
-                var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                return Area2(i, j, k, outputPositions.AsArray()) < minimumArea2 * s.x * s.y;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1827,50 +1885,8 @@ namespace andywiecko.BurstTriangulator
                     Angle(pBC, -pAB),
                     Angle(pCA, -pBC)
                 );
+
                 return math.any(math.abs(angles) < minimumAngle);
-            }
-
-            private int ConstrainedInsertPoint(float2 p, int tId, NativeList<int> heQueue, NativeList<int> tQueue)
-            {
-                var eId = 0;
-                foreach (var e in mode.ConstraintEdges)
-                {
-                    var (e0, e1) = (outputPositions[e.IdA], outputPositions[e.IdB]);
-                    var circle = new Circle(0.5f * (e0 + e1), 0.5f * math.distance(e0, e1));
-                    if (math.distancesq(circle.Center, p) < circle.RadiusSq)
-                    {
-                        var pId = outputPositions.Length;
-                        mode.ConstraintEdges.RemoveAt(eId);
-                        mode.ConstraintEdges.Add((pId, e.IdA));
-                        mode.ConstraintEdges.Add((pId, e.IdB));
-
-                        var target = -1;
-                        for (int he = 0; he < triangles.Length; he++)
-                        {
-                            var nhe = NextHalfedge(he);
-                            var i = triangles[he];
-                            var j = triangles[nhe];
-                            (i, j) = i < j ? (i, j) : (j, i);
-                            if (i == e.IdA && j == e.IdB)
-                            {
-                                target = he;
-                                break;
-                            }
-                        }
-
-                        if (halfedges[target] != -1)
-                        {
-                            return UnsafeInsertPoint(circle.Center, initTriangle: target / 3, heQueue, tQueue);
-                        }
-                        else
-                        {
-                            return UnsafeSplitBoundary(circle.Center, target, heQueue, tQueue);
-                        }
-                    }
-                    eId++;
-                }
-
-                return UnsafeInsertPoint(p, initTriangle: tId, heQueue, tQueue);
             }
 
             private int UnsafeInsertPoint(float2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
@@ -1937,7 +1953,7 @@ namespace andywiecko.BurstTriangulator
             private void VisitEdge(float2 p, int t0, int t1)
             {
                 var e = new Edge(triangles[t0], triangles[t1]);
-                if (mode.ConstrainEdges && mode.ConstraintEdges.Contains(e))
+                if (constraints.Contains(e))
                 {
                     return;
                 }
@@ -2068,21 +2084,26 @@ namespace andywiecko.BurstTriangulator
                         }
                     }
 
-                    for (int i = 0; i < heQueue.Length; i++)
+                    // Adapt he queue
+                    if (heQueue.IsCreated)
                     {
-                        var he = heQueue[i];
-                        if (he == 3 * tId + 0 || he == 3 * tId + 1 || he == 3 * tId + 2)
+                        for (int i = 0; i < heQueue.Length; i++)
                         {
-                            heQueue[i] = -1;
-                            continue;
-                        }
+                            var he = heQueue[i];
+                            if (he == 3 * tId + 0 || he == 3 * tId + 1 || he == 3 * tId + 2)
+                            {
+                                heQueue[i] = -1;
+                                continue;
+                            }
 
-                        if (he > 3 * tId + 2)
-                        {
-                            heQueue[i] -= 3;
+                            if (he > 3 * tId + 2)
+                            {
+                                heQueue[i] -= 3;
+                            }
                         }
                     }
 
+                    // Adapt t queue
                     if (tQueue.IsCreated)
                     {
                         for (int i = 0; i < tQueue.Length; i++)
@@ -2155,23 +2176,20 @@ namespace andywiecko.BurstTriangulator
                 halfedges[heOffset] = heOffset + 3 * (pathPoints.Length - 1) + 2;
                 halfedges[heOffset + 3 * (pathPoints.Length - 1) + 2] = heOffset;
 
-                // Enqueue created edges.
-                for (int i = heOffset; i < halfedges.Length; i++)
+                if (heQueue.IsCreated)
                 {
-                    if (IsEncroached(i))
+                    for (int i = 0; i < pathPoints.Length - 1; i++)
                     {
-                        heQueue.Add(i);
-                    }
-                }
+                        var he = heOffset + 3 * i + 1;
+                        var edge = new Edge(triangles[he], triangles[NextHalfedge(he)]);
 
-                // Enqueue created triangles.
-                if (tQueue.IsCreated)
-                {
-                    for (int i = initTriangles / 3; i < circles.Length; i++)
-                    {
-                        if (IsBadTriangle(i))
+                        if (constraints.Contains(edge) && IsEncroached(he))
                         {
-                            tQueue.Add(i);
+                            heQueue.Add(he);
+                        }
+                        else if (tQueue.IsCreated && IsBadTriangle(he / 3))
+                        {
+                            tQueue.Add(he / 3);
                         }
                     }
                 }
@@ -2215,23 +2233,20 @@ namespace andywiecko.BurstTriangulator
                 halfedges[heOffset] = -1;
                 halfedges[heOffset + 3 * (pathPoints.Length - 2) + 2] = -1;
 
-                // Enqueue created edges.
-                for (int i = heOffset; i < halfedges.Length; i++)
+                if (heQueue.IsCreated)
                 {
-                    if (IsEncroached(i))
+                    for (int i = 0; i < pathPoints.Length - 1; i++)
                     {
-                        heQueue.Add(i);
-                    }
-                }
+                        var he = heOffset + 3 * i + 1;
+                        var edge = new Edge(triangles[he], triangles[NextHalfedge(he)]);
 
-                // Enqueue created triangles.
-                if (tQueue.IsCreated)
-                {
-                    for (int i = initTriangles / 3; i < circles.Length; i++)
-                    {
-                        if (IsBadTriangle(i))
+                        if (constraints.Contains(edge) && IsEncroached(he))
                         {
-                            tQueue.Add(i);
+                            heQueue.Add(he);
+                        }
+                        else if (tQueue.IsCreated && IsBadTriangle(he / 3))
+                        {
+                            tQueue.Add(he / 3);
                         }
                     }
                 }
