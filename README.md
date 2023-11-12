@@ -115,7 +115,7 @@ using var triangulator = new(1024, Allocator.Persistent)
     BatchCount = 64;
     // Triangle is considered as bad if any of its angles is smaller than MinimumAngle. Note: radians.
     MinimumAngle = math.radians(33);
-    // Triangle is not considered as bad if its area is smaller than MinimumArea.
+    // Triangle is considered as bad if its area is smaller than MinimumArea.
     MinimumArea = 0.015f
     // Triangle is considered as bad if its area is greater than MaximumArea.
     MaximumArea = 0.5f;
