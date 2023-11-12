@@ -1,7 +1,11 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using Unity.Collections;
 using Unity.Mathematics;
+using UnityEngine;
 using UnityEngine.TestTools.Utils;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
@@ -28,6 +32,87 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             .Select(i => (triangles[3 * i], triangles[3 * i + 1], triangles[3 * i + 2]))
             .OrderBy(i => i.Item1).ThenBy(i => i.Item2).ThenBy(i => i.Item3)
             .ToArray();
+
+        public static void Draw(this Triangulator triangulator, float duration = 5f) => Draw(triangulator, Color.red, duration);
+        public static void Draw(this Triangulator triangulator, Color color, float duration = 5f)
+        {
+            var p = triangulator.Output.Positions;
+            foreach (var (i, j, k) in triangulator.GetTrisTuple())
+            {
+                var x = math.float3(p[i], 0);
+                var y = math.float3(p[j], 0);
+                var z = math.float3(p[k], 0);
+
+                Debug.DrawLine(x, y, color, duration);
+                Debug.DrawLine(x, z, color, duration);
+                Debug.DrawLine(z, y, color, duration);
+            }
+        }
+
+        public static string LaTeXify(this Triangulator triangulator,
+            string path = default,
+            string appendTikz = "",
+            int[][] loops = default
+        )
+        {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
+            var builder = new StringBuilder();
+            builder.Append(
+@"\documentclass[border=1mm]{standalone}
+\usepackage{tikz}
+
+\begin{document}
+
+\tikzset{
+    every picture/.style={
+        line width=.1pt
+    }
+}
+
+\begin{tikzpicture}[scale=10,inner sep=0pt]
+"
+            );
+
+            var p = triangulator.Output.Positions;
+            foreach (var (i, j, k) in triangulator.GetTrisTuple())
+            {
+                builder.AppendLine(
+$@"\draw[gray]({p[i].x}, {p[i].y})--({p[j].x}, {p[j].y});
+\draw[gray]({p[i].x}, {p[i].y})--({p[k].x}, {p[k].y});
+\draw[gray]({p[j].x}, {p[j].y})--({p[k].x}, {p[k].y});"
+                );
+            }
+
+            if (loops != default)
+            {
+                foreach (var loop in loops)
+                {
+                    builder.Append('\n');
+                    builder.Append(@$"\draw[black, line width = 0.2pt]({p[loop[0]].x}, {p[loop[0]].y})");
+                    for (int i = 0; i < loop.Length / 2 - 1; i++)
+                    {
+                        builder.Append($"--({p[loop[2 * i + 1]].x}, {p[loop[2 * i + 1]].y})");
+                    }
+                    builder.Append("--cycle;\n");
+                }
+            }
+
+            builder.AppendLine(appendTikz);
+
+            builder.AppendLine(@"
+\end{tikzpicture}
+\end{document}"
+                );
+
+            if (path != default)
+            {
+                using var writer = new System.IO.StreamWriter(path);
+                writer.WriteLine(builder.ToString());
+            }
+
+            return builder.ToString();
+        }
 
         public static (int i, int j, int k)[] SortTrianglesIds((int i, int j, int k)[] triangles)
         {
