@@ -1551,6 +1551,7 @@ namespace andywiecko.BurstTriangulator
         private struct RefineMeshJob : IJob
         {
             private int initialPointsCount;
+            private readonly bool restoreBoundary;
             private readonly float maximumArea2;
             private readonly float minimumAngle;
             private readonly float D;
@@ -1576,6 +1577,7 @@ namespace andywiecko.BurstTriangulator
 
             public RefineMeshJob(Triangulator triangulator, NativeList<Edge> constraints)
             {
+                restoreBoundary = triangulator.Settings.RestoreBoundary;
                 maximumArea2 = 2 * triangulator.Settings.RefinementThresholds.Area;
                 minimumAngle = triangulator.Settings.RefinementThresholds.Angle;
                 D = triangulator.Settings.ConcentricShellsParameter;
@@ -1630,6 +1632,17 @@ namespace andywiecko.BurstTriangulator
                         if (halfedges[he] == -1)
                         {
                             constraints.Add(new(triangles[he], triangles[NextHalfedge(he)]));
+                        }
+                    }
+                }
+                if (!restoreBoundary)
+                {
+                    for (int he = 0; he < halfedges.Length; he++)
+                    {
+                        var edge = new Edge(triangles[he], triangles[NextHalfedge(he)]);
+                        if (halfedges[he] == -1 && !constraints.Contains(edge))
+                        {
+                            constraints.Add(edge);
                         }
                     }
                 }
