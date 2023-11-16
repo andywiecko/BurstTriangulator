@@ -89,7 +89,7 @@ using var positions = new NativeArray<float2>(new float2[]
   new(0, 0),
   new(1, 0),
   new(1, 1),
-  new(0, 1)
+  new(0, 1),
 }, Allocator.Persistent);
 
 using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
@@ -107,27 +107,31 @@ The result of the triangulation procedure will depend on selected settings.
 There are a few settings of the triangulation, shortly described below:
 
 ```csharp
-using var triangulator = new(1024, Allocator.Persistent)
+using var triangulator = new Triangulator(1024, Allocator.Persistent)
 {
   Settings = 
   {
+    RefinementThresholds = {
+      // Specifies the maximum area constraint for triangles in the resulting mesh refinement.
+      // Ensures that no triangle in the mesh has an area larger than the specified value.
+      Area = 1f,
+      // Specifies the refinement angle constraint for triangles in the resulting mesh.
+      // Ensures that no triangle in the mesh has an angle smaller than the specified value.
+      Angle = math.radians(20),
+    },
     // Batch count used in parallel job.
-    BatchCount = 64;
-    // Triangle is considered as bad if any of its angles is smaller than MinimumAngle. Note: radians.
-    MinimumAngle = math.radians(33);
-    // Triangle is not considered as bad if its area is smaller than MinimumArea.
-    MinimumArea = 0.015f
-    // Triangle is considered as bad if its area is greater than MaximumArea.
-    MaximumArea = 0.5f;
+    BatchCount = 64,
     // If true refines mesh using Ruppert's algorithm.
-    RefineMesh = true;
+    RefineMesh = true,
     // If true constrains edges defined in the Triangulator.Input.ConstraintEdges
-    ConstrainEdges = false;
+    ConstrainEdges = false,
+    // If true the mesh boundary is restored using Input constraint edges.
+    RestoreBoundary = false,
     // If true and provided Triangulator.Input is not valid, it will throw an exception.
     // The error can be catch by using the `Triangulator.Output.Status`.
-    ValidateInput = true;
+    ValidateInput = true,
     // Type of preprocessing algorithm, see the section below for more details.
-    Preprocessor = Triangulator.Preprocessor.None;
+    Preprocessor = Triangulator.Preprocessor.None,
   }
 };
 ```
@@ -166,49 +170,60 @@ dependencies = new Job(triangulator).Schedule(dependencies);
 ...
 ```
 
-Below one can find the result of the triangulation for different selected options.
+Below, you can find the results of the triangulation for different selected options. 
+The _cool_ guitar was used as an input test case.
 
-> **Note**
->
-> To obtain the boundary from a texture, the `UnityEngine.PolygonCollider` was used.
-> Generating the image boundary is certainly a separate task and is not considered in the project.
+![guitar-light](Documentation~/guitar/guitar-light.svg#gh-light-mode-only)
+![guitar-dark](Documentation~/guitar/guitar-dark.svg#gh-dark-mode-only)
 
 ### Delaunay triangulation
 
-To use *classic* Delaunay triangulation make sure that constraint and refinement are disabled.
+To use *classic*, i.e. non-constrained without refinement, Delaunay triangulation one can use the following
 
 ```csharp
-settings.RefineMesh = false;
-settings.ConstrainEdges = false;
+using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+  Input = { Positions = positions }
+};
+
+triangulator.Schedule().Complete();
+
+var triangles = triangulator.Output.Triangles;
 ```
 
 The result *without* mesh refinement (Delaunay triangulation):
 
-![nyan-cat-without-refinement](Documentation~/nyan-cat-without-refinement.png)
+![guitar-light-dt](Documentation~/guitar/guitar-light-dt.svg#gh-light-mode-only)
+![guitar-dark-dt](Documentation~/guitar/guitar-dark-dt.svg#gh-dark-mode-only)
 
 ### Delaunay triangulation with mesh refinement
 
 To proceed with triangulation with the mesh refinement one has to set a proper refinement option
 
 ```csharp
-settings.RefineMesh = true;
-settings.ConstrainEdges = false;
-```
+using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+  Input = { Positions = positions },
+  Settings = {
+    RefineMesh = true,
+    RefinementThresholds = {
+      Area = 1f,
+      Angle = math.radians(20f)
+    },
+  }
+};
 
-Users can control the quality of the triangles by these options
+triangulator.Schedule().Complete();
 
-```csharp
-// Triangle is considered as bad if any of its angles is smaller than MinimumAngle. Note: radians.
-settings.MinimumAngle = math.radians(33);
-// Triangle is not considered as bad if its area is smaller than MinimumArea.
-settings.MinimumArea = 0.015f
-// Triangle is considered as bad if its area is greater than MaximumArea.
-settings.MaximumArea = 0.5f;
+var triangles = triangulator.Output.Triangles;
 ```
 
 The result *with* mesh refinement:
 
-![nyan-cat-with-refinement](Documentation~/nyan-cat-with-refinement.png)
+![guitar-light-dtr](Documentation~/guitar/guitar-light-dtr.svg#gh-light-mode-only)
+![guitar-dark-dtr](Documentation~/guitar/guitar-dark-dtr.svg#gh-dark-mode-only)
 
 ### Constrained Delaunay triangulation
 
@@ -218,26 +233,33 @@ To specify the edges which should be present in the final triangulation
 provide the additional input data
 
 ```csharp
-triangulator.Settings.RefineMesh = false;
-triangulator.Settings.ConstrainEdges = true;
-
 // Provided input of constraint edges
 // (a0, a1), (b0, b1), (c0, c1), ...
 // should be in the following form
 // constraintEdges elements:
 // [0]: a0, [1]: a1, [2]: b0, [3]: b1, ...
 using var constraintEdges = new NativeArray<int>(64, Allocator.Persistent);
+using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+  Input = { 
+    Positions = positions,
+    ConstraintEdges = constraintEdges,
+  },
+  Settings = {
+    ConstrainEdges = true,
+  }
+};
 
-triangulator.Input.ConstraintEdges = constraintEdges;
+triangulator.Schedule().Complete();
+
+var triangles = triangulator.Output.Triangles;
 ```
-
-In the following figure one can see the non-constrained triangulation result (with yellow), and user-specified constraints (with red).
-
-![nyan-cat-constraint-disabled](Documentation~/nyan-cat-constraint-disabled.png)
 
 After enabling `Settings.ConstrainEdges = true` and providing the corresponding input, the result of the constrained triangulation fully covers all specified edges by the user
 
-![nyan-cat-constraint-enabled](Documentation~/nyan-cat-constraint-enabled.png)
+![guitar-light-cdt](Documentation~/guitar/guitar-light-cdt.svg#gh-light-mode-only)
+![guitar-dark-cdt](Documentation~/guitar/guitar-dark-cdt.svg#gh-dark-mode-only)
 
 ### Constrained Delaunay triangulation with mesh refinement
 
@@ -249,13 +271,10 @@ triangulator.Settings.RefineMesh = true;
 triangulator.Settings.ConstrainEdges = true;
 ```
 
-In the following figure one can see the non-constrained triangulation result (with yellow), and user-specified constraints (with red) with the refinement.
-
-![nyan-constraint-refinement-disabled](Documentation~/nyan-constraint-refinement-disabled.png)
-
 After enabling the refinement and the constraint and providing the input, the result of the constrained triangulation fully covers all specified edges by the user and the mesh is refined with the given refinement conditions.
 
-![nyan-constraint-refinement-enabled](Documentation~/nyan-constraint-refinement-enabled.png)
+![guitar-light-cdtr](Documentation~/guitar/guitar-light-cdtr.svg#gh-light-mode-only)
+![guitar-dark-cdtr](Documentation~/guitar/guitar-dark-cdtr.svg#gh-dark-mode-only)
 
 ### Support for holes and boundaries
 
@@ -266,14 +285,6 @@ One has to enable corresponding options and provide the constraints
 settings.RestoreBoundary = true;
 settings.ConstraintEdges = true;
 ```
-
-In the following figure, one can see the constrained triangulation result (with yellow), and user-specified constraints (with red) with the disabled `RestoreBoundary` and refinement enabled.
-
-![nyan-reconstruction-disabled](Documentation~/nyan-reconstruction-disabled.png)
-
-After enabling the `RestoreBoundary` the result of the constrained triangulation fully covers all conditions and all invalid triangles are destroyed.
-
-![nyan-reconstruction-enabled](Documentation~/nyan-reconstruction-enabled.png)
 
 The package provides also an option for creating holes.
 Except for setting the `ConstraintEdges`, a user needs to provide positions of the holes in the same space as the `Input.Positions`.
@@ -286,6 +297,9 @@ settings.ConstraintEdges = true;
 using var holes = new NativeArray<float2>(new[]{ math.float2(0.5f, 0.5f) }, Allocator.Persistent);
 input.HoleSeeds = holes;
 ```
+
+![guitar-light-cdtrbh](Documentation~/guitar/guitar-light-cdtrbh.svg#gh-light-mode-only)
+![guitar-dark-cdtrbh](Documentation~/guitar/guitar-dark-cdtrbh.svg#gh-dark-mode-only)
 
 ### Summary
 
@@ -308,6 +322,20 @@ Input positions, as well as input constraints, have a few restrictions:
 
 If one of the conditions fails, then triangulation will not be calculated.
 One could catch this as an error by using `triangulator.Output.Status` (native, can be used in jobs).
+
+```csharp
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+  Input = { ... },
+  Settings = {
+    ValidateInput = true
+  },
+};
+
+triangulator.Run();
+
+var status = triangulator.Output.Status.Value;
+```
 
 ### Generating input in a job
 
@@ -408,8 +436,10 @@ Furthermore, we present a performance comparison (with Burst enabled) between `v
 - [X] ~~Adapt constrained triangulation to `halfedges` approach.~~
 - [X] ~~Improve performance of the constraint algorithm.~~
 - [X] ~~Adapt refinement algorithm to `halfedges` approach.~~
+- [X] ~~Remove super-triangle approach.~~
+- [X] ~~Improve quality of the refinement algorithm.~~
 - [ ] Improve performance of the refinement algorithm.
-- [ ] Remove super-triangle approach.
+- [ ] Implement `SplitPermitted` for *terminator*.
 - [ ] (?) Partially restore Delaunay property after Sloan's algorithm.
 - [ ] (?) Add mesh coarsening algorithm.
 
