@@ -14,6 +14,11 @@ Implemented *classic* Delaunay triangulation is based on
 Refinement algorithm is based on [Ruppert's algorithm][rupperts][^ruppert.1995] with [Bowyer–Watson algorithm][bowyerwatson][^bowyer.1981] [^watson.1981] point insertion.
 The package provides also constrained triangulation (with mesh refinement) which is based on Sloan's algorithm[^sloan.1993].
 
+As an illustrative example, we present the triangulation of Lake Superior with various refinement parameters. The top-left image shows the result without any refinement.
+
+![lake-preview-light](Documentation~/lake-preview-light.png#gh-light-mode-only)
+![lake-preview-dark](Documentation~/lake-preview-dark.png#gh-dark-mode-only)
+
 ## Table of contents
 
 - [Burst Triangulator](#burst-triangulator)
@@ -224,6 +229,17 @@ The result *with* mesh refinement:
 
 ![guitar-light-dtr](Documentation~/guitar/guitar-light-dtr.svg#gh-light-mode-only)
 ![guitar-dark-dtr](Documentation~/guitar/guitar-dark-dtr.svg#gh-dark-mode-only)
+
+The refinement process is controlled by two threshold parameters:
+
+- `Area`: denoted as $C_\triangle$
+- `Angle`: denoted as $C_\theta$
+
+These parameters allow fine-tuning of the refinement results based on specific criteria.
+Below, you can observe a set of results obtained by applying the refinement process to input data from Lake Superior (open image in a new tab to see the details).
+
+![lake-full-light](Documentation~/lake-full-light.png#gh-light-mode-only)
+![lake-full-dark](Documentation~/lake-full-dark.png#gh-dark-mode-only)
 
 ### Constrained Delaunay triangulation
 
