@@ -12,6 +12,7 @@ A **single-file** package which provides simple Delaunay triangulation of the gi
 Implemented *classic* Delaunay triangulation is based on
 [`delaunator`](https://github.com/mapbox/delaunator) and [`delaunator-sharp`](https://github.com/nol1fe/delaunator-sharp/).
 Refinement algorithm is based on [Ruppert's algorithm][rupperts][^ruppert.1995] with [Bowyer–Watson algorithm][bowyerwatson][^bowyer.1981] [^watson.1981] point insertion.
+Refinement procedure is inspired by Shewchuk's *terminator* algorithm[^shewchuk.2002].
 The package provides also constrained triangulation (with mesh refinement) which is based on Sloan's algorithm[^sloan.1993].
 
 As an illustrative example, we present the triangulation of Lake Superior with various refinement parameters. The top-left image shows the result without any refinement.
@@ -454,17 +455,23 @@ Furthermore, we present a performance comparison (with Burst enabled) between `v
 - [X] ~~Adapt refinement algorithm to `halfedges` approach.~~
 - [X] ~~Remove super-triangle approach.~~
 - [X] ~~Improve quality of the refinement algorithm.~~
-- [ ] Improve performance of the refinement algorithm.
+- [X] ~~Improve performance of the refinement algorithm.~~
+- [ ] Clean-up refine job after recent changes.
+- [ ] Adapt constraint and *planting* jobs for `constrainedHalfedges`.
+- [ ] Simplify generics for *planting* job.
+- [ ] Mark `ConstrainEdges` as obsolete.
 - [ ] Implement `SplitPermitted` for *terminator*.
 - [ ] (?) Partially restore Delaunay property after Sloan's algorithm.
 - [ ] (?) Add mesh coarsening algorithm.
+- [ ] (?) *Auto holes* detection algorithm.
 
 ## Bibliography
 
-[^bowyer.1981]: A. Bowyer. "Computing Dirichlet tessellations". [Comput. J. 24 (2): 162–166 (1981)](https://doi.org/10.1093%2Fcomjnl%2F24.2.162).
-[^watson.1981]: D.F. Watson. "Computing the n-dimensional Delaunay tessellation with application to Voronoi polytopes". [Comput. J. 24 (2): 167–172 (1981)](https://doi.org/10.1093%2Fcomjnl%2F24.2.167).
-[^sloan.1993]:S.W. Sloan. "A fast algorithm for generating constrained Delaunay triangulations." [Comput. Struct. 47.3:441-450 (1993)](https://doi.org/10.1016/0045-7949(93)90239-A).
-[^ruppert.1995]:J. Ruppert. "A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation". [J. Algorithms 18(3):548-585 (1995)](https://doi.org/10.1006/jagm.1995.1021).
+[^bowyer.1981]: A. Bowyer. "Computing Dirichlet tessellations". [*Comput. J.* 24 (2): 162–166 (1981)](https://doi.org/10.1093%2Fcomjnl%2F24.2.162).
+[^watson.1981]: D. F. Watson. "Computing the n-dimensional Delaunay tessellation with application to Voronoi polytopes". [*Comput. J.* 24 (2): 167–172 (1981)](https://doi.org/10.1093%2Fcomjnl%2F24.2.167).
+[^sloan.1993]:S. W. Sloan. "A fast algorithm for generating constrained Delaunay triangulations." [*Comput. Struct.* 47.3:441-450 (1993)](https://doi.org/10.1016/0045-7949(93)90239-A).
+[^ruppert.1995]:J. Ruppert. "A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation". [*J. Algorithms* 18(3):548-585 (1995)](https://doi.org/10.1006/jagm.1995.1021).
+[^shewchuk.2002]:J. R. Shewchuk. "Delaunay refinement algorithms for triangular mesh generation." [*Comput. Geom.* 22.1-3 (2002)](https://doi.org/10.1016/S0925-7721(01)00047-5).
 
 [bowyerwatson]: https://en.wikipedia.org/wiki/Bowyer%E2%80%93Watson_algorithm
 [rupperts]: https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm
