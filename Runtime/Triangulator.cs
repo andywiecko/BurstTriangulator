@@ -1574,6 +1574,8 @@ namespace andywiecko.BurstTriangulator
             private NativeList<bool> visitedTriangles;
             [NativeDisableContainerSafetyRestriction]
             private NativeList<Edge> constraints;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<bool> constrainedHalfedges;
 
             public RefineMeshJob(Triangulator triangulator, NativeList<Edge> constraints)
             {
@@ -1595,6 +1597,7 @@ namespace andywiecko.BurstTriangulator
                 pathPoints = default;
                 pathHalfedges = default;
                 visitedTriangles = default;
+                constrainedHalfedges = default;
 
                 this.constraints = constraints;
             }
@@ -1619,6 +1622,7 @@ namespace andywiecko.BurstTriangulator
                 using var _pathPoints = pathPoints = new NativeList<int>(Allocator.Temp);
                 using var _pathHalfedges = pathHalfedges = new NativeList<int>(Allocator.Temp);
                 using var _visitedTriangles = visitedTriangles = new NativeList<bool>(triangles.Length / 3, Allocator.Temp);
+                using var _constrainedHalfedges = constrainedHalfedges = new NativeList<bool>(triangles.Length, Allocator.Temp) { Length = triangles.Length };
 
                 using var heQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
                 using var tQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
@@ -1647,30 +1651,27 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
 
-                // Collect encroached half-edges.
-                for (int id = 0; id < constraints.Length; id++)
+                for (int he = 0; he < constrainedHalfedges.Length; he++)
                 {
-                    var (ci, cj) = constraints[id];
-                    var h = -1;
-                    for (int he = 0; he < triangles.Length; he++)
+                    for (int id = 0; id < constraints.Length; id++)
                     {
+                        var (ci, cj) = constraints[id];
                         var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
                         (i, j) = i < j ? (i, j) : (j, i);
                         if (ci == i && cj == j)
                         {
-                            h = he;
+                            constrainedHalfedges[he] = true;
                             break;
                         }
                     }
+                }
 
-                    var oh = halfedges[h];
-                    if (IsEncroached(h))
+                // Collect encroached half-edges.
+                for (int he = 0; he < constrainedHalfedges.Length; he++)
+                {
+                    if (constrainedHalfedges[he] && IsEncroached(he))
                     {
-                        heQueue.Add(h);
-                    }
-                    else if (oh != -1 && IsEncroached(oh))
-                    {
-                        heQueue.Add(oh);
+                        heQueue.Add(he);
                     }
                 }
 
@@ -1751,13 +1752,12 @@ namespace andywiecko.BurstTriangulator
                     p = (1 - alpha) * e0 + alpha * e1;
                 }
 
-                var edge = new Edge(i, j);
-                var pId = outputPositions.Length;
-                var eId = constraints.IndexOf(edge);
-
-                constraints.RemoveAt(eId);
-                constraints.Add((pId, i));
-                constraints.Add((pId, j));
+                constrainedHalfedges[he] = false;
+                var ohe = halfedges[he];
+                if (ohe != -1)
+                {
+                    constrainedHalfedges[ohe] = false;
+                }
 
                 if (halfedges[he] != -1)
                 {
@@ -1800,6 +1800,11 @@ namespace andywiecko.BurstTriangulator
                     {
                         heQueue.Add(ohj);
                     }
+
+                    constrainedHalfedges[hi] = true;
+                    constrainedHalfedges[ohi] = true;
+                    constrainedHalfedges[hj] = true;
+                    constrainedHalfedges[ohj] = true;
                 }
                 else
                 {
@@ -1819,6 +1824,9 @@ namespace andywiecko.BurstTriangulator
                     {
                         heQueue.Add(hj);
                     }
+
+                    constrainedHalfedges[hi] = true;
+                    constrainedHalfedges[hj] = true;
                 }
             }
 
@@ -1836,25 +1844,21 @@ namespace andywiecko.BurstTriangulator
                 var c = circles[tId];
                 var edges = new NativeList<int>(Allocator.Temp);
 
-                for (int id = 0; id < constraints.Length; id++)
+                for (int he = 0; he < constrainedHalfedges.Length; he++)
                 {
-                    var (ci, cj) = constraints[id];
-                    var h = -1;
-                    for (int he = 0; he < triangles.Length; he++)
+                    if (!constrainedHalfedges[he])
                     {
-                        var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
-                        (i, j) = i < j ? (i, j) : (j, i);
-                        if (ci == i && cj == j)
-                        {
-                            h = he;
-                            break;
-                        }
+                        continue;
                     }
 
-                    var (p0, p1) = (outputPositions[ci], outputPositions[cj]);
-                    if (math.dot(p0 - c.Center, p1 - c.Center) <= 0)
+                    var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
+                    if (halfedges[he] == -1 || i < j)
                     {
-                        edges.Add(h);
+                        var (p0, p1) = (outputPositions[i], outputPositions[j]);
+                        if (math.dot(p0 - c.Center, p1 - c.Center) <= 0)
+                        {
+                            edges.Add(he);
+                        }
                     }
                 }
 
@@ -1957,22 +1961,16 @@ namespace andywiecko.BurstTriangulator
             {
                 while (trianglesQueue.TryDequeue(out var tId))
                 {
-                    VisitEdge(p, 3 * tId + 0, 3 * tId + 1);
-                    VisitEdge(p, 3 * tId + 1, 3 * tId + 2);
-                    VisitEdge(p, 3 * tId + 2, 3 * tId + 0);
+                    VisitEdge(p, 3 * tId + 0);
+                    VisitEdge(p, 3 * tId + 1);
+                    VisitEdge(p, 3 * tId + 2);
                 }
             }
 
-            private void VisitEdge(float2 p, int t0, int t1)
+            private void VisitEdge(float2 p, int t0)
             {
-                var e = new Edge(triangles[t0], triangles[t1]);
-                if (constraints.Contains(e))
-                {
-                    return;
-                }
-
                 var he = halfedges[t0];
-                if (he == -1)
+                if (he == -1 || constrainedHalfedges[he])
                 {
                     return;
                 }
@@ -2078,6 +2076,9 @@ namespace andywiecko.BurstTriangulator
                     RemoveHalfedge(3 * tId + 2, 0);
                     RemoveHalfedge(3 * tId + 1, 1);
                     RemoveHalfedge(3 * tId + 0, 2);
+                    constrainedHalfedges.RemoveAt(3 * tId + 2);
+                    constrainedHalfedges.RemoveAt(3 * tId + 1);
+                    constrainedHalfedges.RemoveAt(3 * tId + 0);
 
                     for (int i = 3 * tId; i < halfedges.Length; i++)
                     {
@@ -2169,13 +2170,19 @@ namespace andywiecko.BurstTriangulator
                 // Build half-edges for inserted point pId.
                 var heOffset = halfedges.Length;
                 halfedges.Length += 3 * pathPoints.Length;
+                constrainedHalfedges.Length += 3 * pathPoints.Length;
                 for (int i = 0; i < pathPoints.Length - 1; i++)
                 {
                     var he = pathHalfedges[i];
-                    halfedges[3 * i + 1 + heOffset] = pathHalfedges[i];
+                    halfedges[3 * i + 1 + heOffset] = he;
                     if (he != -1)
                     {
-                        halfedges[pathHalfedges[i]] = 3 * i + 1 + heOffset;
+                        halfedges[he] = 3 * i + 1 + heOffset;
+                        constrainedHalfedges[3 * i + 1 + heOffset] = constrainedHalfedges[he];
+                    }
+                    else
+                    {
+                        constrainedHalfedges[3 * i + 1 + heOffset] = true;
                     }
                     halfedges[3 * i + 2 + heOffset] = 3 * i + 3 + heOffset;
                     halfedges[3 * i + 3 + heOffset] = 3 * i + 2 + heOffset;
@@ -2185,6 +2192,11 @@ namespace andywiecko.BurstTriangulator
                 if (phe != -1)
                 {
                     halfedges[phe] = heOffset + 3 * (pathPoints.Length - 1) + 1;
+                    constrainedHalfedges[heOffset + 3 * (pathPoints.Length - 1) + 1] = constrainedHalfedges[phe];
+                }
+                else
+                {
+                    constrainedHalfedges[heOffset + 3 * (pathPoints.Length - 1) + 1] = true;
                 }
                 halfedges[heOffset] = heOffset + 3 * (pathPoints.Length - 1) + 2;
                 halfedges[heOffset + 3 * (pathPoints.Length - 1) + 2] = heOffset;
@@ -2194,9 +2206,7 @@ namespace andywiecko.BurstTriangulator
                     for (int i = 0; i < pathPoints.Length - 1; i++)
                     {
                         var he = heOffset + 3 * i + 1;
-                        var edge = new Edge(triangles[he], triangles[NextHalfedge(he)]);
-
-                        if (constraints.Contains(edge) && IsEncroached(he))
+                        if (constrainedHalfedges[he] && IsEncroached(he))
                         {
                             heQueue.Add(he);
                         }
@@ -2225,13 +2235,19 @@ namespace andywiecko.BurstTriangulator
                 // Build half-edges for inserted point pId.
                 var heOffset = halfedges.Length;
                 halfedges.Length += 3 * (pathPoints.Length - 1);
+                constrainedHalfedges.Length += 3 * (pathPoints.Length - 1);
                 for (int i = 0; i < pathPoints.Length - 2; i++)
                 {
                     var he = pathHalfedges[i];
-                    halfedges[3 * i + 1 + heOffset] = pathHalfedges[i];
+                    halfedges[3 * i + 1 + heOffset] = he;
                     if (he != -1)
                     {
-                        halfedges[pathHalfedges[i]] = 3 * i + 1 + heOffset;
+                        halfedges[he] = 3 * i + 1 + heOffset;
+                        constrainedHalfedges[3 * i + 1 + heOffset] = constrainedHalfedges[he];
+                    }
+                    else
+                    {
+                        constrainedHalfedges[3 * i + 1 + heOffset] = true;
                     }
                     halfedges[3 * i + 2 + heOffset] = 3 * i + 3 + heOffset;
                     halfedges[3 * i + 3 + heOffset] = 3 * i + 2 + heOffset;
@@ -2242,6 +2258,11 @@ namespace andywiecko.BurstTriangulator
                 if (phe != -1)
                 {
                     halfedges[phe] = heOffset + 3 * (pathPoints.Length - 2) + 1;
+                    constrainedHalfedges[heOffset + 3 * (pathPoints.Length - 2) + 1] = constrainedHalfedges[phe];
+                }
+                else
+                {
+                    constrainedHalfedges[heOffset + 3 * (pathPoints.Length - 2) + 1] = true;
                 }
                 halfedges[heOffset] = -1;
                 halfedges[heOffset + 3 * (pathPoints.Length - 2) + 2] = -1;
@@ -2251,9 +2272,7 @@ namespace andywiecko.BurstTriangulator
                     for (int i = 0; i < pathPoints.Length - 1; i++)
                     {
                         var he = heOffset + 3 * i + 1;
-                        var edge = new Edge(triangles[he], triangles[NextHalfedge(he)]);
-
-                        if (constraints.Contains(edge) && IsEncroached(he))
+                        if (constrainedHalfedges[he] && IsEncroached(he))
                         {
                             heQueue.Add(he);
                         }
