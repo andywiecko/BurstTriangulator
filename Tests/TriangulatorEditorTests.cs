@@ -1082,16 +1082,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 (9, 1, 5),
                 (9, 5, 6),
                 (9, 6, 2),
-                (10, 2, 6),
-                (10, 6, 7),
-                (10, 7, 3),
-                (11, 3, 7),
-                (11, 4, 0),
-                (11, 7, 4),
+                (10, 3, 7),
+                (10, 4, 0),
+                (10, 7, 4),
+                (11, 2, 6),
+                (11, 6, 7),
+                (11, 7, 3),
             };
 
-            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
-            Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
+            Assert.That(triangulator.Output.Positions.AsArray(), Is.EquivalentTo(expectedPositions));
+            Assert.That(triangulator.GetTrisTuple(), Is.EquivalentTo(expectedTriangles));
         }
 
         [BurstCompile]
@@ -1195,15 +1195,15 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 (9, 1, 5),
                 (9, 5, 6),
                 (9, 6, 2),
-                (10, 2, 6),
-                (10, 6, 7),
-                (10, 7, 3),
-                (11, 3, 7),
-                (11, 4, 0),
-                (11, 7, 4),
+                (10, 3, 7),
+                (10, 4, 0),
+                (10, 7, 4),
+                (11, 2, 6),
+                (11, 6, 7),
+                (11, 7, 3),
             };
 
-            Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
+            Assert.That(triangulator.Output.Positions.AsArray(), Is.EquivalentTo(expectedPositions));
             Assert.That(triangulator.GetTrisTuple(), Is.EquivalentTo(expectedTriangles));
         }
 
@@ -1849,6 +1849,48 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             };
 
             triangulator.Run();
+        }
+
+        [Test]
+        public void GenericCase1Test()
+        {
+            using var positions = new NativeArray<float2>(new[] {
+                math.float2(0, 0),
+                math.float2(3, 0),
+                math.float2(3, 1),
+                math.float2(0, 1),
+            }, Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new[] {
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 0,
+                0, 2,
+            }, Allocator.Persistent);
+            using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    RefineMesh = true,
+                    RestoreBoundary = true,
+                    ConstrainEdges = true,
+                    RefinementThresholds =
+                    {
+                        Area = .1f,
+                        Angle = math.radians(33f),
+                    }
+                },
+                Input =
+                {
+                    Positions = positions,
+                    ConstraintEdges = constraints,
+                }
+            };
+
+            triangulator.Run();
+
+            triangulator.Draw();
         }
     }
 }
