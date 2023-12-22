@@ -1761,7 +1761,7 @@ namespace andywiecko.BurstTriangulator
 
                 if (halfedges[he] != -1)
                 {
-                    UnsafeInsertPoint(p, initTriangle: he / 3, heQueue, tQueue);
+                    UnsafeInsertPointBulk(p, initTriangle: he / 3, heQueue, tQueue);
 
                     var h0 = triangles.Length - 3;
                     var hi = -1;
@@ -1808,7 +1808,7 @@ namespace andywiecko.BurstTriangulator
                 }
                 else
                 {
-                    UnsafeSplitBoundary(p, initHe: he, heQueue, tQueue);
+                    UnsafeInsertPointBoundary(p, initHe: he, heQueue, tQueue);
 
                     //var h0 = triangles.Length - 3;
                     var id = 3 * (pathPoints.Length - 1);
@@ -1864,7 +1864,7 @@ namespace andywiecko.BurstTriangulator
 
                 if (edges.IsEmpty)
                 {
-                    UnsafeInsertPoint(c.Center, initTriangle: tId, heQueue, tQueue);
+                    UnsafeInsertPointBulk(c.Center, initTriangle: tId, heQueue, tQueue);
                 }
                 else
                 {
@@ -1906,7 +1906,7 @@ namespace andywiecko.BurstTriangulator
                 return math.any(math.abs(angles) < minimumAngle);
             }
 
-            private int UnsafeInsertPoint(float2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+            private int UnsafeInsertPointCommon(float2 p, int initTriangle)
             {
                 var pId = outputPositions.Length;
                 outputPositions.Add(p);
@@ -1923,38 +1923,24 @@ namespace andywiecko.BurstTriangulator
                 badTriangles.Add(initTriangle);
                 visitedTriangles[initTriangle] = true;
                 RecalculateBadTriangles(p);
-
-                BuildStarPolygon();
-                ProcessBadTriangles(pId, heQueue, tQueue);
-                BuildNewTriangles(pId, heQueue, tQueue);
 
                 return pId;
             }
 
-            private int UnsafeSplitBoundary(float2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+            private void UnsafeInsertPointBulk(float2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
             {
-                var pId = outputPositions.Length;
-                outputPositions.Add(p);
+                var pId = UnsafeInsertPointCommon(p, initTriangle);
+                BuildStarPolygon();
+                ProcessBadTriangles(heQueue, tQueue);
+                BuildNewTrianglesForStar(pId, heQueue, tQueue);
+            }
 
-                badTriangles.Clear();
-                trianglesQueue.Clear();
-                pathPoints.Clear();
-                pathHalfedges.Clear();
-
-                visitedTriangles.Clear();
-                visitedTriangles.Length = triangles.Length / 3;
-
-                var initTriangle = initHe / 3;
-                trianglesQueue.Enqueue(initTriangle);
-                badTriangles.Add(initTriangle);
-                visitedTriangles[initTriangle] = true;
-                RecalculateBadTriangles(p);
-
+            private void UnsafeInsertPointBoundary(float2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+            {
+                var pId = UnsafeInsertPointCommon(p, initHe / 3);
                 BuildAmphitheaterPolygon(initHe);
-                ProcessBadTriangles(pId, heQueue, tQueue);
+                ProcessBadTriangles(heQueue, tQueue);
                 BuildNewTrianglesForAmphitheater(pId, heQueue, tQueue);
-
-                return pId;
             }
 
             private void RecalculateBadTriangles(float2 p)
@@ -2062,7 +2048,7 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private void ProcessBadTriangles(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
+            private void ProcessBadTriangles(NativeList<int> heQueue, NativeList<int> tQueue)
             {
                 // Remove bad triangles and recalculate polygon path halfedges.
                 badTriangles.Sort();
@@ -2149,7 +2135,7 @@ namespace andywiecko.BurstTriangulator
                 halfedges.RemoveAt(he);
             }
 
-            private void BuildNewTriangles(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
+            private void BuildNewTrianglesForStar(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
             {
                 // Build triangles/circles for inserted point pId.
                 var initTriangles = triangles.Length;
