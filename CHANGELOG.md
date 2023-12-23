@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
-## [2.3.0] - 2023-10-25
+## [2.4.0] – 2023-12-23
+
+### Added
+
+- Introduce `ConcentricShellParameter` in `TriangulationSettings`, serving as a constant for *concentric shells* segment splitting.
+- Add `RefinementThresholds` in `TriangulationSettings`, including `.Area` and `.Angle`. Previous corresponding parameters are marked with obsolete.
+
+### Changed
+
+- Enhance triangulation refinement for improved quality and performance. Replace the previous algorithm with a new one, similar to Shewchuk's *terminator* algorithm. The refined mesh now exhibits non-uniform triangle density, with increased density near boundaries and decreased density in the mesh bulk.
+- Update `README.md` to include a comparison between different refinement settings.
+- Remove the super-triangle approach (resulting in a slight performance boost). Perform refinement after removing holes and boundaries for better refinement quality.
+
+### Deprecated
+
+- Mark `MinimumArea`, `MaximumArea`, and `MinimumAngle` as obsolete. Replace these parameters with the more versatile `RefinementThresholds`.
+
+## [2.3.0] – 2023-10-25
 
 ### Changed
 
@@ -136,6 +153,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 - Initial release version
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
+[2.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.4.0
 [2.3.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.3.0
 [2.2.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.2.0
 [2.1.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.1.0
