@@ -146,8 +146,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             new((area: 0.0500f, N: 100)),
             new((area: 0.0100f, N: 100)),
             new((area: 0.0050f, N: 100)),
+            new((area: 0.0030f, N: 100)),
             new((area: 0.0010f, N: 100)),
+            new((area: 0.0007f, N: 010)),
             new((area: 0.0005f, N: 010)),
+            new((area: 0.0004f, N: 010)),
             new((area: 0.0003f, N: 010)),
             new((area: 0.0002f, N: 005)),
         };
