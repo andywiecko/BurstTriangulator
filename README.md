@@ -38,6 +38,7 @@ As an illustrative example, we present the triangulation of Lake Superior with v
       - [PCA transformation](#pca-transformation)
   - [Benchmark](#benchmark)
   - [Dependencies](#dependencies)
+  - [Known Issues](#known-issues)
   - [Roadmap v3.0](#roadmap-v30)
   - [Bibliography](#bibliography)
 
@@ -449,6 +450,16 @@ Furthermore, we present a performance comparison (with Burst enabled) between `v
 
 - [`Unity.Burst`][burst]
 - [`Unity.Collections`][collections]
+
+## Known Issues
+
+- (#103) In the Unity Editor, you may encounter the following log message:
+
+```plaintext
+Leak Detected : Persistent allocates 257 individual allocations. To find out more please enable 'Jobs/LeakDetection/Full StackTraces' and reproduce the leak again.
+```
+
+Not to worry, this issue is likely related to an internal bug in the `Unity.Collections` or `Unity.Burst` package (related to `NativeQueue<>` allocation).
 
 ## Roadmap v3.0
 
