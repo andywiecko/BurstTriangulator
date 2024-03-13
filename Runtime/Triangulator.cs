@@ -22,6 +22,7 @@ namespace andywiecko.BurstTriangulator
         public float2 scale;
 
         public static readonly RigidTransform2D identity = new RigidTransform2D { com = float2.zero, scale = 1 };
+        public RigidTransform2D inverse => new RigidTransform2D { com = -com / scale, scale = 1 / scale };
     }
 
     public class Triangulator : IDisposable
@@ -187,18 +188,20 @@ namespace andywiecko.BurstTriangulator
             public NativeArray<float2> HoleSeeds { get; set; }
         }
 
-        public class OutputData
+        public struct OutputData
         {
-            public NativeList<float2> Positions => owner.outputPositions;
-            public NativeList<int> Triangles => owner.triangles;
-            public NativeReference<Status> Status => owner.status;
-            private readonly Triangulator owner;
-            public OutputData(Triangulator triangulator) => owner = triangulator;
+            public NativeList<float2> Positions;
+            public NativeList<int> Triangles;
+            public NativeReference<Status> Status;
         }
 
         public TriangulationSettings Settings { get; } = new();
         public InputData Input { get; set; } = new();
-        public OutputData Output { get; }
+        public OutputData Output => new OutputData {
+            Positions = outputPositions,
+            Triangles = triangles,
+            Status = status,
+        };
 
         private NativeList<float2> outputPositions;
         private NativeList<int> triangles;
@@ -227,8 +230,8 @@ namespace andywiecko.BurstTriangulator
             localHoleSeeds = new(capacity, allocator);
             localTransformation = new(allocator);
             pcaTransformation = new(allocator);
-            Output = new(this);
         }
+
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
 
         public void Dispose()
@@ -292,7 +295,7 @@ namespace andywiecko.BurstTriangulator
             dependencies = new PCATransformationJob(this).Schedule(dependencies);
             if (tmpInputHoleSeeds.IsCreated)
             {
-                dependencies = new PCATransformationHolesJob(this).Schedule(dependencies);
+                dependencies = new ApplyPCATransformationJob(this).Schedule(dependencies);
             }
             return dependencies;
         }
@@ -323,10 +326,14 @@ namespace andywiecko.BurstTriangulator
                 Input.HoleSeeds = localHoleSeeds.AsDeferredJobArray();
             }
 
-            dependencies = new InitialLocalTransformationJob(this).Schedule(dependencies);
+            dependencies = new CalculateLocalTransformationJob(this).Schedule(dependencies);
             if (tmpInputHoleSeeds.IsCreated)
             {
-                dependencies = new CalculateLocalHoleSeedsJob(this).Schedule(dependencies);
+                dependencies = new ApplyLocalTransformJob() {
+                    inputPositions = this.tmpInputHoleSeeds,
+                    outputPositions = this.localHoleSeeds,
+                    transformRef = this.localTransformation.AsReadOnly(),
+                }.Schedule(dependencies);
             }
             dependencies = new CalculateLocalPositionsJob(this).Schedule(this, dependencies);
 
@@ -335,7 +342,10 @@ namespace andywiecko.BurstTriangulator
 
         private JobHandle ScheduleLocalToWorldTransformation(JobHandle dependencies)
         {
-            dependencies = new LocalToWorldTransformationJob(this).Schedule(this, dependencies);
+            dependencies = new ApplyInverseRigidTransformInPlaceJob() {
+                positions = this.Output.Positions.AsDeferredJobArray(),
+                transformRef = this.localTransformation.AsReadOnly(),
+            }.Schedule(this, dependencies);
 
             Input.Positions = tmpInputPositions;
             tmpInputPositions = default;
@@ -469,18 +479,18 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
-        private struct PCATransformationHolesJob : IJob
+        private struct ApplyPCATransformationJob : IJob
         {
             [ReadOnly]
-            private NativeArray<float2> holeSeeds;
-            private NativeList<float2> localHoleSeeds;
+            private NativeArray<float2> inputPositions;
+            private NativeList<float2> outputPositions;
             private NativeReference<RigidTransform2D>.ReadOnly transformationRef;
             private NativeReference<PCATransformation>.ReadOnly pcaTransformationRef;
 
-            public PCATransformationHolesJob(Triangulator triangulator)
+            public ApplyPCATransformationJob(Triangulator triangulator)
             {
-                holeSeeds = triangulator.tmpInputHoleSeeds;
-                localHoleSeeds = triangulator.localHoleSeeds;
+                inputPositions = triangulator.tmpInputHoleSeeds;
+                outputPositions = triangulator.localHoleSeeds;
                 transformationRef = triangulator.localTransformation.AsReadOnly();
                 pcaTransformationRef = triangulator.pcaTransformation.AsReadOnly();
             }
@@ -495,11 +505,11 @@ namespace andywiecko.BurstTriangulator
                 // Taking the transpose of a rotation matrix is equivalent to taking the inverse.
                 var inverseRotation = math.transpose(rotation);
 
-                localHoleSeeds.Resize(holeSeeds.Length, NativeArrayOptions.UninitializedMemory);
-                for (int i = 0; i < holeSeeds.Length; i++)
+                outputPositions.Resize(inputPositions.Length, NativeArrayOptions.UninitializedMemory);
+                for (int i = 0; i < inputPositions.Length; i++)
                 {
-                    var h = holeSeeds[i];
-                    localHoleSeeds[i] = s * (math.mul(inverseRotation, h - com) - c);
+                    var h = inputPositions[i];
+                    outputPositions[i] = s * (math.mul(inverseRotation, h - com) - c);
                 }
             }
         }
@@ -536,7 +546,7 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
-        private struct InitialLocalTransformationJob : IJob
+        private struct CalculateLocalTransformationJob : IJob
         {
             [ReadOnly]
             private NativeArray<float2> positions;
@@ -544,7 +554,7 @@ namespace andywiecko.BurstTriangulator
 
             private NativeList<float2> localPositions;
 
-            public InitialLocalTransformationJob(Triangulator triangulator)
+            public CalculateLocalTransformationJob(Triangulator triangulator)
             {
                 positions = triangulator.tmpInputPositions;
                 transformationRef = triangulator.localTransformation;
@@ -572,29 +582,22 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
-        private struct CalculateLocalHoleSeedsJob : IJob
+        private struct ApplyLocalTransformJob : IJob
         {
             [ReadOnly]
-            private NativeArray<float2> holeSeeds;
-            private NativeList<float2> localHoleSeeds;
-            private NativeReference<RigidTransform2D>.ReadOnly transformRef;
-
-            public CalculateLocalHoleSeedsJob(Triangulator triangulator)
-            {
-                holeSeeds = triangulator.tmpInputHoleSeeds;
-                localHoleSeeds = triangulator.localHoleSeeds;
-                transformRef = triangulator.localTransformation.AsReadOnly();
-            }
+            public NativeArray<float2> inputPositions;
+            public NativeList<float2> outputPositions;
+            public NativeReference<RigidTransform2D>.ReadOnly transformRef;
 
             public void Execute()
             {
                 var com = transformRef.Value.com;
                 var s = transformRef.Value.scale;
 
-                localHoleSeeds.Resize(holeSeeds.Length, NativeArrayOptions.UninitializedMemory);
-                for (int i = 0; i < holeSeeds.Length; i++)
+                outputPositions.Resize(inputPositions.Length, NativeArrayOptions.UninitializedMemory);
+                for (int i = 0; i < inputPositions.Length; i++)
                 {
-                    localHoleSeeds[i] = s * (holeSeeds[i] - com);
+                    outputPositions[i] = s * (inputPositions[i] - com);
                 }
             }
         }
@@ -629,16 +632,10 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
-        private struct LocalToWorldTransformationJob : IJobParallelForDefer
+        private struct ApplyInverseRigidTransformInPlaceJob : IJobParallelForDefer
         {
-            private NativeArray<float2> positions;
-            private NativeReference<RigidTransform2D>.ReadOnly transformRef;
-
-            public LocalToWorldTransformationJob(Triangulator triangulator)
-            {
-                positions = triangulator.Output.Positions.AsDeferredJobArray();
-                transformRef = triangulator.localTransformation.AsReadOnly();
-            }
+            public NativeArray<float2> positions;
+            public NativeReference<RigidTransform2D>.ReadOnly transformRef;
 
             public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
             {
