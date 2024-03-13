@@ -10,6 +10,20 @@ using UnityEngine;
 
 namespace andywiecko.BurstTriangulator
 {
+    struct PCATransformation {
+        public float2 center;
+        public float2x2 rotation;
+
+        public static readonly PCATransformation identity = new PCATransformation { center = 0, rotation = float2x2.identity };
+    }
+
+    public struct RigidTransform2D {
+        public float2 com;
+        public float2 scale;
+
+        public static readonly RigidTransform2D identity = new RigidTransform2D { com = float2.zero, scale = 1 };
+    }
+
     public class Triangulator : IDisposable
     {
         #region Primitives
@@ -121,7 +135,7 @@ namespace andywiecko.BurstTriangulator
             [Obsolete]
             public float MaximumArea { get => RefinementThresholds.Area; set => RefinementThresholds.Area = value; }
             /// <summary>
-            /// If <see langword="true"/> refines mesh using 
+            /// If <see langword="true"/> refines mesh using
             /// <see href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</see>.
             /// </summary>
             [field: SerializeField]
@@ -135,9 +149,9 @@ namespace andywiecko.BurstTriangulator
             public bool ConstrainEdges { get; set; } = false;
             /// <summary>
             /// If is set to <see langword="true"/>, the provided data will be validated before running the triangulation procedure.
-            /// Input positions, as well as input constraints, have a few restrictions, 
+            /// Input positions, as well as input constraints, have a few restrictions,
             /// see <seealso href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md">README.md</seealso> for more details.
-            /// If one of the conditions fails, then triangulation will not be calculated. 
+            /// If one of the conditions fails, then triangulation will not be calculated.
             /// One could catch this as an error by using <see cref="OutputData.Status"/> (native, can be used in jobs).
             /// </summary>
             [field: SerializeField]
@@ -148,7 +162,7 @@ namespace andywiecko.BurstTriangulator
             [field: SerializeField]
             public bool RestoreBoundary { get; set; } = false;
             /// <summary>
-            /// Max iteration count during Sloan's algorithm (constraining edges). 
+            /// Max iteration count during Sloan's algorithm (constraining edges).
             /// <b>Modify this only if you know what you are doing.</b>
             /// </summary>
             [field: SerializeField]
@@ -197,10 +211,8 @@ namespace andywiecko.BurstTriangulator
         private NativeArray<float2> tmpInputHoleSeeds;
         private NativeList<float2> localPositions;
         private NativeList<float2> localHoleSeeds;
-        private NativeReference<float2> com;
-        private NativeReference<float2> scale;
-        private NativeReference<float2> pcaCenter;
-        private NativeReference<float2x2> pcaMatrix;
+        private NativeReference<RigidTransform2D> localTransformation;
+        private NativeReference<PCATransformation> pcaTransformation;
 
         public Triangulator(int capacity, Allocator allocator)
         {
@@ -213,10 +225,8 @@ namespace andywiecko.BurstTriangulator
 
             localPositions = new(capacity, allocator);
             localHoleSeeds = new(capacity, allocator);
-            com = new(allocator);
-            scale = new(1, allocator);
-            pcaCenter = new(allocator);
-            pcaMatrix = new(float2x2.identity, allocator);
+            localTransformation = new(allocator);
+            pcaTransformation = new(allocator);
             Output = new(this);
         }
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
@@ -232,10 +242,8 @@ namespace andywiecko.BurstTriangulator
 
             localPositions.Dispose();
             localHoleSeeds.Dispose();
-            com.Dispose();
-            scale.Dispose();
-            pcaCenter.Dispose();
-            pcaMatrix.Dispose();
+            localTransformation.Dispose();
+            pcaTransformation.Dispose();
         }
 
         public void Run() => Schedule().Complete();
@@ -400,20 +408,16 @@ namespace andywiecko.BurstTriangulator
         {
             [ReadOnly]
             private NativeArray<float2> positions;
-            private NativeReference<float2> scaleRef;
-            private NativeReference<float2> comRef;
-            private NativeReference<float2> cRef;
-            private NativeReference<float2x2> URef;
+            private NativeReference<PCATransformation> pcaTransformationRef;
+            private NativeReference<RigidTransform2D> transformationRef;
 
             private NativeList<float2> localPositions;
 
             public PCATransformationJob(Triangulator triangulator)
             {
                 positions = triangulator.tmpInputPositions;
-                scaleRef = triangulator.scale;
-                comRef = triangulator.com;
-                cRef = triangulator.pcaCenter;
-                URef = triangulator.pcaMatrix;
+                transformationRef = triangulator.localTransformation;
+                pcaTransformationRef = triangulator.pcaTransformation;
                 localPositions = triangulator.localPositions;
             }
 
@@ -427,7 +431,6 @@ namespace andywiecko.BurstTriangulator
                     com += p;
                 }
                 com /= n;
-                comRef.Value = com;
 
                 var cov = float2x2.zero;
                 foreach (var p in positions)
@@ -439,7 +442,6 @@ namespace andywiecko.BurstTriangulator
                 cov /= n;
 
                 Eigen(cov, out _, out var U);
-                URef.Value = U;
                 for (int i = 0; i < n; i++)
                 {
                     localPositions[i] = math.mul(math.transpose(U), localPositions[i]);
@@ -452,8 +454,11 @@ namespace andywiecko.BurstTriangulator
                     min = math.min(p, min);
                     max = math.max(p, max);
                 }
-                var c = cRef.Value = 0.5f * (min + max);
-                var s = scaleRef.Value = 2f / (max - min);
+                var c = 0.5f * (min + max);
+                var s = 2f / (max - min);
+
+                transformationRef.Value = new RigidTransform2D { com = com, scale = s };
+                pcaTransformationRef.Value = new PCATransformation { center = c, rotation = U };
 
                 for (int i = 0; i < n; i++)
                 {
@@ -469,34 +474,32 @@ namespace andywiecko.BurstTriangulator
             [ReadOnly]
             private NativeArray<float2> holeSeeds;
             private NativeList<float2> localHoleSeeds;
-            private NativeReference<float2>.ReadOnly scaleRef;
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly cRef;
-            private NativeReference<float2x2>.ReadOnly URef;
+            private NativeReference<RigidTransform2D>.ReadOnly transformationRef;
+            private NativeReference<PCATransformation>.ReadOnly pcaTransformationRef;
 
             public PCATransformationHolesJob(Triangulator triangulator)
             {
                 holeSeeds = triangulator.tmpInputHoleSeeds;
                 localHoleSeeds = triangulator.localHoleSeeds;
-                scaleRef = triangulator.scale.AsReadOnly();
-                comRef = triangulator.com.AsReadOnly();
-                cRef = triangulator.pcaCenter.AsReadOnly();
-                URef = triangulator.pcaMatrix.AsReadOnly();
+                transformationRef = triangulator.localTransformation.AsReadOnly();
+                pcaTransformationRef = triangulator.pcaTransformation.AsReadOnly();
             }
 
             public void Execute()
             {
-                var com = comRef.Value;
-                var s = scaleRef.Value;
-                var c = cRef.Value;
-                var U = URef.Value;
-                var UT = math.transpose(U);
+                var com = transformationRef.Value.com;
+                var s = transformationRef.Value.scale;
+                var c = pcaTransformationRef.Value.center;
+                var rotation = pcaTransformationRef.Value.rotation;
+
+                // Taking the transpose of a rotation matrix is equivalent to taking the inverse.
+                var inverseRotation = math.transpose(rotation);
 
                 localHoleSeeds.Resize(holeSeeds.Length, NativeArrayOptions.UninitializedMemory);
                 for (int i = 0; i < holeSeeds.Length; i++)
                 {
                     var h = holeSeeds[i];
-                    localHoleSeeds[i] = s * (math.mul(UT, h - com) - c);
+                    localHoleSeeds[i] = s * (math.mul(inverseRotation, h - com) - c);
                 }
             }
         }
@@ -505,18 +508,15 @@ namespace andywiecko.BurstTriangulator
         private struct PCAInverseTransformationJob : IJobParallelForDefer
         {
             private NativeArray<float2> positions;
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly scaleRef;
-            private NativeReference<float2>.ReadOnly cRef;
-            private NativeReference<float2x2>.ReadOnly URef;
+
+            private NativeReference<RigidTransform2D>.ReadOnly transformationRef;
+            private NativeReference<PCATransformation>.ReadOnly pcaTransformationRef;
 
             public PCAInverseTransformationJob(Triangulator triangulator)
             {
                 positions = triangulator.Output.Positions.AsDeferredJobArray();
-                comRef = triangulator.com.AsReadOnly();
-                scaleRef = triangulator.scale.AsReadOnly();
-                cRef = triangulator.pcaCenter.AsReadOnly();
-                URef = triangulator.pcaMatrix.AsReadOnly();
+                transformationRef = triangulator.localTransformation.AsReadOnly();
+                pcaTransformationRef = triangulator.pcaTransformation.AsReadOnly();
             }
 
             public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
@@ -527,10 +527,10 @@ namespace andywiecko.BurstTriangulator
             public void Execute(int i)
             {
                 var p = positions[i];
-                var com = comRef.Value;
-                var s = scaleRef.Value;
-                var c = cRef.Value;
-                var U = URef.Value;
+                var com = transformationRef.Value.com;
+                var s = transformationRef.Value.scale;
+                var c = pcaTransformationRef.Value.center;
+                var U = pcaTransformationRef.Value.rotation;
                 positions[i] = math.mul(U, p / s + c) + com;
             }
         }
@@ -540,15 +540,14 @@ namespace andywiecko.BurstTriangulator
         {
             [ReadOnly]
             private NativeArray<float2> positions;
-            private NativeReference<float2> comRef;
-            private NativeReference<float2> scaleRef;
+            private NativeReference<RigidTransform2D> transformationRef;
+
             private NativeList<float2> localPositions;
 
             public InitialLocalTransformationJob(Triangulator triangulator)
             {
                 positions = triangulator.tmpInputPositions;
-                comRef = triangulator.com;
-                scaleRef = triangulator.scale;
+                transformationRef = triangulator.localTransformation;
                 localPositions = triangulator.localPositions;
             }
 
@@ -563,8 +562,10 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 com /= positions.Length;
-                comRef.Value = com;
-                scaleRef.Value = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
+                transformationRef.Value = new RigidTransform2D {
+                    com = com,
+                    scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com))),
+                };
 
                 localPositions.Resize(positions.Length, NativeArrayOptions.UninitializedMemory);
             }
@@ -576,21 +577,19 @@ namespace andywiecko.BurstTriangulator
             [ReadOnly]
             private NativeArray<float2> holeSeeds;
             private NativeList<float2> localHoleSeeds;
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly scaleRef;
+            private NativeReference<RigidTransform2D>.ReadOnly transformRef;
 
             public CalculateLocalHoleSeedsJob(Triangulator triangulator)
             {
                 holeSeeds = triangulator.tmpInputHoleSeeds;
                 localHoleSeeds = triangulator.localHoleSeeds;
-                comRef = triangulator.com.AsReadOnly();
-                scaleRef = triangulator.scale.AsReadOnly();
+                transformRef = triangulator.localTransformation.AsReadOnly();
             }
 
             public void Execute()
             {
-                var com = comRef.Value;
-                var s = scaleRef.Value;
+                var com = transformRef.Value.com;
+                var s = transformRef.Value.scale;
 
                 localHoleSeeds.Resize(holeSeeds.Length, NativeArrayOptions.UninitializedMemory);
                 for (int i = 0; i < holeSeeds.Length; i++)
@@ -603,18 +602,16 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct CalculateLocalPositionsJob : IJobParallelForDefer
         {
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly scaleRef;
+            private NativeReference<RigidTransform2D>.ReadOnly transformRef;
             private NativeArray<float2> localPositions;
             [ReadOnly]
             private NativeArray<float2> positions;
 
             public CalculateLocalPositionsJob(Triangulator triangulator)
             {
-                comRef = triangulator.com.AsReadOnly();
-                scaleRef = triangulator.scale.AsReadOnly();
                 localPositions = triangulator.localPositions.AsDeferredJobArray();
                 positions = triangulator.tmpInputPositions;
+                transformRef = triangulator.localTransformation.AsReadOnly();
             }
 
             public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
@@ -625,8 +622,8 @@ namespace andywiecko.BurstTriangulator
             public void Execute(int i)
             {
                 var p = positions[i];
-                var com = comRef.Value;
-                var s = scaleRef.Value;
+                var com = transformRef.Value.com;
+                var s = transformRef.Value.scale;
                 localPositions[i] = s * (p - com);
             }
         }
@@ -635,14 +632,12 @@ namespace andywiecko.BurstTriangulator
         private struct LocalToWorldTransformationJob : IJobParallelForDefer
         {
             private NativeArray<float2> positions;
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly scaleRef;
+            private NativeReference<RigidTransform2D>.ReadOnly transformRef;
 
             public LocalToWorldTransformationJob(Triangulator triangulator)
             {
                 positions = triangulator.Output.Positions.AsDeferredJobArray();
-                comRef = triangulator.com.AsReadOnly();
-                scaleRef = triangulator.scale.AsReadOnly();
+                transformRef = triangulator.localTransformation.AsReadOnly();
             }
 
             public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
@@ -653,8 +648,8 @@ namespace andywiecko.BurstTriangulator
             public void Execute(int i)
             {
                 var p = positions[i];
-                var com = comRef.Value;
-                var s = scaleRef.Value;
+                var com = transformRef.Value.com;
+                var s = transformRef.Value.scale;
                 positions[i] = p / s + com;
             }
         }
@@ -662,10 +657,8 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct ClearDataJob : IJob
         {
-            private NativeReference<float2> scaleRef;
-            private NativeReference<float2> comRef;
-            private NativeReference<float2> cRef;
-            private NativeReference<float2x2> URef;
+            private NativeReference<RigidTransform2D> transformRef;
+            private NativeReference<PCATransformation> pcaTransformationRef;
             private NativeList<float2> outputPositions;
             private NativeList<int> triangles;
             private NativeList<int> halfedges;
@@ -682,10 +675,8 @@ namespace andywiecko.BurstTriangulator
                 constraintEdges = triangulator.constraintEdges;
 
                 status = triangulator.status;
-                scaleRef = triangulator.scale;
-                comRef = triangulator.com;
-                cRef = triangulator.pcaCenter;
-                URef = triangulator.pcaMatrix;
+                transformRef = triangulator.localTransformation;
+                pcaTransformationRef = triangulator.pcaTransformation;
             }
             public void Execute()
             {
@@ -696,10 +687,8 @@ namespace andywiecko.BurstTriangulator
                 constraintEdges.Clear();
 
                 status.Value = Status.OK;
-                scaleRef.Value = 1;
-                comRef.Value = 0;
-                cRef.Value = 0;
-                URef.Value = float2x2.identity;
+                transformRef.Value = RigidTransform2D.identity;
+                pcaTransformationRef.Value = PCATransformation.identity;
             }
         }
 
@@ -1542,7 +1531,7 @@ namespace andywiecko.BurstTriangulator
             private readonly float maximumArea2;
             private readonly float minimumAngle;
             private readonly float D;
-            private NativeReference<float2>.ReadOnly scaleRef;
+            private NativeReference<RigidTransform2D>.ReadOnly transformationRef;
             private NativeReference<Status>.ReadOnly status;
             private NativeList<int> triangles;
             private NativeList<float2> outputPositions;
@@ -1570,7 +1559,7 @@ namespace andywiecko.BurstTriangulator
                 maximumArea2 = 2 * triangulator.Settings.RefinementThresholds.Area;
                 minimumAngle = triangulator.Settings.RefinementThresholds.Angle;
                 D = triangulator.Settings.ConcentricShellsParameter;
-                scaleRef = triangulator.scale.AsReadOnly();
+                transformationRef = triangulator.localTransformation.AsReadOnly();
 
                 status = triangulator.status.AsReadOnly();
                 triangles = triangulator.triangles;
@@ -1821,7 +1810,7 @@ namespace andywiecko.BurstTriangulator
             private bool IsBadTriangle(int tId)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                var s = scaleRef.Value;
+                var s = transformationRef.Value.scale;
                 var area2 = Area2(i, j, k, outputPositions.AsArray());
                 return area2 > maximumArea2 * s.x * s.y || AngleIsTooSmall(tId, minimumAngle);
             }
@@ -1855,7 +1844,7 @@ namespace andywiecko.BurstTriangulator
                 }
                 else
                 {
-                    var s = scaleRef.Value;
+                    var s = transformationRef.Value.scale;
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     var area2 = Area2(i, j, k, outputPositions.AsArray());
                     if (area2 > maximumArea2 * s.x * s.y) // TODO split permited
