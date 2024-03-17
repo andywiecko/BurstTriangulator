@@ -41,7 +41,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ValidateInput = false,
                     RefineMesh = true,
                     RestoreBoundary = true,
-                    ConstrainEdges = true,
                     RefinementThresholds =
                     {
                         Area = area,

@@ -58,7 +58,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Input = { Positions = positions },
                 Settings = {
                     RefineMesh = false,
-                    ConstrainEdges = false,
                     RestoreBoundary = false,
                     ValidateInput = false,
                 },
@@ -115,7 +114,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Input = { Positions = positions, ConstraintEdges = constraintEdges },
                 Settings = {
                     RefineMesh = false,
-                    ConstrainEdges = true,
                     RestoreBoundary = false,
                     ValidateInput = false
                 },
@@ -175,7 +173,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Input = { Positions = points },
                 Settings = {
                     RefineMesh = true,
-                    ConstrainEdges = false,
                     RestoreBoundary = false,
                     ValidateInput = false,
                     RefinementThresholds = { Area = area },

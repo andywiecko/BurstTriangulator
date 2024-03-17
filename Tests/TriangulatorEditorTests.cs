@@ -360,7 +360,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 Settings =
                 {
-                    ConstrainEdges = true,
                     RefineMesh = false
                 },
                 Input =
@@ -479,7 +478,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 Settings =
                 {
-                    ConstrainEdges = true,
                     RefineMesh = false
                 },
                 Input =
@@ -650,7 +648,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 Settings =
                 {
-                    ConstrainEdges = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
                     RefinementThresholds = { Area = 10.3f, Angle = 0 },
@@ -709,7 +706,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 Settings =
                 {
-                    ConstrainEdges = true,
                     RefineMesh = false,
                     RestoreBoundary = true,
                 },
@@ -768,7 +764,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 Settings =
                 {
-                    ConstrainEdges = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
                     RefinementThresholds = { Area = 0.25f }
@@ -989,7 +984,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 Settings =
                 {
-                    ConstrainEdges = true,
                     RefineMesh = false,
                     RestoreBoundary = true,
                 },
@@ -1052,7 +1046,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 Settings =
                 {
-                    ConstrainEdges = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
                     RefinementThresholds = { Area = 1.0f },
@@ -1149,7 +1142,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Settings =
                 {
                     ValidateInput = true,
-                    ConstrainEdges = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
                     RefinementThresholds = { Area = 1.0f },
@@ -1225,7 +1217,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Settings =
                 {
                     ValidateInput = true,
-                    ConstrainEdges = true,
                     RefineMesh = false,
                     RestoreBoundary = false,
                 },
@@ -1265,7 +1256,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Settings =
                 {
                     ValidateInput = true,
-                    ConstrainEdges = false,
                     RefineMesh = true,
                     RestoreBoundary = false,
                     RefinementThresholds = { Area = 0.0005f },
@@ -1326,7 +1316,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Settings =
                 {
                     ValidateInput = true,
-                    ConstrainEdges = true,
                     RefineMesh = false,
                     RestoreBoundary = true,
                 },
@@ -1415,7 +1404,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Settings =
                 {
                     RefineMesh = false,
-                    ConstrainEdges = true,
                     RestoreBoundary = true,
                     SloanMaxIters = 5,
                 },
@@ -1448,7 +1436,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Settings =
                 {
                     RefineMesh = false,
-                    ConstrainEdges = false,
                     RestoreBoundary = true,
                     Preprocessor = Triangulator.Preprocessor.PCA
                 }
@@ -1479,7 +1466,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 {
                     RefinementThresholds = { Area = 0.01f },
                     RefineMesh = true,
-                    ConstrainEdges = false,
                     RestoreBoundary = true,
                     Preprocessor = Triangulator.Preprocessor.PCA
                 }
@@ -1532,7 +1518,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 {
                     ValidateInput = true,
                     RefineMesh = false,
-                    ConstrainEdges = true,
                     RestoreBoundary = true,
                     Preprocessor = Triangulator.Preprocessor.PCA
                 }
@@ -1617,7 +1602,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 {
                     ValidateInput = true,
                     RefineMesh = false,
-                    ConstrainEdges = true,
                     RestoreBoundary = true,
                     Preprocessor = Triangulator.Preprocessor.PCA
                 }
@@ -1721,7 +1705,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
                     ValidateInput = true,
                     RefineMesh = true,
-                    ConstrainEdges = true,
                     RestoreBoundary = true,
                     Preprocessor = Triangulator.Preprocessor.PCA
                 }
@@ -1756,7 +1739,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Input = { Positions = positions, ConstraintEdges = constraintEdges, HoleSeeds = holes },
                 Settings = {
                     RefineMesh = true,
-                    ConstrainEdges = true,
                     RestoreBoundary = false,
                     RefinementThresholds = { Area = 1f },
                 },
@@ -1789,7 +1771,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ValidateInput = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
-                    ConstrainEdges = false,
                     RefinementThresholds =
                     {
                         Area = .10f,
@@ -1807,7 +1788,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             var trianglesWithConstraints = triangulator.GetTrisTuple();
 
-            triangulator.Settings.ConstrainEdges = false;
+            triangulator.Input.ConstraintEdges = default;
             triangulator.Run();
             var trianglesWithoutConstraints = triangulator.GetTrisTuple();
 
@@ -1834,7 +1815,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ValidateInput = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
-                    ConstrainEdges = true,
                     RefinementThresholds =
                     {
                         Area = 1f,
@@ -1874,7 +1854,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     ValidateInput = true,
                     RefineMesh = true,
                     RestoreBoundary = true,
-                    ConstrainEdges = true,
                     RefinementThresholds =
                     {
                         Area = .1f,

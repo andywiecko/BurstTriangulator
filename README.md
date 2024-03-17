@@ -130,8 +130,6 @@ using var triangulator = new Triangulator(1024, Allocator.Persistent)
     BatchCount = 64,
     // If true refines mesh using Ruppert's algorithm.
     RefineMesh = true,
-    // If true constrains edges defined in the Triangulator.Input.ConstraintEdges
-    ConstrainEdges = false,
     // If true the mesh boundary is restored using Input constraint edges.
     RestoreBoundary = false,
     // If true and provided Triangulator.Input is not valid, it will throw an exception.
@@ -264,9 +262,6 @@ using var triangulator = new Triangulator(Allocator.Persistent)
     Positions = positions,
     ConstraintEdges = constraintEdges,
   },
-  Settings = {
-    ConstrainEdges = true,
-  }
 };
 
 triangulator.Schedule().Complete();
@@ -274,7 +269,7 @@ triangulator.Schedule().Complete();
 var triangles = triangulator.Output.Triangles;
 ```
 
-After enabling `Settings.ConstrainEdges = true` and providing the corresponding input, the result of the constrained triangulation fully covers all specified edges by the user
+After providing the corresponding input for the constraints, the result of the constrained triangulation fully covers all specified edges by the user
 
 ![guitar-light-cdt](Documentation~/guitar/guitar-light-cdt.svg#gh-light-mode-only)
 ![guitar-dark-cdt](Documentation~/guitar/guitar-dark-cdt.svg#gh-dark-mode-only)
@@ -286,7 +281,6 @@ by enabling corresponding options in triangulation settings:
 
 ```csharp
 triangulator.Settings.RefineMesh = true;
-triangulator.Settings.ConstrainEdges = true;
 ```
 
 After enabling the refinement and the constraint and providing the input, the result of the constrained triangulation fully covers all specified edges by the user and the mesh is refined with the given refinement conditions.
@@ -301,7 +295,6 @@ One has to enable corresponding options and provide the constraints
 
 ```csharp
 settings.RestoreBoundary = true;
-settings.ConstraintEdges = true;
 ```
 
 The package provides also an option for creating holes.
@@ -310,7 +303,6 @@ Enabling `RestoringBoundary` option is not mandatory, holes could be introduced 
 
 ```csharp
 settings.RestoreBoundary = true; // optional
-settings.ConstraintEdges = true;
 
 using var holes = new NativeArray<float2>(new[]{ math.float2(0.5f, 0.5f) }, Allocator.Persistent);
 input.HoleSeeds = holes;
@@ -471,8 +463,8 @@ Not to worry, this issue is likely related to an internal bug in the `Unity.Coll
 - [X] ~~Improve quality of the refinement algorithm.~~
 - [X] ~~Improve performance of the refinement algorithm.~~
 - [X] ~~Simplify generics for *planting* job.~~
+- [X] ~~Mark `ConstrainEdges` as obsolete.~~
 - [ ] Adapt constraint and *planting* jobs for `constrainedHalfedges`.
-- [ ] Mark `ConstrainEdges` as obsolete.
 - [ ] Clean-up refine job after recent changes.
 - [ ] Implement `SplitPermitted` for *terminator*.
 - [ ] (?) Partially restore Delaunay property after Sloan's algorithm.
