@@ -130,6 +130,7 @@ namespace andywiecko.BurstTriangulator
             /// If <see langword="true"/> constrains edges defined in <see cref="Input"/> using
             /// <see href="https://www.sciencedirect.com/science/article/abs/pii/004579499390239A">Sloan's algorithm</see>.
             /// </summary>
+            [Obsolete("To enable constraint edges, pass the corresponding array into Input.ConstraintEdges. Setting this property is unnecessary.", error: true)]
             [field: SerializeField]
             public bool ConstrainEdges { get; set; } = false;
             /// <summary>
@@ -251,16 +252,13 @@ namespace andywiecko.BurstTriangulator
                 _ => throw new NotImplementedException()
             };
 
-            if (Settings.ValidateInput)
-            {
-                dependencies = new ValidateInputPositionsJob(this).Schedule(dependencies);
-                dependencies = Settings.ConstrainEdges ? new ValidateInputConstraintEdges(this).Schedule(dependencies) : dependencies;
-            }
+            dependencies = Settings.ValidateInput ? new ValidateInputPositionsJob(this).Schedule(dependencies) : dependencies;
+            dependencies = Settings.ValidateInput && Input.ConstraintEdges.IsCreated ? new ValidateInputConstraintEdges(this).Schedule(dependencies) : dependencies;
 
             dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
-            dependencies = Settings.ConstrainEdges ? new ConstrainEdgesJob(this).Schedule(dependencies) : dependencies;
-            dependencies = Settings.ConstrainEdges && (Settings.RestoreBoundary || Input.HoleSeeds.IsCreated) ? new PlantingSeedsJob(this).Schedule(dependencies) : dependencies;
-            dependencies = Settings.RefineMesh ? new RefineMeshJob(this, Settings.ConstrainEdges ? constraintEdges : default).Schedule(dependencies) : dependencies;
+            dependencies = Input.ConstraintEdges.IsCreated ? new ConstrainEdgesJob(this).Schedule(dependencies) : dependencies;
+            dependencies = Input.ConstraintEdges.IsCreated && (Settings.RestoreBoundary || Input.HoleSeeds.IsCreated) ? new PlantingSeedsJob(this).Schedule(dependencies) : dependencies;
+            dependencies = Settings.RefineMesh ? new RefineMeshJob(this).Schedule(dependencies) : dependencies;
 
             dependencies = Settings.Preprocessor switch
             {
@@ -1564,7 +1562,7 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> constrainedHalfedges;
 
-            public RefineMeshJob(Triangulator triangulator, NativeList<Edge> constraints)
+            public RefineMeshJob(Triangulator triangulator)
             {
                 restoreBoundary = triangulator.Settings.RestoreBoundary;
                 maximumArea2 = 2 * triangulator.Settings.RefinementThresholds.Area;
@@ -1586,7 +1584,7 @@ namespace andywiecko.BurstTriangulator
                 visitedTriangles = default;
                 constrainedHalfedges = default;
 
-                this.constraints = constraints;
+                constraints = triangulator.constraintEdges;
             }
 
             public void Execute()
