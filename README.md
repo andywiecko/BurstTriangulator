@@ -470,10 +470,10 @@ Not to worry, this issue is likely related to an internal bug in the `Unity.Coll
 - [X] ~~Remove super-triangle approach.~~
 - [X] ~~Improve quality of the refinement algorithm.~~
 - [X] ~~Improve performance of the refinement algorithm.~~
-- [ ] Clean-up refine job after recent changes.
+- [X] ~~Simplify generics for *planting* job.~~
 - [ ] Adapt constraint and *planting* jobs for `constrainedHalfedges`.
-- [ ] Simplify generics for *planting* job.
 - [ ] Mark `ConstrainEdges` as obsolete.
+- [ ] Clean-up refine job after recent changes.
 - [ ] Implement `SplitPermitted` for *terminator*.
 - [ ] (?) Partially restore Delaunay property after Sloan's algorithm.
 - [ ] (?) Add mesh coarsening algorithm.
