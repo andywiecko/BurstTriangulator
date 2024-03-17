@@ -2317,6 +2317,8 @@ namespace andywiecko.BurstTriangulator
             private NativeList<Circle> circles;
             private NativeList<Edge> constraintEdges;
             private NativeList<int> halfedges;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<bool> constrainedHalfedges;
 
             public PlantingSeedsJob(Triangulator triangulator)
             {
@@ -2329,6 +2331,8 @@ namespace andywiecko.BurstTriangulator
                 circles = triangulator.circles;
                 constraintEdges = triangulator.constraintEdges;
                 halfedges = triangulator.halfedges;
+
+                constrainedHalfedges = default;
             }
 
             public void Execute()
@@ -2351,6 +2355,22 @@ namespace andywiecko.BurstTriangulator
                 using var visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
                 using var badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
                 using var trianglesQueue = new NativeQueue<int>(Allocator.Temp);
+                using var _constrainedHalfedges = constrainedHalfedges = new NativeList<bool>(triangles.Length, Allocator.Temp) { Length = triangles.Length };
+
+                for (int he = 0; he < constrainedHalfedges.Length; he++)
+                {
+                    for (int id = 0; id < constraintEdges.Length; id++)
+                    {
+                        var (ci, cj) = constraintEdges[id];
+                        var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
+                        (i, j) = i < j ? (i, j) : (j, i);
+                        if (ci == i && cj == j)
+                        {
+                            constrainedHalfedges[he] = true;
+                            break;
+                        }
+                    }
+                }
 
                 PlantSeeds(visitedTriangles, badTriangles, trianglesQueue);
 
@@ -2367,9 +2387,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     for (int he = 0; he < halfedges.Length; he++)
                     {
-                        if (halfedges[he] == -1 &&
-                            !visitedTriangles[he / 3] &&
-                            !constraintEdges.Contains(new Edge(triangles[he], triangles[NextHalfedge(he)])))
+                        if (halfedges[he] == -1 && !visitedTriangles[he / 3] && !constrainedHalfedges[he])
                         {
                             PlantSeed(he / 3, visitedTriangles, badTriangles, trianglesQueue);
                         }
@@ -2402,17 +2420,13 @@ namespace andywiecko.BurstTriangulator
 
                 while (trianglesQueue.TryDequeue(out tId))
                 {
-                    var (t0, t1, t2) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                    TryEnqueue(new(t0, t1), 3 * tId + 0, constraintEdges, halfedges);
-                    TryEnqueue(new(t1, t2), 3 * tId + 1, constraintEdges, halfedges);
-                    TryEnqueue(new(t2, t0), 3 * tId + 2, constraintEdges, halfedges);
-
-                    void TryEnqueue(Edge e, int he, NativeList<Edge> constraintEdges, NativeList<int> halfedges)
+                    for (int i = 0; i < 3; i++)
                     {
+                        var he = 3 * tId + i;
                         var ohe = halfedges[he];
-                        if (constraintEdges.Contains(e) || ohe == -1)
+                        if (constrainedHalfedges[he] || ohe == -1)
                         {
-                            return;
+                            continue;
                         }
 
                         var otherId = ohe / 3;
