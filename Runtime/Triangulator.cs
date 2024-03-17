@@ -259,21 +259,8 @@ namespace andywiecko.BurstTriangulator
 
             dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
             dependencies = Settings.ConstrainEdges ? new ConstrainEdgesJob(this).Schedule(dependencies) : dependencies;
-
-            var holes = Input.HoleSeeds;
-            if (Settings.RestoreBoundary && Settings.ConstrainEdges)
-            {
-                dependencies = holes.IsCreated ?
-                    new PlantingSeedsJob<PlantBoundaryAndHoles>(this).Schedule(dependencies) :
-                    new PlantingSeedsJob<PlantBoundary>(this).Schedule(dependencies);
-            }
-            else if (holes.IsCreated && Settings.ConstrainEdges)
-            {
-                dependencies = new PlantingSeedsJob<PlantHoles>(this).Schedule(dependencies);
-            }
-
-            dependencies = Settings.RefineMesh ?
-                new RefineMeshJob(this, Settings.ConstrainEdges ? constraintEdges : default).Schedule(dependencies) : dependencies;
+            dependencies = Settings.ConstrainEdges && (Settings.RestoreBoundary || Input.HoleSeeds.IsCreated) ? new PlantingSeedsJob(this).Schedule(dependencies) : dependencies;
+            dependencies = Settings.RefineMesh ? new RefineMeshJob(this, Settings.ConstrainEdges ? constraintEdges : default).Schedule(dependencies) : dependencies;
 
             dependencies = Settings.Preprocessor switch
             {
@@ -2271,59 +2258,28 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private interface IPlantingSeedJobMode<TSelf>
-        {
-            TSelf Create(Triangulator triangulator);
-            bool PlantBoundarySeed { get; }
-            bool PlantHolesSeed { get; }
-            NativeArray<float2> HoleSeeds { get; }
-        }
-
-        private readonly struct PlantBoundary : IPlantingSeedJobMode<PlantBoundary>
-        {
-            public bool PlantBoundarySeed => true;
-            public bool PlantHolesSeed => false;
-            public NativeArray<float2> HoleSeeds => default;
-            public PlantBoundary Create(Triangulator _) => new();
-        }
-
-        private struct PlantHoles : IPlantingSeedJobMode<PlantHoles>
-        {
-            public readonly bool PlantBoundarySeed => false;
-            public readonly bool PlantHolesSeed => true;
-            public readonly NativeArray<float2> HoleSeeds => holeSeeds;
-            private NativeArray<float2> holeSeeds;
-            public PlantHoles Create(Triangulator triangulator) => new() { holeSeeds = triangulator.Input.HoleSeeds };
-        }
-
-        private struct PlantBoundaryAndHoles : IPlantingSeedJobMode<PlantBoundaryAndHoles>
-        {
-            public readonly bool PlantBoundarySeed => true;
-            public readonly bool PlantHolesSeed => true;
-            public readonly NativeArray<float2> HoleSeeds => holeSeeds;
-            private NativeArray<float2> holeSeeds;
-            public PlantBoundaryAndHoles Create(Triangulator triangulator) => new() { holeSeeds = triangulator.Input.HoleSeeds };
-        }
-
         [BurstCompile]
-        private struct PlantingSeedsJob<T> : IJob where T : struct, IPlantingSeedJobMode<T>
+        private struct PlantingSeedsJob : IJob
         {
             [ReadOnly]
             private NativeArray<float2> positions;
-            private readonly T mode;
+            private readonly bool restoreBoundary;
             private NativeReference<Status>.ReadOnly status;
             private NativeList<int> triangles;
             private NativeList<float2> outputPositions;
             private NativeList<Circle> circles;
             private NativeList<Edge> constraintEdges;
             private NativeList<int> halfedges;
+
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> constrainedHalfedges;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<float2> holeSeeds;
 
             public PlantingSeedsJob(Triangulator triangulator)
             {
                 positions = triangulator.Input.Positions;
-                mode = default(T).Create(triangulator);
+                restoreBoundary = triangulator.Settings.RestoreBoundary;
 
                 status = triangulator.status.AsReadOnly();
                 triangles = triangulator.triangles;
@@ -2333,6 +2289,7 @@ namespace andywiecko.BurstTriangulator
                 halfedges = triangulator.halfedges;
 
                 constrainedHalfedges = default;
+                holeSeeds = triangulator.Input.HoleSeeds;
             }
 
             public void Execute()
@@ -2383,7 +2340,7 @@ namespace andywiecko.BurstTriangulator
 
             private void PlantSeeds(NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
             {
-                if (mode.PlantBoundarySeed)
+                if (restoreBoundary)
                 {
                     for (int he = 0; he < halfedges.Length; he++)
                     {
@@ -2394,9 +2351,9 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
 
-                if (mode.PlantHolesSeed)
+                if (holeSeeds.IsCreated)
                 {
-                    foreach (var s in mode.HoleSeeds)
+                    foreach (var s in holeSeeds.AsReadOnly())
                     {
                         var tId = FindTriangle(s);
                         if (tId != -1)
