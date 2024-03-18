@@ -298,27 +298,22 @@ namespace andywiecko.BurstTriangulator
             static readonly ProfilerMarker MarkerRefineMesh = new ProfilerMarker("RefineMesh");
             static readonly ProfilerMarker MarkerInverseTransformation = new ProfilerMarker("InverseTransformation");
 
-            static void PreProcessInput (Preprocessor preprocessor, InputData input, OutputData output, out NativeList<float2> localPositions, out NativeArray<float2> localHoles, out NativeReference<AffineTransform2D> localTransformation) {
-                localTransformation = new NativeReference<AffineTransform2D>(Allocator.Temp);
+            static void PreProcessInput (Preprocessor preprocessor, InputData input, OutputData output, out NativeList<float2> localPositions, out NativeArray<float2> localHoles, out AffineTransform2D localTransformation) {
                 localPositions = output.Positions.IsCreated ? output.Positions : new NativeList<float2>(input.Positions.Length, Allocator.Temp);
                 localPositions.ResizeUninitialized(input.Positions.Length);
                 if (preprocessor == Preprocessor.PCA || preprocessor == Preprocessor.COM) {
-                    if (preprocessor == Preprocessor.PCA) {
-                        localTransformation.Value = CalculatePCATransformation(input.Positions);
-                    } else {
-                        localTransformation.Value = CalculateLocalTransformation(input.Positions);
-                    }
-                    localTransformation.Value.Transform(input.Positions, localPositions.AsArray());
+                    localTransformation = preprocessor == Preprocessor.PCA ? CalculatePCATransformation(input.Positions) : CalculateLocalTransformation(input.Positions);
+                    localTransformation.Transform(input.Positions, localPositions.AsArray());
                     if (input.HoleSeeds.IsCreated) {
                         localHoles = new NativeArray<float2>(input.HoleSeeds.Length, Allocator.Temp);
-                        localTransformation.Value.Transform(input.HoleSeeds, localHoles);
+                        localTransformation.Transform(input.HoleSeeds, localHoles);
                     } else {
                         localHoles = default;
                     }
                 } else if (preprocessor == Preprocessor.None) {
                     localPositions.CopyFrom(input.Positions);
                     localHoles = input.HoleSeeds;
-                    localTransformation.Value = AffineTransform2D.identity;
+                    localTransformation = AffineTransform2D.identity;
                 } else {
                     throw new System.ArgumentException();
                 }
@@ -380,7 +375,7 @@ namespace andywiecko.BurstTriangulator
                     MarkerRefineMesh.Begin();
                     new RefineMeshJob() {
                         restoreBoundary = restoreBoundary,
-                        maximumArea2 = 2 * refinementThresholdArea * localTransformation.Value.areaScalingFactor,
+                        maximumArea2 = 2 * refinementThresholdArea * localTransformation.areaScalingFactor,
                         minimumAngle = refinementThresholdAngle,
                         D = concentricShellsParameter,
                         status = output.Status,
@@ -397,7 +392,7 @@ namespace andywiecko.BurstTriangulator
                 // If an output position list was provided, we need to transform the local positions back to world space.
                 // If none was provided, we can skip this step, as the user doesn't need it.
                 if (output.Positions.IsCreated && preprocessor != Preprocessor.None) {
-                    localTransformation.Value.InverseTransform(localPositions.AsArray(), output.Positions.AsArray());
+                    localTransformation.InverseTransform(localPositions.AsArray(), output.Positions.AsArray());
                 }
                 MarkerInverseTransformation.End();
             }
