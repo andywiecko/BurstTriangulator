@@ -246,29 +246,13 @@ namespace andywiecko.BurstTriangulator
 
         private NativeList<float2> outputPositions;
         private NativeList<int> triangles;
-        private NativeList<int> halfedges;
-        private NativeList<Circle> circles;
-        private NativeList<Edge> constraintEdges;
         private NativeReference<Status> status;
-
-        private NativeArray<float2> tmpInputPositions;
-        private NativeArray<float2> tmpInputHoleSeeds;
-        private NativeList<float2> localPositions;
-        private NativeList<float2> localHoleSeeds;
-        private NativeReference<AffineTransform2D> localTransformation;
 
         public Triangulator(int capacity, Allocator allocator)
         {
             outputPositions = new(capacity, allocator);
             triangles = new(6 * capacity, allocator);
-            halfedges = new(6 * capacity, allocator);
-            circles = new(capacity, allocator);
-            constraintEdges = new(capacity, allocator);
             status = new(Status.OK, allocator);
-
-            localPositions = new(capacity, allocator);
-            localHoleSeeds = new(capacity, allocator);
-            localTransformation = new(allocator);
         }
 
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
@@ -277,14 +261,7 @@ namespace andywiecko.BurstTriangulator
         {
             outputPositions.Dispose();
             triangles.Dispose();
-            halfedges.Dispose();
-            circles.Dispose();
-            constraintEdges.Dispose();
             status.Dispose();
-
-            localPositions.Dispose();
-            localHoleSeeds.Dispose();
-            localTransformation.Dispose();
         }
 
         public void Run() => Schedule().Complete();
@@ -498,12 +475,6 @@ namespace andywiecko.BurstTriangulator
             public NativeArray<float2> positions;
             public NativeReference<Status> status;
 
-            public ValidateInputPositionsJob(Triangulator triangulator)
-            {
-                positions = triangulator.Input.Positions;
-                status = triangulator.status;
-            }
-
             public void Execute()
             {
                 if (positions.Length < 3)
@@ -633,28 +604,6 @@ namespace andywiecko.BurstTriangulator
             private int trianglesLen;
             private int hashSize;
             public float2 c;
-
-            public DelaunayTriangulationJob(Triangulator triangulator)
-            {
-                status = triangulator.status;
-                positions = triangulator.Input.Positions;
-                triangles = triangulator.triangles;
-                halfedges = triangulator.halfedges;
-
-                positions = default;
-                ids = default;
-                dists = default;
-                hullNext = default;
-                hullPrev = default;
-                hullTri = default;
-                hullHash = default;
-                EDGE_STACK = default;
-
-                hullStart = int.MaxValue;
-                trianglesLen = 0;
-                hashSize = 0;
-                c = float.MaxValue;
-            }
 
             private readonly int HashKey(float2 p)
             {
@@ -1001,13 +950,6 @@ namespace andywiecko.BurstTriangulator
             public NativeArray<float2> positions;
             public NativeReference<Status> status;
 
-            public ValidateInputConstraintEdges(Triangulator triangulator)
-            {
-                constraints = triangulator.Input.ConstraintEdges;
-                positions = triangulator.Input.Positions;
-                status = triangulator.status;
-            }
-
             public void Execute()
             {
                 if (constraints.Length % 2 == 1)
@@ -1139,21 +1081,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> unresolvedIntersections;
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<int> pointToHalfedge;
-
-            public ConstrainEdgesJob(Triangulator triangulator)
-            {
-                status = triangulator.status;
-                positions = triangulator.outputPositions.AsDeferredJobArray();
-                triangles = triangulator.triangles.AsDeferredJobArray();
-                maxIters = triangulator.Settings.SloanMaxIters;
-                inputConstraintEdges = triangulator.Input.ConstraintEdges;
-                internalConstraints = triangulator.constraintEdges;
-                halfedges = triangulator.halfedges.AsDeferredJobArray();
-
-                intersections = default;
-                unresolvedIntersections = default;
-                pointToHalfedge = default;
-            }
 
             public void Execute()
             {
@@ -1490,30 +1417,6 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private int initialPointsCount;
             private NativeList<bool> constrainedHalfedges;
-
-            public RefineMeshJob(Triangulator triangulator)
-            {
-                restoreBoundary = triangulator.Settings.RestoreBoundary;
-                maximumArea2 = 2 * triangulator.Settings.RefinementThresholds.Area;
-                minimumAngle = triangulator.Settings.RefinementThresholds.Angle;
-                D = triangulator.Settings.ConcentricShellsParameter;
-
-                status = triangulator.status.AsReadOnly();
-                triangles = triangulator.triangles;
-                outputPositions = triangulator.outputPositions;
-                circles = triangulator.circles;
-                halfedges = triangulator.halfedges;
-
-                initialPointsCount = default;
-                trianglesQueue = default;
-                badTriangles = default;
-                pathPoints = default;
-                pathHalfedges = default;
-                visitedTriangles = default;
-                constrainedHalfedges = default;
-
-                constraints = triangulator.constraintEdges;
-            }
 
             public void Execute()
             {
@@ -2189,34 +2092,13 @@ namespace andywiecko.BurstTriangulator
             public NativeReference<Status>.ReadOnly status;
             public NativeList<int> triangles;
             [ReadOnly]
-            private NativeArray<float2> positions;
-            private readonly bool restoreBoundary;
-            private NativeReference<Status>.ReadOnly status;
-            private NativeList<int> triangles;
-            private NativeList<float2> outputPositions;
-            private NativeList<Circle> circles;
-            private NativeList<Edge> constraintEdges;
-            private NativeList<int> halfedges;
+            public NativeList<float2> positions;
+            public NativeList<Circle> circles;
+            public NativeList<Edge> constraintEdges;
+            public NativeList<int> halfedges;
 
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> constrainedHalfedges;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<float2> holeSeeds;
-
-            public PlantingSeedsJob(Triangulator triangulator)
-            {
-                positions = triangulator.Input.Positions;
-                restoreBoundary = triangulator.Settings.RestoreBoundary;
-
-                status = triangulator.status.AsReadOnly();
-                triangles = triangulator.triangles;
-                circles = triangulator.circles;
-                constraintEdges = triangulator.constraintEdges;
-                halfedges = triangulator.halfedges;
-
-                constrainedHalfedges = default;
-                holeSeeds = triangulator.Input.HoleSeeds;
-            }
 
             public void Execute()
             {
