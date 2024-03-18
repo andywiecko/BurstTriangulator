@@ -367,44 +367,12 @@ namespace andywiecko.BurstTriangulator
                     }.Execute();
                     MarkerConstrainEdges.End();
 
+                if (input.ConstraintEdges.IsCreated && (localHoles.IsCreated || restoreBoundary)) {
                     MarkerPlantSeeds.Begin();
-                    if (restoreBoundary)
-                    {
-                        if (localHoles.IsCreated) {
-                            // TODO: Merge with ELSE, as this optimization is not necessary.
-                            new PlantingSeedsJob<PlantBoundaryAndHoles> {
-                                positions = localPositions,
-                                mode = new PlantBoundaryAndHoles(localHoles),
-                                status = output.Status,
-                                triangles = triangles,
-                                circles = circles,
-                                constraintEdges = internalConstraints,
-                                halfedges = halfEdges,
-                            }.Execute();
-                        } else {
-                            new PlantingSeedsJob<PlantBoundary> {
-                                positions = localPositions,
-                                mode = new PlantBoundary(),
-                                status = output.Status,
-                                triangles = triangles,
-                                circles = circles,
-                                constraintEdges = internalConstraints,
-                                halfedges = halfEdges,
-                            }.Execute();
-                        }
-                    }
-                    else if (localHoles.IsCreated)
-                    {
-                        new PlantingSeedsJob<PlantHoles> {
-                            positions = localPositions,
-                            mode = new PlantHoles(localHoles),
-                            status = output.Status,
-                            triangles = triangles,
-                            circles = circles,
-                            constraintEdges = internalConstraints,
-                            halfedges = halfEdges,
-                        }.Execute();
-                    }
+                    var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, internalConstraints, halfEdges);
+                    if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
+                    if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
+                    seedPlanter.Finish();
                     MarkerPlantSeeds.End();
                 }
 
@@ -2085,10 +2053,8 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        [BurstCompile]
-        private struct PlantingSeedsJob : IJob
+        struct SeedPlanter
         {
-            public T mode;
             public NativeReference<Status>.ReadOnly status;
             public NativeList<int> triangles;
             [ReadOnly]
@@ -2100,30 +2066,24 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> constrainedHalfedges;
 
-            public void Execute()
+            private NativeArray<bool> visitedTriangles;
+            private NativeList<int> badTriangles;
+            private NativeQueue<int> trianglesQueue;
+
+            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<float2> positions, NativeList<Circle> circles, NativeList<Edge> constraintEdges, NativeList<int> halfedges)
             {
-                // unsafe {
-                //     Unity.Burst.CompilerServices.Aliasing.ExpectNotAliased(triangles.GetUnsafePtr(), halfedges.GetUnsafePtr());
-                // }
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
+                this.status = status;
+                this.triangles = triangles;
+                this.positions = positions;
+                this.circles = circles;
+                this.constraintEdges = constraintEdges;
+                this.halfedges = halfedges;
 
-                if (circles.Length != triangles.Length / 3)
-                {
-                    circles.Length = triangles.Length / 3;
-                    for (int tId = 0; tId < triangles.Length / 3; tId++)
-                    {
-                        var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                        circles[tId] = CalculateCircumCircle(i, j, k, positions.AsArray());
-                    }
-                }
+                this.visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
+                this.badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
+                this.trianglesQueue = new NativeQueue<int>(Allocator.Temp);
 
-                using var visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
-                using var badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
-                using var trianglesQueue = new NativeQueue<int>(Allocator.Temp);
-                using var _constrainedHalfedges = constrainedHalfedges = new NativeList<bool>(triangles.Length, Allocator.Temp) { Length = triangles.Length };
+                var constrainedHalfedges = this.constrainedHalfedges = new NativeList<bool>(triangles.Length, Allocator.Temp) { Length = triangles.Length };
 
                 for (int he = 0; he < constrainedHalfedges.Length; he++)
                 {
@@ -2140,7 +2100,47 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
 
-                PlantSeeds(visitedTriangles, badTriangles, trianglesQueue);
+                // TODO: Shouldn't be done here
+                if (circles.Length != triangles.Length / 3)
+                {
+                    circles.Length = triangles.Length / 3;
+                    for (int tId = 0; tId < triangles.Length / 3; tId++)
+                    {
+                        var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
+                        circles[tId] = CalculateCircumCircle(i, j, k, positions.AsArray());
+                    }
+                }
+            }
+
+            public void PlantBoundarySeeds() {
+                for (int he = 0; he < halfedges.Length; he++)
+                {
+                    if (halfedges[he] == -1 &&
+                        !visitedTriangles[he / 3] &&
+                        !constrainedHalfedges[he])
+                    {
+                        PlantSeed(he / 3);
+                    }
+                }
+            }
+
+            public void PlantHoleSeeds(NativeArray<float2> holeSeeds) {
+                foreach (var s in holeSeeds)
+                {
+                    var tId = FindTriangle(s);
+                    if (tId != -1)
+                    {
+                        PlantSeed(tId);
+                    }
+                }
+            }
+
+            public void Finish()
+            {
+                if (status.Value != Status.OK)
+                {
+                    return;
+                }
 
                 using var potentialPointsToRemove = new NativeHashSet<int>(initialCapacity: 3 * badTriangles.Length, Allocator.Temp);
 
@@ -2149,34 +2149,12 @@ namespace andywiecko.BurstTriangulator
                 RemovePoints(potentialPointsToRemove);
             }
 
-            private void PlantSeeds(NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
+            private void PlantSeed(int tId)
             {
-                if (restoreBoundary)
-                {
-                    for (int he = 0; he < halfedges.Length; he++)
-                    {
-                        if (halfedges[he] == -1 && !visitedTriangles[he / 3] && !constrainedHalfedges[he])
-                        {
-                            PlantSeed(he / 3, visitedTriangles, badTriangles, trianglesQueue);
-                        }
-                    }
-                }
+                var visitedTriangles = this.visitedTriangles;
+                var badTriangles = this.badTriangles;
+                var trianglesQueue = this.trianglesQueue;
 
-                if (holeSeeds.IsCreated)
-                {
-                    foreach (var s in holeSeeds.AsReadOnly())
-                    {
-                        var tId = FindTriangle(s);
-                        if (tId != -1)
-                        {
-                            PlantSeed(tId, visitedTriangles, badTriangles, trianglesQueue);
-                        }
-                    }
-                }
-            }
-
-            private void PlantSeed(int tId, NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
-            {
                 if (visitedTriangles[tId])
                 {
                     return;
