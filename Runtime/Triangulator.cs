@@ -812,6 +812,8 @@ namespace andywiecko.BurstTriangulator
                         minDistSq = distSq;
                     }
                 }
+
+                // Centermost vertex
                 var p0 = positions[i0];
 
                 minDistSq = float.MaxValue;
@@ -825,6 +827,8 @@ namespace andywiecko.BurstTriangulator
                         minDistSq = distSq;
                     }
                 }
+
+                // Second closest to the center
                 var p1 = positions[i1];
 
                 var minRadius = float.MaxValue;
@@ -839,6 +843,10 @@ namespace andywiecko.BurstTriangulator
                         minRadius = r;
                     }
                 }
+
+                // Vertex closest to p1 and p2, as measured by the circumscribed circle radius of p1, p2, p3
+                // Thus (p1,p2,p3) form a triangle close to the center of the point set, and it's guaranteed that there
+                // are no other vertices inside this triangle.
                 var p2 = positions[i2];
 
                 if (minRadius == float.MaxValue)
@@ -848,12 +856,14 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
+                // Swap the order of the vertices if the triangle is not oriented in the right direction
                 if (Orient2dFast(p0, p1, p2) < 0)
                 {
                     (i1, i2) = (i2, i1);
                     (p1, p2) = (p2, p1);
                 }
 
+                // Sort all other vertices by their distance to the circumcenter of the initial triangle
                 c = CircumCenter(p0, p1, p2);
                 for (int i = 0; i < positions.Length; i++)
                 {
@@ -876,6 +886,7 @@ namespace andywiecko.BurstTriangulator
                 hullHash[HashKey(p1)] = i1;
                 hullHash[HashKey(p2)] = i2;
 
+                // Add the initial triangle
                 AddTriangle(i0, i1, i2, -1, -1, -1);
 
                 for (var k = 0; k < ids.Length; k++)
@@ -885,6 +896,7 @@ namespace andywiecko.BurstTriangulator
 
                     var p = positions[i];
 
+                    // Find a visible edge on the convex hull using edge hash
                     var start = 0;
                     for (var j = 0; j < hashSize; j++)
                     {
@@ -911,13 +923,18 @@ namespace andywiecko.BurstTriangulator
 
                     if (e == int.MaxValue) continue;
 
+                     // Add the first triangle from the point
                     var t = AddTriangle(e, i, hullNext[e], -1, -1, hullTri[e]);
+
+                    // Recursively flip triangles from the point until they satisfy the Delaunay condition
                     hullTri[i] = Legalize(t + 2);
+                    // Keep track of boundary triangles on the hull
                     hullTri[e] = t;
 
                     var next = hullNext[e];
                     q = hullNext[next];
 
+                    // Walk forward through the hull, adding more triangles and flipping recursively
                     while (Orient2dFast(p, positions[next], positions[q]) < 0)
                     {
                         t = AddTriangle(next, i, q, hullTri[i], -1, hullTri[next]);
@@ -928,6 +945,7 @@ namespace andywiecko.BurstTriangulator
                         q = hullNext[next];
                     }
 
+                    // Walk backward from the other side, adding more triangles and flipping
                     if (e == start)
                     {
                         q = hullPrev[e];
@@ -937,20 +955,23 @@ namespace andywiecko.BurstTriangulator
                             t = AddTriangle(q, i, e, -1, hullTri[e], hullTri[q]);
                             Legalize(t + 2);
                             hullTri[q] = t;
-                            hullNext[e] = e;
+                            hullNext[e] = e; // mark as removed
                             e = q;
                             q = hullPrev[e];
                         }
                     }
 
+                    // Update the hull indices
                     hullStart = hullPrev[i] = e;
                     hullNext[e] = hullPrev[next] = i;
                     hullNext[i] = next;
 
+                    // Save the two new edges in the hash table
                     hullHash[HashKey(p)] = i;
                     hullHash[HashKey(positions[e])] = e;
                 }
 
+                // Trim lists to their actual size
                 triangles.Length = trianglesLen;
                 halfedges.Length = trianglesLen;
             }
@@ -960,12 +981,30 @@ namespace andywiecko.BurstTriangulator
                 var i = 0;
                 int ar;
 
+                // recursion eliminated with a fixed-size stack
                 while (true)
                 {
                     var b = halfedges[a];
+                    /* if the pair of triangles doesn't satisfy the Delaunay condition
+                     * (p1 is inside the circumcircle of [p0, pl, pr]), flip them,
+                     * then do the same check/flip recursively for the new pair of triangles
+                     *
+                     *           pl                    pl
+                     *          /||\                  /  \
+                     *       al/ || \bl            al/    \a
+                     *        /  ||  \              /      \
+                     *       /  a||b  \    flip    /___ar___\
+                     *     p0\   ||   /p1   =>   p0\---bl---/p1
+                     *        \  ||  /              \      /
+                     *       ar\ || /br             b\    /br
+                     *          \||/                  \  /
+                     *           pr                    pr
+                     */
+
                     int a0 = a - a % 3;
                     ar = a0 + (a + 2) % 3;
 
+                    // Check if we are on a convex hull edge
                     if (b == -1)
                     {
                         if (i == 0) break;
@@ -991,6 +1030,7 @@ namespace andywiecko.BurstTriangulator
 
                         var hbl = halfedges[bl];
 
+                        // Edge swapped on the other side of the hull (rare); fix the halfedge reference
                         if (hbl == -1)
                         {
                             var e = hullStart;
@@ -1010,6 +1050,7 @@ namespace andywiecko.BurstTriangulator
 
                         var br = b0 + (b + 1) % 3;
 
+                        // Don't worry about hitting the cap: it can only happen on extremely degenerate input
                         if (i < EDGE_STACK.Length)
                         {
                             EDGE_STACK[i++] = br;
