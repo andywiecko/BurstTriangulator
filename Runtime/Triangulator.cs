@@ -13,20 +13,57 @@ using UnityEngine.Assertions;
 
 namespace andywiecko.BurstTriangulator
 {
-    struct PCATransformation {
-        public float2 center;
-        public float2x2 rotation;
+    /** Supports rotation, scaling and translation in 2D */
+    public struct AffineTransform2D {
+        float2x2 rotScale;
+        float2 translation;
 
-        public static readonly PCATransformation identity = new PCATransformation { center = 0, rotation = float2x2.identity };
-    }
+        public static readonly AffineTransform2D identity = new AffineTransform2D { rotScale = float2x2.identity, translation = float2.zero };
 
-    public struct RigidTransform2D {
-        public float2 com;
-        public float2 scale;
+        // R(T + x) = y
+        // Solve for x:
+        // T + x = R^-1(y)
+        // x = R^-1(y) - T
+        // x = R^-1(y - RT)
+        // x = R^-1(y + R(-T))
+        public AffineTransform2D inverse => new AffineTransform2D { rotScale = math.inverse(rotScale), translation = math.mul(rotScale, -translation) };
 
-        public static readonly RigidTransform2D identity = new RigidTransform2D { com = float2.zero, scale = 1 };
-        public RigidTransform2D inverse => new RigidTransform2D { com = -com / scale, scale = 1 / scale };
-    }
+        /** How much the area of a shape is scaled by this transformation */
+        public float areaScalingFactor => math.abs(math.determinant(rotScale));
+
+        public float2 Transform (float2 point) => math.mul(rotScale, point + translation);
+
+        public static AffineTransform2D Translate(float2 offset) => new AffineTransform2D { rotScale = float2x2.identity, translation = offset };
+        public static AffineTransform2D Scale(float2 scale) => new AffineTransform2D { rotScale = new float2x2(scale.x, 0, 0, scale.y), translation = float2.zero };
+        public static AffineTransform2D Rotate(float2x2 rotation) => new AffineTransform2D { rotScale = rotation, translation = float2.zero };
+
+        // result.transform(x) = R1(T1 + R2(x + T2)) = R1((T1 + R2T2) + R2(x)) = R1*R2(R2^-1(T1 + R2T2) + x) = R1*R2(R2^-1(T1) + T2 + x)
+        public static AffineTransform2D operator * (AffineTransform2D lhs, AffineTransform2D rhs) => new AffineTransform2D {
+            rotScale = math.mul(lhs.rotScale, rhs.rotScale),
+            translation = math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
+        };
+
+        public void Transform(NativeArray<float2> points) {
+            for (int i = 0; i < points.Length; i++) points[i] = Transform(points[i]);
+        }
+
+        public void Transform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints) {
+            if (points.Length != outPoints.Length) throw new ArgumentException("Input and output arrays must have the same length");
+            for (int i = 0; i < points.Length; i++) outPoints[i] = Transform(points[i]);
+        }
+
+        /** Applies the inverse transform to all points, in-place.
+         *
+         * This is mathematically equivalent to calling `this.inverse.Transform(points, outPoints)`,
+         * but it is less susceptible to floating point errors.
+         */
+        public void InverseTransform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints) {
+            var invRotScale = math.inverse(rotScale);
+            for (int i = 0; i < points.Length; i++) outPoints[i] = math.mul(invRotScale, points[i]) - translation;
+        }
+
+		public override string ToString() => $"RigidTransform(rotScale={rotScale}, translation={translation})";
+	}
 
     public class Triangulator : IDisposable
     {
@@ -218,8 +255,7 @@ namespace andywiecko.BurstTriangulator
         private NativeArray<float2> tmpInputHoleSeeds;
         private NativeList<float2> localPositions;
         private NativeList<float2> localHoleSeeds;
-        private NativeReference<RigidTransform2D> localTransformation;
-        private NativeReference<PCATransformation> pcaTransformation;
+        private NativeReference<AffineTransform2D> localTransformation;
 
         public Triangulator(int capacity, Allocator allocator)
         {
@@ -233,7 +269,6 @@ namespace andywiecko.BurstTriangulator
             localPositions = new(capacity, allocator);
             localHoleSeeds = new(capacity, allocator);
             localTransformation = new(allocator);
-            pcaTransformation = new(allocator);
         }
 
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
@@ -250,7 +285,6 @@ namespace andywiecko.BurstTriangulator
             localPositions.Dispose();
             localHoleSeeds.Dispose();
             localTransformation.Dispose();
-            pcaTransformation.Dispose();
         }
 
         public void Run() => Schedule().Complete();
@@ -287,75 +321,39 @@ namespace andywiecko.BurstTriangulator
             static readonly ProfilerMarker MarkerRefineMesh = new ProfilerMarker("RefineMesh");
             static readonly ProfilerMarker MarkerInverseTransformation = new ProfilerMarker("InverseTransformation");
 
-            static void PreProcessInput (Preprocessor preprocessor, InputData input, OutputData output, out NativeList<float2> localPositions, out NativeArray<float2> localHoles, out NativeReference<PCATransformation> pcaTransformation, out NativeReference<RigidTransform2D> localTransformation) {
-                pcaTransformation = new NativeReference<PCATransformation>(Allocator.Temp);
-                localTransformation = new NativeReference<RigidTransform2D>(Allocator.Temp);
+            static void PreProcessInput (Preprocessor preprocessor, InputData input, OutputData output, out NativeList<float2> localPositions, out NativeArray<float2> localHoles, out NativeReference<AffineTransform2D> localTransformation) {
+                localTransformation = new NativeReference<AffineTransform2D>(Allocator.Temp);
                 localPositions = output.Positions.IsCreated ? output.Positions : new NativeList<float2>(input.Positions.Length, Allocator.Temp);
                 localPositions.ResizeUninitialized(input.Positions.Length);
-                switch (preprocessor)
-                {
-                    case Preprocessor.PCA: {
-                        new PCATransformationJob {
-                            positions = input.Positions,
-                            transformationRef = localTransformation,
-                            pcaTransformationRef = pcaTransformation,
-                            localPositions = localPositions.AsArray(),
-                        }.Execute();
-                        if (input.HoleSeeds.IsCreated) {
-                            localHoles = new NativeArray<float2>(input.HoleSeeds.Length, Allocator.Temp);
-                            new ApplyPCATransformationJob {
-                                inputPositions = input.HoleSeeds,
-                                outputPositions = localHoles,
-                                transformationRef = localTransformation.AsReadOnly(),
-                                pcaTransformationRef = pcaTransformation.AsReadOnly(),
-                            }.Execute();
-                        } else {
-                            localHoles = default;
-                        }
-                        break;
+                if (preprocessor == Preprocessor.PCA || preprocessor == Preprocessor.COM) {
+                    if (preprocessor == Preprocessor.PCA) {
+                        localTransformation.Value = CalculatePCATransformation(input.Positions);
+                    } else {
+                        localTransformation.Value = CalculateLocalTransformation(input.Positions);
                     }
-                    case Preprocessor.COM: {
-                        new CalculateLocalTransformationJob {
-                            positions = input.Positions,
-                            transformationRef = localTransformation,
-                            localPositions = localPositions.AsArray(),
-                        }.Execute();
-                        if (input.HoleSeeds.IsCreated)
-                        {
-                            localHoles = new NativeArray<float2>(input.HoleSeeds.Length, Allocator.Temp);
-                            new ApplyLocalTransformJob() {
-                                inputPositions = input.HoleSeeds,
-                                outputPositions = localHoles,
-                                transformRef = localTransformation.AsReadOnly(),
-                            }.Execute();
-                        } else {
-                            localHoles = default;
-                        }
-                        new CalculateLocalPositionsJob {
-                            localPositions = localPositions.AsArray(),
-                            positions = input.Positions,
-                            transformRef = localTransformation.AsReadOnly()
-                        }.Execute();
-                        break;
+                    localTransformation.Value.Transform(input.Positions, localPositions.AsArray());
+                    if (input.HoleSeeds.IsCreated) {
+                        localHoles = new NativeArray<float2>(input.HoleSeeds.Length, Allocator.Temp);
+                        localTransformation.Value.Transform(input.HoleSeeds, localHoles);
+                    } else {
+                        localHoles = default;
                     }
-                    case Preprocessor.None: {
-                        localPositions.CopyFrom(input.Positions);
-                        localHoles = input.HoleSeeds;
-                        pcaTransformation.Value = PCATransformation.identity;
-                        localTransformation.Value = RigidTransform2D.identity;
-                        break;
-                    }
-                    default: throw new System.ArgumentException();
+                } else if (preprocessor == Preprocessor.None) {
+                    localPositions.CopyFrom(input.Positions);
+                    localHoles = input.HoleSeeds;
+                    localTransformation.Value = AffineTransform2D.identity;
+                } else {
+                    throw new System.ArgumentException();
                 }
             }
+
             public void Execute() {
                 output.Status.Value = Status.OK;
                 output.Triangles.Clear();
                 output.Positions.Clear();
-                // new ClearDataJob(ref this).Execute();
 
                 MarkerPreProcess.Begin();
-                PreProcessInput(preprocessor, input, output, out var localPositions, out var localHoles, out var pcaTransformation, out var localTransformation);
+                PreProcessInput(preprocessor, input, output, out var localPositions, out var localHoles, out var localTransformation);
                 MarkerPreProcess.End();
 
                 if (validateInput) {
@@ -366,7 +364,7 @@ namespace andywiecko.BurstTriangulator
 
                 MarkerDelaunayTriangulation.Begin();
                 var halfEdges = new NativeList<int>(localPositions.Length, Allocator.Temp);
-                var triangles = output.Triangles; // new NativeList<int>(localPositions.Length, Allocator.Temp);
+                var triangles = output.Triangles;
                 var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
                 new DelaunayTriangulationJob {
                     status = output.Status,
@@ -437,10 +435,9 @@ namespace andywiecko.BurstTriangulator
                     MarkerRefineMesh.Begin();
                     new RefineMeshJob() {
                         restoreBoundary = restoreBoundary,
-                        maximumArea2 = 2 * refinementThresholdArea,
+                        maximumArea2 = 2 * refinementThresholdArea * localTransformation.Value.areaScalingFactor,
                         minimumAngle = refinementThresholdAngle,
                         D = concentricShellsParameter,
-                        transformationRef = localTransformation,
                         status = output.Status,
                         triangles = triangles,
                         outputPositions = localPositions,
@@ -454,27 +451,8 @@ namespace andywiecko.BurstTriangulator
                 MarkerInverseTransformation.Begin();
                 // If an output position list was provided, we need to transform the local positions back to world space.
                 // If none was provided, we can skip this step, as the user doesn't need it.
-                if (output.Positions.IsCreated) {
-                    switch (preprocessor)
-                    {
-                        case Preprocessor.PCA: {
-                            new PCAInverseTransformationJob {
-                                positions = localPositions.AsArray(),
-                                transformationRef = localTransformation.AsReadOnly(),
-                                pcaTransformationRef = pcaTransformation.AsReadOnly(),
-                            }.Execute();
-                            break;
-                        }
-                        case Preprocessor.COM: {
-                            new ApplyInverseRigidTransformInPlaceJob() {
-                                positions = localPositions.AsArray(),
-                                transformRef = localTransformation.AsReadOnly(),
-                            }.Execute();
-                            break;
-                        }
-                        case Preprocessor.None: break;
-                        default: throw new System.ArgumentException();
-                    }
+                if (output.Positions.IsCreated && preprocessor != Preprocessor.None) {
+                    localTransformation.Value.InverseTransform(localPositions.AsArray(), output.Positions.AsArray());
                 }
                 MarkerInverseTransformation.End();
             }
@@ -510,83 +488,6 @@ namespace andywiecko.BurstTriangulator
                 },
                 output = Output,
             }.Schedule(dependencies);
-        }
-
-        // private JobHandle SchedulePCATransformation(JobHandle dependencies)
-        // {
-        //     tmpInputPositions = Input.Positions;
-        //     Input.Positions = localPositions.AsDeferredJobArray();
-        //     if (Input.HoleSeeds.IsCreated)
-        //     {
-        //         tmpInputHoleSeeds = Input.HoleSeeds;
-        //         Input.HoleSeeds = localHoleSeeds.AsDeferredJobArray();
-        //     }
-
-        //     dependencies = new PCATransformationJob(this).Schedule(dependencies);
-        //     if (tmpInputHoleSeeds.IsCreated)
-        //     {
-        //         dependencies = new ApplyPCATransformationJob(this).Schedule(dependencies);
-        //     }
-        //     return dependencies;
-        // }
-
-        private JobHandle SchedulePCAInverseTransformation(JobHandle dependencies)
-        {
-            dependencies = new PCAInverseTransformationJob(this).Schedule(this, dependencies);
-
-            Input.Positions = tmpInputPositions;
-            tmpInputPositions = default;
-
-            if (tmpInputHoleSeeds.IsCreated)
-            {
-                Input.HoleSeeds = tmpInputHoleSeeds;
-                tmpInputHoleSeeds = default;
-            }
-
-            return dependencies;
-        }
-
-        private JobHandle ScheduleWorldToLocalTransformation(JobHandle dependencies)
-        {
-            tmpInputPositions = Input.Positions;
-            Input.Positions = localPositions.AsDeferredJobArray();
-            if (Input.HoleSeeds.IsCreated)
-            {
-                tmpInputHoleSeeds = Input.HoleSeeds;
-                Input.HoleSeeds = localHoleSeeds.AsDeferredJobArray();
-            }
-
-            dependencies = new CalculateLocalTransformationJob(this).Schedule(dependencies);
-            if (tmpInputHoleSeeds.IsCreated)
-            {
-                dependencies = new ApplyLocalTransformJob() {
-                    inputPositions = this.tmpInputHoleSeeds,
-                    outputPositions = this.localHoleSeeds,
-                    transformRef = this.localTransformation.AsReadOnly(),
-                }.Schedule(dependencies);
-            }
-            dependencies = new CalculateLocalPositionsJob(this).Schedule(this, dependencies);
-
-            return dependencies;
-        }
-
-        private JobHandle ScheduleLocalToWorldTransformation(JobHandle dependencies)
-        {
-            dependencies = new ApplyInverseRigidTransformInPlaceJob() {
-                positions = this.Output.Positions.AsDeferredJobArray(),
-                transformRef = this.localTransformation.AsReadOnly(),
-            }.Schedule(this, dependencies);
-
-            Input.Positions = tmpInputPositions;
-            tmpInputPositions = default;
-
-            if (tmpInputHoleSeeds.IsCreated)
-            {
-                Input.HoleSeeds = tmpInputHoleSeeds;
-                tmpInputHoleSeeds = default;
-            }
-
-            return dependencies;
         }
 
         #region Jobs
@@ -644,297 +545,54 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
-        private struct PCATransformationJob : IJob
-        {
-            [ReadOnly]
-            public NativeArray<float2> positions;
-            public NativeReference<PCATransformation> pcaTransformationRef;
-            public NativeReference<RigidTransform2D> transformationRef;
-
-            public NativeArray<float2> localPositions;
-
-            // public PCATransformationJob(Triangulator triangulator)
-            // {
-            //     positions = triangulator.tmpInputPositions;
-            //     transformationRef = triangulator.localTransformation;
-            //     pcaTransformationRef = triangulator.pcaTransformation;
-            //     localPositions = triangulator.localPositions;
-            // }
-
-            public void Execute()
+        static AffineTransform2D CalculatePCATransformation(NativeArray<float2> positions) {
+            var com = (float2)0;
+            foreach (var p in positions)
             {
-                Assert.AreEqual(localPositions.Length, positions.Length);
-                var n = positions.Length;
-
-                var com = (float2)0;
-                foreach (var p in positions)
-                {
-                    com += p;
-                }
-                com /= n;
-
-                var cov = float2x2.zero;
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    var q = positions[i] - com;
-                    localPositions[i] = q;
-                    cov += Kron(q, q);
-                }
-                cov /= n;
-
-                Eigen(cov, out _, out var U);
-                for (int i = 0; i < n; i++)
-                {
-                    localPositions[i] = math.mul(math.transpose(U), localPositions[i]);
-                }
-
-                float2 min = float.MaxValue;
-                float2 max = float.MinValue;
-                foreach (var p in localPositions)
-                {
-                    min = math.min(p, min);
-                    max = math.max(p, max);
-                }
-                var c = 0.5f * (min + max);
-                var s = 2f / (max - min);
-
-                transformationRef.Value = new RigidTransform2D { com = com, scale = s };
-                pcaTransformationRef.Value = new PCATransformation { center = c, rotation = U };
-
-                for (int i = 0; i < n; i++)
-                {
-                    var p = localPositions[i];
-                    localPositions[i] = (p - c) * s;
-                }
+                com += p;
             }
+            com /= positions.Length;
+
+            var cov = float2x2.zero;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var q = positions[i] - com;
+                cov += Kron(q, q);
+            }
+            cov /= positions.Length;
+
+            Eigen(cov, out _, out var rotationMatrix);
+
+            // Note: Taking the transpose of a rotation matrix is equivalent to taking the inverse.
+            var partialTransform = AffineTransform2D.Rotate(math.transpose(rotationMatrix)) * AffineTransform2D.Translate(-com);
+            float2 min = float.MaxValue;
+            float2 max = float.MinValue;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var p = partialTransform.Transform(positions[i]);
+                min = math.min(p, min);
+                max = math.max(p, max);
+            }
+
+            var c = 0.5f * (min + max);
+            var s = 2f / (max - min);
+
+            return AffineTransform2D.Scale(s) * AffineTransform2D.Translate(-c) * partialTransform;
         }
 
         [BurstCompile]
-        private struct ApplyPCATransformationJob : IJob
-        {
-            [ReadOnly]
-            public NativeArray<float2> inputPositions;
-            public NativeArray<float2> outputPositions;
-            public NativeReference<RigidTransform2D>.ReadOnly transformationRef;
-            public NativeReference<PCATransformation>.ReadOnly pcaTransformationRef;
-
-            // public ApplyPCATransformationJob(Triangulator triangulator)
-            // {
-            //     inputPositions = triangulator.tmpInputHoleSeeds;
-            //     outputPositions = triangulator.localHoleSeeds;
-            //     transformationRef = triangulator.localTransformation.AsReadOnly();
-            //     pcaTransformationRef = triangulator.pcaTransformation.AsReadOnly();
-            // }
-
-            public void Execute()
+        static AffineTransform2D CalculateLocalTransformation(NativeArray<float2> positions) {
+            float2 min = float.PositiveInfinity, max = float.NegativeInfinity, com = 0;
+            foreach (var p in positions)
             {
-                var com = transformationRef.Value.com;
-                var s = transformationRef.Value.scale;
-                var c = pcaTransformationRef.Value.center;
-                var rotation = pcaTransformationRef.Value.rotation;
-
-                // Taking the transpose of a rotation matrix is equivalent to taking the inverse.
-                var inverseRotation = math.transpose(rotation);
-
-                for (int i = 0; i < inputPositions.Length; i++)
-                {
-                    var h = inputPositions[i];
-                    outputPositions[i] = s * (math.mul(inverseRotation, h - com) - c);
-                }
-            }
-        }
-
-        [BurstCompile]
-        private struct PCAInverseTransformationJob : IJobParallelForDefer
-        {
-            public NativeArray<float2> positions;
-
-            public NativeReference<RigidTransform2D>.ReadOnly transformationRef;
-            public NativeReference<PCATransformation>.ReadOnly pcaTransformationRef;
-
-            public PCAInverseTransformationJob(Triangulator triangulator)
-            {
-                positions = triangulator.Output.Positions.AsDeferredJobArray();
-                transformationRef = triangulator.localTransformation.AsReadOnly();
-                pcaTransformationRef = triangulator.pcaTransformation.AsReadOnly();
+                min = math.min(p, min);
+                max = math.max(p, max);
+                com += p;
             }
 
-            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
-            {
-                return this.Schedule(triangulator.Output.Positions, triangulator.Settings.BatchCount, dependencies);
-            }
-
-            public void Execute () {
-                var com = transformationRef.Value.com;
-                var s = transformationRef.Value.scale;
-                var c = pcaTransformationRef.Value.center;
-                var U = pcaTransformationRef.Value.rotation;
-                for (int i = 0; i < positions.Length; i++) positions[i] = math.mul(U, positions[i] / s + c) + com;
-            }
-
-            public void Execute(int i)
-            {
-                var p = positions[i];
-                var com = transformationRef.Value.com;
-                var s = transformationRef.Value.scale;
-                var c = pcaTransformationRef.Value.center;
-                var U = pcaTransformationRef.Value.rotation;
-                positions[i] = math.mul(U, p / s + c) + com;
-            }
-        }
-
-        [BurstCompile]
-        private struct CalculateLocalTransformationJob : IJob
-        {
-            [ReadOnly]
-            public NativeArray<float2> positions;
-            public NativeReference<RigidTransform2D> transformationRef;
-
-            public NativeArray<float2> localPositions;
-
-            public CalculateLocalTransformationJob(Triangulator triangulator)
-            {
-                positions = triangulator.tmpInputPositions;
-                transformationRef = triangulator.localTransformation;
-                localPositions = triangulator.localPositions;
-            }
-
-            public void Execute()
-            {
-                float2 min = 0, max = 0, com = 0;
-                foreach (var p in positions)
-                {
-                    min = math.min(p, min);
-                    max = math.max(p, max);
-                    com += p;
-                }
-
-                com /= positions.Length;
-                transformationRef.Value = new RigidTransform2D {
-                    com = com,
-                    scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com))),
-                };
-            }
-        }
-
-        [BurstCompile]
-        private struct ApplyLocalTransformJob : IJob
-        {
-            [ReadOnly]
-            public NativeArray<float2> inputPositions;
-            public NativeArray<float2> outputPositions;
-            public NativeReference<RigidTransform2D>.ReadOnly transformRef;
-
-            public void Execute()
-            {
-                var com = transformRef.Value.com;
-                var s = transformRef.Value.scale;
-
-                for (int i = 0; i < inputPositions.Length; i++)
-                {
-                    outputPositions[i] = s * (inputPositions[i] - com);
-                }
-            }
-        }
-
-        [BurstCompile]
-        private struct CalculateLocalPositionsJob : IJobParallelForDefer
-        {
-            public NativeReference<RigidTransform2D>.ReadOnly transformRef;
-            public NativeArray<float2> localPositions;
-            [ReadOnly]
-            public NativeArray<float2> positions;
-
-            public CalculateLocalPositionsJob(Triangulator triangulator)
-            {
-                localPositions = triangulator.localPositions.AsDeferredJobArray();
-                positions = triangulator.tmpInputPositions;
-                transformRef = triangulator.localTransformation.AsReadOnly();
-            }
-
-            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
-            {
-                return this.Schedule(triangulator.localPositions, triangulator.Settings.BatchCount, dependencies);
-            }
-
-            public void Execute() {
-                var com = transformRef.Value.com;
-                var s = transformRef.Value.scale;
-                for (int i = 0; i < positions.Length; i++) localPositions[i] = s * (positions[i] - com);
-            }
-
-            public void Execute(int i)
-            {
-                var p = positions[i];
-                var com = transformRef.Value.com;
-                var s = transformRef.Value.scale;
-                localPositions[i] = s * (p - com);
-            }
-        }
-
-        [BurstCompile]
-        private struct ApplyInverseRigidTransformInPlaceJob : IJobParallelForDefer
-        {
-            public NativeArray<float2> positions;
-            public NativeReference<RigidTransform2D>.ReadOnly transformRef;
-
-            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
-            {
-                return this.Schedule(triangulator.Output.Positions, triangulator.Settings.BatchCount, dependencies);
-            }
-
-            public void Execute() {
-                var com = transformRef.Value.com;
-                var s = transformRef.Value.scale;
-                for (int i = 0; i < positions.Length; i++) positions[i] = positions[i] / s + com;
-            }
-
-            public void Execute(int i)
-            {
-                var p = positions[i];
-                var com = transformRef.Value.com;
-                var s = transformRef.Value.scale;
-                positions[i] = p / s + com;
-            }
-        }
-
-        [BurstCompile]
-        private struct ClearDataJob : IJob
-        {
-            private NativeReference<RigidTransform2D> transformRef;
-            private NativeReference<PCATransformation> pcaTransformationRef;
-            private NativeList<float2> outputPositions;
-            private NativeList<int> triangles;
-            private NativeList<int> halfedges;
-            private NativeList<Circle> circles;
-            private NativeList<Edge> constraintEdges;
-            private NativeReference<Status> status;
-
-            // public ClearDataJob(ref TriangulationJob triangulator)
-            // {
-            //     outputPositions = triangulator.outputPositions;
-            //     triangles = triangulator.triangles;
-            //     halfedges = triangulator.halfedges;
-            //     circles = triangulator.circles;
-            //     constraintEdges = triangulator.constraintEdges;
-
-            //     status = triangulator.status;
-            //     transformRef = triangulator.localTransformation;
-            //     pcaTransformationRef = triangulator.pcaTransformation;
-            // }
-
-            public void Execute()
-            {
-                outputPositions.Clear();
-                triangles.Clear();
-                halfedges.Clear();
-                circles.Clear();
-                constraintEdges.Clear();
-
-                status.Value = Status.OK;
-                transformRef.Value = RigidTransform2D.identity;
-                pcaTransformationRef.Value = PCATransformation.identity;
-            }
+            com /= positions.Length;
+            var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
+            return AffineTransform2D.Scale(scale) * AffineTransform2D.Translate(-com);
         }
 
         [BurstCompile]
@@ -1812,7 +1470,6 @@ namespace andywiecko.BurstTriangulator
             public float maximumArea2;
             public float minimumAngle;
             public float D;
-            public NativeReference<RigidTransform2D>.ReadOnly transformationRef;
             public NativeReference<Status>.ReadOnly status;
             public NativeList<int> triangles;
             public NativeList<float2> outputPositions;
@@ -1840,7 +1497,6 @@ namespace andywiecko.BurstTriangulator
                 maximumArea2 = 2 * triangulator.Settings.RefinementThresholds.Area;
                 minimumAngle = triangulator.Settings.RefinementThresholds.Angle;
                 D = triangulator.Settings.ConcentricShellsParameter;
-                transformationRef = triangulator.localTransformation.AsReadOnly();
 
                 status = triangulator.status.AsReadOnly();
                 triangles = triangulator.triangles;
@@ -2091,9 +1747,8 @@ namespace andywiecko.BurstTriangulator
             private bool IsBadTriangle(int tId)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                var s = transformationRef.Value.scale;
                 var area2 = Area2(i, j, k, outputPositions.AsArray());
-                return area2 > maximumArea2 * s.x * s.y || AngleIsTooSmall(tId, minimumAngle);
+                return area2 > maximumArea2 || AngleIsTooSmall(tId, minimumAngle);
             }
 
             private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue)
@@ -2125,10 +1780,9 @@ namespace andywiecko.BurstTriangulator
                 }
                 else
                 {
-                    var s = transformationRef.Value.scale;
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     var area2 = Area2(i, j, k, outputPositions.AsArray());
-                    if (area2 > maximumArea2 * s.x * s.y) // TODO split permited
+                    if (area2 > maximumArea2) // TODO split permited
                     {
                         foreach (var he in edges.AsReadOnly())
                         {
