@@ -354,8 +354,9 @@ namespace andywiecko.BurstTriangulator
                 }.Execute();
                 MarkerDelaunayTriangulation.End();
 
-                var internalConstraints = new NativeList<Edge>(localPositions.Length, Allocator.Temp);
+                NativeList<Edge> internalConstraints = default;
                 if (input.ConstraintEdges.IsCreated) {
+                    internalConstraints = new NativeList<Edge>(localPositions.Length, Allocator.Temp);
                     MarkerConstrainEdges.Begin();
                     new ConstrainEdgesJob {
                         status = output.Status,
@@ -390,7 +391,7 @@ namespace andywiecko.BurstTriangulator
                         outputPositions = localPositions,
                         circles = circles,
                         halfedges = halfEdges,
-                        constraints = input.ConstraintEdges.IsCreated ? internalConstraints : default,
+                        constraints = internalConstraints,
                     }.Execute();
                     MarkerRefineMesh.End();
                 }
