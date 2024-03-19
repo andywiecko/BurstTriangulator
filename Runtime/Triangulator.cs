@@ -13,8 +13,14 @@ using UnityEngine.Assertions;
 
 namespace andywiecko.BurstTriangulator
 {
-    /** Supports rotation, scaling and translation in 2D */
-    public struct AffineTransform2D {
+    /** Supports rotation, scaling and translation in 2D.
+     *
+     * The transformation is defined as first a translation, and then rotation+scaling.
+     * The order is important for floating point accuracy reasons. This is often used to
+     * move points from very far away back to the origin. If we would have done the rotation+scaling first (like in a standard matrix multiplication),
+     * the translation might have to be much larger, which can lead to floating point inaccuracies.
+     */
+    struct AffineTransform2D {
         float2x2 rotScale;
         float2 translation;
 
@@ -62,7 +68,7 @@ namespace andywiecko.BurstTriangulator
             for (int i = 0; i < points.Length; i++) outPoints[i] = math.mul(invRotScale, points[i]) - translation;
         }
 
-		public override string ToString() => $"RigidTransform(rotScale={rotScale}, translation={translation})";
+		public override string ToString() => $"AffineTransform2D(translation={translation}, rotScale={rotScale})";
 	}
 
     public class Triangulator : IDisposable
