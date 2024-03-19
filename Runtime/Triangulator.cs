@@ -368,13 +368,14 @@ namespace andywiecko.BurstTriangulator
                     }.Execute();
                     MarkerConstrainEdges.End();
 
-                if (input.ConstraintEdges.IsCreated && (localHoles.IsCreated || restoreBoundary)) {
-                    MarkerPlantSeeds.Begin();
-                    var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, internalConstraints, halfEdges);
-                    if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
-                    if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
-                    seedPlanter.Finish();
-                    MarkerPlantSeeds.End();
+                    if (localHoles.IsCreated || restoreBoundary) {
+                        MarkerPlantSeeds.Begin();
+                        var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, internalConstraints, halfEdges);
+                        if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
+                        if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
+                        seedPlanter.Finish();
+                        MarkerPlantSeeds.End();
+                    }
                 }
 
                 if (refineMesh) {
