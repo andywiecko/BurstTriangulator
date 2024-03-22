@@ -1354,6 +1354,8 @@ namespace andywiecko.BurstTriangulator
                     triangles[h3] = _p;
                     pointToHalfedge[_q] = h0;
                     pointToHalfedge[_p] = h3;
+                    pointToHalfedge[_i] = h4;
+                    pointToHalfedge[_j] = h1;
 
                     var h5p = halfedges[h5];
                     halfedges[h0] = h5p;
