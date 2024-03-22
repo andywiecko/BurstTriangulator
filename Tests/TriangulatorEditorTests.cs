@@ -1871,5 +1871,91 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Draw();
         }
+
+        [Test]
+        public void GithubIssue111Test()
+        {
+            float2[] positions =
+            {
+                new(16.5f,1.5f),
+                new(16.5f,2.5f),
+                new(7.5f,2.5f),
+                new(7.5f,8.5f),
+                new(0.5f,8.5f),
+                new(0.5f,15.5f),
+                new(7.5f,15.5f),
+                new(7.5f,20.5f),
+                new(16.5f,20.5f),
+                new(16.5f,21.5f),
+                new(24.5f,21.5f),
+                new(24.5f,20.5f),
+                new(33.5f,20.5f),
+                new(33.5f,15.5f),
+                new(39.5f,15.5f),
+                new(39.5f,8.5f),
+                new(33.5f,8.5f),
+                new(33.5f,2.5f),
+                new(24.5f,2.5f),
+                new(24.5f,1.5f),
+                new(15.5f,15.5f),
+                new(25.5f,15.5f),
+                new(25.5f,18.5f),
+                new(15.5f,18.5f),
+                new(15.5f,4.5f),
+                new(25.5f,4.5f),
+                new(25.5f,7.5f),
+                new(15.5f,7.5f),
+                new(10.5f,6.5f),
+                new(12.5f,6.5f),
+                new(12.5f,17.5f),
+                new(10.5f,17.5f),
+                new(28.5f,6.5f),
+                new(30.5f,6.5f),
+                new(30.5f,17.5f),
+                new(28.5f,17.5f),
+                new(0.5f,11.5f),
+                new(20.5f,21.5f),
+                new(39.5f,11.5f),
+                new(20.5f,1.44f)
+            };
+
+            int[] constraint =
+            {
+                0,1, 1,2, 2,3, 3,4, 36,5, 5,6, 6,7, 7,8, 8,9, 37,10, 10,11, 11,12, 12,13, 13,14, 38,15, 15,16, 16,17, 17,18, 18,19, 39,0, 20,21, 21,22, 22,23, 23,20, 24,25, 25,26, 26,27, 27,24, 28,29, 29,30, 30,31, 31,28, 32,33, 33,34, 34,35, 35,32, 4,36, 9,37, 14,38, 19,39
+            };
+
+
+            float2[] holesSeeds =
+            {
+                new(16.5f,16.5f),
+                new(16.5f,5.5f),
+                new(11.5f,7.5f),
+                new(29.5f,7.5f),
+            };
+
+            using var constraintEdges = new NativeArray<int>(constraint, Allocator.Persistent);
+            using var nativePositions = new NativeArray<float2>(positions, Allocator.Persistent);
+            using var holes = new NativeArray<float2>(holesSeeds, Allocator.Persistent);
+
+            using var triangulator = new Triangulator(Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    RestoreBoundary = true,
+                },
+                Input =
+                {
+                    Positions = nativePositions,
+                    ConstraintEdges = constraintEdges,
+                    HoleSeeds = holes,
+                },
+            };
+
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Triangles, Has.Length.GreaterThan(0));
+            triangulator.Draw();
+        }
     }
 }
