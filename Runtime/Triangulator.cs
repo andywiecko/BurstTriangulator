@@ -366,7 +366,14 @@ namespace andywiecko.BurstTriangulator
                 using var halfedges = new NativeList<int>(localPositions.Length, Allocator.Temp);
                 var triangles = output.Triangles;
                 using var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
-                new DelaunayTriangulationJob(output.Status, localPositions.AsArray(), triangles, halfedges).Execute();
+                new DelaunayTriangulationJob {
+                    status = output.Status,
+                    positions = localPositions.AsArray(),
+                    triangles = triangles,
+                    halfedges = halfedges,
+                    hullStart = int.MaxValue,
+                    c = float.MaxValue
+                }.Execute();
                 MarkerDelaunayTriangulation.End();
 
                 NativeArray<Edge> internalConstraints = default;
@@ -539,25 +546,6 @@ namespace andywiecko.BurstTriangulator
                 public DistComparer(NativeArray<float> dist) => this.dist = dist;
                 public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
             }
-
-            public DelaunayTriangulationJob(NativeReference<Status> status, NativeArray<float2> positions, NativeList<int> triangles, NativeList<int> halfedges) {
-                this.status = status;
-                this.positions = positions;
-                this.triangles = triangles;
-                this.halfedges = halfedges;
-                hullStart = int.MaxValue;
-                c = float.MaxValue;
-                ids = default;
-                dists = default;
-                hullNext = default;
-                hullPrev = default;
-                hullTri = default;
-                hullHash = default;
-                hashSize = default;
-                EDGE_STACK = default;
-                trianglesLen = 0;
-            }
-
 
             public NativeReference<Status> status;
             [ReadOnly]
