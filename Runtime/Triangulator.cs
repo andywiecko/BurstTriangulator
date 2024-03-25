@@ -8,6 +8,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Profiling;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace andywiecko.BurstTriangulator
 {
@@ -368,9 +369,9 @@ namespace andywiecko.BurstTriangulator
                 new DelaunayTriangulationJob(output.Status, localPositions.AsArray(), triangles, halfedges).Execute();
                 MarkerDelaunayTriangulation.End();
 
-                NativeList<Edge> internalConstraints = default;
+                NativeArray<Edge> internalConstraints = default;
                 if (input.ConstraintEdges.IsCreated) {
-                    internalConstraints = new NativeList<Edge>(localPositions.Length, Allocator.Temp);
+                    internalConstraints = new NativeArray<Edge>(input.ConstraintEdges.Length/2, Allocator.Temp);
                     MarkerConstrainEdges.Begin();
                     new ConstrainEdgesJob {
                         status = output.Status,
@@ -1053,7 +1054,7 @@ namespace andywiecko.BurstTriangulator
             public NativeArray<int> triangles;
             [ReadOnly]
             public NativeArray<int> inputConstraintEdges;
-            public NativeList<Edge> internalConstraints;
+            public NativeArray<Edge> internalConstraints;
             public NativeArray<int> halfedges;
             public int maxIters;
 
@@ -1091,7 +1092,7 @@ namespace andywiecko.BurstTriangulator
 
             private void BuildInternalConstraints()
             {
-                internalConstraints.Length = inputConstraintEdges.Length / 2;
+                Assert.AreEqual(inputConstraintEdges.Length / 2, internalConstraints.Length);
                 for (int index = 0; index < internalConstraints.Length; index++)
                 {
                     internalConstraints[index] = new(
@@ -1384,7 +1385,7 @@ namespace andywiecko.BurstTriangulator
             public NativeList<float2> outputPositions;
             public NativeList<Circle> circles;
             public NativeList<int> halfedges;
-            public NativeList<Edge> constraints;
+            public NativeArray<Edge> constraints;
 
             [NativeDisableContainerSafetyRestriction]
             private NativeQueue<int> trianglesQueue;
@@ -1425,41 +1426,28 @@ namespace andywiecko.BurstTriangulator
                 using var heQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
                 using var tQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
 
-                var tempConstraints = default(NativeList<Edge>);
-                if (!constraints.IsCreated)
-                {
-                    tempConstraints = constraints = new NativeList<Edge>(Allocator.Temp);
-                    for (int he = 0; he < halfedges.Length; he++)
-                    {
-                        if (halfedges[he] == -1)
-                        {
-                            constraints.Add(new(triangles[he], triangles[NextHalfedge(he)]));
-                        }
-                    }
-                }
-                if (!restoreBoundary)
-                {
-                    for (int he = 0; he < halfedges.Length; he++)
-                    {
-                        var edge = new Edge(triangles[he], triangles[NextHalfedge(he)]);
-                        if (halfedges[he] == -1 && !constraints.Contains(edge))
-                        {
-                            constraints.Add(edge);
-                        }
-                    }
+                if (!constraints.IsCreated || !restoreBoundary) {
+                    // If a triangle edge is not connected to any other triangle,
+                    // then it is implicitly constrained.
+                    for (int he = 0; he < constrainedHalfedges.Length; he++) constrainedHalfedges[he] = halfedges[he] == -1;
                 }
 
-                for (int he = 0; he < constrainedHalfedges.Length; he++)
-                {
-                    for (int id = 0; id < constraints.Length; id++)
+                if (constraints.IsCreated) {
+                    for (int he = 0; he < constrainedHalfedges.Length; he++)
                     {
-                        var (ci, cj) = constraints[id];
+                        if (constrainedHalfedges[he]) continue;
+
                         var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
                         (i, j) = i < j ? (i, j) : (j, i);
-                        if (ci == i && cj == j)
+
+                        for (int id = 0; id < constraints.Length; id++)
                         {
-                            constrainedHalfedges[he] = true;
-                            break;
+                            var (ci, cj) = constraints[id];
+                            if (ci == i && cj == j)
+                            {
+                                constrainedHalfedges[he] = true;
+                                break;
+                            }
                         }
                     }
                 }
@@ -1492,11 +1480,6 @@ namespace andywiecko.BurstTriangulator
                     {
                         SplitTriangle(tId, heQueue, tQueue);
                     }
-                }
-
-                if (tempConstraints.IsCreated)
-                {
-                    tempConstraints.Dispose();
                 }
             }
 
@@ -2074,7 +2057,7 @@ namespace andywiecko.BurstTriangulator
             [ReadOnly]
             public NativeList<float2> positions;
             public NativeList<Circle> circles;
-            public NativeList<Edge> constraintEdges;
+            public NativeArray<Edge> constraintEdges;
             public NativeList<int> halfedges;
 
             [NativeDisableContainerSafetyRestriction]
@@ -2084,7 +2067,7 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> badTriangles;
             private NativeQueue<int> trianglesQueue;
 
-            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<float2> positions, NativeList<Circle> circles, NativeList<Edge> constraintEdges, NativeList<int> halfedges)
+            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<float2> positions, NativeList<Circle> circles, NativeArray<Edge> constraintEdges, NativeList<int> halfedges)
             {
                 this.status = status;
                 this.triangles = triangles;
