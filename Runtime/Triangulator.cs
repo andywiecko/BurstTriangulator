@@ -7,24 +7,27 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Profiling;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace andywiecko.BurstTriangulator
 {
-    /** Supports rotation, scaling and translation in 2D.
-     *
-     * The transformation is defined as first a translation, and then rotation+scaling.
-     * The order is important for floating point accuracy reasons. This is often used to
-     * move points from very far away back to the origin. If we would have done the rotation+scaling first (like in a standard matrix multiplication),
-     * the translation might have to be much larger, which can lead to floating point inaccuracies.
-     */
-    struct AffineTransform2D {
-        float2x2 rotScale;
-        float2 translation;
+    /// <summary>Supports rotation, scaling and translation in 2D.
+    ///
+    /// The transformation is defined as first a translation, and then rotation+scaling.
+    /// The order is important for floating point accuracy reasons. This is often used to
+    /// move points from very far away back to the origin. If we would have done the rotation+scaling first (like in a standard matrix multiplication),
+    /// the translation might have to be much larger, which can lead to floating point inaccuracies.
+    /// </summary>
+    internal readonly struct AffineTransform2D {
+        readonly float2x2 rotScale;
+        readonly float2 translation;
 
-        public static readonly AffineTransform2D identity = new AffineTransform2D { rotScale = float2x2.identity, translation = float2.zero };
+        public AffineTransform2D(float2x2 rotScale, float2 translation) {
+            this.rotScale = rotScale;
+            this.translation = translation;
+        }
+
+        public static readonly AffineTransform2D identity = new AffineTransform2D(float2x2.identity, float2.zero);
 
         // R(T + x) = y
         // Solve for x:
@@ -32,22 +35,22 @@ namespace andywiecko.BurstTriangulator
         // x = R^-1(y) - T
         // x = R^-1(y - RT)
         // x = R^-1(y + R(-T))
-        public AffineTransform2D inverse => new AffineTransform2D { rotScale = math.inverse(rotScale), translation = math.mul(rotScale, -translation) };
+        public AffineTransform2D inverse => new AffineTransform2D(math.inverse(rotScale), math.mul(rotScale, -translation));
 
-        /** How much the area of a shape is scaled by this transformation */
+        /// <summary>How much the area of a shape is scaled by this transformation</summary>
         public float areaScalingFactor => math.abs(math.determinant(rotScale));
 
         public float2 Transform (float2 point) => math.mul(rotScale, point + translation);
 
-        public static AffineTransform2D Translate(float2 offset) => new AffineTransform2D { rotScale = float2x2.identity, translation = offset };
-        public static AffineTransform2D Scale(float2 scale) => new AffineTransform2D { rotScale = new float2x2(scale.x, 0, 0, scale.y), translation = float2.zero };
-        public static AffineTransform2D Rotate(float2x2 rotation) => new AffineTransform2D { rotScale = rotation, translation = float2.zero };
+        public static AffineTransform2D Translate(float2 offset) => new AffineTransform2D(float2x2.identity, offset);
+        public static AffineTransform2D Scale(float2 scale) => new AffineTransform2D(new float2x2(scale.x, 0, 0, scale.y), float2.zero);
+        public static AffineTransform2D Rotate(float2x2 rotation) => new AffineTransform2D(rotation, float2.zero);
 
         // result.transform(x) = R1(T1 + R2(x + T2)) = R1((T1 + R2T2) + R2(x)) = R1*R2(R2^-1(T1 + R2T2) + x) = R1*R2(R2^-1(T1) + T2 + x)
-        public static AffineTransform2D operator * (AffineTransform2D lhs, AffineTransform2D rhs) => new AffineTransform2D {
-            rotScale = math.mul(lhs.rotScale, rhs.rotScale),
-            translation = math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
-        };
+        public static AffineTransform2D operator * (AffineTransform2D lhs, AffineTransform2D rhs) => new AffineTransform2D(
+            math.mul(lhs.rotScale, rhs.rotScale),
+            math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
+        );
 
         public void Transform(NativeArray<float2> points) {
             for (int i = 0; i < points.Length; i++) points[i] = Transform(points[i]);
@@ -58,11 +61,11 @@ namespace andywiecko.BurstTriangulator
             for (int i = 0; i < points.Length; i++) outPoints[i] = Transform(points[i]);
         }
 
-        /** Applies the inverse transform to all points, in-place.
-         *
-         * This is mathematically equivalent to calling `this.inverse.Transform(points, outPoints)`,
-         * but it is less susceptible to floating point errors.
-         */
+        /// <summary>Applies the inverse transform to all points, in-place.
+        ///
+        /// This is mathematically equivalent to calling `this.inverse.Transform(points, outPoints)`,
+        /// but it is less susceptible to floating point errors.
+        /// </summary>
         public void InverseTransform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints) {
             var invRotScale = math.inverse(rotScale);
             for (int i = 0; i < points.Length; i++) outPoints[i] = math.mul(invRotScale, points[i]) - translation;
@@ -151,7 +154,7 @@ namespace andywiecko.BurstTriangulator
             /// <summary>
             /// Batch count used in parallel jobs.
             /// </summary>
-            [field: SerializeField]
+            [System.Obsolete("This property is no longer used. Setting it has no effect.")]
             public int BatchCount { get; set; } = 64;
             /// <summary>
             /// Specifies the refinement angle constraint for triangles in the resulting mesh.
@@ -272,6 +275,27 @@ namespace andywiecko.BurstTriangulator
 
         public void Run() => Schedule().Complete();
 
+        public JobHandle Schedule(JobHandle dependencies = default)
+        {
+            return new TriangulationJob {
+                preprocessor = Settings.Preprocessor,
+                validateInput = Settings.ValidateInput,
+                restoreBoundary = Settings.RestoreBoundary,
+                refineMesh = Settings.RefineMesh,
+                sloanMaxIters = Settings.SloanMaxIters,
+                concentricShellsParameter = Settings.ConcentricShellsParameter,
+                refinementThresholdArea = Settings.RefinementThresholds.Area,
+                refinementThresholdAngle = Settings.RefinementThresholds.Angle,
+                input = new TriangulationJob.InputData {
+                    Positions = Input.Positions,
+                    ConstraintEdges = Input.ConstraintEdges,
+                    HoleSeeds = Input.HoleSeeds,
+                },
+                output = Output,
+            }.Schedule(dependencies);
+        }
+
+        #region Jobs
         [BurstCompile]
         struct TriangulationJob: IJob {
             public Preprocessor preprocessor;
@@ -287,15 +311,12 @@ namespace andywiecko.BurstTriangulator
 
             public struct InputData {
                 public NativeArray<float2> Positions;
-
                 [NativeDisableContainerSafetyRestriction]
                 public NativeArray<int> ConstraintEdges;
-
                 [NativeDisableContainerSafetyRestriction]
                 public NativeArray<float2> HoleSeeds;
             }
 
-            // Markers
             static readonly ProfilerMarker MarkerPreProcess = new ProfilerMarker("PreProcess");
             static readonly ProfilerMarker MarkerValidateInput = new ProfilerMarker("ValidateInput");
             static readonly ProfilerMarker MarkerDelaunayTriangulation = new ProfilerMarker("DelaunayTriangulation");
@@ -305,7 +326,7 @@ namespace andywiecko.BurstTriangulator
             static readonly ProfilerMarker MarkerInverseTransformation = new ProfilerMarker("InverseTransformation");
 
             static void PreProcessInput (Preprocessor preprocessor, InputData input, OutputData output, out NativeList<float2> localPositions, out NativeArray<float2> localHoles, out AffineTransform2D localTransformation) {
-                localPositions = output.Positions.IsCreated ? output.Positions : new NativeList<float2>(input.Positions.Length, Allocator.Temp);
+                localPositions = output.Positions;
                 localPositions.ResizeUninitialized(input.Positions.Length);
                 if (preprocessor == Preprocessor.PCA || preprocessor == Preprocessor.COM) {
                     localTransformation = preprocessor == Preprocessor.PCA ? CalculatePCATransformation(input.Positions) : CalculateLocalTransformation(input.Positions);
@@ -341,17 +362,10 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 MarkerDelaunayTriangulation.Begin();
-                var halfEdges = new NativeList<int>(localPositions.Length, Allocator.Temp);
+                using var halfedges = new NativeList<int>(localPositions.Length, Allocator.Temp);
                 var triangles = output.Triangles;
-                var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
-                new DelaunayTriangulationJob {
-                    status = output.Status,
-                    positions = localPositions.AsArray(),
-                    triangles = triangles,
-                    halfedges = halfEdges,
-                    hullStart = int.MaxValue,
-                    c = float.MaxValue,
-                }.Execute();
+                using var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
+                new DelaunayTriangulationJob(output.Status, localPositions.AsArray(), triangles, halfedges).Execute();
                 MarkerDelaunayTriangulation.End();
 
                 NativeList<Edge> internalConstraints = default;
@@ -364,14 +378,14 @@ namespace andywiecko.BurstTriangulator
                         triangles = triangles.AsArray(),
                         inputConstraintEdges = input.ConstraintEdges,
                         internalConstraints = internalConstraints,
-                        halfedges = halfEdges.AsArray(),
+                        halfedges = halfedges.AsArray(),
                         maxIters = sloanMaxIters,
                     }.Execute();
                     MarkerConstrainEdges.End();
 
                     if (localHoles.IsCreated || restoreBoundary) {
                         MarkerPlantSeeds.Begin();
-                        var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, internalConstraints, halfEdges);
+                        var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, internalConstraints, halfedges);
                         if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
                         if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
                         seedPlanter.Finish();
@@ -390,7 +404,7 @@ namespace andywiecko.BurstTriangulator
                         triangles = triangles,
                         outputPositions = localPositions,
                         circles = circles,
-                        halfedges = halfEdges,
+                        halfedges = halfedges,
                         constraints = internalConstraints,
                     }.Execute();
                     MarkerRefineMesh.End();
@@ -418,27 +432,6 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        public JobHandle Schedule(JobHandle dependencies = default)
-        {
-            return new TriangulationJob {
-                preprocessor = Settings.Preprocessor,
-                validateInput = Settings.ValidateInput,
-                restoreBoundary = Settings.RestoreBoundary,
-                refineMesh = Settings.RefineMesh,
-                sloanMaxIters = Settings.SloanMaxIters,
-                concentricShellsParameter = Settings.ConcentricShellsParameter,
-                refinementThresholdArea = Settings.RefinementThresholds.Area,
-                refinementThresholdAngle = Settings.RefinementThresholds.Angle,
-                input = new TriangulationJob.InputData {
-                    Positions = Input.Positions,
-                    ConstraintEdges = Input.ConstraintEdges,
-                    HoleSeeds = Input.HoleSeeds,
-                },
-                output = Output,
-            }.Schedule(dependencies);
-        }
-
-        #region Jobs
         [BurstCompile]
         private struct ValidateInputPositionsJob : IJob
         {
@@ -545,6 +538,24 @@ namespace andywiecko.BurstTriangulator
                 private NativeArray<float> dist;
                 public DistComparer(NativeArray<float> dist) => this.dist = dist;
                 public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
+            }
+
+            public DelaunayTriangulationJob(NativeReference<Status> status, NativeArray<float2> positions, NativeList<int> triangles, NativeList<int> halfedges) {
+                this.status = status;
+                this.positions = positions;
+                this.triangles = triangles;
+                this.halfedges = halfedges;
+                hullStart = int.MaxValue;
+                c = float.MaxValue;
+                ids = default;
+                dists = default;
+                hullNext = default;
+                hullPrev = default;
+                hullTri = default;
+                hullHash = default;
+                hashSize = default;
+                EDGE_STACK = default;
+                trianglesLen = 0;
             }
 
 
@@ -1385,8 +1396,8 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> pathHalfedges;
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> visitedTriangles;
-            [NativeDisableContainerSafetyRestriction]
             private int initialPointsCount;
+            [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> constrainedHalfedges;
 
             public void Execute()
