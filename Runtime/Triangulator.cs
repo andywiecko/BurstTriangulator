@@ -394,14 +394,13 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
 
-                if (refineMesh) {
+                if (refineMesh && output.Status.Value == Status.OK) {
                     MarkerRefineMesh.Begin();
                     new RefineMeshJob() {
                         restoreBoundary = restoreBoundary,
                         maximumArea2 = 2 * refinementThresholdArea * localTransformation.areaScalingFactor,
                         minimumAngle = refinementThresholdAngle,
                         D = concentricShellsParameter,
-                        status = output.Status,
                         triangles = triangles,
                         outputPositions = localPositions,
                         circles = circles,
@@ -1380,7 +1379,6 @@ namespace andywiecko.BurstTriangulator
             public float maximumArea2;
             public float minimumAngle;
             public float D;
-            public NativeReference<Status>.ReadOnly status;
             public NativeList<int> triangles;
             public NativeList<float2> outputPositions;
             public NativeList<Circle> circles;
@@ -1403,11 +1401,6 @@ namespace andywiecko.BurstTriangulator
 
             public void Execute()
             {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
                 initialPointsCount = outputPositions.Length;
                 circles.Length = triangles.Length / 3;
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
