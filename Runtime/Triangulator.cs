@@ -413,7 +413,7 @@ namespace andywiecko.BurstTriangulator
                 MarkerInverseTransformation.Begin();
                 // If an output position list was provided, we need to transform the local positions back to world space.
                 // If none was provided, we can skip this step, as the user doesn't need it.
-                if (output.Positions.IsCreated && preprocessor != Preprocessor.None) {
+                if (preprocessor != Preprocessor.None) {
                     localTransformation.InverseTransform(localPositions.AsArray(), output.Positions.AsArray());
                 }
                 MarkerInverseTransformation.End();
