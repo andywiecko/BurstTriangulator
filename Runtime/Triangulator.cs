@@ -373,15 +373,15 @@ namespace andywiecko.BurstTriangulator
                 if (input.ConstraintEdges.IsCreated) {
                     internalConstraints = new NativeArray<Edge>(input.ConstraintEdges.Length/2, Allocator.Temp);
                     MarkerConstrainEdges.Begin();
-                    new ConstrainEdgesJob {
-                        status = output.Status,
-                        positions = localPositions.AsArray(),
-                        triangles = triangles.AsArray(),
-                        inputConstraintEdges = input.ConstraintEdges,
-                        internalConstraints = internalConstraints,
-                        halfedges = halfedges.AsArray(),
-                        maxIters = sloanMaxIters,
-                    }.Execute();
+                    new ConstrainEdgesJob(
+                        status: output.Status,
+                        positions: localPositions.AsArray(),
+                        triangles: triangles.AsArray(),
+                        inputConstraintEdges: input.ConstraintEdges,
+                        internalConstraints: internalConstraints,
+                        halfedges: halfedges.AsArray(),
+                        maxIters: sloanMaxIters
+                    ).Execute();
                     MarkerConstrainEdges.End();
 
                     if (localHoles.IsCreated || restoreBoundary) {
@@ -394,20 +394,19 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
 
-                if (refineMesh) {
+                if (refineMesh && output.Status.Value == Status.OK) {
                     MarkerRefineMesh.Begin();
-                    new RefineMeshJob() {
-                        restoreBoundary = restoreBoundary,
-                        maximumArea2 = 2 * refinementThresholdArea * localTransformation.areaScalingFactor,
-                        minimumAngle = refinementThresholdAngle,
-                        D = concentricShellsParameter,
-                        status = output.Status,
-                        triangles = triangles,
-                        outputPositions = localPositions,
-                        circles = circles,
-                        halfedges = halfedges,
-                        constraints = internalConstraints,
-                    }.Execute();
+                    new RefineMeshJob(
+                        triangles: triangles,
+                        outputPositions: localPositions,
+                        circles: circles,
+                        halfedges: halfedges,
+                        constraints: internalConstraints,
+                        restoreBoundary: restoreBoundary,
+                        maximumArea2: 2 * refinementThresholdArea * localTransformation.areaScalingFactor,
+                        minimumAngle: refinementThresholdAngle,
+                        D: concentricShellsParameter
+                    ).Execute();
                     MarkerRefineMesh.End();
                 }
 
@@ -1065,6 +1064,28 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<int> pointToHalfedge;
 
+            public ConstrainEdgesJob(
+                NativeReference<Status> status,
+                NativeArray<float2> positions,
+                NativeArray<int> triangles,
+                NativeArray<int> inputConstraintEdges,
+                NativeArray<Edge> internalConstraints,
+                NativeArray<int> halfedges,
+                int maxIters
+            )
+            {
+                this.status = status;
+                this.positions = positions;
+                this.triangles = triangles;
+                this.inputConstraintEdges = inputConstraintEdges;
+                this.internalConstraints = internalConstraints;
+                this.halfedges = halfedges;
+                this.maxIters = maxIters;
+                intersections = default;
+                unresolvedIntersections = default;
+                pointToHalfedge = default;
+            }
+
             public void Execute()
             {
                 if (status.Value != Status.OK)
@@ -1380,7 +1401,6 @@ namespace andywiecko.BurstTriangulator
             public float maximumArea2;
             public float minimumAngle;
             public float D;
-            public NativeReference<Status>.ReadOnly status;
             public NativeList<int> triangles;
             public NativeList<float2> outputPositions;
             public NativeList<Circle> circles;
@@ -1401,13 +1421,38 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> constrainedHalfedges;
 
+            public RefineMeshJob (
+                NativeList<int> triangles,
+                NativeList<float2> outputPositions,
+                NativeList<Circle> circles,
+                NativeList<int> halfedges,
+                NativeArray<Edge> constraints,
+                bool restoreBoundary,
+                float maximumArea2,
+                float minimumAngle,
+                float D
+            )
+            {
+                this.restoreBoundary = restoreBoundary;
+                this.maximumArea2 = maximumArea2;
+                this.minimumAngle = minimumAngle;
+                this.D = D;
+                this.triangles = triangles;
+                this.outputPositions = outputPositions;
+                this.circles = circles;
+                this.halfedges = halfedges;
+                this.constraints = constraints;
+                trianglesQueue = default;
+                badTriangles = default;
+                pathPoints = default;
+                pathHalfedges = default;
+                visitedTriangles = default;
+                constrainedHalfedges = default;
+                initialPointsCount = 0;
+            }
+
             public void Execute()
             {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
                 initialPointsCount = outputPositions.Length;
                 circles.Length = triangles.Length / 3;
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
