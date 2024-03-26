@@ -386,7 +386,7 @@ namespace andywiecko.BurstTriangulator
                         triangles = triangles.AsArray(),
                         inputConstraintEdges = input.ConstraintEdges,
                         internalConstraints = internalConstraints,
-                        halfedges = halfedges.AsArray(),
+                        halfedges = halfedges,
                         maxIters = sloanMaxIters,
                     }.Execute();
                     MarkerConstrainEdges.End();
@@ -1042,7 +1042,7 @@ namespace andywiecko.BurstTriangulator
             [ReadOnly]
             public NativeArray<int> inputConstraintEdges;
             public NativeArray<Edge> internalConstraints;
-            public NativeArray<int> halfedges;
+            public NativeList<int> halfedges;
             public int maxIters;
 
             [NativeDisableContainerSafetyRestriction]
