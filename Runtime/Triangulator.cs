@@ -6,10 +6,75 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.Profiling;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace andywiecko.BurstTriangulator
 {
+    /// <summary>Supports rotation, scaling and translation in 2D.
+    ///
+    /// The transformation is defined as first a translation, and then rotation+scaling.
+    /// The order is important for floating point accuracy reasons. This is often used to
+    /// move points from very far away back to the origin. If we would have done the rotation+scaling first (like in a standard matrix multiplication),
+    /// the translation might have to be much larger, which can lead to floating point inaccuracies.
+    /// </summary>
+    internal readonly struct AffineTransform2D {
+        readonly float2x2 rotScale;
+        readonly float2 translation;
+
+        public AffineTransform2D(float2x2 rotScale, float2 translation) {
+            this.rotScale = rotScale;
+            this.translation = translation;
+        }
+
+        public static readonly AffineTransform2D identity = new AffineTransform2D(float2x2.identity, float2.zero);
+
+        // R(T + x) = y
+        // Solve for x:
+        // T + x = R^-1(y)
+        // x = R^-1(y) - T
+        // x = R^-1(y - RT)
+        // x = R^-1(y + R(-T))
+        public AffineTransform2D inverse => new AffineTransform2D(math.inverse(rotScale), math.mul(rotScale, -translation));
+
+        /// <summary>How much the area of a shape is scaled by this transformation</summary>
+        public float areaScalingFactor => math.abs(math.determinant(rotScale));
+
+        public float2 Transform (float2 point) => math.mul(rotScale, point + translation);
+
+        public static AffineTransform2D Translate(float2 offset) => new AffineTransform2D(float2x2.identity, offset);
+        public static AffineTransform2D Scale(float2 scale) => new AffineTransform2D(new float2x2(scale.x, 0, 0, scale.y), float2.zero);
+        public static AffineTransform2D Rotate(float2x2 rotation) => new AffineTransform2D(rotation, float2.zero);
+
+        // result.transform(x) = R1(T1 + R2(x + T2)) = R1((T1 + R2T2) + R2(x)) = R1*R2(R2^-1(T1 + R2T2) + x) = R1*R2(R2^-1(T1) + T2 + x)
+        public static AffineTransform2D operator * (AffineTransform2D lhs, AffineTransform2D rhs) => new AffineTransform2D(
+            math.mul(lhs.rotScale, rhs.rotScale),
+            math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
+        );
+
+        public void Transform(NativeArray<float2> points) {
+            for (int i = 0; i < points.Length; i++) points[i] = Transform(points[i]);
+        }
+
+        public void Transform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints) {
+            if (points.Length != outPoints.Length) throw new ArgumentException("Input and output arrays must have the same length");
+            for (int i = 0; i < points.Length; i++) outPoints[i] = Transform(points[i]);
+        }
+
+        /// <summary>Applies the inverse transform to all points, in-place.
+        ///
+        /// This is mathematically equivalent to calling `this.inverse.Transform(points, outPoints)`,
+        /// but it is less susceptible to floating point errors.
+        /// </summary>
+        public void InverseTransform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints) {
+            var invRotScale = math.inverse(rotScale);
+            for (int i = 0; i < points.Length; i++) outPoints[i] = math.mul(invRotScale, points[i]) - translation;
+        }
+
+		public override string ToString() => $"AffineTransform2D(translation={translation}, rotScale={rotScale})";
+	}
+
     public class Triangulator : IDisposable
     {
         #region Primitives
@@ -90,7 +155,7 @@ namespace andywiecko.BurstTriangulator
             /// <summary>
             /// Batch count used in parallel jobs.
             /// </summary>
-            [field: SerializeField]
+            [System.Obsolete("This property is no longer used. Setting it has no effect.")]
             public int BatchCount { get; set; } = 64;
             /// <summary>
             /// Specifies the refinement angle constraint for triangles in the resulting mesh.
@@ -121,7 +186,7 @@ namespace andywiecko.BurstTriangulator
             [Obsolete]
             public float MaximumArea { get => RefinementThresholds.Area; set => RefinementThresholds.Area = value; }
             /// <summary>
-            /// If <see langword="true"/> refines mesh using 
+            /// If <see langword="true"/> refines mesh using
             /// <see href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</see>.
             /// </summary>
             [field: SerializeField]
@@ -135,9 +200,9 @@ namespace andywiecko.BurstTriangulator
             public bool ConstrainEdges { get; set; } = false;
             /// <summary>
             /// If is set to <see langword="true"/>, the provided data will be validated before running the triangulation procedure.
-            /// Input positions, as well as input constraints, have a few restrictions, 
+            /// Input positions, as well as input constraints, have a few restrictions,
             /// see <seealso href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md">README.md</seealso> for more details.
-            /// If one of the conditions fails, then triangulation will not be calculated. 
+            /// If one of the conditions fails, then triangulation will not be calculated.
             /// One could catch this as an error by using <see cref="OutputData.Status"/> (native, can be used in jobs).
             /// </summary>
             [field: SerializeField]
@@ -148,7 +213,7 @@ namespace andywiecko.BurstTriangulator
             [field: SerializeField]
             public bool RestoreBoundary { get; set; } = false;
             /// <summary>
-            /// Max iteration count during Sloan's algorithm (constraining edges). 
+            /// Max iteration count during Sloan's algorithm (constraining edges).
             /// <b>Modify this only if you know what you are doing.</b>
             /// </summary>
             [field: SerializeField]
@@ -173,187 +238,213 @@ namespace andywiecko.BurstTriangulator
             public NativeArray<float2> HoleSeeds { get; set; }
         }
 
-        public class OutputData
+        public struct OutputData
         {
-            public NativeList<float2> Positions => owner.outputPositions;
-            public NativeList<int> Triangles => owner.triangles;
-            public NativeReference<Status> Status => owner.status;
-            private readonly Triangulator owner;
-            public OutputData(Triangulator triangulator) => owner = triangulator;
+            [NativeDisableContainerSafetyRestriction]
+            public NativeList<float2> Positions;
+            public NativeList<int> Triangles;
+            public NativeReference<Status> Status;
         }
 
         public TriangulationSettings Settings { get; } = new();
         public InputData Input { get; set; } = new();
-        public OutputData Output { get; }
+        public OutputData Output => new OutputData {
+            Positions = outputPositions,
+            Triangles = triangles,
+            Status = status,
+        };
 
         private NativeList<float2> outputPositions;
         private NativeList<int> triangles;
-        private NativeList<int> halfedges;
-        private NativeList<Circle> circles;
-        private NativeList<Edge> constraintEdges;
         private NativeReference<Status> status;
-
-        private NativeArray<float2> tmpInputPositions;
-        private NativeArray<float2> tmpInputHoleSeeds;
-        private NativeList<float2> localPositions;
-        private NativeList<float2> localHoleSeeds;
-        private NativeReference<float2> com;
-        private NativeReference<float2> scale;
-        private NativeReference<float2> pcaCenter;
-        private NativeReference<float2x2> pcaMatrix;
 
         public Triangulator(int capacity, Allocator allocator)
         {
             outputPositions = new(capacity, allocator);
             triangles = new(6 * capacity, allocator);
-            halfedges = new(6 * capacity, allocator);
-            circles = new(capacity, allocator);
-            constraintEdges = new(capacity, allocator);
             status = new(Status.OK, allocator);
-
-            localPositions = new(capacity, allocator);
-            localHoleSeeds = new(capacity, allocator);
-            com = new(allocator);
-            scale = new(1, allocator);
-            pcaCenter = new(allocator);
-            pcaMatrix = new(float2x2.identity, allocator);
-            Output = new(this);
         }
+
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
 
         public void Dispose()
         {
             outputPositions.Dispose();
             triangles.Dispose();
-            halfedges.Dispose();
-            circles.Dispose();
-            constraintEdges.Dispose();
             status.Dispose();
-
-            localPositions.Dispose();
-            localHoleSeeds.Dispose();
-            com.Dispose();
-            scale.Dispose();
-            pcaCenter.Dispose();
-            pcaMatrix.Dispose();
         }
 
         public void Run() => Schedule().Complete();
 
         public JobHandle Schedule(JobHandle dependencies = default)
         {
-            dependencies = new ClearDataJob(this).Schedule(dependencies);
-
-            dependencies = Settings.Preprocessor switch
-            {
-                Preprocessor.PCA => SchedulePCATransformation(dependencies),
-                Preprocessor.COM => ScheduleWorldToLocalTransformation(dependencies),
-                Preprocessor.None => dependencies,
-                _ => throw new NotImplementedException()
-            };
-
-            dependencies = Settings.ValidateInput ? new ValidateInputPositionsJob(this).Schedule(dependencies) : dependencies;
-            dependencies = Settings.ValidateInput && Input.ConstraintEdges.IsCreated ? new ValidateInputConstraintEdges(this).Schedule(dependencies) : dependencies;
-
-            dependencies = new DelaunayTriangulationJob(this).Schedule(dependencies);
-            dependencies = Input.ConstraintEdges.IsCreated ? new ConstrainEdgesJob(this).Schedule(dependencies) : dependencies;
-            dependencies = Input.ConstraintEdges.IsCreated && (Settings.RestoreBoundary || Input.HoleSeeds.IsCreated) ? new PlantingSeedsJob(this).Schedule(dependencies) : dependencies;
-            dependencies = Settings.RefineMesh ? new RefineMeshJob(this).Schedule(dependencies) : dependencies;
-
-            dependencies = Settings.Preprocessor switch
-            {
-                Preprocessor.PCA => SchedulePCAInverseTransformation(dependencies),
-                Preprocessor.COM => ScheduleLocalToWorldTransformation(dependencies),
-                Preprocessor.None => dependencies,
-                _ => throw new NotImplementedException()
-            };
-
-            return dependencies;
-        }
-
-        private JobHandle SchedulePCATransformation(JobHandle dependencies)
-        {
-            tmpInputPositions = Input.Positions;
-            Input.Positions = localPositions.AsDeferredJobArray();
-            if (Input.HoleSeeds.IsCreated)
-            {
-                tmpInputHoleSeeds = Input.HoleSeeds;
-                Input.HoleSeeds = localHoleSeeds.AsDeferredJobArray();
-            }
-
-            dependencies = new PCATransformationJob(this).Schedule(dependencies);
-            if (tmpInputHoleSeeds.IsCreated)
-            {
-                dependencies = new PCATransformationHolesJob(this).Schedule(dependencies);
-            }
-            return dependencies;
-        }
-
-        private JobHandle SchedulePCAInverseTransformation(JobHandle dependencies)
-        {
-            dependencies = new PCAInverseTransformationJob(this).Schedule(this, dependencies);
-
-            Input.Positions = tmpInputPositions;
-            tmpInputPositions = default;
-
-            if (tmpInputHoleSeeds.IsCreated)
-            {
-                Input.HoleSeeds = tmpInputHoleSeeds;
-                tmpInputHoleSeeds = default;
-            }
-
-            return dependencies;
-        }
-
-        private JobHandle ScheduleWorldToLocalTransformation(JobHandle dependencies)
-        {
-            tmpInputPositions = Input.Positions;
-            Input.Positions = localPositions.AsDeferredJobArray();
-            if (Input.HoleSeeds.IsCreated)
-            {
-                tmpInputHoleSeeds = Input.HoleSeeds;
-                Input.HoleSeeds = localHoleSeeds.AsDeferredJobArray();
-            }
-
-            dependencies = new InitialLocalTransformationJob(this).Schedule(dependencies);
-            if (tmpInputHoleSeeds.IsCreated)
-            {
-                dependencies = new CalculateLocalHoleSeedsJob(this).Schedule(dependencies);
-            }
-            dependencies = new CalculateLocalPositionsJob(this).Schedule(this, dependencies);
-
-            return dependencies;
-        }
-
-        private JobHandle ScheduleLocalToWorldTransformation(JobHandle dependencies)
-        {
-            dependencies = new LocalToWorldTransformationJob(this).Schedule(this, dependencies);
-
-            Input.Positions = tmpInputPositions;
-            tmpInputPositions = default;
-
-            if (tmpInputHoleSeeds.IsCreated)
-            {
-                Input.HoleSeeds = tmpInputHoleSeeds;
-                tmpInputHoleSeeds = default;
-            }
-
-            return dependencies;
+            return new TriangulationJob {
+                preprocessor = Settings.Preprocessor,
+                validateInput = Settings.ValidateInput,
+                restoreBoundary = Settings.RestoreBoundary,
+                refineMesh = Settings.RefineMesh,
+                sloanMaxIters = Settings.SloanMaxIters,
+                concentricShellsParameter = Settings.ConcentricShellsParameter,
+                refinementThresholdArea = Settings.RefinementThresholds.Area,
+                refinementThresholdAngle = Settings.RefinementThresholds.Angle,
+                input = new TriangulationJob.InputData {
+                    Positions = Input.Positions,
+                    ConstraintEdges = Input.ConstraintEdges,
+                    HoleSeeds = Input.HoleSeeds,
+                },
+                output = Output,
+            }.Schedule(dependencies);
         }
 
         #region Jobs
         [BurstCompile]
+        struct TriangulationJob: IJob {
+            public Preprocessor preprocessor;
+            public bool validateInput;
+            public bool restoreBoundary;
+            public bool refineMesh;
+            public int sloanMaxIters;
+            public float concentricShellsParameter;
+            public float refinementThresholdArea;
+            public float refinementThresholdAngle;
+            public InputData input;
+            public OutputData output;
+
+            public struct InputData {
+                public NativeArray<float2> Positions;
+                [NativeDisableContainerSafetyRestriction]
+                public NativeArray<int> ConstraintEdges;
+                [NativeDisableContainerSafetyRestriction]
+                public NativeArray<float2> HoleSeeds;
+            }
+
+            static readonly ProfilerMarker MarkerPreProcess = new ProfilerMarker("PreProcess");
+            static readonly ProfilerMarker MarkerValidateInput = new ProfilerMarker("ValidateInput");
+            static readonly ProfilerMarker MarkerDelaunayTriangulation = new ProfilerMarker("DelaunayTriangulation");
+            static readonly ProfilerMarker MarkerConstrainEdges = new ProfilerMarker("ConstrainEdges");
+            static readonly ProfilerMarker MarkerPlantSeeds = new ProfilerMarker("PlantSeeds");
+            static readonly ProfilerMarker MarkerRefineMesh = new ProfilerMarker("RefineMesh");
+            static readonly ProfilerMarker MarkerInverseTransformation = new ProfilerMarker("InverseTransformation");
+
+            static void PreProcessInput (Preprocessor preprocessor, InputData input, OutputData output, out NativeList<float2> localPositions, out NativeArray<float2> localHoles, out AffineTransform2D localTransformation) {
+                localPositions = output.Positions;
+                localPositions.ResizeUninitialized(input.Positions.Length);
+                if (preprocessor == Preprocessor.PCA || preprocessor == Preprocessor.COM) {
+                    localTransformation = preprocessor == Preprocessor.PCA ? CalculatePCATransformation(input.Positions) : CalculateLocalTransformation(input.Positions);
+                    localTransformation.Transform(input.Positions, localPositions.AsArray());
+                    if (input.HoleSeeds.IsCreated) {
+                        localHoles = new NativeArray<float2>(input.HoleSeeds.Length, Allocator.Temp);
+                        localTransformation.Transform(input.HoleSeeds, localHoles);
+                    } else {
+                        localHoles = default;
+                    }
+                } else if (preprocessor == Preprocessor.None) {
+                    localPositions.CopyFrom(input.Positions);
+                    localHoles = input.HoleSeeds;
+                    localTransformation = AffineTransform2D.identity;
+                } else {
+                    throw new System.ArgumentException();
+                }
+            }
+
+            public void Execute() {
+                output.Status.Value = Status.OK;
+                output.Triangles.Clear();
+                output.Positions.Clear();
+
+                MarkerPreProcess.Begin();
+                PreProcessInput(preprocessor, input, output, out var localPositions, out var localHoles, out var localTransformation);
+                MarkerPreProcess.End();
+
+                if (validateInput) {
+                    MarkerValidateInput.Begin();
+                    ValidateInput(localPositions.AsArray(), input.ConstraintEdges);
+                    MarkerValidateInput.End();
+                }
+
+                MarkerDelaunayTriangulation.Begin();
+                using var halfedges = new NativeList<int>(localPositions.Length, Allocator.Temp);
+                var triangles = output.Triangles;
+                using var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
+                new DelaunayTriangulationJob {
+                    status = output.Status,
+                    positions = localPositions.AsArray(),
+                    triangles = triangles,
+                    halfedges = halfedges,
+                    hullStart = int.MaxValue,
+                    c = float.MaxValue
+                }.Execute();
+                MarkerDelaunayTriangulation.End();
+
+                NativeArray<Edge> internalConstraints = default;
+                if (input.ConstraintEdges.IsCreated) {
+                    internalConstraints = new NativeArray<Edge>(input.ConstraintEdges.Length/2, Allocator.Temp);
+                    MarkerConstrainEdges.Begin();
+                    new ConstrainEdgesJob {
+                        status = output.Status,
+                        positions = localPositions.AsArray(),
+                        triangles = triangles.AsArray(),
+                        inputConstraintEdges = input.ConstraintEdges,
+                        internalConstraints = internalConstraints,
+                        halfedges = halfedges,
+                        maxIters = sloanMaxIters,
+                    }.Execute();
+                    MarkerConstrainEdges.End();
+
+                    if (localHoles.IsCreated || restoreBoundary) {
+                        MarkerPlantSeeds.Begin();
+                        var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, internalConstraints, halfedges);
+                        if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
+                        if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
+                        seedPlanter.Finish();
+                        MarkerPlantSeeds.End();
+                    }
+                }
+
+                if (refineMesh && output.Status.Value == Status.OK) {
+                    MarkerRefineMesh.Begin();
+                    new RefineMeshJob() {
+                        restoreBoundary = restoreBoundary,
+                        maximumArea2 = 2 * refinementThresholdArea * localTransformation.areaScalingFactor,
+                        minimumAngle = refinementThresholdAngle,
+                        D = concentricShellsParameter,
+                        triangles = triangles,
+                        outputPositions = localPositions,
+                        circles = circles,
+                        halfedges = halfedges,
+                        constraints = internalConstraints,
+                    }.Execute();
+                    MarkerRefineMesh.End();
+                }
+
+                MarkerInverseTransformation.Begin();
+                // If an output position list was provided, we need to transform the local positions back to world space.
+                // If none was provided, we can skip this step, as the user doesn't need it.
+                if (preprocessor != Preprocessor.None) {
+                    localTransformation.InverseTransform(localPositions.AsArray(), output.Positions.AsArray());
+                }
+                MarkerInverseTransformation.End();
+            }
+
+            void ValidateInput (NativeArray<float2> localPositions, NativeArray<int> constraintEdges) {
+                new ValidateInputPositionsJob {
+                    positions = localPositions,
+                    status = output.Status,
+                }.Execute();
+                if (input.ConstraintEdges.IsCreated) new ValidateInputConstraintEdges {
+                    positions = localPositions,
+                    constraints = constraintEdges,
+                    status = output.Status,
+                }.Execute();
+            }
+        }
+
+        [BurstCompile]
         private struct ValidateInputPositionsJob : IJob
         {
             [ReadOnly]
-            private NativeArray<float2> positions;
-            private NativeReference<Status> status;
-
-            public ValidateInputPositionsJob(Triangulator triangulator)
-            {
-                positions = triangulator.Input.Positions;
-                status = triangulator.status;
-            }
+            public NativeArray<float2> positions;
+            public NativeReference<Status> status;
 
             public void Execute()
             {
@@ -396,311 +487,54 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
-        private struct PCATransformationJob : IJob
-        {
-            [ReadOnly]
-            private NativeArray<float2> positions;
-            private NativeReference<float2> scaleRef;
-            private NativeReference<float2> comRef;
-            private NativeReference<float2> cRef;
-            private NativeReference<float2x2> URef;
-
-            private NativeList<float2> localPositions;
-
-            public PCATransformationJob(Triangulator triangulator)
+        static AffineTransform2D CalculatePCATransformation(NativeArray<float2> positions) {
+            var com = (float2)0;
+            foreach (var p in positions)
             {
-                positions = triangulator.tmpInputPositions;
-                scaleRef = triangulator.scale;
-                comRef = triangulator.com;
-                cRef = triangulator.pcaCenter;
-                URef = triangulator.pcaMatrix;
-                localPositions = triangulator.localPositions;
+                com += p;
+            }
+            com /= positions.Length;
+
+            var cov = float2x2.zero;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var q = positions[i] - com;
+                cov += Kron(q, q);
+            }
+            cov /= positions.Length;
+
+            Eigen(cov, out _, out var rotationMatrix);
+
+            // Note: Taking the transpose of a rotation matrix is equivalent to taking the inverse.
+            var partialTransform = AffineTransform2D.Rotate(math.transpose(rotationMatrix)) * AffineTransform2D.Translate(-com);
+            float2 min = float.MaxValue;
+            float2 max = float.MinValue;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var p = partialTransform.Transform(positions[i]);
+                min = math.min(p, min);
+                max = math.max(p, max);
             }
 
-            public void Execute()
-            {
-                var n = positions.Length;
+            var c = 0.5f * (min + max);
+            var s = 2f / (max - min);
 
-                var com = (float2)0;
-                foreach (var p in positions)
-                {
-                    com += p;
-                }
-                com /= n;
-                comRef.Value = com;
-
-                var cov = float2x2.zero;
-                foreach (var p in positions)
-                {
-                    var q = p - com;
-                    localPositions.Add(q);
-                    cov += Kron(q, q);
-                }
-                cov /= n;
-
-                Eigen(cov, out _, out var U);
-                URef.Value = U;
-                for (int i = 0; i < n; i++)
-                {
-                    localPositions[i] = math.mul(math.transpose(U), localPositions[i]);
-                }
-
-                float2 min = float.MaxValue;
-                float2 max = float.MinValue;
-                foreach (var p in localPositions)
-                {
-                    min = math.min(p, min);
-                    max = math.max(p, max);
-                }
-                var c = cRef.Value = 0.5f * (min + max);
-                var s = scaleRef.Value = 2f / (max - min);
-
-                for (int i = 0; i < n; i++)
-                {
-                    var p = localPositions[i];
-                    localPositions[i] = (p - c) * s;
-                }
-            }
+            return AffineTransform2D.Scale(s) * AffineTransform2D.Translate(-c) * partialTransform;
         }
 
         [BurstCompile]
-        private struct PCATransformationHolesJob : IJob
-        {
-            [ReadOnly]
-            private NativeArray<float2> holeSeeds;
-            private NativeList<float2> localHoleSeeds;
-            private NativeReference<float2>.ReadOnly scaleRef;
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly cRef;
-            private NativeReference<float2x2>.ReadOnly URef;
-
-            public PCATransformationHolesJob(Triangulator triangulator)
+        static AffineTransform2D CalculateLocalTransformation(NativeArray<float2> positions) {
+            float2 min = float.PositiveInfinity, max = float.NegativeInfinity, com = 0;
+            foreach (var p in positions)
             {
-                holeSeeds = triangulator.tmpInputHoleSeeds;
-                localHoleSeeds = triangulator.localHoleSeeds;
-                scaleRef = triangulator.scale.AsReadOnly();
-                comRef = triangulator.com.AsReadOnly();
-                cRef = triangulator.pcaCenter.AsReadOnly();
-                URef = triangulator.pcaMatrix.AsReadOnly();
+                min = math.min(p, min);
+                max = math.max(p, max);
+                com += p;
             }
 
-            public void Execute()
-            {
-                var com = comRef.Value;
-                var s = scaleRef.Value;
-                var c = cRef.Value;
-                var U = URef.Value;
-                var UT = math.transpose(U);
-
-                localHoleSeeds.Resize(holeSeeds.Length, NativeArrayOptions.UninitializedMemory);
-                for (int i = 0; i < holeSeeds.Length; i++)
-                {
-                    var h = holeSeeds[i];
-                    localHoleSeeds[i] = s * (math.mul(UT, h - com) - c);
-                }
-            }
-        }
-
-        [BurstCompile]
-        private struct PCAInverseTransformationJob : IJobParallelForDefer
-        {
-            private NativeArray<float2> positions;
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly scaleRef;
-            private NativeReference<float2>.ReadOnly cRef;
-            private NativeReference<float2x2>.ReadOnly URef;
-
-            public PCAInverseTransformationJob(Triangulator triangulator)
-            {
-                positions = triangulator.Output.Positions.AsDeferredJobArray();
-                comRef = triangulator.com.AsReadOnly();
-                scaleRef = triangulator.scale.AsReadOnly();
-                cRef = triangulator.pcaCenter.AsReadOnly();
-                URef = triangulator.pcaMatrix.AsReadOnly();
-            }
-
-            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
-            {
-                return this.Schedule(triangulator.Output.Positions, triangulator.Settings.BatchCount, dependencies);
-            }
-
-            public void Execute(int i)
-            {
-                var p = positions[i];
-                var com = comRef.Value;
-                var s = scaleRef.Value;
-                var c = cRef.Value;
-                var U = URef.Value;
-                positions[i] = math.mul(U, p / s + c) + com;
-            }
-        }
-
-        [BurstCompile]
-        private struct InitialLocalTransformationJob : IJob
-        {
-            [ReadOnly]
-            private NativeArray<float2> positions;
-            private NativeReference<float2> comRef;
-            private NativeReference<float2> scaleRef;
-            private NativeList<float2> localPositions;
-
-            public InitialLocalTransformationJob(Triangulator triangulator)
-            {
-                positions = triangulator.tmpInputPositions;
-                comRef = triangulator.com;
-                scaleRef = triangulator.scale;
-                localPositions = triangulator.localPositions;
-            }
-
-            public void Execute()
-            {
-                float2 min = 0, max = 0, com = 0;
-                foreach (var p in positions)
-                {
-                    min = math.min(p, min);
-                    max = math.max(p, max);
-                    com += p;
-                }
-
-                com /= positions.Length;
-                comRef.Value = com;
-                scaleRef.Value = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
-
-                localPositions.Resize(positions.Length, NativeArrayOptions.UninitializedMemory);
-            }
-        }
-
-        [BurstCompile]
-        private struct CalculateLocalHoleSeedsJob : IJob
-        {
-            [ReadOnly]
-            private NativeArray<float2> holeSeeds;
-            private NativeList<float2> localHoleSeeds;
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly scaleRef;
-
-            public CalculateLocalHoleSeedsJob(Triangulator triangulator)
-            {
-                holeSeeds = triangulator.tmpInputHoleSeeds;
-                localHoleSeeds = triangulator.localHoleSeeds;
-                comRef = triangulator.com.AsReadOnly();
-                scaleRef = triangulator.scale.AsReadOnly();
-            }
-
-            public void Execute()
-            {
-                var com = comRef.Value;
-                var s = scaleRef.Value;
-
-                localHoleSeeds.Resize(holeSeeds.Length, NativeArrayOptions.UninitializedMemory);
-                for (int i = 0; i < holeSeeds.Length; i++)
-                {
-                    localHoleSeeds[i] = s * (holeSeeds[i] - com);
-                }
-            }
-        }
-
-        [BurstCompile]
-        private struct CalculateLocalPositionsJob : IJobParallelForDefer
-        {
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly scaleRef;
-            private NativeArray<float2> localPositions;
-            [ReadOnly]
-            private NativeArray<float2> positions;
-
-            public CalculateLocalPositionsJob(Triangulator triangulator)
-            {
-                comRef = triangulator.com.AsReadOnly();
-                scaleRef = triangulator.scale.AsReadOnly();
-                localPositions = triangulator.localPositions.AsDeferredJobArray();
-                positions = triangulator.tmpInputPositions;
-            }
-
-            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
-            {
-                return this.Schedule(triangulator.localPositions, triangulator.Settings.BatchCount, dependencies);
-            }
-
-            public void Execute(int i)
-            {
-                var p = positions[i];
-                var com = comRef.Value;
-                var s = scaleRef.Value;
-                localPositions[i] = s * (p - com);
-            }
-        }
-
-        [BurstCompile]
-        private struct LocalToWorldTransformationJob : IJobParallelForDefer
-        {
-            private NativeArray<float2> positions;
-            private NativeReference<float2>.ReadOnly comRef;
-            private NativeReference<float2>.ReadOnly scaleRef;
-
-            public LocalToWorldTransformationJob(Triangulator triangulator)
-            {
-                positions = triangulator.Output.Positions.AsDeferredJobArray();
-                comRef = triangulator.com.AsReadOnly();
-                scaleRef = triangulator.scale.AsReadOnly();
-            }
-
-            public JobHandle Schedule(Triangulator triangulator, JobHandle dependencies)
-            {
-                return this.Schedule(triangulator.Output.Positions, triangulator.Settings.BatchCount, dependencies);
-            }
-
-            public void Execute(int i)
-            {
-                var p = positions[i];
-                var com = comRef.Value;
-                var s = scaleRef.Value;
-                positions[i] = p / s + com;
-            }
-        }
-
-        [BurstCompile]
-        private struct ClearDataJob : IJob
-        {
-            private NativeReference<float2> scaleRef;
-            private NativeReference<float2> comRef;
-            private NativeReference<float2> cRef;
-            private NativeReference<float2x2> URef;
-            private NativeList<float2> outputPositions;
-            private NativeList<int> triangles;
-            private NativeList<int> halfedges;
-            private NativeList<Circle> circles;
-            private NativeList<Edge> constraintEdges;
-            private NativeReference<Status> status;
-
-            public ClearDataJob(Triangulator triangulator)
-            {
-                outputPositions = triangulator.outputPositions;
-                triangles = triangulator.triangles;
-                halfedges = triangulator.halfedges;
-                circles = triangulator.circles;
-                constraintEdges = triangulator.constraintEdges;
-
-                status = triangulator.status;
-                scaleRef = triangulator.scale;
-                comRef = triangulator.com;
-                cRef = triangulator.pcaCenter;
-                URef = triangulator.pcaMatrix;
-            }
-            public void Execute()
-            {
-                outputPositions.Clear();
-                triangles.Clear();
-                halfedges.Clear();
-                circles.Clear();
-                constraintEdges.Clear();
-
-                status.Value = Status.OK;
-                scaleRef.Value = 1;
-                comRef.Value = 0;
-                cRef.Value = 0;
-                URef.Value = float2x2.identity;
-            }
+            com /= positions.Length;
+            var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
+            return AffineTransform2D.Scale(scale) * AffineTransform2D.Translate(-com);
         }
 
         [BurstCompile]
@@ -713,15 +547,14 @@ namespace andywiecko.BurstTriangulator
                 public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
             }
 
-            private NativeReference<Status> status;
+            public NativeReference<Status> status;
             [ReadOnly]
-            private NativeArray<float2> inputPositions;
-            private NativeList<float2> outputPositions;
-            private NativeList<int> triangles;
-            private NativeList<int> halfedges;
+            public NativeArray<float2> positions;
 
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<float2> positions;
+            public NativeList<int> triangles;
+
+            public NativeList<int> halfedges;
+
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<int> ids;
             [NativeDisableContainerSafetyRestriction]
@@ -737,33 +570,10 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<int> EDGE_STACK;
 
-            private int hullStart;
+            public int hullStart;
             private int trianglesLen;
             private int hashSize;
-            private float2 c;
-
-            public DelaunayTriangulationJob(Triangulator triangulator)
-            {
-                status = triangulator.status;
-                inputPositions = triangulator.Input.Positions;
-                outputPositions = triangulator.outputPositions;
-                triangles = triangulator.triangles;
-                halfedges = triangulator.halfedges;
-
-                positions = default;
-                ids = default;
-                dists = default;
-                hullNext = default;
-                hullPrev = default;
-                hullTri = default;
-                hullHash = default;
-                EDGE_STACK = default;
-
-                hullStart = int.MaxValue;
-                trianglesLen = 0;
-                hashSize = 0;
-                c = float.MaxValue;
-            }
+            public float2 c;
 
             private readonly int HashKey(float2 p)
             {
@@ -782,9 +592,6 @@ namespace andywiecko.BurstTriangulator
                 {
                     return;
                 }
-
-                outputPositions.CopyFrom(inputPositions);
-                positions = outputPositions.AsArray();
 
                 var n = positions.Length;
                 var maxTriangles = math.max(2 * n - 5, 0);
@@ -826,6 +633,8 @@ namespace andywiecko.BurstTriangulator
                         minDistSq = distSq;
                     }
                 }
+
+                // Centermost vertex
                 var p0 = positions[i0];
 
                 minDistSq = float.MaxValue;
@@ -839,6 +648,8 @@ namespace andywiecko.BurstTriangulator
                         minDistSq = distSq;
                     }
                 }
+
+                // Second closest to the center
                 var p1 = positions[i1];
 
                 var minRadius = float.MaxValue;
@@ -853,6 +664,10 @@ namespace andywiecko.BurstTriangulator
                         minRadius = r;
                     }
                 }
+
+                // Vertex closest to p1 and p2, as measured by the circumscribed circle radius of p1, p2, p3
+                // Thus (p1,p2,p3) form a triangle close to the center of the point set, and it's guaranteed that there
+                // are no other vertices inside this triangle.
                 var p2 = positions[i2];
 
                 if (minRadius == float.MaxValue)
@@ -862,12 +677,14 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
+                // Swap the order of the vertices if the triangle is not oriented in the right direction
                 if (Orient2dFast(p0, p1, p2) < 0)
                 {
                     (i1, i2) = (i2, i1);
                     (p1, p2) = (p2, p1);
                 }
 
+                // Sort all other vertices by their distance to the circumcenter of the initial triangle
                 c = CircumCenter(p0, p1, p2);
                 for (int i = 0; i < positions.Length; i++)
                 {
@@ -890,6 +707,7 @@ namespace andywiecko.BurstTriangulator
                 hullHash[HashKey(p1)] = i1;
                 hullHash[HashKey(p2)] = i2;
 
+                // Add the initial triangle
                 AddTriangle(i0, i1, i2, -1, -1, -1);
 
                 for (var k = 0; k < ids.Length; k++)
@@ -899,6 +717,7 @@ namespace andywiecko.BurstTriangulator
 
                     var p = positions[i];
 
+                    // Find a visible edge on the convex hull using edge hash
                     var start = 0;
                     for (var j = 0; j < hashSize; j++)
                     {
@@ -925,13 +744,18 @@ namespace andywiecko.BurstTriangulator
 
                     if (e == int.MaxValue) continue;
 
+                     // Add the first triangle from the point
                     var t = AddTriangle(e, i, hullNext[e], -1, -1, hullTri[e]);
+
+                    // Recursively flip triangles from the point until they satisfy the Delaunay condition
                     hullTri[i] = Legalize(t + 2);
+                    // Keep track of boundary triangles on the hull
                     hullTri[e] = t;
 
                     var next = hullNext[e];
                     q = hullNext[next];
 
+                    // Walk forward through the hull, adding more triangles and flipping recursively
                     while (Orient2dFast(p, positions[next], positions[q]) < 0)
                     {
                         t = AddTriangle(next, i, q, hullTri[i], -1, hullTri[next]);
@@ -942,6 +766,7 @@ namespace andywiecko.BurstTriangulator
                         q = hullNext[next];
                     }
 
+                    // Walk backward from the other side, adding more triangles and flipping
                     if (e == start)
                     {
                         q = hullPrev[e];
@@ -951,20 +776,23 @@ namespace andywiecko.BurstTriangulator
                             t = AddTriangle(q, i, e, -1, hullTri[e], hullTri[q]);
                             Legalize(t + 2);
                             hullTri[q] = t;
-                            hullNext[e] = e;
+                            hullNext[e] = e; // mark as removed
                             e = q;
                             q = hullPrev[e];
                         }
                     }
 
+                    // Update the hull indices
                     hullStart = hullPrev[i] = e;
                     hullNext[e] = hullPrev[next] = i;
                     hullNext[i] = next;
 
+                    // Save the two new edges in the hash table
                     hullHash[HashKey(p)] = i;
                     hullHash[HashKey(positions[e])] = e;
                 }
 
+                // Trim lists to their actual size
                 triangles.Length = trianglesLen;
                 halfedges.Length = trianglesLen;
             }
@@ -974,12 +802,30 @@ namespace andywiecko.BurstTriangulator
                 var i = 0;
                 int ar;
 
+                // recursion eliminated with a fixed-size stack
                 while (true)
                 {
                     var b = halfedges[a];
+                    /* if the pair of triangles doesn't satisfy the Delaunay condition
+                     * (p1 is inside the circumcircle of [p0, pl, pr]), flip them,
+                     * then do the same check/flip recursively for the new pair of triangles
+                     *
+                     *           pl                    pl
+                     *          /||\                  /  \
+                     *       al/ || \bl            al/    \a
+                     *        /  ||  \              /      \
+                     *       /  a||b  \    flip    /___ar___\
+                     *     p0\   ||   /p1   =>   p0\---bl---/p1
+                     *        \  ||  /              \      /
+                     *       ar\ || /br             b\    /br
+                     *          \||/                  \  /
+                     *           pr                    pr
+                     */
+
                     int a0 = a - a % 3;
                     ar = a0 + (a + 2) % 3;
 
+                    // Check if we are on a convex hull edge
                     if (b == -1)
                     {
                         if (i == 0) break;
@@ -1005,6 +851,7 @@ namespace andywiecko.BurstTriangulator
 
                         var hbl = halfedges[bl];
 
+                        // Edge swapped on the other side of the hull (rare); fix the halfedge reference
                         if (hbl == -1)
                         {
                             var e = hullStart;
@@ -1024,6 +871,7 @@ namespace andywiecko.BurstTriangulator
 
                         var br = b0 + (b + 1) % 3;
 
+                        // Don't worry about hitting the cap: it can only happen on extremely degenerate input
                         if (i < EDGE_STACK.Length)
                         {
                             EDGE_STACK[i++] = br;
@@ -1067,17 +915,10 @@ namespace andywiecko.BurstTriangulator
         private struct ValidateInputConstraintEdges : IJob
         {
             [ReadOnly]
-            private NativeArray<int> constraints;
+            public NativeArray<int> constraints;
             [ReadOnly]
-            private NativeArray<float2> positions;
-            private NativeReference<Status> status;
-
-            public ValidateInputConstraintEdges(Triangulator triangulator)
-            {
-                constraints = triangulator.Input.ConstraintEdges;
-                positions = triangulator.Input.Positions;
-                status = triangulator.status;
-            }
+            public NativeArray<float2> positions;
+            public NativeReference<Status> status;
 
             public void Execute()
             {
@@ -1194,15 +1035,15 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct ConstrainEdgesJob : IJob
         {
-            private NativeReference<Status> status;
+            public NativeReference<Status> status;
             [ReadOnly]
-            private NativeArray<float2> outputPositions;
-            private NativeArray<int> triangles;
+            public NativeArray<float2> positions;
+            public NativeArray<int> triangles;
             [ReadOnly]
-            private NativeArray<int> inputConstraintEdges;
-            private NativeList<Edge> internalConstraints;
-            private NativeArray<int> halfedges;
-            private readonly int maxIters;
+            public NativeArray<int> inputConstraintEdges;
+            public NativeArray<Edge> internalConstraints;
+            public NativeList<int> halfedges;
+            public int maxIters;
 
             [NativeDisableContainerSafetyRestriction]
             private NativeList<int> intersections;
@@ -1210,21 +1051,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> unresolvedIntersections;
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<int> pointToHalfedge;
-
-            public ConstrainEdgesJob(Triangulator triangulator)
-            {
-                status = triangulator.status;
-                outputPositions = triangulator.outputPositions.AsDeferredJobArray();
-                triangles = triangulator.triangles.AsDeferredJobArray();
-                maxIters = triangulator.Settings.SloanMaxIters;
-                inputConstraintEdges = triangulator.Input.ConstraintEdges;
-                internalConstraints = triangulator.constraintEdges;
-                halfedges = triangulator.halfedges.AsDeferredJobArray();
-
-                intersections = default;
-                unresolvedIntersections = default;
-                pointToHalfedge = default;
-            }
 
             public void Execute()
             {
@@ -1235,7 +1061,7 @@ namespace andywiecko.BurstTriangulator
 
                 using var _intersections = intersections = new NativeList<int>(Allocator.Temp);
                 using var _unresolvedIntersections = unresolvedIntersections = new NativeList<int>(Allocator.Temp);
-                using var _pointToHalfedge = pointToHalfedge = new NativeArray<int>(outputPositions.Length, Allocator.Temp);
+                using var _pointToHalfedge = pointToHalfedge = new NativeArray<int>(positions.Length, Allocator.Temp);
 
                 // build point to halfedge
                 for (int i = 0; i < triangles.Length; i++)
@@ -1253,7 +1079,7 @@ namespace andywiecko.BurstTriangulator
 
             private void BuildInternalConstraints()
             {
-                internalConstraints.Length = inputConstraintEdges.Length / 2;
+                Assert.AreEqual(inputConstraintEdges.Length / 2, internalConstraints.Length);
                 for (int index = 0; index < internalConstraints.Length; index++)
                 {
                     internalConstraints[index] = new(
@@ -1342,7 +1168,7 @@ namespace andywiecko.BurstTriangulator
                     var _p = triangles[h2];
                     var _q = triangles[h5];
 
-                    var (p0, p1, p2, p3) = (outputPositions[_i], outputPositions[_q], outputPositions[_j], outputPositions[_p]);
+                    var (p0, p1, p2, p3) = (positions[_i], positions[_q], positions[_j], positions[_p]);
                     if (!IsConvexQuadrilateral(p0, p1, p2, p3))
                     {
                         unresolvedIntersections.Add(h0);
@@ -1398,8 +1224,8 @@ namespace andywiecko.BurstTriangulator
 
             private bool EdgeEdgeIntersection(Edge e1, Edge e2)
             {
-                var (a0, a1) = (outputPositions[e1.IdA], outputPositions[e1.IdB]);
-                var (b0, b1) = (outputPositions[e2.IdA], outputPositions[e2.IdB]);
+                var (a0, a1) = (positions[e1.IdA], positions[e1.IdB]);
+                var (b0, b1) = (positions[e2.IdA], positions[e2.IdB]);
                 return !e1.ContainsCommonPointWith(e2) && Triangulator.EdgeEdgeIntersection(a0, a1, b0, b1);
             }
 
@@ -1537,17 +1363,15 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct RefineMeshJob : IJob
         {
-            private int initialPointsCount;
-            private readonly bool restoreBoundary;
-            private readonly float maximumArea2;
-            private readonly float minimumAngle;
-            private readonly float D;
-            private NativeReference<float2>.ReadOnly scaleRef;
-            private NativeReference<Status>.ReadOnly status;
-            private NativeList<int> triangles;
-            private NativeList<float2> outputPositions;
-            private NativeList<Circle> circles;
-            private NativeList<int> halfedges;
+            public bool restoreBoundary;
+            public float maximumArea2;
+            public float minimumAngle;
+            public float D;
+            public NativeList<int> triangles;
+            public NativeList<float2> outputPositions;
+            public NativeList<Circle> circles;
+            public NativeList<int> halfedges;
+            public NativeArray<Edge> constraints;
 
             [NativeDisableContainerSafetyRestriction]
             private NativeQueue<int> trianglesQueue;
@@ -1559,43 +1383,12 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> pathHalfedges;
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> visitedTriangles;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<Edge> constraints;
+            private int initialPointsCount;
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> constrainedHalfedges;
 
-            public RefineMeshJob(Triangulator triangulator)
-            {
-                restoreBoundary = triangulator.Settings.RestoreBoundary;
-                maximumArea2 = 2 * triangulator.Settings.RefinementThresholds.Area;
-                minimumAngle = triangulator.Settings.RefinementThresholds.Angle;
-                D = triangulator.Settings.ConcentricShellsParameter;
-                scaleRef = triangulator.scale.AsReadOnly();
-
-                status = triangulator.status.AsReadOnly();
-                triangles = triangulator.triangles;
-                outputPositions = triangulator.outputPositions;
-                circles = triangulator.circles;
-                halfedges = triangulator.halfedges;
-
-                initialPointsCount = default;
-                trianglesQueue = default;
-                badTriangles = default;
-                pathPoints = default;
-                pathHalfedges = default;
-                visitedTriangles = default;
-                constrainedHalfedges = default;
-
-                constraints = triangulator.constraintEdges;
-            }
-
             public void Execute()
             {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
                 initialPointsCount = outputPositions.Length;
                 circles.Length = triangles.Length / 3;
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
@@ -1614,41 +1407,28 @@ namespace andywiecko.BurstTriangulator
                 using var heQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
                 using var tQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
 
-                var tempConstraints = default(NativeList<Edge>);
-                if (!constraints.IsCreated)
-                {
-                    tempConstraints = constraints = new NativeList<Edge>(Allocator.Temp);
-                    for (int he = 0; he < halfedges.Length; he++)
-                    {
-                        if (halfedges[he] == -1)
-                        {
-                            constraints.Add(new(triangles[he], triangles[NextHalfedge(he)]));
-                        }
-                    }
-                }
-                if (!restoreBoundary)
-                {
-                    for (int he = 0; he < halfedges.Length; he++)
-                    {
-                        var edge = new Edge(triangles[he], triangles[NextHalfedge(he)]);
-                        if (halfedges[he] == -1 && !constraints.Contains(edge))
-                        {
-                            constraints.Add(edge);
-                        }
-                    }
+                if (!constraints.IsCreated || !restoreBoundary) {
+                    // If a triangle edge is not connected to any other triangle,
+                    // then it is implicitly constrained.
+                    for (int he = 0; he < constrainedHalfedges.Length; he++) constrainedHalfedges[he] = halfedges[he] == -1;
                 }
 
-                for (int he = 0; he < constrainedHalfedges.Length; he++)
-                {
-                    for (int id = 0; id < constraints.Length; id++)
+                if (constraints.IsCreated) {
+                    for (int he = 0; he < constrainedHalfedges.Length; he++)
                     {
-                        var (ci, cj) = constraints[id];
+                        if (constrainedHalfedges[he]) continue;
+
                         var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
                         (i, j) = i < j ? (i, j) : (j, i);
-                        if (ci == i && cj == j)
+
+                        for (int id = 0; id < constraints.Length; id++)
                         {
-                            constrainedHalfedges[he] = true;
-                            break;
+                            var (ci, cj) = constraints[id];
+                            if (ci == i && cj == j)
+                            {
+                                constrainedHalfedges[he] = true;
+                                break;
+                            }
                         }
                     }
                 }
@@ -1681,11 +1461,6 @@ namespace andywiecko.BurstTriangulator
                     {
                         SplitTriangle(tId, heQueue, tQueue);
                     }
-                }
-
-                if (tempConstraints.IsCreated)
-                {
-                    tempConstraints.Dispose();
                 }
             }
 
@@ -1821,9 +1596,8 @@ namespace andywiecko.BurstTriangulator
             private bool IsBadTriangle(int tId)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                var s = scaleRef.Value;
                 var area2 = Area2(i, j, k, outputPositions.AsArray());
-                return area2 > maximumArea2 * s.x * s.y || AngleIsTooSmall(tId, minimumAngle);
+                return area2 > maximumArea2 || AngleIsTooSmall(tId, minimumAngle);
             }
 
             private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue)
@@ -1855,10 +1629,9 @@ namespace andywiecko.BurstTriangulator
                 }
                 else
                 {
-                    var s = scaleRef.Value;
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     var area2 = Area2(i, j, k, outputPositions.AsArray());
-                    if (area2 > maximumArea2 * s.x * s.y) // TODO split permited
+                    if (area2 > maximumArea2) // TODO split permited
                     {
                         foreach (var he in edges.AsReadOnly())
                         {
@@ -2258,61 +2031,37 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        [BurstCompile]
-        private struct PlantingSeedsJob : IJob
+        struct SeedPlanter
         {
+            public NativeReference<Status>.ReadOnly status;
+            public NativeList<int> triangles;
             [ReadOnly]
-            private NativeArray<float2> positions;
-            private readonly bool restoreBoundary;
-            private NativeReference<Status>.ReadOnly status;
-            private NativeList<int> triangles;
-            private NativeList<float2> outputPositions;
-            private NativeList<Circle> circles;
-            private NativeList<Edge> constraintEdges;
-            private NativeList<int> halfedges;
+            public NativeList<float2> positions;
+            public NativeList<Circle> circles;
+            public NativeArray<Edge> constraintEdges;
+            public NativeList<int> halfedges;
 
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> constrainedHalfedges;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<float2> holeSeeds;
 
-            public PlantingSeedsJob(Triangulator triangulator)
+            private NativeArray<bool> visitedTriangles;
+            private NativeList<int> badTriangles;
+            private NativeQueue<int> trianglesQueue;
+
+            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<float2> positions, NativeList<Circle> circles, NativeArray<Edge> constraintEdges, NativeList<int> halfedges)
             {
-                positions = triangulator.Input.Positions;
-                restoreBoundary = triangulator.Settings.RestoreBoundary;
+                this.status = status;
+                this.triangles = triangles;
+                this.positions = positions;
+                this.circles = circles;
+                this.constraintEdges = constraintEdges;
+                this.halfedges = halfedges;
 
-                status = triangulator.status.AsReadOnly();
-                triangles = triangulator.triangles;
-                outputPositions = triangulator.outputPositions;
-                circles = triangulator.circles;
-                constraintEdges = triangulator.constraintEdges;
-                halfedges = triangulator.halfedges;
+                this.visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
+                this.badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
+                this.trianglesQueue = new NativeQueue<int>(Allocator.Temp);
 
-                constrainedHalfedges = default;
-                holeSeeds = triangulator.Input.HoleSeeds;
-            }
-
-            public void Execute()
-            {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
-                if (circles.Length != triangles.Length / 3)
-                {
-                    circles.Length = triangles.Length / 3;
-                    for (int tId = 0; tId < triangles.Length / 3; tId++)
-                    {
-                        var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                        circles[tId] = CalculateCircumCircle(i, j, k, outputPositions.AsArray());
-                    }
-                }
-
-                using var visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
-                using var badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
-                using var trianglesQueue = new NativeQueue<int>(Allocator.Temp);
-                using var _constrainedHalfedges = constrainedHalfedges = new NativeList<bool>(triangles.Length, Allocator.Temp) { Length = triangles.Length };
+                var constrainedHalfedges = this.constrainedHalfedges = new NativeList<bool>(triangles.Length, Allocator.Temp) { Length = triangles.Length };
 
                 for (int he = 0; he < constrainedHalfedges.Length; he++)
                 {
@@ -2329,7 +2078,47 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
 
-                PlantSeeds(visitedTriangles, badTriangles, trianglesQueue);
+                // TODO: Shouldn't be done here
+                if (circles.Length != triangles.Length / 3)
+                {
+                    circles.Length = triangles.Length / 3;
+                    for (int tId = 0; tId < triangles.Length / 3; tId++)
+                    {
+                        var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
+                        circles[tId] = CalculateCircumCircle(i, j, k, positions.AsArray());
+                    }
+                }
+            }
+
+            public void PlantBoundarySeeds() {
+                for (int he = 0; he < halfedges.Length; he++)
+                {
+                    if (halfedges[he] == -1 &&
+                        !visitedTriangles[he / 3] &&
+                        !constrainedHalfedges[he])
+                    {
+                        PlantSeed(he / 3);
+                    }
+                }
+            }
+
+            public void PlantHoleSeeds(NativeArray<float2> holeSeeds) {
+                foreach (var s in holeSeeds)
+                {
+                    var tId = FindTriangle(s);
+                    if (tId != -1)
+                    {
+                        PlantSeed(tId);
+                    }
+                }
+            }
+
+            public void Finish()
+            {
+                if (status.Value != Status.OK)
+                {
+                    return;
+                }
 
                 using var potentialPointsToRemove = new NativeHashSet<int>(initialCapacity: 3 * badTriangles.Length, Allocator.Temp);
 
@@ -2338,34 +2127,12 @@ namespace andywiecko.BurstTriangulator
                 RemovePoints(potentialPointsToRemove);
             }
 
-            private void PlantSeeds(NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
+            private void PlantSeed(int tId)
             {
-                if (restoreBoundary)
-                {
-                    for (int he = 0; he < halfedges.Length; he++)
-                    {
-                        if (halfedges[he] == -1 && !visitedTriangles[he / 3] && !constrainedHalfedges[he])
-                        {
-                            PlantSeed(he / 3, visitedTriangles, badTriangles, trianglesQueue);
-                        }
-                    }
-                }
+                var visitedTriangles = this.visitedTriangles;
+                var badTriangles = this.badTriangles;
+                var trianglesQueue = this.trianglesQueue;
 
-                if (holeSeeds.IsCreated)
-                {
-                    foreach (var s in holeSeeds.AsReadOnly())
-                    {
-                        var tId = FindTriangle(s);
-                        if (tId != -1)
-                        {
-                            PlantSeed(tId, visitedTriangles, badTriangles, trianglesQueue);
-                        }
-                    }
-                }
-            }
-
-            private void PlantSeed(int tId, NativeArray<bool> visitedTriangles, NativeList<int> badTriangles, NativeQueue<int> trianglesQueue)
-            {
                 if (visitedTriangles[tId])
                 {
                     return;
@@ -2402,7 +2169,7 @@ namespace andywiecko.BurstTriangulator
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
                 {
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                    var (a, b, c) = (outputPositions[i], outputPositions[j], outputPositions[k]);
+                    var (a, b, c) = (positions[i], positions[j], positions[k]);
                     if (PointInsideTriangle(p, a, b, c))
                     {
                         return tId;
@@ -2466,8 +2233,8 @@ namespace andywiecko.BurstTriangulator
 
             private void RemovePoints(NativeHashSet<int> potentialPointsToRemove)
             {
-                var pointToHalfedge = new NativeArray<int>(outputPositions.Length, Allocator.Temp);
-                var pointsOffset = new NativeArray<int>(outputPositions.Length, Allocator.Temp);
+                var pointToHalfedge = new NativeArray<int>(positions.Length, Allocator.Temp);
+                var pointsOffset = new NativeArray<int>(positions.Length, Allocator.Temp);
 
                 for (int i = 0; i < pointToHalfedge.Length; i++)
                 {
@@ -2479,6 +2246,7 @@ namespace andywiecko.BurstTriangulator
                     pointToHalfedge[triangles[i]] = i;
                 }
 
+                // TODO: Optimize
                 using var tmp = potentialPointsToRemove.ToNativeArray(Allocator.Temp);
                 tmp.Sort();
 
@@ -2490,7 +2258,7 @@ namespace andywiecko.BurstTriangulator
                         continue;
                     }
 
-                    outputPositions.RemoveAt(pId);
+                    positions.RemoveAt(pId);
                     for (int i = pId; i < pointsOffset.Length; i++)
                     {
                         pointsOffset[i]--;
