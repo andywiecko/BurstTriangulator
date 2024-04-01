@@ -11,77 +11,76 @@ using UnityEngine;
 
 namespace andywiecko.BurstTriangulator
 {
-    /// <summary>
-    /// Supports rotation, scaling and translation in 2D.
-    /// </summary>
-    /// <remarks>
-    /// The transformation is defined as first a translation, and then rotation+scaling.
-    /// The order is important for floating point accuracy reasons. This is often used to
-    /// move points from very far away back to the origin. If we would have done the rotation+scaling first (like in a standard matrix multiplication),
-    /// the translation might have to be much larger, which can lead to floating point inaccuracies.
-    /// </remarks>
-    internal readonly struct AffineTransform2D
-    {
-        private readonly float2x2 rotScale;
-        private readonly float2 translation;
-
-        public AffineTransform2D(float2x2 rotScale, float2 translation) => (this.rotScale, this.translation) = (rotScale, translation);
-        public static readonly AffineTransform2D identity = new(float2x2.identity, float2.zero);
-
-        // R(T + x) = y
-        // Solve for x:
-        // T + x = R^-1(y)
-        // x = R^-1(y) - T
-        // x = R^-1(y - RT)
-        // x = R^-1(y + R(-T))
-        public AffineTransform2D inverse => new(math.inverse(rotScale), math.mul(rotScale, -translation));
-
-        /// <summary>
-        /// How much the area of a shape is scaled by this transformation
-        /// </summary>
-        public float areaScalingFactor => math.abs(math.determinant(rotScale));
-
-        public float2 Transform(float2 point) => math.mul(rotScale, point + translation);
-        public static AffineTransform2D Translate(float2 offset) => new(float2x2.identity, offset);
-        public static AffineTransform2D Scale(float2 scale) => new(new float2x2(scale.x, 0, 0, scale.y), float2.zero);
-        public static AffineTransform2D Rotate(float2x2 rotation) => new(rotation, float2.zero);
-
-        // result.transform(x) = R1(T1 + R2(x + T2)) = R1((T1 + R2T2) + R2(x)) = R1*R2(R2^-1(T1 + R2T2) + x) = R1*R2(R2^-1(T1) + T2 + x)
-        public static AffineTransform2D operator *(AffineTransform2D lhs, AffineTransform2D rhs) => new AffineTransform2D(
-            math.mul(lhs.rotScale, rhs.rotScale),
-            math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
-        );
-
-        public void Transform(NativeArray<float2> points)
-        {
-            for (int i = 0; i < points.Length; i++) points[i] = Transform(points[i]);
-        }
-
-        public void Transform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints)
-        {
-            if (points.Length != outPoints.Length) throw new ArgumentException("Input and output arrays must have the same length!");
-            for (int i = 0; i < points.Length; i++) outPoints[i] = Transform(points[i]);
-        }
-
-        /// <summary>
-        /// Applies the inverse transform to all points, in-place.
-        /// </summary>
-        /// <remarks>
-        /// This is mathematically equivalent to calling `this.inverse.Transform(points, outPoints)`,
-        /// but it is less susceptible to floating point errors.
-        /// </remarks>
-        public void InverseTransform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints)
-        {
-            var invRotScale = math.inverse(rotScale);
-            for (int i = 0; i < points.Length; i++) outPoints[i] = math.mul(invRotScale, points[i]) - translation;
-        }
-
-        public override string ToString() => $"{nameof(AffineTransform2D)}(translation={translation}, rotScale={rotScale})";
-    }
-
     public class Triangulator : IDisposable
     {
         #region Primitives
+        /// <summary>
+        /// Supports rotation, scaling and translation in 2D.
+        /// </summary>
+        /// <remarks>
+        /// The transformation is defined as first a translation, and then rotation+scaling.
+        /// The order is important for floating point accuracy reasons. This is often used to
+        /// move points from very far away back to the origin. If we would have done the rotation+scaling first (like in a standard matrix multiplication),
+        /// the translation might have to be much larger, which can lead to floating point inaccuracies.
+        /// </remarks>
+        private readonly struct AffineTransform2D
+        {
+            private readonly float2x2 rotScale;
+            private readonly float2 translation;
+
+            public AffineTransform2D(float2x2 rotScale, float2 translation) => (this.rotScale, this.translation) = (rotScale, translation);
+            public static readonly AffineTransform2D identity = new(float2x2.identity, float2.zero);
+
+            // R(T + x) = y
+            // Solve for x:
+            // T + x = R^-1(y)
+            // x = R^-1(y) - T
+            // x = R^-1(y - RT)
+            // x = R^-1(y + R(-T))
+            public AffineTransform2D inverse => new(math.inverse(rotScale), math.mul(rotScale, -translation));
+
+            /// <summary>
+            /// How much the area of a shape is scaled by this transformation
+            /// </summary>
+            public float areaScalingFactor => math.abs(math.determinant(rotScale));
+
+            public float2 Transform(float2 point) => math.mul(rotScale, point + translation);
+            public static AffineTransform2D Translate(float2 offset) => new(float2x2.identity, offset);
+            public static AffineTransform2D Scale(float2 scale) => new(new float2x2(scale.x, 0, 0, scale.y), float2.zero);
+            public static AffineTransform2D Rotate(float2x2 rotation) => new(rotation, float2.zero);
+
+            // result.transform(x) = R1(T1 + R2(x + T2)) = R1((T1 + R2T2) + R2(x)) = R1*R2(R2^-1(T1 + R2T2) + x) = R1*R2(R2^-1(T1) + T2 + x)
+            public static AffineTransform2D operator *(AffineTransform2D lhs, AffineTransform2D rhs) => new AffineTransform2D(
+                math.mul(lhs.rotScale, rhs.rotScale),
+                math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
+            );
+
+            public void Transform(NativeArray<float2> points)
+            {
+                for (int i = 0; i < points.Length; i++) points[i] = Transform(points[i]);
+            }
+
+            public void Transform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints)
+            {
+                if (points.Length != outPoints.Length) throw new ArgumentException("Input and output arrays must have the same length!");
+                for (int i = 0; i < points.Length; i++) outPoints[i] = Transform(points[i]);
+            }
+
+            /// <summary>
+            /// Applies the inverse transform to all points, in-place.
+            /// </summary>
+            /// <remarks>
+            /// This is mathematically equivalent to calling `this.inverse.Transform(points, outPoints)`,
+            /// but it is less susceptible to floating point errors.
+            /// </remarks>
+            public void InverseTransform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints)
+            {
+                var invRotScale = math.inverse(rotScale);
+                for (int i = 0; i < points.Length; i++) outPoints[i] = math.mul(invRotScale, points[i]) - translation;
+            }
+
+            public override string ToString() => $"{nameof(AffineTransform2D)}(translation={translation}, rotScale={rotScale})";
+        }
         private readonly struct Circle
         {
             public readonly float2 Center;
