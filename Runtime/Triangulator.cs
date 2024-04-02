@@ -342,411 +342,6 @@ namespace andywiecko.BurstTriangulator
             }.Schedule(dependencies);
         }
 
-
-        struct FloatCoordinateUtils : ICoordinateUtils<float2, float> {
-            public float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
-
-            /// <summary>
-            /// True iff the angle ∠abc is acute.
-            /// </summary>
-            public bool IsAcuteAngle(float2 a, float2 b, float2 c) => math.dot(a - b, c - b) > 0;
-            public float Area2(int i, int j, int k, ReadOnlySpan<float2> positions)
-            {
-                var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
-                var pAB = pB - pA;
-                var pAC = pC - pA;
-                return math.abs(Cross(pAB, pAC));
-            }
-            public float Cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
-            public Circle<float2, float> CalculateCircumCircle(int i, int j, int k, NativeArray<float2> positions)
-            {
-                var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
-                return new(CircumCenter(pA, pB, pC), CircumRadiusSq(pA, pB, pC));
-            }
-            public float CircumRadiusSq(float2 a, float2 b, float2 c) => math.distancesq(CircumCenter(a, b, c), a);
-            public float2 CircumCenter(float2 a, float2 b, float2 c)
-            {
-                var dx = b.x - a.x;
-                var dy = b.y - a.y;
-                var ex = c.x - a.x;
-                var ey = c.y - a.y;
-
-                var bl = dx * dx + dy * dy;
-                var cl = ex * ex + ey * ey;
-
-                var d = 0.5f / (dx * ey - dy * ex);
-
-                var x = a.x + (ey * bl - dy * cl) * d;
-                var y = a.y + (dx * cl - ex * bl) * d;
-
-                return new(x, y);
-            }
-            public int Orient2dFast(float2 a, float2 b, float2 c) {
-                var x = Cross(b - a, b - c);
-                // Burst is very good at optimizing this away when the caller just compares the result for e.g. >= 0 or < 0
-                return x < 0 ? -1 : x > 0 ? 1 : 0;
-            }
-
-            public bool InCircle(float2 a, float2 b, float2 c, float2 p)
-            {
-                var dx = a.x - p.x;
-                var dy = a.y - p.y;
-                var ex = b.x - p.x;
-                var ey = b.y - p.y;
-                var fx = c.x - p.x;
-                var fy = c.y - p.y;
-
-                var ap = dx * dx + dy * dy;
-                var bp = ex * ex + ey * ey;
-                var cp = fx * fx + fy * fy;
-
-                return dx * (ey * cp - bp * fy) -
-                    dy * (ex * cp - bp * fx) +
-                    ap * (ex * fy - ey * fx) < 0;
-            }
-            public float3 Barycentric(float2 a, float2 b, float2 c, float2 p)
-            {
-                var (v0, v1, v2) = (b - a, c - a, p - a);
-                var denInv = 1 / Cross(v0, v1);
-                var v = denInv * Cross(v2, v1);
-                var w = denInv * Cross(v0, v2);
-                var u = 1.0f - v - w;
-                return math.float3(u, v, w);
-            }
-            public void Eigen(float2x2 matrix, out float2 eigval, out float2x2 eigvec)
-            {
-                var a00 = matrix[0][0];
-                var a11 = matrix[1][1];
-                var a01 = matrix[0][1];
-
-                var a00a11 = a00 - a11;
-                var p1 = a00 + a11;
-                var p2 = (a00a11 >= 0 ? 1 : -1) * math.sqrt(a00a11 * a00a11 + 4 * a01 * a01);
-                var lambda1 = p1 + p2;
-                var lambda2 = p1 - p2;
-                eigval = 0.5f * math.float2(lambda1, lambda2);
-
-                var phi = 0.5f * math.atan2(2 * a01, a00a11);
-
-                eigvec = math.float2x2
-                (
-                    m00: math.cos(phi), m01: -math.sin(phi),
-                    m10: math.sin(phi), m11: math.cos(phi)
-                );
-            }
-            public float2x2 Kron(float2 a, float2 b) => math.float2x2(a * b[0], a * b[1]);
-            public bool PointInsideTriangle(float2 p, float2 a, float2 b, float2 c) => math.cmax(-Barycentric(a, b, c, p)) <= 0;
-            public float CCW(float2 a, float2 b, float2 c) => math.sign(Cross(b - a, b - c));
-            public bool PointLineSegmentIntersection(float2 a, float2 b0, float2 b1) =>
-                CCW(b0, b1, a) == 0 && math.all(a >= math.min(b0, b1) & a <= math.max(b0, b1));
-            public bool EdgeEdgeIntersection(float2 a0, float2 a1, float2 b0, float2 b1) =>
-                CCW(a0, a1, b0) != CCW(a0, a1, b1) && CCW(b0, b1, a0) != CCW(b0, b1, a1);
-            public bool IsConvexQuadrilateral(float2 a, float2 b, float2 c, float2 d) =>
-                CCW(a, c, b) != 0 && CCW(a, c, d) != 0 && CCW(b, d, a) != 0 && CCW(b, d, c) != 0 &&
-                CCW(a, c, b) != CCW(a, c, d) && CCW(b, d, a) != CCW(b, d, c);
-
-            public bool IsValidCoordinate(float2 v) => math.all(math.isfinite(v));
-            public bool Equals (float2 a, float2 b) => math.all(a == b);
-            public float Distance (float2 a, float2 b) => math.distance(a, b);
-            public float DistanceSq(float2 a, float2 b) => math.distancesq(a, b);
-            public bool LengthSmaller (float lhs, float rhs) => lhs < rhs;
-            public float MultiplyLengthSq (float lhs, float multiplier) => lhs * multiplier;
-            public float InfLengthSq => float.PositiveInfinity;
-
-            public AffineTransform2D CalculatePCATransformation(NativeArray<float2> positions)
-            {
-                var com = (float2)0;
-                foreach (var p in positions)
-                {
-                    com += p;
-                }
-                com /= positions.Length;
-
-                var cov = float2x2.zero;
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    var q = positions[i] - com;
-                    cov += Kron(q, q);
-                }
-                cov /= positions.Length;
-
-                Eigen(cov, out _, out var rotationMatrix);
-
-                // Note: Taking the transpose of a rotation matrix is equivalent to taking the inverse.
-                var partialTransform = AffineTransform2D.Rotate(math.transpose(rotationMatrix)) * AffineTransform2D.Translate(-com);
-                float2 min = float.MaxValue;
-                float2 max = float.MinValue;
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    var p = partialTransform.Transform(positions[i]);
-                    min = math.min(p, min);
-                    max = math.max(p, max);
-                }
-
-                var c = 0.5f * (min + max);
-                var s = 2f / (max - min);
-
-                return AffineTransform2D.Scale(s) * AffineTransform2D.Translate(-c) * partialTransform;
-            }
-
-            public AffineTransform2D CalculateLocalTransformation(NativeArray<float2> positions)
-            {
-                float2 min = float.PositiveInfinity, max = float.NegativeInfinity, com = 0;
-                foreach (var p in positions)
-                {
-                    min = math.min(p, min);
-                    max = math.max(p, max);
-                    com += p;
-                }
-
-                com /= positions.Length;
-                var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
-                return AffineTransform2D.Scale(scale) * AffineTransform2D.Translate(-com);
-            }
-
-            public void Transform (AffineTransform2D transform, NativeArray<float2> points) => transform.Transform(points);
-            public void Transform (AffineTransform2D transform, [NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints) => transform.Transform(points, outPoints);
-            public void InverseTransform (AffineTransform2D transform, [NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints) => transform.InverseTransform(points, outPoints);
-
-            public int HashKey(float2 p, float2 origin, int hashSize)
-            {
-                return (int)math.floor(pseudoAngle(p.x - origin.x, p.y - origin.y) * hashSize) % hashSize;
-
-                static float pseudoAngle(float dx, float dy)
-                {
-                    var p = dx / (math.abs(dx) + math.abs(dy));
-                    return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
-                }
-            }
-
-            public void BoundingBox (ReadOnlySpan<float2> positions, out float2 min, out float2 max, out float2 center) {
-                min = float.MaxValue;
-                max = float.MinValue;
-                foreach (var p in positions)
-                {
-                    min = math.min(p, min);
-                    max = math.max(p, max);
-                }
-                center = 0.5f * (min + max);
-            }
-
-            public float2 Lerp (float2 a, float2 b, float t) => math.lerp(a, b, t);
-            public bool SmallestInnerAngleIsBelowThreshold(float2 pA, float2 pB, float2 pC, float angleThreshold) {
-                var pAB = pB - pA;
-                var pBC = pC - pB;
-                var pCA = pA - pC;
-
-                var angles = math.float3
-                (
-                    Angle(pAB, -pCA),
-                    Angle(pBC, -pAB),
-                    Angle(pCA, -pBC)
-                );
-
-                return math.any(math.abs(angles) < angleThreshold);
-            }
-        }
-
-        struct IntCoordinateUtils : ICoordinateUtils<int2, ulong> {
-            static long DotLong (int2 a, int2 b) => (long)a.x * (long)b.x + (long)a.y * (long)b.y;
-            /// <summary>
-            /// True iff the angle ∠abc is acute.
-            /// </summary>
-            public bool IsAcuteAngle(int2 a, int2 b, int2 c) => DotLong(a - b, c - b) > 0;
-            public ulong Area2(int i, int j, int k, ReadOnlySpan<int2> positions)
-            {
-                var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
-                var pAB = pB - pA;
-                var pAC = pC - pA;
-                return (ulong)math.abs(Cross(pAB, pAC));
-            }
-            public long Cross(int2 a, int2 b) => (long)a.x * (long)b.y - (long)a.y * (long)b.x;
-            public Circle<int2, ulong> CalculateCircumCircle(int i, int j, int k, NativeArray<int2> positions)
-            {
-                var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
-                return new(CircumCenter(pA, pB, pC), CircumRadiusSq(pA, pB, pC));
-            }
-            public ulong CircumRadiusSq(int2 a, int2 b, int2 c) => DistanceSq(CircumCenter(a, b, c), a);
-            public int2 CircumCenter(int2 a, int2 b, int2 c)
-            {
-                var dx = (long)b.x - (long)a.x;
-                var dy = (long)b.y - (long)a.y;
-                var ex = (long)c.x - (long)a.x;
-                var ey = (long)c.y - (long)a.y;
-
-                var bl = dx * dx + dy * dy;
-                var cl = ex * ex + ey * ey;
-
-                var d = 0.5 / (double)(dx * ey - dy * ex);
-
-                var x = a.x + (ey * bl - dy * cl) * d;
-                var y = a.y + (dx * cl - ex * bl) * d;
-
-                return new((int)math.round(x), (int)math.round(y));
-            }
-            public int Orient2dFast(int2 a, int2 b, int2 c) {
-                var x = math.sign(Cross(b - a, b - c));
-                // Burst is very good at optimizing this away when the caller just compares the result for e.g. >= 0 or < 0
-                return x < 0 ? -1 : x > 0 ? 1 : 0;
-            }
-
-            public bool InCircle(int2 a, int2 b, int2 c, int2 p)
-            {
-                var dx = (long)(a.x - p.x);
-                var dy = (long)(a.y - p.y);
-                var ex = (long)(b.x - p.x);
-                var ey = (long)(b.y - p.y);
-                var fx = (long)(c.x - p.x);
-                var fy = (long)(c.y - p.y);
-
-                var ap = dx * dx + dy * dy;
-                var bp = ex * ex + ey * ey;
-                var cp = fx * fx + fy * fy;
-
-                // TODO: This may fail with coordinates that differ by more than approximately 2^20
-                return dx * (ey * cp - bp * fy) -
-                    dy * (ex * cp - bp * fx) +
-                    ap * (ex * fy - ey * fx) < 0;
-            }
-
-            public bool PointInsideTriangle(int2 p, int2 a, int2 b, int2 c) {
-                var check1 = Cross(p - a, b - a);
-                var check2 = Cross(p - b, c - b);
-                var check3 = Cross(p - c, a - c);
-
-                // Allow for both clockwise and counter-clockwise triangle layouts.
-                return (check1 >= 0 & check2 >= 0 & check3 >= 0) | (check1 <= 0 & check2 <= 0 & check3 <= 0);
-            }
-
-            public int CCW(int2 a, int2 b, int2 c) => Orient2dFast(a,b,c);
-            public bool PointLineSegmentIntersection(int2 a, int2 b0, int2 b1) =>
-                CCW(b0, b1, a) == 0 && math.all(a >= math.min(b0, b1) & a <= math.max(b0, b1));
-            public bool EdgeEdgeIntersection(int2 a0, int2 a1, int2 b0, int2 b1) =>
-                CCW(a0, a1, b0) != CCW(a0, a1, b1) && CCW(b0, b1, a0) != CCW(b0, b1, a1);
-            public bool IsConvexQuadrilateral(int2 a, int2 b, int2 c, int2 d) =>
-                CCW(a, c, b) != 0 && CCW(a, c, d) != 0 && CCW(b, d, a) != 0 && CCW(b, d, c) != 0 &&
-                CCW(a, c, b) != CCW(a, c, d) && CCW(b, d, a) != CCW(b, d, c);
-
-            public bool IsValidCoordinate(int2 v) => math.all(v <= (1 << 20) & v >= -(1 << 20));
-            public bool Equals (int2 a, int2 b) => math.all(a == b);
-            public float Distance (int2 a, int2 b) => math.distance(a, b);
-            public ulong DistanceSq(int2 a, int2 b) => (ulong)DotLong(a - b, a - b);
-            public bool LengthSmaller (ulong lhs, ulong rhs) => lhs < rhs;
-            public ulong MultiplyLengthSq (ulong lhs, float multiplier) {
-                if (multiplier < 0) throw new ArgumentOutOfRangeException(nameof(multiplier), "Multiplier must be non-negative.");
-                return (ulong)math.round(lhs * (double)multiplier);
-            }
-            public ulong InfLengthSq => ulong.MaxValue;
-
-            public AffineTransform2D CalculatePCATransformation(NativeArray<int2> positions)
-            {
-                throw new NotImplementedException();
-            }
-
-            public AffineTransform2D CalculateLocalTransformation(NativeArray<int2> positions)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Transform (AffineTransform2D transform, NativeArray<int2> points) {
-                if (transform != AffineTransform2D.identity) {
-                    throw new NotImplementedException();
-                }
-            }
-            public void Transform (AffineTransform2D transform, [NoAlias] NativeArray<int2> points, [NoAlias] NativeArray<int2> outPoints) {
-                if (transform != AffineTransform2D.identity) {
-                    throw new NotImplementedException();
-                }
-                outPoints.CopyFrom(points);
-            }
-            public void InverseTransform (AffineTransform2D transform, [NoAlias] NativeArray<int2> points, [NoAlias] NativeArray<int2> outPoints) {
-                if (transform != AffineTransform2D.identity) {
-                    throw new NotImplementedException();
-                }
-                outPoints.CopyFrom(points);
-            }
-
-            public int HashKey(int2 p, int2 origin, int hashSize)
-            {
-                return (int)math.floor(pseudoAngle(p.x - origin.x, p.y - origin.y) * hashSize) % hashSize;
-
-                static float pseudoAngle(float dx, float dy)
-                {
-                    var p = dx / (math.abs(dx) + math.abs(dy));
-                    return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
-                }
-            }
-
-            public void BoundingBox (ReadOnlySpan<int2> positions, out int2 min, out int2 max, out int2 center) {
-                min = int.MaxValue;
-                max = int.MinValue;
-                foreach (var p in positions)
-                {
-                    min = math.min(p, min);
-                    max = math.max(p, max);
-                }
-                center = (min + max) / 2;
-            }
-
-            public int2 Lerp (int2 a, int2 b, float t) {
-                return new int2(
-                    a.x + (int)math.round((b.x - a.x)*(double)t),
-                    a.y + (int)math.round((b.y - a.y)*(double)t)
-                );
-            }
-
-            double Angle(int2 a, int2 b) => math.atan2((double)Cross(a, b), (double)DotLong(a, b));
-
-            public bool SmallestInnerAngleIsBelowThreshold(int2 pA, int2 pB, int2 pC, float angleThreshold) {
-                var pAB = pB - pA;
-                var pBC = pC - pB;
-                var pCA = pA - pC;
-
-                var angles = math.float3
-                (
-                    (float)Angle(pAB, -pCA),
-                    (float)Angle(pBC, -pAB),
-                    (float)Angle(pCA, -pBC)
-                );
-
-                return math.any(math.abs(angles) < angleThreshold);
-            }
-        }
-
-        interface ICoordinateUtils<Coord, LengthSq> where Coord : unmanaged where LengthSq : unmanaged {
-            public bool IsAcuteAngle(Coord a, Coord b, Coord c);
-            public LengthSq Area2(int i, int j, int k, ReadOnlySpan<Coord> positions);
-            public Circle<Coord, LengthSq> CalculateCircumCircle(int i, int j, int k, NativeArray<Coord> positions);
-            public LengthSq CircumRadiusSq(Coord a, Coord b, Coord c);
-            public Coord CircumCenter(Coord a, Coord b, Coord c);
-            public int Orient2dFast(Coord a, Coord b, Coord c);
-            public bool InCircle(Coord a, Coord b, Coord c, Coord p);
-            public bool PointInsideTriangle(Coord p, Coord a, Coord b, Coord c);
-            public bool PointLineSegmentIntersection(Coord a, Coord b0, Coord b1);
-            public bool EdgeEdgeIntersection(Coord a0, Coord a1, Coord b0, Coord b1);
-            public bool IsConvexQuadrilateral(Coord a, Coord b, Coord c, Coord d);
-
-            public bool IsValidCoordinate(Coord coord);
-            public bool Equals (Coord a, Coord b);
-            public float Distance (Coord a, Coord b);
-            public LengthSq DistanceSq(Coord a, Coord b);
-            public bool LengthSmaller (LengthSq lhs, LengthSq rhs);
-            public LengthSq MultiplyLengthSq (LengthSq lhs, float multiplier);
-
-            public AffineTransform2D CalculatePCATransformation(NativeArray<Coord> positions);
-            public AffineTransform2D CalculateLocalTransformation(NativeArray<Coord> positions);
-
-            public void Transform (AffineTransform2D transform, NativeArray<Coord> points);
-            public void Transform (AffineTransform2D transform, [NoAlias] NativeArray<Coord> points, [NoAlias] NativeArray<Coord> outPoints);
-            public void InverseTransform (AffineTransform2D transform, [NoAlias] NativeArray<Coord> points, [NoAlias] NativeArray<Coord> outPoints);
-            public LengthSq InfLengthSq { get; }
-
-            public int HashKey(Coord p, Coord origin, int hashSize);
-            public void BoundingBox (ReadOnlySpan<Coord> positions, out Coord min, out Coord max, out Coord center);
-            public Coord Lerp(Coord a, Coord b, float t);
-            public bool SmallestInnerAngleIsBelowThreshold(Coord a, Coord b, Coord c, float angleThreshold);
-        }
-
         #region Jobs
 
         public struct InputData<Coord> where Coord : unmanaged
@@ -2675,6 +2270,410 @@ namespace andywiecko.BurstTriangulator
     #endregion
 
 #region Utils
+    struct FloatCoordinateUtils : ICoordinateUtils<float2, float> {
+        public float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
+
+        /// <summary>
+        /// True iff the angle ∠abc is acute.
+        /// </summary>
+        public bool IsAcuteAngle(float2 a, float2 b, float2 c) => math.dot(a - b, c - b) > 0;
+        public float Area2(int i, int j, int k, ReadOnlySpan<float2> positions)
+        {
+            var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
+            var pAB = pB - pA;
+            var pAC = pC - pA;
+            return math.abs(Cross(pAB, pAC));
+        }
+        public float Cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
+        public Circle<float2, float> CalculateCircumCircle(int i, int j, int k, NativeArray<float2> positions)
+        {
+            var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
+            return new(CircumCenter(pA, pB, pC), CircumRadiusSq(pA, pB, pC));
+        }
+        public float CircumRadiusSq(float2 a, float2 b, float2 c) => math.distancesq(CircumCenter(a, b, c), a);
+        public float2 CircumCenter(float2 a, float2 b, float2 c)
+        {
+            var dx = b.x - a.x;
+            var dy = b.y - a.y;
+            var ex = c.x - a.x;
+            var ey = c.y - a.y;
+
+            var bl = dx * dx + dy * dy;
+            var cl = ex * ex + ey * ey;
+
+            var d = 0.5f / (dx * ey - dy * ex);
+
+            var x = a.x + (ey * bl - dy * cl) * d;
+            var y = a.y + (dx * cl - ex * bl) * d;
+
+            return new(x, y);
+        }
+        public int Orient2dFast(float2 a, float2 b, float2 c) {
+            var x = Cross(b - a, b - c);
+            // Burst is very good at optimizing this away when the caller just compares the result for e.g. >= 0 or < 0
+            return x < 0 ? -1 : x > 0 ? 1 : 0;
+        }
+
+        public bool InCircle(float2 a, float2 b, float2 c, float2 p)
+        {
+            var dx = a.x - p.x;
+            var dy = a.y - p.y;
+            var ex = b.x - p.x;
+            var ey = b.y - p.y;
+            var fx = c.x - p.x;
+            var fy = c.y - p.y;
+
+            var ap = dx * dx + dy * dy;
+            var bp = ex * ex + ey * ey;
+            var cp = fx * fx + fy * fy;
+
+            return dx * (ey * cp - bp * fy) -
+                dy * (ex * cp - bp * fx) +
+                ap * (ex * fy - ey * fx) < 0;
+        }
+        public float3 Barycentric(float2 a, float2 b, float2 c, float2 p)
+        {
+            var (v0, v1, v2) = (b - a, c - a, p - a);
+            var denInv = 1 / Cross(v0, v1);
+            var v = denInv * Cross(v2, v1);
+            var w = denInv * Cross(v0, v2);
+            var u = 1.0f - v - w;
+            return math.float3(u, v, w);
+        }
+        public void Eigen(float2x2 matrix, out float2 eigval, out float2x2 eigvec)
+        {
+            var a00 = matrix[0][0];
+            var a11 = matrix[1][1];
+            var a01 = matrix[0][1];
+
+            var a00a11 = a00 - a11;
+            var p1 = a00 + a11;
+            var p2 = (a00a11 >= 0 ? 1 : -1) * math.sqrt(a00a11 * a00a11 + 4 * a01 * a01);
+            var lambda1 = p1 + p2;
+            var lambda2 = p1 - p2;
+            eigval = 0.5f * math.float2(lambda1, lambda2);
+
+            var phi = 0.5f * math.atan2(2 * a01, a00a11);
+
+            eigvec = math.float2x2
+            (
+                m00: math.cos(phi), m01: -math.sin(phi),
+                m10: math.sin(phi), m11: math.cos(phi)
+            );
+        }
+        public float2x2 Kron(float2 a, float2 b) => math.float2x2(a * b[0], a * b[1]);
+        public bool PointInsideTriangle(float2 p, float2 a, float2 b, float2 c) => math.cmax(-Barycentric(a, b, c, p)) <= 0;
+        public float CCW(float2 a, float2 b, float2 c) => math.sign(Cross(b - a, b - c));
+        public bool PointLineSegmentIntersection(float2 a, float2 b0, float2 b1) =>
+            CCW(b0, b1, a) == 0 && math.all(a >= math.min(b0, b1) & a <= math.max(b0, b1));
+        public bool EdgeEdgeIntersection(float2 a0, float2 a1, float2 b0, float2 b1) =>
+            CCW(a0, a1, b0) != CCW(a0, a1, b1) && CCW(b0, b1, a0) != CCW(b0, b1, a1);
+        public bool IsConvexQuadrilateral(float2 a, float2 b, float2 c, float2 d) =>
+            CCW(a, c, b) != 0 && CCW(a, c, d) != 0 && CCW(b, d, a) != 0 && CCW(b, d, c) != 0 &&
+            CCW(a, c, b) != CCW(a, c, d) && CCW(b, d, a) != CCW(b, d, c);
+
+        public bool IsValidCoordinate(float2 v) => math.all(math.isfinite(v));
+        public bool Equals (float2 a, float2 b) => math.all(a == b);
+        public float Distance (float2 a, float2 b) => math.distance(a, b);
+        public float DistanceSq(float2 a, float2 b) => math.distancesq(a, b);
+        public bool LengthSmaller (float lhs, float rhs) => lhs < rhs;
+        public float MultiplyLengthSq (float lhs, float multiplier) => lhs * multiplier;
+        public float InfLengthSq => float.PositiveInfinity;
+
+        public AffineTransform2D CalculatePCATransformation(NativeArray<float2> positions)
+        {
+            var com = (float2)0;
+            foreach (var p in positions)
+            {
+                com += p;
+            }
+            com /= positions.Length;
+
+            var cov = float2x2.zero;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var q = positions[i] - com;
+                cov += Kron(q, q);
+            }
+            cov /= positions.Length;
+
+            Eigen(cov, out _, out var rotationMatrix);
+
+            // Note: Taking the transpose of a rotation matrix is equivalent to taking the inverse.
+            var partialTransform = AffineTransform2D.Rotate(math.transpose(rotationMatrix)) * AffineTransform2D.Translate(-com);
+            float2 min = float.MaxValue;
+            float2 max = float.MinValue;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var p = partialTransform.Transform(positions[i]);
+                min = math.min(p, min);
+                max = math.max(p, max);
+            }
+
+            var c = 0.5f * (min + max);
+            var s = 2f / (max - min);
+
+            return AffineTransform2D.Scale(s) * AffineTransform2D.Translate(-c) * partialTransform;
+        }
+
+        public AffineTransform2D CalculateLocalTransformation(NativeArray<float2> positions)
+        {
+            float2 min = float.PositiveInfinity, max = float.NegativeInfinity, com = 0;
+            foreach (var p in positions)
+            {
+                min = math.min(p, min);
+                max = math.max(p, max);
+                com += p;
+            }
+
+            com /= positions.Length;
+            var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
+            return AffineTransform2D.Scale(scale) * AffineTransform2D.Translate(-com);
+        }
+
+        public void Transform (AffineTransform2D transform, NativeArray<float2> points) => transform.Transform(points);
+        public void Transform (AffineTransform2D transform, [NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints) => transform.Transform(points, outPoints);
+        public void InverseTransform (AffineTransform2D transform, [NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints) => transform.InverseTransform(points, outPoints);
+
+        public int HashKey(float2 p, float2 origin, int hashSize)
+        {
+            return (int)math.floor(pseudoAngle(p.x - origin.x, p.y - origin.y) * hashSize) % hashSize;
+
+            static float pseudoAngle(float dx, float dy)
+            {
+                var p = dx / (math.abs(dx) + math.abs(dy));
+                return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
+            }
+        }
+
+        public void BoundingBox (ReadOnlySpan<float2> positions, out float2 min, out float2 max, out float2 center) {
+            min = float.MaxValue;
+            max = float.MinValue;
+            foreach (var p in positions)
+            {
+                min = math.min(p, min);
+                max = math.max(p, max);
+            }
+            center = 0.5f * (min + max);
+        }
+
+        public float2 Lerp (float2 a, float2 b, float t) => math.lerp(a, b, t);
+        public bool SmallestInnerAngleIsBelowThreshold(float2 pA, float2 pB, float2 pC, float angleThreshold) {
+            var pAB = pB - pA;
+            var pBC = pC - pB;
+            var pCA = pA - pC;
+
+            var angles = math.float3
+            (
+                Angle(pAB, -pCA),
+                Angle(pBC, -pAB),
+                Angle(pCA, -pBC)
+            );
+
+            return math.any(math.abs(angles) < angleThreshold);
+        }
+    }
+
+    struct IntCoordinateUtils : ICoordinateUtils<int2, ulong> {
+        static long DotLong (int2 a, int2 b) => (long)a.x * (long)b.x + (long)a.y * (long)b.y;
+        /// <summary>
+        /// True iff the angle ∠abc is acute.
+        /// </summary>
+        public bool IsAcuteAngle(int2 a, int2 b, int2 c) => DotLong(a - b, c - b) > 0;
+        public ulong Area2(int i, int j, int k, ReadOnlySpan<int2> positions)
+        {
+            var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
+            var pAB = pB - pA;
+            var pAC = pC - pA;
+            return (ulong)math.abs(Cross(pAB, pAC));
+        }
+        public long Cross(int2 a, int2 b) => (long)a.x * (long)b.y - (long)a.y * (long)b.x;
+        public Circle<int2, ulong> CalculateCircumCircle(int i, int j, int k, NativeArray<int2> positions)
+        {
+            var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
+            return new(CircumCenter(pA, pB, pC), CircumRadiusSq(pA, pB, pC));
+        }
+        public ulong CircumRadiusSq(int2 a, int2 b, int2 c) => DistanceSq(CircumCenter(a, b, c), a);
+        public int2 CircumCenter(int2 a, int2 b, int2 c)
+        {
+            var dx = (long)b.x - (long)a.x;
+            var dy = (long)b.y - (long)a.y;
+            var ex = (long)c.x - (long)a.x;
+            var ey = (long)c.y - (long)a.y;
+
+            var bl = dx * dx + dy * dy;
+            var cl = ex * ex + ey * ey;
+
+            var d = 0.5 / (double)(dx * ey - dy * ex);
+
+            var x = a.x + (ey * bl - dy * cl) * d;
+            var y = a.y + (dx * cl - ex * bl) * d;
+
+            return new((int)math.round(x), (int)math.round(y));
+        }
+        public int Orient2dFast(int2 a, int2 b, int2 c) {
+            var x = math.sign(Cross(b - a, b - c));
+            // Burst is very good at optimizing this away when the caller just compares the result for e.g. >= 0 or < 0
+            return x < 0 ? -1 : x > 0 ? 1 : 0;
+        }
+
+        public bool InCircle(int2 a, int2 b, int2 c, int2 p)
+        {
+            var dx = (long)(a.x - p.x);
+            var dy = (long)(a.y - p.y);
+            var ex = (long)(b.x - p.x);
+            var ey = (long)(b.y - p.y);
+            var fx = (long)(c.x - p.x);
+            var fy = (long)(c.y - p.y);
+
+            var ap = dx * dx + dy * dy;
+            var bp = ex * ex + ey * ey;
+            var cp = fx * fx + fy * fy;
+
+            // TODO: This may fail with coordinates that differ by more than approximately 2^20
+            return dx * (ey * cp - bp * fy) -
+                dy * (ex * cp - bp * fx) +
+                ap * (ex * fy - ey * fx) < 0;
+        }
+
+        public bool PointInsideTriangle(int2 p, int2 a, int2 b, int2 c) {
+            var check1 = Cross(p - a, b - a);
+            var check2 = Cross(p - b, c - b);
+            var check3 = Cross(p - c, a - c);
+
+            // Allow for both clockwise and counter-clockwise triangle layouts.
+            return (check1 >= 0 & check2 >= 0 & check3 >= 0) | (check1 <= 0 & check2 <= 0 & check3 <= 0);
+        }
+
+        public int CCW(int2 a, int2 b, int2 c) => Orient2dFast(a,b,c);
+        public bool PointLineSegmentIntersection(int2 a, int2 b0, int2 b1) =>
+            CCW(b0, b1, a) == 0 && math.all(a >= math.min(b0, b1) & a <= math.max(b0, b1));
+        public bool EdgeEdgeIntersection(int2 a0, int2 a1, int2 b0, int2 b1) =>
+            CCW(a0, a1, b0) != CCW(a0, a1, b1) && CCW(b0, b1, a0) != CCW(b0, b1, a1);
+        public bool IsConvexQuadrilateral(int2 a, int2 b, int2 c, int2 d) =>
+            CCW(a, c, b) != 0 && CCW(a, c, d) != 0 && CCW(b, d, a) != 0 && CCW(b, d, c) != 0 &&
+            CCW(a, c, b) != CCW(a, c, d) && CCW(b, d, a) != CCW(b, d, c);
+
+        public bool IsValidCoordinate(int2 v) => math.all(v <= (1 << 20) & v >= -(1 << 20));
+        public bool Equals (int2 a, int2 b) => math.all(a == b);
+        public float Distance (int2 a, int2 b) => math.distance(a, b);
+        public ulong DistanceSq(int2 a, int2 b) => (ulong)DotLong(a - b, a - b);
+        public bool LengthSmaller (ulong lhs, ulong rhs) => lhs < rhs;
+        public ulong MultiplyLengthSq (ulong lhs, float multiplier) {
+            if (multiplier < 0) throw new ArgumentOutOfRangeException(nameof(multiplier), "Multiplier must be non-negative.");
+            return (ulong)math.round(lhs * (double)multiplier);
+        }
+        public ulong InfLengthSq => ulong.MaxValue;
+
+        public AffineTransform2D CalculatePCATransformation(NativeArray<int2> positions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public AffineTransform2D CalculateLocalTransformation(NativeArray<int2> positions)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Transform (AffineTransform2D transform, NativeArray<int2> points) {
+            if (transform != AffineTransform2D.identity) {
+                throw new NotImplementedException();
+            }
+        }
+        public void Transform (AffineTransform2D transform, [NoAlias] NativeArray<int2> points, [NoAlias] NativeArray<int2> outPoints) {
+            if (transform != AffineTransform2D.identity) {
+                throw new NotImplementedException();
+            }
+            outPoints.CopyFrom(points);
+        }
+        public void InverseTransform (AffineTransform2D transform, [NoAlias] NativeArray<int2> points, [NoAlias] NativeArray<int2> outPoints) {
+            if (transform != AffineTransform2D.identity) {
+                throw new NotImplementedException();
+            }
+            outPoints.CopyFrom(points);
+        }
+
+        public int HashKey(int2 p, int2 origin, int hashSize)
+        {
+            return (int)math.floor(pseudoAngle(p.x - origin.x, p.y - origin.y) * hashSize) % hashSize;
+
+            static float pseudoAngle(float dx, float dy)
+            {
+                var p = dx / (math.abs(dx) + math.abs(dy));
+                return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
+            }
+        }
+
+        public void BoundingBox (ReadOnlySpan<int2> positions, out int2 min, out int2 max, out int2 center) {
+            min = int.MaxValue;
+            max = int.MinValue;
+            foreach (var p in positions)
+            {
+                min = math.min(p, min);
+                max = math.max(p, max);
+            }
+            center = (min + max) / 2;
+        }
+
+        public int2 Lerp (int2 a, int2 b, float t) {
+            return new int2(
+                a.x + (int)math.round((b.x - a.x)*(double)t),
+                a.y + (int)math.round((b.y - a.y)*(double)t)
+            );
+        }
+
+        double Angle(int2 a, int2 b) => math.atan2((double)Cross(a, b), (double)DotLong(a, b));
+
+        public bool SmallestInnerAngleIsBelowThreshold(int2 pA, int2 pB, int2 pC, float angleThreshold) {
+            var pAB = pB - pA;
+            var pBC = pC - pB;
+            var pCA = pA - pC;
+
+            var angles = math.float3
+            (
+                (float)Angle(pAB, -pCA),
+                (float)Angle(pBC, -pAB),
+                (float)Angle(pCA, -pBC)
+            );
+
+            return math.any(math.abs(angles) < angleThreshold);
+        }
+    }
+
+    interface ICoordinateUtils<Coord, LengthSq> where Coord : unmanaged where LengthSq : unmanaged {
+        bool IsAcuteAngle(Coord a, Coord b, Coord c);
+        LengthSq Area2(int i, int j, int k, ReadOnlySpan<Coord> positions);
+        Circle<Coord, LengthSq> CalculateCircumCircle(int i, int j, int k, NativeArray<Coord> positions);
+        LengthSq CircumRadiusSq(Coord a, Coord b, Coord c);
+        Coord CircumCenter(Coord a, Coord b, Coord c);
+        int Orient2dFast(Coord a, Coord b, Coord c);
+        bool InCircle(Coord a, Coord b, Coord c, Coord p);
+        bool PointInsideTriangle(Coord p, Coord a, Coord b, Coord c);
+        bool PointLineSegmentIntersection(Coord a, Coord b0, Coord b1);
+        bool EdgeEdgeIntersection(Coord a0, Coord a1, Coord b0, Coord b1);
+        bool IsConvexQuadrilateral(Coord a, Coord b, Coord c, Coord d);
+
+        bool IsValidCoordinate(Coord coord);
+        bool Equals (Coord a, Coord b);
+        float Distance (Coord a, Coord b);
+        LengthSq DistanceSq(Coord a, Coord b);
+        bool LengthSmaller (LengthSq lhs, LengthSq rhs);
+        LengthSq MultiplyLengthSq (LengthSq lhs, float multiplier);
+
+        AffineTransform2D CalculatePCATransformation(NativeArray<Coord> positions);
+        AffineTransform2D CalculateLocalTransformation(NativeArray<Coord> positions);
+
+        void Transform (AffineTransform2D transform, NativeArray<Coord> points);
+        void Transform (AffineTransform2D transform, [NoAlias] NativeArray<Coord> points, [NoAlias] NativeArray<Coord> outPoints);
+        void InverseTransform (AffineTransform2D transform, [NoAlias] NativeArray<Coord> points, [NoAlias] NativeArray<Coord> outPoints);
+        LengthSq InfLengthSq { get; }
+
+        int HashKey(Coord p, Coord origin, int hashSize);
+        void BoundingBox (ReadOnlySpan<Coord> positions, out Coord min, out Coord max, out Coord center);
+        Coord Lerp(Coord a, Coord b, float t);
+        bool SmallestInnerAngleIsBelowThreshold(Coord a, Coord b, Coord c, float angleThreshold);
+    }
+
     private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
 #endregion
     }
