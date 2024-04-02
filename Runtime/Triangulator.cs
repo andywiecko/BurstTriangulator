@@ -2554,6 +2554,7 @@ namespace andywiecko.BurstTriangulator
             CCW(a, c, b) != 0 && CCW(a, c, d) != 0 && CCW(b, d, a) != 0 && CCW(b, d, c) != 0 &&
             CCW(a, c, b) != CCW(a, c, d) && CCW(b, d, a) != CCW(b, d, c);
 
+        // For most purposes, all integer coordinates are valid, but e.g. the InCircle method may fail with very large coordinates, I think.
         public bool IsValidCoordinate(int2 v) => math.all(v <= (1 << 20) & v >= -(1 << 20));
         public bool Equals (int2 a, int2 b) => math.all(a == b);
         public float Distance (int2 a, int2 b) => math.distance(a, b);
