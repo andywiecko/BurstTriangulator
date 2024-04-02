@@ -317,7 +317,7 @@ namespace andywiecko.BurstTriangulator
                 sloanMaxIters = settings.SloanMaxIters,
                 verbose = settings.Verbose,
                 concentricShellsParameter = settings.ConcentricShellsParameter,
-                refinementThresholdArea = (ulong)settings.RefinementThresholds.Area,
+                refinementThresholdArea = settings.RefinementThresholds.Area,
                 refinementThresholdAngle = settings.RefinementThresholds.Angle,
                 input = input,
                 output = output
