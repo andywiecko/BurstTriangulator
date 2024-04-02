@@ -2567,28 +2567,28 @@ namespace andywiecko.BurstTriangulator
 
         public AffineTransform2D CalculatePCATransformation(NativeArray<int2> positions)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Cannot use pre-processing for integer coordinates");
         }
 
         public AffineTransform2D CalculateLocalTransformation(NativeArray<int2> positions)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Cannot use pre-processing for integer coordinates");
         }
 
         public void Transform (AffineTransform2D transform, NativeArray<int2> points) {
             if (transform != AffineTransform2D.identity) {
-                throw new NotImplementedException();
+                throw new InvalidOperationException("Cannot use pre-processing for integer coordinates");
             }
         }
         public void Transform (AffineTransform2D transform, [NoAlias] NativeArray<int2> points, [NoAlias] NativeArray<int2> outPoints) {
             if (transform != AffineTransform2D.identity) {
-                throw new NotImplementedException();
+                throw new InvalidOperationException("Cannot use pre-processing for integer coordinates");
             }
             outPoints.CopyFrom(points);
         }
         public void InverseTransform (AffineTransform2D transform, [NoAlias] NativeArray<int2> points, [NoAlias] NativeArray<int2> outPoints) {
             if (transform != AffineTransform2D.identity) {
-                throw new NotImplementedException();
+                throw new InvalidOperationException("Cannot use pre-processing for integer coordinates");
             }
             outPoints.CopyFrom(points);
         }
