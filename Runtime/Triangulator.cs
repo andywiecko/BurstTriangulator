@@ -60,6 +60,13 @@ namespace andywiecko.BurstTriangulator
                 for (int i = 0; i < points.Length; i++) points[i] = Transform(points[i]);
             }
 
+            public override string ToString() => $"{nameof(AffineTransform2D)}(translation={translation}, rotScale={rotScale})";
+
+            public static bool operator ==(AffineTransform2D lhs, AffineTransform2D rhs) => lhs.Equals(rhs);
+            public static bool operator !=(AffineTransform2D lhs, AffineTransform2D rhs) => !lhs.Equals(rhs);
+            public override bool Equals(object obj) => obj is AffineTransform2D other && Equals(other);
+            public bool Equals(AffineTransform2D other) => rotScale.Equals(other.rotScale) && translation.Equals(other.translation);
+
             public void Transform([NoAlias] NativeArray<float2> points, [NoAlias] NativeArray<float2> outPoints)
             {
                 if (points.Length != outPoints.Length) throw new ArgumentException("Input and output arrays must have the same length!");
@@ -78,8 +85,6 @@ namespace andywiecko.BurstTriangulator
                 var invRotScale = math.inverse(rotScale);
                 for (int i = 0; i < points.Length; i++) outPoints[i] = math.mul(invRotScale, points[i]) - translation;
             }
-
-            public override string ToString() => $"{nameof(AffineTransform2D)}(translation={translation}, rotScale={rotScale})";
         }
         private readonly struct Circle
         {
