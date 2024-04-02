@@ -432,7 +432,6 @@ namespace andywiecko.BurstTriangulator
                 MarkerDelaunayTriangulation.Begin();
                 using var halfedges = new NativeList<int>(localPositions.Length, Allocator.Temp);
                 var triangles = output.Triangles;
-                using var circles = new NativeList<Circle<Coord, LengthSq>>(localPositions.Length, Allocator.Temp);
                 new DelaunayTriangulator<Coord, LengthSq, CoordinateUtils>
                 {
                     status = output.Status,
@@ -464,7 +463,7 @@ namespace andywiecko.BurstTriangulator
                     if (localHoles.IsCreated || restoreBoundary)
                     {
                         MarkerPlantSeeds.Begin();
-                        var seedPlanter = new SeedPlanter<Coord, LengthSq, CoordinateUtils>(output.Status, triangles, localPositions, circles, constrainedHalfedges, halfedges);
+                        var seedPlanter = new SeedPlanter<Coord, LengthSq, CoordinateUtils>(output.Status, triangles, localPositions, constrainedHalfedges, halfedges);
                         if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
                         if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
                         seedPlanter.Finish();
@@ -482,7 +481,6 @@ namespace andywiecko.BurstTriangulator
                         D = concentricShellsParameter,
                         triangles = triangles,
                         outputPositions = localPositions,
-                        circles = circles,
                         halfedges = halfedges,
                         constrainBoundary = !input.ConstraintEdges.IsCreated || !restoreBoundary,
                         constrainedHalfedges = constrainedHalfedges,
@@ -1404,11 +1402,12 @@ namespace andywiecko.BurstTriangulator
             public float D;
             public NativeList<int> triangles;
             public NativeList<Coord> outputPositions;
-            public NativeList<Circle<Coord, LengthSq>> circles;
             public NativeList<int> halfedges;
             public bool constrainBoundary;
             public NativeList<bool> constrainedHalfedges;
 
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<Circle<Coord, LengthSq>> circles;
             [NativeDisableContainerSafetyRestriction]
             private NativeQueue<int> trianglesQueue;
             [NativeDisableContainerSafetyRestriction]
@@ -1424,6 +1423,7 @@ namespace andywiecko.BurstTriangulator
             public void Execute()
             {
                 initialPointsCount = outputPositions.Length;
+                using var _circles = circles = new NativeList<Circle<Coord, LengthSq>>(triangles.Length / 3, Allocator.Temp);
                 circles.Length = triangles.Length / 3;
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
                 {
@@ -2045,7 +2045,6 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> triangles;
             [ReadOnly]
             private NativeList<Coord> positions;
-            private NativeList<Circle<Coord, LengthSq>> circles;
             private NativeList<bool> constrainedHalfedges;
             private NativeList<int> halfedges;
 
@@ -2053,29 +2052,17 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> badTriangles;
             private NativeQueue<int> trianglesQueue;
 
-            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<Coord> positions, NativeList<Circle<Coord, LengthSq>> circles, NativeList<bool> constrainedHalfedges, NativeList<int> halfedges)
+            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<Coord> positions, NativeList<bool> constrainedHalfedges, NativeList<int> halfedges)
             {
                 this.status = status;
                 this.triangles = triangles;
                 this.positions = positions;
-                this.circles = circles;
                 this.constrainedHalfedges = constrainedHalfedges;
                 this.halfedges = halfedges;
 
                 this.visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
                 this.badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
                 this.trianglesQueue = new NativeQueue<int>(Allocator.Temp);
-
-                // TODO: Shouldn't be done here
-                if (circles.Length != triangles.Length / 3)
-                {
-                    circles.Length = triangles.Length / 3;
-                    for (int tId = 0; tId < triangles.Length / 3; tId++)
-                    {
-                        var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                        circles[tId] = new CoordinateUtils().CalculateCircumCircle(i, j, k, positions.AsArray());
-                    }
-                }
             }
 
             public void PlantBoundarySeeds()
@@ -2193,7 +2180,6 @@ namespace andywiecko.BurstTriangulator
                     triangles.RemoveAt(3 * tId + 2);
                     triangles.RemoveAt(3 * tId + 1);
                     triangles.RemoveAt(3 * tId + 0);
-                    circles.RemoveAt(tId);
                     RemoveHalfedge(3 * tId + 2, 0);
                     RemoveHalfedge(3 * tId + 1, 1);
                     RemoveHalfedge(3 * tId + 0, 2);
