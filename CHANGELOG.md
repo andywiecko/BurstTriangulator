@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [2.5.0] – 2024-04-03
+
+### Changed
+
+- Simplified `PlantingSeedJob` by removing generics and introducing an algorithm based on `constraintEdges`. This resulted in improved performance.
+- Changed the triangulator to schedule a single job instead of multiple smaller ones.
+- Greatly simplified the preprocessor transformations code. All transformations are now represented by the `AffineTransform2D` struct, and several jobs have been removed.
+
+### Deprecated
+
+- Deprecated the `Triangulator.Settings.ConstrainEdges` property. To enable constrained edges, pass the corresponding array into input.
+- Deprecated the `Triangulator.Settings.BatchCount` property. This property is no longer used, setting it has no effect.
+
+### Fixed
+
+- Fixed constructing `pointToHalfedges` during constraint resolution. This resolves GitHub issue [#111].
+
 ## [2.4.0] – 2023-12-23
 
 ### Added
@@ -153,6 +170,8 @@ options in the triangulation settings, aka `RestoreBoundary`.
 - Initial release version
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
+
+[2.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.5.0
 [2.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.4.0
 [2.3.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.3.0
 [2.2.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.2.0
@@ -165,5 +184,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 [1.1.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.1.0
 [1.0.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.0.1
 [1.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.0.0
+
 [#30]: https://github.com/andywiecko/BurstTriangulator/issues/30
 [#31]: https://github.com/andywiecko/BurstTriangulator/issues/31
+[#111]: https://github.com/andywiecko/BurstTriangulator/issues/111
