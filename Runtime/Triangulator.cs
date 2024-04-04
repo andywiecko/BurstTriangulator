@@ -1141,22 +1141,6 @@ namespace andywiecko.BurstTriangulator
                     c = c.x < c.y ? c.xy : c.yx; // Backward compatibility. To remove in the future.
                     TryApplyConstraint(c);
                 }
-
-                for (int he = 0; he < constrainedHalfedges.Length; he++)
-                {
-                    for (int id = 0; id < inputConstraintEdges.Length / 2; id++)
-                    {
-                        var (ci, cj) = (inputConstraintEdges[2 * id + 0], inputConstraintEdges[2 * id + 1]);
-                        (ci, cj) = ci < cj ? (ci, cj) : (cj, ci);
-                        var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
-                        (i, j) = i < j ? (i, j) : (j, i);
-                        if (ci == i && cj == j)
-                        {
-                            constrainedHalfedges[he] = true;
-                            break;
-                        }
-                    }
-                }
             }
 
             private void TryApplyConstraint(int2 c)
@@ -1270,6 +1254,22 @@ namespace andywiecko.BurstTriangulator
                     halfedges[h2] = h5;
                     halfedges[h5] = h2;
 
+                    constrainedHalfedges[h3] = constrainedHalfedges[h2];
+                    var h3p = halfedges[h3];
+                    if (h3p != -1)
+                    {
+                        constrainedHalfedges[h3p] = constrainedHalfedges[h2];
+                    }
+
+                    constrainedHalfedges[h0] = constrainedHalfedges[h5];
+                    var h0p = halfedges[h0];
+                    if (h0p != -1)
+                    {
+                        constrainedHalfedges[h0p] = constrainedHalfedges[h5];
+                    }
+                    constrainedHalfedges[h2] = false;
+                    constrainedHalfedges[h5] = false;
+
                     // Fix intersections
                     for (int j = i + 1; j < intersections.Length; j++)
                     {
@@ -1283,6 +1283,11 @@ namespace andywiecko.BurstTriangulator
                     }
 
                     var swapped = math.int2(_p, _q);
+                    if (math.all(c.xy == swapped.xy) || math.all(c.xy == swapped.yx))
+                    {
+                        constrainedHalfedges[h2] = true;
+                        constrainedHalfedges[h5] = true;
+                    }
                     if (EdgeEdgeIntersection(c, swapped))
                     {
                         unresolvedIntersections.Add(h2);
@@ -1324,6 +1329,12 @@ namespace andywiecko.BurstTriangulator
                     var h1 = NextHalfedge(h0);
                     if (triangles[h1] == cj)
                     {
+                        constrainedHalfedges[h0] = true;
+                        var oh0 = halfedges[h0];
+                        if (oh0 != -1)
+                        {
+                            constrainedHalfedges[oh0] = true;
+                        }
                         break;
                     }
                     var h2 = NextHalfedge(h1);
@@ -1339,6 +1350,11 @@ namespace andywiecko.BurstTriangulator
                     // Boundary reached check other side
                     if (h0 == -1)
                     {
+                        if (triangles[h2] == cj)
+                        {
+                            constrainedHalfedges[h2] = true;
+                        }
+
                         // possible that triangles[h2] == cj, not need to check
                         break;
                     }
@@ -1354,6 +1370,12 @@ namespace andywiecko.BurstTriangulator
                         var h1 = NextHalfedge(h0);
                         if (triangles[h1] == cj)
                         {
+                            constrainedHalfedges[h0] = true;
+                            var oh0 = halfedges[h0];
+                            if (oh0 != -1)
+                            {
+                                constrainedHalfedges[oh0] = true;
+                            }
                             break;
                         }
                         var h2 = NextHalfedge(h1);
@@ -1468,6 +1490,14 @@ namespace andywiecko.BurstTriangulator
                     circles[tId] = CalculateCircumCircle(i, j, k, outputPositions.AsArray());
                 }
 
+                if (constrainBoundary)
+                {
+                    for (int he = 0; he < constrainedHalfedges.Length; he++)
+                    {
+                        constrainedHalfedges[he] = halfedges[he] == -1;
+                    }
+                }
+
                 using var _trianglesQueue = trianglesQueue = new NativeQueue<int>(Allocator.Temp);
                 using var _badTriangles = badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
                 using var _pathPoints = pathPoints = new NativeList<int>(Allocator.Temp);
@@ -1476,14 +1506,6 @@ namespace andywiecko.BurstTriangulator
 
                 using var heQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
                 using var tQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
-
-                if (constrainBoundary)
-                {
-                    for (int he = 0; he < constrainedHalfedges.Length; he++)
-                    {
-                        constrainedHalfedges[he] = halfedges[he] == -1;
-                    }
-                }
 
                 // Collect encroached half-edges.
                 for (int he = 0; he < constrainedHalfedges.Length; he++)
