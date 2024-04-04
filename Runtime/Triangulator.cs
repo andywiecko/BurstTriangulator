@@ -420,10 +420,9 @@ namespace andywiecko.BurstTriangulator
                 }.Execute();
                 MarkerDelaunayTriangulation.End();
 
-                var internalConstraints = default(NativeArray<Edge>);
+                using var constrainedHalfedges = new NativeList<bool>(Allocator.Temp) { Length = halfedges.Length };
                 if (input.ConstraintEdges.IsCreated)
                 {
-                    internalConstraints = new NativeArray<Edge>(input.ConstraintEdges.Length / 2, Allocator.Temp);
                     MarkerConstrainEdges.Begin();
                     new ConstrainEdgesJob
                     {
@@ -431,17 +430,17 @@ namespace andywiecko.BurstTriangulator
                         positions = localPositions.AsArray(),
                         triangles = triangles.AsArray(),
                         inputConstraintEdges = input.ConstraintEdges,
-                        internalConstraints = internalConstraints,
                         halfedges = halfedges,
                         maxIters = sloanMaxIters,
                         verbose = verbose,
+                        constrainedHalfedges = constrainedHalfedges,
                     }.Execute();
                     MarkerConstrainEdges.End();
 
                     if (localHoles.IsCreated || restoreBoundary)
                     {
                         MarkerPlantSeeds.Begin();
-                        var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, internalConstraints, halfedges);
+                        var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, constrainedHalfedges, halfedges);
                         if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
                         if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
                         seedPlanter.Finish();
@@ -454,7 +453,6 @@ namespace andywiecko.BurstTriangulator
                     MarkerRefineMesh.Begin();
                     new RefineMeshJob()
                     {
-                        restoreBoundary = restoreBoundary,
                         maximumArea2 = 2 * refinementThresholdArea * localTransformation.areaScalingFactor,
                         minimumAngle = refinementThresholdAngle,
                         D = concentricShellsParameter,
@@ -462,7 +460,8 @@ namespace andywiecko.BurstTriangulator
                         outputPositions = localPositions,
                         circles = circles,
                         halfedges = halfedges,
-                        constraints = internalConstraints,
+                        constrainBoundary = !input.ConstraintEdges.IsCreated || !restoreBoundary,
+                        constrainedHalfedges = constrainedHalfedges,
                     }.Execute();
                     MarkerRefineMesh.End();
                 }
@@ -1119,11 +1118,12 @@ namespace andywiecko.BurstTriangulator
             public NativeArray<int> triangles;
             [ReadOnly]
             public NativeArray<int> inputConstraintEdges;
-            public NativeArray<Edge> internalConstraints;
             public NativeList<int> halfedges;
             public int maxIters;
             public bool verbose;
+            public NativeList<bool> constrainedHalfedges;
 
+            private NativeArray<Edge> internalConstraints;
             [NativeDisableContainerSafetyRestriction]
             private NativeList<int> intersections;
             [NativeDisableContainerSafetyRestriction]
@@ -1138,6 +1138,7 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
+                using var _internalConstraints = internalConstraints = new NativeArray<Edge>(inputConstraintEdges.Length / 2, Allocator.Temp);
                 using var _intersections = intersections = new NativeList<int>(Allocator.Temp);
                 using var _unresolvedIntersections = unresolvedIntersections = new NativeList<int>(Allocator.Temp);
                 using var _pointToHalfedge = pointToHalfedge = new NativeArray<int>(positions.Length, Allocator.Temp);
@@ -1153,6 +1154,21 @@ namespace andywiecko.BurstTriangulator
                 foreach (var c in internalConstraints)
                 {
                     TryApplyConstraint(c);
+                }
+
+                for (int he = 0; he < constrainedHalfedges.Length; he++)
+                {
+                    for (int id = 0; id < internalConstraints.Length; id++)
+                    {
+                        var (ci, cj) = internalConstraints[id];
+                        var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
+                        (i, j) = i < j ? (i, j) : (j, i);
+                        if (ci == i && cj == j)
+                        {
+                            constrainedHalfedges[he] = true;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -1444,7 +1460,6 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct RefineMeshJob : IJob
         {
-            public bool restoreBoundary;
             public float maximumArea2;
             public float minimumAngle;
             public float D;
@@ -1452,7 +1467,8 @@ namespace andywiecko.BurstTriangulator
             public NativeList<float2> outputPositions;
             public NativeList<Circle> circles;
             public NativeList<int> halfedges;
-            public NativeArray<Edge> constraints;
+            public bool constrainBoundary;
+            public NativeList<bool> constrainedHalfedges;
 
             [NativeDisableContainerSafetyRestriction]
             private NativeQueue<int> trianglesQueue;
@@ -1465,8 +1481,6 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private NativeList<bool> visitedTriangles;
             private int initialPointsCount;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeList<bool> constrainedHalfedges;
 
             public void Execute()
             {
@@ -1483,42 +1497,15 @@ namespace andywiecko.BurstTriangulator
                 using var _pathPoints = pathPoints = new NativeList<int>(Allocator.Temp);
                 using var _pathHalfedges = pathHalfedges = new NativeList<int>(Allocator.Temp);
                 using var _visitedTriangles = visitedTriangles = new NativeList<bool>(triangles.Length / 3, Allocator.Temp);
-                using var _constrainedHalfedges = constrainedHalfedges = new NativeList<bool>(triangles.Length, Allocator.Temp) { Length = triangles.Length };
 
                 using var heQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
                 using var tQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
 
-                if (!constraints.IsCreated || !restoreBoundary)
+                if (constrainBoundary)
                 {
-                    // If a triangle edge is not connected to any other triangle,
-                    // then it is implicitly constrained.
                     for (int he = 0; he < constrainedHalfedges.Length; he++)
                     {
                         constrainedHalfedges[he] = halfedges[he] == -1;
-                    }
-                }
-
-                if (constraints.IsCreated)
-                {
-                    for (int he = 0; he < constrainedHalfedges.Length; he++)
-                    {
-                        if (constrainedHalfedges[he])
-                        {
-                            continue;
-                        }
-
-                        var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
-                        (i, j) = i < j ? (i, j) : (j, i);
-
-                        for (int id = 0; id < constraints.Length; id++)
-                        {
-                            var (ci, cj) = constraints[id];
-                            if (ci == i && cj == j)
-                            {
-                                constrainedHalfedges[he] = true;
-                                break;
-                            }
-                        }
                     }
                 }
 
@@ -2122,50 +2109,30 @@ namespace andywiecko.BurstTriangulator
 
         private struct SeedPlanter
         {
-            public NativeReference<Status>.ReadOnly status;
-            public NativeList<int> triangles;
+            private NativeReference<Status>.ReadOnly status;
+            private NativeList<int> triangles;
             [ReadOnly]
-            public NativeList<float2> positions;
-            public NativeList<Circle> circles;
-            public NativeArray<Edge> constraintEdges;
-            public NativeList<int> halfedges;
-
-            [NativeDisableContainerSafetyRestriction]
+            private NativeList<float2> positions;
+            private NativeList<Circle> circles;
             private NativeList<bool> constrainedHalfedges;
+            private NativeList<int> halfedges;
 
             private NativeArray<bool> visitedTriangles;
             private NativeList<int> badTriangles;
             private NativeQueue<int> trianglesQueue;
 
-            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<float2> positions, NativeList<Circle> circles, NativeArray<Edge> constraintEdges, NativeList<int> halfedges)
+            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<float2> positions, NativeList<Circle> circles, NativeList<bool> constrainedHalfedges, NativeList<int> halfedges)
             {
                 this.status = status;
                 this.triangles = triangles;
                 this.positions = positions;
                 this.circles = circles;
-                this.constraintEdges = constraintEdges;
+                this.constrainedHalfedges = constrainedHalfedges;
                 this.halfedges = halfedges;
 
                 this.visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
                 this.badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
                 this.trianglesQueue = new NativeQueue<int>(Allocator.Temp);
-
-                var constrainedHalfedges = this.constrainedHalfedges = new NativeList<bool>(triangles.Length, Allocator.Temp) { Length = triangles.Length };
-
-                for (int he = 0; he < constrainedHalfedges.Length; he++)
-                {
-                    for (int id = 0; id < constraintEdges.Length; id++)
-                    {
-                        var (ci, cj) = constraintEdges[id];
-                        var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
-                        (i, j) = i < j ? (i, j) : (j, i);
-                        if (ci == i && cj == j)
-                        {
-                            constrainedHalfedges[he] = true;
-                            break;
-                        }
-                    }
-                }
 
                 // TODO: Shouldn't be done here
                 if (circles.Length != triangles.Length / 3)
@@ -2298,6 +2265,9 @@ namespace andywiecko.BurstTriangulator
                     RemoveHalfedge(3 * tId + 2, 0);
                     RemoveHalfedge(3 * tId + 1, 1);
                     RemoveHalfedge(3 * tId + 0, 2);
+                    constrainedHalfedges.RemoveAt(3 * tId + 2);
+                    constrainedHalfedges.RemoveAt(3 * tId + 1);
+                    constrainedHalfedges.RemoveAt(3 * tId + 0);
 
                     for (int i = 3 * tId; i < halfedges.Length; i++)
                     {
