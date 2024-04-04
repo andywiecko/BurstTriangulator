@@ -468,9 +468,9 @@ Furthermore, we present a performance comparison (with Burst enabled) between `v
 - [X] ~~Improve performance of the refinement algorithm.~~
 - [X] ~~Simplify generics for *planting* job.~~
 - [X] ~~Mark `ConstrainEdges` as obsolete.~~
-- [ ] Adapt constraint and *planting* jobs for `constrainedHalfedges`.
-- [ ] Clean-up refine job after recent changes.
-- [ ] Implement `SplitPermitted` for *terminator*.
+- [X] ~~Adapt constraint and *planting* jobs for `constrainedHalfedges`.~~
+- [ ] (?) Clean-up refine job after recent changes.
+- [ ] (?) Implement `SplitPermitted` for *terminator*.
 - [ ] (?) Partially restore Delaunay property after Sloan's algorithm.
 - [ ] (?) Add mesh coarsening algorithm.
 - [ ] (?) *Auto holes* detection algorithm.
