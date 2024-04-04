@@ -88,21 +88,6 @@ namespace andywiecko.BurstTriangulator
             public Circle(float2 center, float radius) => (Center, Radius, RadiusSq) = (center, radius, radius * radius);
             public void Deconstruct(out float2 center, out float radius) => (center, radius) = (Center, Radius);
         }
-
-        private readonly struct Edge : IEquatable<Edge>, IComparable<Edge>
-        {
-            public readonly int IdA, IdB;
-            public Edge(int idA, int idB) => (IdA, IdB) = idA < idB ? (idA, idB) : (idB, idA);
-            public static implicit operator Edge((int a, int b) ids) => new(ids.a, ids.b);
-            public void Deconstruct(out int idA, out int idB) => (idA, idB) = (IdA, IdB);
-            public bool Equals(Edge other) => IdA == other.IdA && IdB == other.IdB;
-            public bool Contains(int id) => IdA == id || IdB == id;
-            public bool ContainsCommonPointWith(Edge other) => Contains(other.IdA) || Contains(other.IdB);
-            // Elegant pairing function: https://en.wikipedia.org/wiki/Pairing_function
-            public override int GetHashCode() => IdA < IdB ? IdB * IdB + IdA : IdA * IdA + IdA + IdB;
-            public int CompareTo(Edge other) => IdA != other.IdA ? IdA.CompareTo(other.IdA) : IdB.CompareTo(other.IdB);
-            public override string ToString() => $"({IdA}, {IdB})";
-        }
         #endregion
 
         public enum Status
@@ -1123,7 +1108,6 @@ namespace andywiecko.BurstTriangulator
             public bool verbose;
             public NativeList<bool> constrainedHalfedges;
 
-            private NativeArray<Edge> internalConstraints;
             [NativeDisableContainerSafetyRestriction]
             private NativeList<int> intersections;
             [NativeDisableContainerSafetyRestriction]
@@ -1138,7 +1122,6 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                using var _internalConstraints = internalConstraints = new NativeArray<Edge>(inputConstraintEdges.Length / 2, Allocator.Temp);
                 using var _intersections = intersections = new NativeList<int>(Allocator.Temp);
                 using var _unresolvedIntersections = unresolvedIntersections = new NativeList<int>(Allocator.Temp);
                 using var _pointToHalfedge = pointToHalfedge = new NativeArray<int>(positions.Length, Allocator.Temp);
@@ -1149,18 +1132,22 @@ namespace andywiecko.BurstTriangulator
                     pointToHalfedge[triangles[i]] = i;
                 }
 
-                BuildInternalConstraints();
-
-                foreach (var c in internalConstraints)
+                for (int index = 0; index < inputConstraintEdges.Length / 2; index++)
                 {
+                    var c = math.int2(
+                        inputConstraintEdges[2 * index + 0],
+                        inputConstraintEdges[2 * index + 1]
+                    );
+                    c = c.x < c.y ? c.xy : c.yx; // Backward compatibility. To remove in the future.
                     TryApplyConstraint(c);
                 }
 
                 for (int he = 0; he < constrainedHalfedges.Length; he++)
                 {
-                    for (int id = 0; id < internalConstraints.Length; id++)
+                    for (int id = 0; id < inputConstraintEdges.Length / 2; id++)
                     {
-                        var (ci, cj) = internalConstraints[id];
+                        var (ci, cj) = (inputConstraintEdges[2 * id + 0], inputConstraintEdges[2 * id + 1]);
+                        (ci, cj) = ci < cj ? (ci, cj) : (cj, ci);
                         var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
                         (i, j) = i < j ? (i, j) : (j, i);
                         if (ci == i && cj == j)
@@ -1172,18 +1159,7 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private void BuildInternalConstraints()
-            {
-                for (int index = 0; index < internalConstraints.Length; index++)
-                {
-                    internalConstraints[index] = new(
-                        idA: inputConstraintEdges[2 * index + 0],
-                        idB: inputConstraintEdges[2 * index + 1]
-                    );
-                }
-            }
-
-            private void TryApplyConstraint(Edge c)
+            private void TryApplyConstraint(int2 c)
             {
                 intersections.Clear();
                 unresolvedIntersections.Clear();
@@ -1203,7 +1179,7 @@ namespace andywiecko.BurstTriangulator
                 } while (!unresolvedIntersections.IsEmpty);
             }
 
-            private void TryResolveIntersections(Edge c, ref int iter)
+            private void TryResolveIntersections(int2 c, ref int iter)
             {
                 for (int i = 0; i < intersections.Length; i++)
                 {
@@ -1306,7 +1282,7 @@ namespace andywiecko.BurstTriangulator
                         unresolvedIntersections[j] = tmp == h2 ? h3 : tmp == h5 ? h0 : tmp;
                     }
 
-                    var swapped = new Edge(_p, _q);
+                    var swapped = math.int2(_p, _q);
                     if (EdgeEdgeIntersection(c, swapped))
                     {
                         unresolvedIntersections.Add(h2);
@@ -1316,14 +1292,14 @@ namespace andywiecko.BurstTriangulator
                 intersections.Clear();
             }
 
-            private bool EdgeEdgeIntersection(Edge e1, Edge e2)
+            private bool EdgeEdgeIntersection(int2 e1, int2 e2)
             {
-                var (a0, a1) = (positions[e1.IdA], positions[e1.IdB]);
-                var (b0, b1) = (positions[e2.IdA], positions[e2.IdB]);
-                return !e1.ContainsCommonPointWith(e2) && Triangulator.EdgeEdgeIntersection(a0, a1, b0, b1);
+                var (a0, a1) = (positions[e1.x], positions[e1.y]);
+                var (b0, b1) = (positions[e2.x], positions[e2.y]);
+                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && Triangulator.EdgeEdgeIntersection(a0, a1, b0, b1);
             }
 
-            private void CollectIntersections(Edge edge)
+            private void CollectIntersections(int2 edge)
             {
                 // 1. Check if h1 is cj
                 // 2. Check if h1-h2 intersects with ci-cj
@@ -1340,7 +1316,7 @@ namespace andywiecko.BurstTriangulator
                 //       '. v
                 //          h2'
                 var tunnelInit = -1;
-                var (ci, cj) = edge;
+                var (ci, cj) = (edge.x, edge.y);
                 var h0init = pointToHalfedge[ci];
                 var h0 = h0init;
                 do
