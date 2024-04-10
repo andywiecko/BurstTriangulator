@@ -22,6 +22,18 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public int GetHashCode(float2 _) => 0;
     }
 
+    public class Double2Comparer : IEqualityComparer<double2>
+    {
+        private readonly float epsilon;
+        public static readonly Double2Comparer Instance = new(0.0001f);
+        public Double2Comparer(float epsilon) => this.epsilon = epsilon;
+        public static Double2Comparer With(float epsilon) => new(epsilon);
+        public bool Equals(double2 expected, double2 actual) =>
+            Utils.AreFloatsEqual((float)expected.x, (float)actual.x, epsilon) &&
+            Utils.AreFloatsEqual((float)expected.y, (float)actual.y, epsilon);
+        public int GetHashCode(double2 _) => 0;
+    }
+
     public static class TestUtils
     {
         public static (int, int, int)[] GetTrisTuple(this Triangulator triangulator) =>
@@ -39,9 +51,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var p = triangulator.Output.Positions;
             foreach (var (i, j, k) in triangulator.GetTrisTuple())
             {
-                var x = math.float3(p[i], 0);
-                var y = math.float3(p[j], 0);
-                var z = math.float3(p[k], 0);
+                var x = math.float3((float2)p[i], 0);
+                var y = math.float3((float2)p[j], 0);
+                var z = math.float3((float2)p[k], 0);
 
                 Debug.DrawLine(x, y, color, duration);
                 Debug.DrawLine(x, z, color, duration);

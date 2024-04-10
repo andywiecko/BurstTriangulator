@@ -40,17 +40,17 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var debuggerInitialValue = Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled;
             Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
 
-            var points = new List<float2>(count * count);
+            var points = new List<double2>(count * count);
             for (int i = 0; i < count; i++)
             {
                 for (int j = 0; j < count; j++)
                 {
-                    var p = math.float2(i / (float)(count - 1), j / (float)(count - 1));
+                    var p = math.double2(i / (float)(count - 1), j / (float)(count - 1));
                     points.Add(p);
                 }
             }
 
-            using var positions = new NativeArray<float2>(points.ToArray(), Allocator.Persistent);
+            using var positions = new NativeArray<double2>(points.ToArray(), Allocator.Persistent);
 
             var stopwatch = Stopwatch.StartNew();
             using var triangulator = new Triangulator(capacity: count * count, Allocator.Persistent)
@@ -84,12 +84,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var debuggerInitialValue = Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled;
             Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
 
-            var points = new List<float2>(count * count);
+            var points = new List<double2>(count * count);
             for (int i = 0; i < count; i++)
             {
                 for (int j = 0; j < count; j++)
                 {
-                    var p = math.float2(i / (float)(count - 1), j / (float)(count - 1));
+                    var p = math.double2(i / (float)(count - 1), j / (float)(count - 1));
                     points.Add(p);
                 }
             }
@@ -99,13 +99,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             for (int i = 0; i < N; i++)
             {
                 var phi = 2 * math.PI / N * i + 0.1452f;
-                var p = 0.2f * math.float2(math.cos(phi), math.sin(phi)) + 0.5f;
+                var p = 0.2f * math.double2(math.cos(phi), math.sin(phi)) + 0.5f;
                 points.Add(p);
                 constraints.Add(offset + i);
                 constraints.Add(offset + (i + 1) % N);
             }
 
-            using var positions = new NativeArray<float2>(points.ToArray(), Allocator.Persistent);
+            using var positions = new NativeArray<double2>(points.ToArray(), Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints.ToArray(), Allocator.Persistent);
 
             var stopwatch = Stopwatch.StartNew();
@@ -161,12 +161,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
 
             var stopwatch = Stopwatch.StartNew();
-            using var points = new NativeArray<float2>(new[]
+            using var points = new NativeArray<double2>(new[]
             {
-                math.float2(-1, -1),
-                math.float2(+1, -1),
-                math.float2(+1, +1),
-                math.float2(-1, +1),
+                math.double2(-1, -1),
+                math.double2(+1, -1),
+                math.double2(+1, +1),
+                math.double2(-1, +1),
             }, Allocator.Persistent);
             using var triangulator = new Triangulator(capacity: 64 * 1024, Allocator.Persistent)
             {

@@ -5,7 +5,7 @@ namespace andywiecko.BurstTriangulator.Editor
 {
     public static class LakeSuperior
     {
-        public static readonly float2[] Points =
+        public static readonly double2[] Points = new float2[]
         {
             math.float2(0.1f, -0.629607f),
             math.float2(0.102293f, -0.635353f),
@@ -525,7 +525,7 @@ namespace andywiecko.BurstTriangulator.Editor
             math.float2(0.764373f, -0.49454f),
             math.float2(0.758627f, -0.496847f),
             math.float2(0.748853f, -0.49914f),
-        };
+        }.Select(i => (double2)i).ToArray();
 
         public static readonly int[][] Loops =
         {
@@ -1059,7 +1059,7 @@ namespace andywiecko.BurstTriangulator.Editor
 
         public static readonly int[] Constraints = Loops.SelectMany(i => i).ToArray();
 
-        public static readonly float2[] Holes =
+        public static readonly double2[] Holes = new float2[]
         {
             math.float2(0.4500143f, -0.4520052f),
             math.float2(0.5371191f, -0.3362f),
@@ -1067,6 +1067,6 @@ namespace andywiecko.BurstTriangulator.Editor
             math.float2(0.2433115f, -0.6328027f),
             math.float2(0.2567142f, -0.6134274f),
             math.float2(0.27388f, -0.59701f),
-        };
+        }.Select(i => (double2)i).ToArray();
     }
 }

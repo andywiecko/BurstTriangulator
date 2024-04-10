@@ -31,9 +31,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test, TestCaseSource(nameof(lakeTestData))]
         public void LakeTest(float area, float angle)
         {
-            using var positions = new NativeArray<float2>(LakeSuperior.Points, Allocator.Persistent);
+            using var positions = new NativeArray<double2>(LakeSuperior.Points, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holeSeeds = new NativeArray<float2>(LakeSuperior.Holes, Allocator.Persistent);
+            using var holeSeeds = new NativeArray<double2>(LakeSuperior.Holes, Allocator.Persistent);
             using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
             {
                 Settings =
@@ -64,7 +64,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var constraints = triangulator.Input.ConstraintEdges;
             for (int i = 0; i < constraints.Length / 2; i++)
             {
-                Debug.DrawLine(math.float3(p[constraints[2 * i]], 0), math.float3(p[constraints[2 * i + 1]], 0), Color.white, 5f);
+                Debug.DrawLine(math.float3((float2)p[constraints[2 * i]], 0), math.float3((float2)p[constraints[2 * i + 1]], 0), Color.white, 5f);
             }
 
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
