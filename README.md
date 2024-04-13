@@ -110,7 +110,7 @@ var outputTriangles = triangulator.Output.Triangles;
 var outputPositions = triangulator.Output.Positions;
 ```
 
-> **Note**  
+> [!TIP]  
 > To run triangulation on the main thread, use the `triangulator.Run()` method.
 > If you want to call this within a jobs pipeline, schedule a job using `triangulator.Schedule(dependencies)`.
 
@@ -417,8 +417,7 @@ $$
 \boxed{x_i \to U(x_i / s + c) + \mu}.
 $$
 
-> **Note**
->
+> [!NOTE]  
 > The PCA transformation does not preserve the `Settings.MinimumAngle` used for refinement. 
 > As a result, triangles can be classified as bad in the PCA local space.
 
@@ -439,7 +438,7 @@ Furthermore, we present a performance comparison (with Burst enabled) between `v
 
 ![Refinement Benchmark](Documentation~/benchmark-refinement.png)
 
-> **Note**  
+> [!NOTE]  
 > Since v2.4, the triangulation refinement algorithm has been updated, resulting in improved mesh quality.
 
 ## Dependencies
@@ -449,14 +448,14 @@ Furthermore, we present a performance comparison (with Burst enabled) between `v
 
 ## Known Issues
 
-- (#103) In the Unity Editor, you may encounter the following log message:
+- **[#103]: Leak Detected Warning in the Console.**  
+  In the Unity Editor, you may encounter the following log message:  
+`Leak Detected : Persistent allocates 257 individual allocations. To find out more please enable 'Jobs/LeakDetection/Full StackTraces' and reproduce the leak again.`  
+  Not to worry, this issue is likely related to an internal bug in the `Unity.Collections` or `Unity.Burst` package (related to `NativeQueue<>` allocation).
 
-```plaintext
-Leak Detected : Persistent allocates 257 individual allocations. To find out more please enable 'Jobs/LeakDetection/Full StackTraces' and reproduce the leak again.
-```
-
-Not to worry, this issue is likely related to an internal bug in the `Unity.Collections` or `Unity.Burst` package (related to `NativeQueue<>` allocation).
-
+- **[#105], [#106]: Incorrect triangulations for complicated input.**  
+  Due to floating-point precision, triangulation may fail for some input. This is often related to single-point precision. Changing coordinates from `float2` to `double2` solves the issue. This will be addressed in the upcoming release. If you want to try it now, there is an experimental branch available [**here**](https://github.com/andywiecko/BurstTriangulator/tree/experimental/double2-coords).
+  
 ## Roadmap v3.0
 
 - [X] ~~Adapt Delaunay triangluation to `halfedges` approach.~~
@@ -487,3 +486,7 @@ Not to worry, this issue is likely related to an internal bug in the `Unity.Coll
 [rupperts]: https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm
 [burst]: https://docs.unity3d.com/Packages/com.unity.burst@1.8
 [collections]: https://docs.unity3d.com/Packages/com.unity.collections@2.2
+
+[#103]: https://github.com/andywiecko/BurstTriangulator/issues/103
+[#105]: https://github.com/andywiecko/BurstTriangulator/issues/105
+[#106]: https://github.com/andywiecko/BurstTriangulator/issues/106
