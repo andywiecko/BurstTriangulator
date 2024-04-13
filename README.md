@@ -110,6 +110,10 @@ var outputTriangles = triangulator.Output.Triangles;
 var outputPositions = triangulator.Output.Positions;
 ```
 
+> **Note**  
+> To run triangulation on the main thread, use the `triangulator.Run()` method.
+> If you want to call this within a jobs pipeline, schedule a job using `triangulator.Schedule(dependencies)`.
+
 The result of the triangulation procedure will depend on selected settings.
 There are a few settings of the triangulation, shortly described below:
 

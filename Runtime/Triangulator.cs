@@ -278,29 +278,22 @@ namespace andywiecko.BurstTriangulator
             status.Dispose();
         }
 
-        public void Run() => Schedule().Complete();
+        /// <summary>
+        /// Perform the job's Execute method immediately on the same thread.
+        /// </summary>
+        public void Run() => new TriangulationJob(this).Run();
 
-        public JobHandle Schedule(JobHandle dependencies = default)
-        {
-            return new TriangulationJob
-            {
-                preprocessor = Settings.Preprocessor,
-                validateInput = Settings.ValidateInput,
-                restoreBoundary = Settings.RestoreBoundary,
-                refineMesh = Settings.RefineMesh,
-                sloanMaxIters = Settings.SloanMaxIters,
-                concentricShellsParameter = Settings.ConcentricShellsParameter,
-                refinementThresholdArea = Settings.RefinementThresholds.Area,
-                refinementThresholdAngle = Settings.RefinementThresholds.Angle,
-                input = new()
-                {
-                    Positions = Input.Positions,
-                    ConstraintEdges = Input.ConstraintEdges,
-                    HoleSeeds = Input.HoleSeeds,
-                },
-                output = Output,
-            }.Schedule(dependencies);
-        }
+        /// <summary>
+        /// Schedule the job for execution on a worker thread.
+        /// </summary>
+        /// <param name="dependencies">
+        /// Dependencies are used to ensure that a job executes on worker threads after the dependency has completed execution.
+        /// Making sure that two jobs reading or writing to same data do not run in parallel.
+        /// </param>
+        /// <returns>
+        /// The handle identifying the scheduled job. Can be used as a dependency for a later job or ensure completion on the main thread.
+        /// </returns>
+        public JobHandle Schedule(JobHandle dependencies = default) => new TriangulationJob(this).Schedule(dependencies);
 
         #region Jobs
         [BurstCompile]
@@ -333,6 +326,25 @@ namespace andywiecko.BurstTriangulator
             private static readonly ProfilerMarker MarkerPlantSeeds = new("PlantSeeds");
             private static readonly ProfilerMarker MarkerRefineMesh = new("RefineMesh");
             private static readonly ProfilerMarker MarkerInverseTransformation = new("InverseTransformation");
+
+            public TriangulationJob(Triangulator triangulator)
+            {
+                preprocessor = triangulator.Settings.Preprocessor;
+                validateInput = triangulator.Settings.ValidateInput;
+                restoreBoundary = triangulator.Settings.RestoreBoundary;
+                refineMesh = triangulator.Settings.RefineMesh;
+                sloanMaxIters = triangulator.Settings.SloanMaxIters;
+                concentricShellsParameter = triangulator.Settings.ConcentricShellsParameter;
+                refinementThresholdArea = triangulator.Settings.RefinementThresholds.Area;
+                refinementThresholdAngle = triangulator.Settings.RefinementThresholds.Angle;
+                input = new()
+                {
+                    Positions = triangulator.Input.Positions,
+                    ConstraintEdges = triangulator.Input.ConstraintEdges,
+                    HoleSeeds = triangulator.Input.HoleSeeds,
+                };
+                output = triangulator.Output;
+            }
 
             private static void PreProcessInput(Preprocessor preprocessor, InputData input, OutputData output, out NativeList<float2> localPositions, out NativeArray<float2> localHoles, out AffineTransform2D localTransformation)
             {
