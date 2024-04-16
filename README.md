@@ -130,15 +130,16 @@ using var triangulator = new Triangulator(1024, Allocator.Persistent)
       // Ensures that no triangle in the mesh has an angle smaller than the specified value.
       Angle = math.radians(20),
     },
-    // Batch count used in parallel job.
-    BatchCount = 64,
     // If true refines mesh using Ruppert's algorithm.
     RefineMesh = true,
     // If true the mesh boundary is restored using Input constraint edges.
     RestoreBoundary = false,
-    // If true and provided Triangulator.Input is not valid, it will throw an exception.
-    // The error can be catch by using the `Triangulator.Output.Status`.
+    /// If set to true, the provided data will be validated before running the triangulation procedure.
+    /// If one of the conditions fails, the triangulation will not be calculated.
+    /// This can be detected as an error by inspecting OutputData.Status value (native, can be used in jobs).
     ValidateInput = true,
+    // If set to true, caught errors with Triangulator will be logged in the Console.
+    Verbose = true,
     // Type of preprocessing algorithm, see the section below for more details.
     Preprocessor = Triangulator.Preprocessor.None,
   }
