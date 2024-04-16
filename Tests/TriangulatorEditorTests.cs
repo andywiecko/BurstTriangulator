@@ -91,11 +91,29 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
             using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
             {
-                Settings = { RefineMesh = false },
+                Settings = { ValidateInput = true, Verbose = true },
                 Input = { Positions = positions },
             };
 
             LogAssert.Expect(UnityEngine.LogType.Error, new Regex(".*"));
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Triangulator.Status.ERR));
+        }
+
+        private static readonly TestCaseData[] validateInputPositionsNoVerboseTestData = validateInputPositionsTestData
+            .Select(i => new TestCaseData(i.Arguments) { TestName = i.TestName[..^1] + ", no verbose" }).ToArray();
+
+        [Test, TestCaseSource(nameof(validateInputPositionsNoVerboseTestData))]
+        public void ValidateInputPositionsNoVerboseTest(float2[] managedPositions)
+        {
+            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
+            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            {
+                Settings = { ValidateInput = true, Verbose = false },
+                Input = { Positions = positions },
+            };
+
             triangulator.Run();
 
             Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Triangulator.Status.ERR));
@@ -478,7 +496,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 Settings =
                 {
-                    RefineMesh = false
+                    ValidateInput = true,
+                    Verbose = true,
                 },
                 Input =
                 {
@@ -488,6 +507,33 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             };
 
             LogAssert.Expect(UnityEngine.LogType.Error, new Regex(".*"));
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Triangulator.Status.ERR));
+        }
+
+        private static readonly TestCaseData[] validateConstraintDelaunayTriangulationNoVerboseTestData = validateConstraintDelaunayTriangulationTestData
+            .Select(i => new TestCaseData(i.Arguments) { TestName = i.TestName[..^1] + ", no verbose" }).ToArray();
+
+        [Test, TestCaseSource(nameof(validateConstraintDelaunayTriangulationNoVerboseTestData))]
+        public void ValidateConstraintDelaunayTriangulationNoVerboseTest(float2[] managedPositions, int[] constraints)
+        {
+            using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
+            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    Verbose = false,
+                },
+                Input =
+                {
+                    Positions = positions,
+                    ConstraintEdges = constraintEdges,
+                }
+            };
+
             triangulator.Run();
 
             Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Triangulator.Status.ERR));
@@ -1339,16 +1385,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(localTriangles, Has.Length.EqualTo(24));
         }
 
-        [Test]
-        public void SloanMaxItersTest()
-        {
-            // Input for this test is grabbed from issue #30 from @mduvergey user.
-            // https://github.com/andywiecko/BurstTriangulator/issues/30
-            // This test tests editor hanging problem reported in issue #30 and #31.
-            //
-            // UPDATE: Thanks to the recent fix, this input will no longer cause the algorithm to hang,
-            //         unless "max iters" are intentionally reduced.
-            float2[] points =
+        // Input for this test is grabbed from issue #30 from @mduvergey user.
+        // https://github.com/andywiecko/BurstTriangulator/issues/30
+        // This test tests editor hanging problem reported in issue #30 and #31.
+        //
+        // UPDATE: Thanks to the recent fix, this input will no longer cause the algorithm to hang,
+        //         unless "max iters" are intentionally reduced.
+        private static readonly (float2[] points, int[] constraints) sloanMaxItersData = (
+            new[]
             {
                 new float2(14225.59f, -2335.27f), new float2(13380.24f, -2344.72f), new float2(13197.35f, -2119.65f),
                 new float2(11750.51f, -2122.18f), new float2(11670.1f, -2186.25f), new float2(11424.88f, -2178.53f),
@@ -1383,9 +1427,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 new float2(8816.72f, -830.49f), new float2(9861.58f, -835.71f), new float2(10065.59f, -1110.57f),
                 new float2(10052.32f, -2118.14f), new float2(9006.64f, -2125.78f), new float2(8818.37f, -2203.58f),
                 new float2(8846.09f, -2620.2f), new float2(14244.65f, -2650.96f)
-            };
-
-            int[] constraintIndices =
+            },
+            new[]
             {
                 97, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18,
                 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29, 30, 30, 31, 31, 32, 32, 33,
@@ -1394,10 +1437,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 63, 64, 64, 65, 65, 66, 66, 67, 67, 68, 68, 69, 69, 70, 70, 71, 71, 72, 72, 73, 73, 74, 74, 75, 75, 76, 76, 77, 77, 78,
                 78, 79, 79, 80, 80, 81, 81, 82, 82, 83, 83, 84, 84, 85, 85, 86, 86, 87, 87, 88, 88, 89, 89, 90, 90, 91, 91, 92, 92, 93,
                 93, 94, 94, 95, 95, 96, 96, 97
-            };
+            }
+        );
 
-            using var inputPositions = new NativeArray<float2>(points, Allocator.Persistent);
-            using var constraintEdges = new NativeArray<int>(constraintIndices, Allocator.Persistent);
+        [Test]
+        public void SloanMaxItersTest([Values] bool verbose)
+        {
+            using var inputPositions = new NativeArray<float2>(sloanMaxItersData.points, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(sloanMaxItersData.constraints, Allocator.Persistent);
 
             using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
             {
@@ -1406,6 +1453,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RefineMesh = false,
                     RestoreBoundary = true,
                     SloanMaxIters = 5,
+                    Verbose = verbose,
                 },
                 Input =
                 {
@@ -1414,8 +1462,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 }
             };
 
-            LogAssert.Expect(UnityEngine.LogType.Error, new Regex("Sloan max iterations exceeded.*"));
+            if (verbose)
+            {
+                LogAssert.Expect(UnityEngine.LogType.Error, new Regex("Sloan max iterations exceeded.*"));
+            }
+
             triangulator.Run();
+
+            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Triangulator.Status.ERR));
         }
 
         [Test]

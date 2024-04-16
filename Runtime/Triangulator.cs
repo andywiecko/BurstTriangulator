@@ -202,14 +202,23 @@ namespace andywiecko.BurstTriangulator
             [field: SerializeField]
             public bool ConstrainEdges { get; set; } = false;
             /// <summary>
-            /// If is set to <see langword="true"/>, the provided data will be validated before running the triangulation procedure.
-            /// Input positions, as well as input constraints, have a few restrictions,
-            /// see <seealso href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md">README.md</seealso> for more details.
-            /// If one of the conditions fails, then triangulation will not be calculated.
-            /// One could catch this as an error by using <see cref="OutputData.Status"/> (native, can be used in jobs).
+            /// If set to <see langword="true"/>, the provided data will be validated before running the triangulation procedure.
+            /// Input positions, as well as input constraints, have a few restrictions.
+            /// See <seealso href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md">README.md</seealso> for more details.
+            /// If one of the conditions fails, the triangulation will not be calculated.
+            /// This can be detected as an error by inspecting <see cref="OutputData.Status"/> value (native, can be used in jobs).
+            /// Additionally, if <see cref="Verbose"/> is set to <see langword="true"/>, the corresponding error will be logged in the Console.
             /// </summary>
             [field: SerializeField]
             public bool ValidateInput { get; set; } = true;
+            /// <summary>
+            /// If set to <see langword="true"/>, caught errors with <see cref="Triangulator"/> will be logged in the Console.
+            /// </summary>
+            /// <remarks>
+            /// See also the <see cref="ValidateInput"/> settings.
+            /// </remarks>
+            [field: SerializeField]
+            public bool Verbose { get; set; } = true;
             /// <summary>
             /// If <see langword="true"/> the mesh boundary is restored using <see cref="Input"/> constraint edges.
             /// </summary>
@@ -301,6 +310,7 @@ namespace andywiecko.BurstTriangulator
         {
             public Preprocessor preprocessor;
             public bool validateInput;
+            public bool verbose;
             public bool restoreBoundary;
             public bool refineMesh;
             public int sloanMaxIters;
@@ -331,6 +341,7 @@ namespace andywiecko.BurstTriangulator
             {
                 preprocessor = triangulator.Settings.Preprocessor;
                 validateInput = triangulator.Settings.ValidateInput;
+                verbose = triangulator.Settings.Verbose;
                 restoreBoundary = triangulator.Settings.RestoreBoundary;
                 refineMesh = triangulator.Settings.RefineMesh;
                 sloanMaxIters = triangulator.Settings.SloanMaxIters;
@@ -389,7 +400,7 @@ namespace andywiecko.BurstTriangulator
                 if (validateInput)
                 {
                     MarkerValidateInput.Begin();
-                    ValidateInput(localPositions.AsArray(), input.ConstraintEdges);
+                    ValidateInput(localPositions.AsArray(), input.ConstraintEdges, verbose);
                     MarkerValidateInput.End();
                 }
 
@@ -404,7 +415,8 @@ namespace andywiecko.BurstTriangulator
                     triangles = triangles,
                     halfedges = halfedges,
                     hullStart = int.MaxValue,
-                    c = float.MaxValue
+                    c = float.MaxValue,
+                    verbose = verbose,
                 }.Execute();
                 MarkerDelaunayTriangulation.End();
 
@@ -422,6 +434,7 @@ namespace andywiecko.BurstTriangulator
                         internalConstraints = internalConstraints,
                         halfedges = halfedges,
                         maxIters = sloanMaxIters,
+                        verbose = verbose,
                     }.Execute();
                     MarkerConstrainEdges.End();
 
@@ -462,18 +475,20 @@ namespace andywiecko.BurstTriangulator
                 MarkerInverseTransformation.End();
             }
 
-            private void ValidateInput(NativeArray<float2> localPositions, NativeArray<int> constraintEdges)
+            private void ValidateInput(NativeArray<float2> localPositions, NativeArray<int> constraintEdges, bool verbose)
             {
                 new ValidateInputPositionsJob
                 {
                     positions = localPositions,
                     status = output.Status,
+                    verbose = verbose,
                 }.Execute();
                 if (input.ConstraintEdges.IsCreated) new ValidateInputConstraintEdges
                 {
                     positions = localPositions,
                     constraints = constraintEdges,
                     status = output.Status,
+                    verbose = verbose,
                 }.Execute();
             }
         }
@@ -484,12 +499,13 @@ namespace andywiecko.BurstTriangulator
             [ReadOnly]
             public NativeArray<float2> positions;
             public NativeReference<Status> status;
+            public bool verbose;
 
             public void Execute()
             {
                 if (positions.Length < 3)
                 {
-                    Debug.LogError($"[Triangulator]: Positions.Length is less then 3!");
+                    Log($"[Triangulator]: Positions.Length is less then 3!");
                     status.Value |= Status.ERR;
                 }
 
@@ -497,7 +513,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     if (!PointValidation(i))
                     {
-                        Debug.LogError($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
+                        Log($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
                         status.Value |= Status.ERR;
                     }
                     if (!PointPointValidation(i))
@@ -517,11 +533,19 @@ namespace andywiecko.BurstTriangulator
                     var pj = positions[j];
                     if (math.all(pi == pj))
                     {
-                        Debug.LogError($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
+                        Log($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
                         return false;
                     }
                 }
                 return true;
+            }
+
+            private void Log(string message)
+            {
+                if(verbose)
+                {
+                    Debug.LogError(message);
+                }
             }
         }
 
@@ -615,6 +639,7 @@ namespace andywiecko.BurstTriangulator
             private int trianglesLen;
             private int hashSize;
             public float2 c;
+            public bool verbose;
 
             private readonly int HashKey(float2 p)
             {
@@ -713,7 +738,10 @@ namespace andywiecko.BurstTriangulator
 
                 if (minRadius == float.MaxValue)
                 {
-                    Debug.LogError("[Triangulator]: Provided input is not supported!");
+                    if (verbose)
+                    {
+                        Debug.LogError("[Triangulator]: Provided input is not supported!");
+                    }
                     status.Value |= Status.ERR;
                     return;
                 }
@@ -960,12 +988,13 @@ namespace andywiecko.BurstTriangulator
             [ReadOnly]
             public NativeArray<float2> positions;
             public NativeReference<Status> status;
+            public bool verbose;
 
             public void Execute()
             {
                 if (constraints.Length % 2 == 1)
                 {
-                    Debug.LogError($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
+                    Log($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
                     status.Value |= Status.ERR;
                     return;
                 }
@@ -983,13 +1012,21 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
+            private void Log(string message)
+            {
+                if (verbose)
+                {
+                    Debug.LogError(message);
+                }
+            }
+
             private bool EdgePositionsRangeValidation(int i)
             {
                 var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
                 var count = positions.Length;
                 if (a0Id >= count || a0Id < 0 || a1Id >= count || a1Id < 0)
                 {
-                    Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
+                    Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
                     return false;
                 }
 
@@ -1001,7 +1038,7 @@ namespace andywiecko.BurstTriangulator
                 var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
                 if (a0Id == a1Id)
                 {
-                    Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] is length zero!");
+                    Log($"[Triangulator]: ConstraintEdges[{i}] is length zero!");
                     return false;
                 }
                 return true;
@@ -1022,7 +1059,7 @@ namespace andywiecko.BurstTriangulator
                     var p = positions[j];
                     if (PointLineSegmentIntersection(p, a0, a1))
                     {
-                        Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] and Positions[{j}] are collinear!");
+                        Log($"[Triangulator]: ConstraintEdges[{i}] and Positions[{j}] are collinear!");
                         return false;
                     }
                 }
@@ -1052,7 +1089,7 @@ namespace andywiecko.BurstTriangulator
                 if (a0Id == b0Id && a1Id == b1Id ||
                     a0Id == b1Id && a1Id == b0Id)
                 {
-                    Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] and [{j}] are equivalent!");
+                    Log($"[Triangulator]: ConstraintEdges[{i}] and [{j}] are equivalent!");
                     return false;
                 }
 
@@ -1065,7 +1102,7 @@ namespace andywiecko.BurstTriangulator
                 var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
                 if (EdgeEdgeIntersection(a0, a1, b0, b1))
                 {
-                    Debug.LogError($"[Triangulator]: ConstraintEdges[{i}] and [{j}] intersect!");
+                    Log($"[Triangulator]: ConstraintEdges[{i}] and [{j}] intersect!");
                     return false;
                 }
 
@@ -1085,6 +1122,7 @@ namespace andywiecko.BurstTriangulator
             public NativeArray<Edge> internalConstraints;
             public NativeList<int> halfedges;
             public int maxIters;
+            public bool verbose;
 
             [NativeDisableContainerSafetyRestriction]
             private NativeList<int> intersections;
@@ -1388,11 +1426,14 @@ namespace andywiecko.BurstTriangulator
             {
                 if (iter >= maxIters)
                 {
-                    Debug.LogError(
-                        $"[Triangulator]: Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +
-                        $"It usually happens when the scale of the input positions is not uniform. " +
-                        $"Please try to post-process input data or increase {nameof(Settings.SloanMaxIters)} value."
-                    );
+                    if (verbose)
+                    {
+                        Debug.LogError(
+                            $"[Triangulator]: Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +
+                            $"It usually happens when the scale of the input positions is not uniform. " +
+                            $"Please try to post-process input data or increase {nameof(Settings.SloanMaxIters)} value."
+                        );
+                    }
                     status.Value |= Status.ERR;
                     return true;
                 }
