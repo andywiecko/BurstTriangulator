@@ -1,0 +1,202 @@
+{
+  "api/andywiecko.BurstTriangulator.Triangulator.-ctor.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.-ctor.html",
+    "title": "Constructor Triangulator | BurstTriangulator",
+    "keywords": "Constructor Triangulator Triangulator(int, Allocator) Declaration public Triangulator(int capacity, Allocator allocator) Parameters Type Name Description int capacity Allocator allocator Triangulator(Allocator) Declaration public Triangulator(Allocator allocator) Parameters Type Name Description Allocator allocator"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.Dispose.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.Dispose.html",
+    "title": "Method Dispose | BurstTriangulator",
+    "keywords": "Method Dispose Dispose() Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources. Declaration public void Dispose() Implements IDisposable.Dispose()"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.Input.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.Input.html",
+    "title": "Property Input | BurstTriangulator",
+    "keywords": "Property Input Input Declaration public Triangulator.InputData Input { get; set; } Property Value Type Description Triangulator.InputData"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges.html",
+    "title": "Property ConstraintEdges | BurstTriangulator",
+    "keywords": "Property ConstraintEdges ConstraintEdges Declaration public NativeArray<int> ConstraintEdges { get; set; } Property Value Type Description NativeArray<int>"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds.html",
+    "title": "Property HoleSeeds | BurstTriangulator",
+    "keywords": "Property HoleSeeds HoleSeeds Declaration public NativeArray<float2> HoleSeeds { get; set; } Property Value Type Description NativeArray<float2>"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.InputData.Positions.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.InputData.Positions.html",
+    "title": "Property Positions | BurstTriangulator",
+    "keywords": "Property Positions Positions Declaration public NativeArray<float2> Positions { get; set; } Property Value Type Description NativeArray<float2>"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.InputData.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.InputData.html",
+    "title": "Class Triangulator.InputData | BurstTriangulator",
+    "keywords": "Class Triangulator.InputData Inheritance object Triangulator.InputData Inherited Members object.Equals(object) object.Equals(object, object) object.GetHashCode() object.GetType() object.MemberwiseClone() object.ReferenceEquals(object, object) object.ToString() Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax public class Triangulator.InputData Properties Name Description ConstraintEdges HoleSeeds Positions"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.Output.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.Output.html",
+    "title": "Property Output | BurstTriangulator",
+    "keywords": "Property Output Output Declaration public Triangulator.OutputData Output { get; } Property Value Type Description Triangulator.OutputData"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.OutputData.Positions.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.Positions.html",
+    "title": "Field Positions | BurstTriangulator",
+    "keywords": "Field Positions Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax public NativeList<float2> Positions Returns Type Description NativeList<float2>"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.OutputData.Status.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.Status.html",
+    "title": "Field Status | BurstTriangulator",
+    "keywords": "Field Status Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax public NativeReference<Triangulator.Status> Status Returns Type Description NativeReference<Status>"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.OutputData.Triangles.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.Triangles.html",
+    "title": "Field Triangles | BurstTriangulator",
+    "keywords": "Field Triangles Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax public NativeList<int> Triangles Returns Type Description NativeList<int>"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.OutputData.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.html",
+    "title": "Struct Triangulator.OutputData | BurstTriangulator",
+    "keywords": "Struct Triangulator.OutputData Inherited Members ValueType.Equals(object) ValueType.GetHashCode() ValueType.ToString() object.Equals(object, object) object.GetType() object.ReferenceEquals(object, object) Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax public struct Triangulator.OutputData Fields Name Description Positions Status Triangles"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.Preprocessor.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.Preprocessor.html",
+    "title": "Enum Triangulator.Preprocessor | BurstTriangulator",
+    "keywords": "Enum Triangulator.Preprocessor Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax public enum Triangulator.Preprocessor Fields Name Description COM Transforms Input to local coordinate system using center of mass. None PCA Transforms Input using coordinate system obtained from principal component analysis."
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle.html",
+    "title": "Property Angle | BurstTriangulator",
+    "keywords": "Property Angle Angle Specifies the refinement angle constraint for triangles in the resulting mesh. Ensures that no triangle in the mesh has an angle smaller than the specified value. Declaration public float Angle { get; set; } Property Value Type Description float Remarks Expressed in radians."
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area.html",
+    "title": "Property Area | BurstTriangulator",
+    "keywords": "Property Area Area Specifies the maximum area constraint for triangles in the resulting mesh refinement. Ensures that no triangle in the mesh has an area larger than the specified value. Declaration public float Area { get; set; } Property Value Type Description float"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.html",
+    "title": "Class Triangulator.RefinementThresholds | BurstTriangulator",
+    "keywords": "Class Triangulator.RefinementThresholds Inheritance object Triangulator.RefinementThresholds Inherited Members object.Equals(object) object.Equals(object, object) object.GetHashCode() object.GetType() object.MemberwiseClone() object.ReferenceEquals(object, object) object.ToString() Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax [Serializable] public class Triangulator.RefinementThresholds Properties Name Description Angle Specifies the refinement angle constraint for triangles in the resulting mesh. Ensures that no triangle in the mesh has an angle smaller than the specified value. Area Specifies the maximum area constraint for triangles in the resulting mesh refinement. Ensures that no triangle in the mesh has an area larger than the specified value."
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.Run.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.Run.html",
+    "title": "Method Run | BurstTriangulator",
+    "keywords": "Method Run Run() Declaration public void Run()"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.Schedule.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.Schedule.html",
+    "title": "Method Schedule | BurstTriangulator",
+    "keywords": "Method Schedule Schedule(JobHandle) Declaration public JobHandle Schedule(JobHandle dependencies = null) Parameters Type Name Description JobHandle dependencies Returns Type Description JobHandle"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.Settings.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.Settings.html",
+    "title": "Property Settings | BurstTriangulator",
+    "keywords": "Property Settings Settings Declaration public Triangulator.TriangulationSettings Settings { get; } Property Value Type Description Triangulator.TriangulationSettings"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.Status.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.Status.html",
+    "title": "Enum Triangulator.Status | BurstTriangulator",
+    "keywords": "Enum Triangulator.Status Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax public enum Triangulator.Status Fields Name Description ERR State may suggest that some error occurs during triangulation. See console for more details. OK State corresponds to triangulation completed successfully."
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount.html",
+    "title": "Property BatchCount | BurstTriangulator",
+    "keywords": "Property BatchCount BatchCount Batch count used in parallel jobs. Declaration [Obsolete(\"This property is no longer used. Setting it has no effect.\")] public int BatchCount { get; set; } Property Value Type Description int"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter.html",
+    "title": "Property ConcentricShellsParameter | BurstTriangulator",
+    "keywords": "Property ConcentricShellsParameter ConcentricShellsParameter Constant used in concentric shells segment splitting. Modify this only if you know what you are doing! Declaration public float ConcentricShellsParameter { get; set; } Property Value Type Description float"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges.html",
+    "title": "Property ConstrainEdges | BurstTriangulator",
+    "keywords": "Property ConstrainEdges ConstrainEdges If true constrains edges defined in Input using Sloan's algorithm. Declaration [Obsolete(\"To enable constraint edges, pass the corresponding array into Input.ConstraintEdges. Setting this property is unnecessary.\", true)] public bool ConstrainEdges { get; set; } Property Value Type Description bool"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea.html",
+    "title": "Property MaximumArea | BurstTriangulator",
+    "keywords": "Property MaximumArea MaximumArea Specifies the maximum area constraint for triangles in the resulting mesh refinement. Ensures that no triangle in the mesh has an area larger than the specified value. Declaration [Obsolete] public float MaximumArea { get; set; } Property Value Type Description float Remarks Obsolete: use Area instead."
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle.html",
+    "title": "Property MinimumAngle | BurstTriangulator",
+    "keywords": "Property MinimumAngle MinimumAngle Specifies the refinement angle constraint for triangles in the resulting mesh. Ensures that no triangle in the mesh has an angle smaller than the specified value. Expressed in radians. Declaration [Obsolete] public float MinimumAngle { get; set; } Property Value Type Description float Remarks Obsolete: use Angle instead."
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea.html",
+    "title": "Property MinimumArea | BurstTriangulator",
+    "keywords": "Property MinimumArea MinimumArea Specifies the maximum area constraint for triangles in the resulting mesh refinement. Ensures that no triangle in the mesh has an area larger than the specified value. Declaration [Obsolete] public float MinimumArea { get; set; } Property Value Type Description float Remarks Obsolete: use Area instead."
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor.html",
+    "title": "Property Preprocessor | BurstTriangulator",
+    "keywords": "Property Preprocessor Preprocessor Preprocessing algorithm for the input data. Default is None. Declaration public Triangulator.Preprocessor Preprocessor { get; set; } Property Value Type Description Triangulator.Preprocessor"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh.html",
+    "title": "Property RefineMesh | BurstTriangulator",
+    "keywords": "Property RefineMesh RefineMesh If true refines mesh using Ruppert's algorithm. Declaration public bool RefineMesh { get; set; } Property Value Type Description bool"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds.html",
+    "title": "Property RefinementThresholds | BurstTriangulator",
+    "keywords": "Property RefinementThresholds RefinementThresholds Declaration public Triangulator.RefinementThresholds RefinementThresholds { get; } Property Value Type Description Triangulator.RefinementThresholds"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary.html",
+    "title": "Property RestoreBoundary | BurstTriangulator",
+    "keywords": "Property RestoreBoundary RestoreBoundary If true the mesh boundary is restored using Input constraint edges. Declaration public bool RestoreBoundary { get; set; } Property Value Type Description bool"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters.html",
+    "title": "Property SloanMaxIters | BurstTriangulator",
+    "keywords": "Property SloanMaxIters SloanMaxIters Max iteration count during Sloan's algorithm (constraining edges). Modify this only if you know what you are doing. Declaration public int SloanMaxIters { get; set; } Property Value Type Description int"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput.html",
+    "title": "Property ValidateInput | BurstTriangulator",
+    "keywords": "Property ValidateInput ValidateInput If is set to true, the provided data will be validated before running the triangulation procedure. Input positions, as well as input constraints, have a few restrictions, see README.md for more details. If one of the conditions fails, then triangulation will not be calculated. One could catch this as an error by using Status (native, can be used in jobs). Declaration public bool ValidateInput { get; set; } Property Value Type Description bool"
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.html",
+    "title": "Class Triangulator.TriangulationSettings | BurstTriangulator",
+    "keywords": "Class Triangulator.TriangulationSettings Inheritance object Triangulator.TriangulationSettings Inherited Members object.Equals(object) object.Equals(object, object) object.GetHashCode() object.GetType() object.MemberwiseClone() object.ReferenceEquals(object, object) object.ToString() Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax [Serializable] public class Triangulator.TriangulationSettings Properties Name Description BatchCount Batch count used in parallel jobs. ConcentricShellsParameter Constant used in concentric shells segment splitting. Modify this only if you know what you are doing! ConstrainEdges If true constrains edges defined in Input using Sloan's algorithm. MaximumArea Specifies the maximum area constraint for triangles in the resulting mesh refinement. Ensures that no triangle in the mesh has an area larger than the specified value. MinimumAngle Specifies the refinement angle constraint for triangles in the resulting mesh. Ensures that no triangle in the mesh has an angle smaller than the specified value. Expressed in radians. MinimumArea Specifies the maximum area constraint for triangles in the resulting mesh refinement. Ensures that no triangle in the mesh has an area larger than the specified value. Preprocessor Preprocessing algorithm for the input data. Default is None. RefineMesh If true refines mesh using Ruppert's algorithm. RefinementThresholds RestoreBoundary If true the mesh boundary is restored using Input constraint edges. SloanMaxIters Max iteration count during Sloan's algorithm (constraining edges). Modify this only if you know what you are doing. ValidateInput If is set to true, the provided data will be validated before running the triangulation procedure. Input positions, as well as input constraints, have a few restrictions, see README.md for more details. If one of the conditions fails, then triangulation will not be calculated. One could catch this as an error by using Status (native, can be used in jobs)."
+  },
+  "api/andywiecko.BurstTriangulator.Triangulator.html": {
+    "href": "api/andywiecko.BurstTriangulator.Triangulator.html",
+    "title": "Class Triangulator | BurstTriangulator",
+    "keywords": "Class Triangulator Inheritance object Triangulator Implements IDisposable Inherited Members object.Equals(object) object.Equals(object, object) object.GetHashCode() object.GetType() object.MemberwiseClone() object.ReferenceEquals(object, object) object.ToString() Namespace: andywiecko.BurstTriangulator Assembly: .dll Syntax public class Triangulator : IDisposable Constructors Name Description Triangulator(Allocator) Triangulator(int, Allocator) Properties Name Description Input Output Settings Methods Name Description Dispose() Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources. Run() Schedule(JobHandle)"
+  },
+  "api/andywiecko.BurstTriangulator.html": {
+    "href": "api/andywiecko.BurstTriangulator.html",
+    "title": "Namespace andywiecko.BurstTriangulator | BurstTriangulator",
+    "keywords": "Namespace andywiecko.BurstTriangulator Classes Triangulator Triangulator.InputData Triangulator.RefinementThresholds Triangulator.TriangulationSettings Structs Triangulator.OutputData Enums Triangulator.Preprocessor Triangulator.Status"
+  },
+  "api/andywiecko.html": {
+    "href": "api/andywiecko.html",
+    "title": "",
+    "keywords": ""
+  },
+  "api/index.html": {
+    "href": "api/index.html",
+    "title": "| BurstTriangulator",
+    "keywords": "This is the documentation for the Scripting APIs of this package. Manual for this package can be found at README.md. The manual will be moved here in the future."
+  },
+  "changelog/CHANGELOG.html": {
+    "href": "changelog/CHANGELOG.html",
+    "title": "Change log | BurstTriangulator",
+    "keywords": "Change log All notable changes to this project will be documented in this file. The format is based on Keep a Changelog, and this project adheres to Semantic Versioning. For online version see Github Releases. 2.5.0 – 2024-04-03 Changed Simplified PlantingSeedJob by removing generics and introducing an algorithm based on constraintEdges. This resulted in improved performance. Changed the triangulator to schedule a single job instead of multiple smaller ones. Greatly simplified the preprocessor transformations code. All transformations are now represented by the AffineTransform2D struct, and several jobs have been removed. Deprecated Deprecated the Triangulator.Settings.ConstrainEdges property. To enable constrained edges, pass the corresponding array into input. Deprecated the Triangulator.Settings.BatchCount property. This property is no longer used, setting it has no effect. Fixed Fixed constructing pointToHalfedges during constraint resolution. This resolves GitHub issue #111. 2.4.0 – 2023-12-23 Added Introduce ConcentricShellParameter in TriangulationSettings, serving as a constant for concentric shells segment splitting. Add RefinementThresholds in TriangulationSettings, including .Area and .Angle. Previous corresponding parameters are marked with obsolete. Changed Enhance triangulation refinement for improved quality and performance. Replace the previous algorithm with a new one, similar to Shewchuk's terminator algorithm. The refined mesh now exhibits non-uniform triangle density, with increased density near boundaries and decreased density in the mesh bulk. Update README.md to include a comparison between different refinement settings. Remove the super-triangle approach (resulting in a slight performance boost). Perform refinement after removing holes and boundaries for better refinement quality. Deprecated Mark MinimumArea, MaximumArea, and MinimumAngle as obsolete. Replace these parameters with the more versatile RefinementThresholds. 2.3.0 – 2023-10-25 Changed Improved performance by adapting triangulation with mesh refinement to a half-edges approach. Simplified the refinement job contract. Merged several internal jobs for better efficiency. General project simplification for enhanced maintainability. Removed Eliminated edgeToTriangles and triangleToEdges mappings. Removed the internal Triangle struct. 2.2.0 ⁠– 2023-10-03 Changed Simplified constrained triangulation scheduling jobs pipeline. Adapted constrained triangulation for half-edges approach, which significantly improved performance. The algorithm no longer relies on triangulation mappings, such as edge-to-triangle and triangle-to-edge relationships (or circles). The complexity of the intersection searching algorithm has been reduced from a naive O(n^2) solution to O(n log n). Fixed Resolved Sloan algorithm corner cases. In previous releases, constrained triangulation may get stuck. Constrained triangulation is now more robust. Added Added constrained triangulation benchmark test. The results may be found at README.md. 2.1.0 ⁠– 2023-09-17 Changed Replaced the classic Delaunay algorithm (without refinement/constraints) with an implementation based on half-edges (see delaunator and delaunator-sharp for more details). This change has led to a significant performance boost in unconstrained triangulation. See README.md for more details. Refactored some internal math utilities. 2.0.0 ⁠– 2023-09-09 Added Introduced the Preprocessor enum with the following options: None, COM, and PCA. This enum replaces the previous transformation settings (UseLocalTransformation/UsePCATransformation). Introduced the Status (with values OK, ERR) enum along with corresponding native data. This enum is now utilized for input validation, with functionality extending beyond the Unity editor to encompass validation in builds as well. Added a benchmark test for mesh refinement, which will be used for future performance measurement. Changed Default values for TriangulationSettings. Updated Unity Editor to version 2022.2.1f1. Bumped dependencies: Burst to 1.8.7, Collections to 2.2.0. Removed Removed the following deprecated methods: Schedule(NativeArray<float2>, ...). Removed the following deprecated properties: Positions, Triangles, PositionsDeferred, PositionsDeferred. Removed the internal TriangulatorNativeData as part of a significant refactor to simplify the code structure. Internal implementations were cleaned up, and code structure was simplified. 1.5.0 ⁠– 2023-04-12 Added Added PCA transformation for input positions and holes. Fixed Editor hangs during Sloan algorithm for specific input data (issues #30 and #31). 1.4.0 ⁠– 2022-11-01 Added Added option for transforming input positions (as well as holes) into normalized local space, i.e. [-1, 1] box. Converting points into normalized local space could increase numerical accuracy. Fixed Fix deferred array support in triangulator input. Add missing constraint position range validation. Fix whitespaces in code and README.md. 1.3.0 ⁠– 2022-04-09 Added Restoring input boundaries. The feature allows for restoring a given boundary from triangulation input. It is necessary to provide constraints, as well as enable corresponding options in the triangulation settings, aka RestoreBoundary. Support for holes in the mesh. Upload project's logo generated using the above features. Changed More verbose warnings during input validation. 1.2.0 ⁠– 2022-04-02 Added Add support for the Constraint Delaunay Triangulation with mesh refinement. Changed Performance: Bower-Watson point insertion algorithm has been optimised and is based on the breadth-first search. Refactor: moved a few methods from jobs into TriangulatorNativeData. Refactor: structures have more compact layout. 1.1.0 ⁠– 2022-03-27 Added Add support for Constraint Delaunay Triangulation. Selected edges can be constrained e.g. for restoring the boundary. The feature currently does not support mesh refinement. Basic validation of the input positions as well as input constraint edges. Deprecated Refactor of input/output data buffers, some of them are marked as obsoletes. 1.0.1 ⁠– 2021-11-24 Changed Util function GetCircumcenter has been optimized. It is faster and more stable. Unity packages have been updated (Note: there was API changed in FixedList<T>). 1.0.0 ⁠– 2021-10-26 Added Initial release version"
+  },
+  "index.html": {
+    "href": "index.html",
+    "title": "",
+    "keywords": ""
+  },
+  "license/LICENSE.html": {
+    "href": "license/LICENSE.html",
+    "title": "| BurstTriangulator",
+    "keywords": "MIT License Copyright (c) 2021 Andrzej Więckowski, Ph.D. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+  }
+}

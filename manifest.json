@@ -1,0 +1,501 @@
+{
+  "source_base_path": "C:/Users/Andrzej/Documents/andywiecko/BurstTriangulator/Documentation~/docfx",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      }
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.InputData.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.InputData.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.InputData.Positions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.InputData.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.InputData.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.InputData.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.Status.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.Triangles.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.OutputData.Positions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Preprocessor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Preprocessor.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Status.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Status.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Run.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Settings.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Dispose.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Input.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Schedule.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Output.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.-ctor.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Redirection",
+      "source_relative_path": "api/andywiecko.md",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "api/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "api/index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "api/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "changelog/CHANGELOG.md",
+      "output": {
+        ".html": {
+          "relative_path": "changelog/CHANGELOG.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "changelog/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "changelog/toc.html"
+        },
+        ".json": {
+          "relative_path": "changelog/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/burst-triangulator-logo-light-mode.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/burst-triangulator-logo-light-mode.svg"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/favicon.ico",
+      "output": {
+        "resource": {
+          "relative_path": "images/favicon.ico"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/logo.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/logo.svg"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Redirection",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "license/LICENSE.md",
+      "output": {
+        ".html": {
+          "relative_path": "license/LICENSE.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "license/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "license/toc.html"
+        },
+        ".json": {
+          "relative_path": "license/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html"
+        },
+        ".json": {
+          "relative_path": "toc.json"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}

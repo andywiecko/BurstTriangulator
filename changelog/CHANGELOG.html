@@ -1,0 +1,285 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Change log | BurstTriangulator </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Change log | BurstTriangulator ">
+    
+    
+      <link rel="shortcut icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/logo.svg" alt="BurstTriangulator">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+                <!-- Added by me -->
+                <div style="margin-right: 15px;"><a href="https://github.com/andywiecko/BurstTriangulator/"><i class="fa fa-github" style="font-size:30px; color: white"></i></a></div>
+              </form>
+            </div>
+          </div>
+        </nav>        <div class="subnav navbar navbar-default">
+            <div class="container" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div class="container hide-when-search" id="breadcrumb">
+                 <ul class="breadcrumb">
+                   <li></li>
+                 </ul>
+                </div>
+                <div class="container" style="
+                    width: 80px;
+                    line-height: 40px;
+                "><b>v2.5.0</b></div>
+          </div>
+        </div>      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="change-log">Change log</h1>
+
+<p>All notable changes to this project will be documented in this file.</p>
+<p>The format is based on <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a>,
+and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<p>For online version see <a href="https://github.com/andywiecko/BurstTriangulator/releases">Github Releases</a>.</p>
+<h2 id="250--2024-04-03"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.5.0">2.5.0</a> – 2024-04-03</h2>
+<h3 id="changed">Changed</h3>
+<ul>
+<li>Simplified <code>PlantingSeedJob</code> by removing generics and introducing an algorithm based on <code>constraintEdges</code>. This resulted in improved performance.</li>
+<li>Changed the triangulator to schedule a single job instead of multiple smaller ones.</li>
+<li>Greatly simplified the preprocessor transformations code. All transformations are now represented by the <code>AffineTransform2D</code> struct, and several jobs have been removed.</li>
+</ul>
+<h3 id="deprecated">Deprecated</h3>
+<ul>
+<li>Deprecated the <code>Triangulator.Settings.ConstrainEdges</code> property. To enable constrained edges, pass the corresponding array into input.</li>
+<li>Deprecated the <code>Triangulator.Settings.BatchCount</code> property. This property is no longer used, setting it has no effect.</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li>Fixed constructing <code>pointToHalfedges</code> during constraint resolution. This resolves GitHub issue <a href="https://github.com/andywiecko/BurstTriangulator/issues/111">#111</a>.</li>
+</ul>
+<h2 id="240--2023-12-23"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.4.0">2.4.0</a> – 2023-12-23</h2>
+<h3 id="added">Added</h3>
+<ul>
+<li>Introduce <code>ConcentricShellParameter</code> in <code>TriangulationSettings</code>, serving as a constant for <em>concentric shells</em> segment splitting.</li>
+<li>Add <code>RefinementThresholds</code> in <code>TriangulationSettings</code>, including <code>.Area</code> and <code>.Angle</code>. Previous corresponding parameters are marked with obsolete.</li>
+</ul>
+<h3 id="changed-1">Changed</h3>
+<ul>
+<li>Enhance triangulation refinement for improved quality and performance. Replace the previous algorithm with a new one, similar to Shewchuk's <em>terminator</em> algorithm. The refined mesh now exhibits non-uniform triangle density, with increased density near boundaries and decreased density in the mesh bulk.</li>
+<li>Update <code>README.md</code> to include a comparison between different refinement settings.</li>
+<li>Remove the super-triangle approach (resulting in a slight performance boost). Perform refinement after removing holes and boundaries for better refinement quality.</li>
+</ul>
+<h3 id="deprecated-1">Deprecated</h3>
+<ul>
+<li>Mark <code>MinimumArea</code>, <code>MaximumArea</code>, and <code>MinimumAngle</code> as obsolete. Replace these parameters with the more versatile <code>RefinementThresholds</code>.</li>
+</ul>
+<h2 id="230--2023-10-25"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.3.0">2.3.0</a> – 2023-10-25</h2>
+<h3 id="changed-2">Changed</h3>
+<ul>
+<li>Improved performance by adapting triangulation with mesh refinement to a <code>half-edges</code> approach.</li>
+<li>Simplified the refinement job contract.</li>
+<li>Merged several internal jobs for better efficiency.</li>
+<li>General project simplification for enhanced maintainability.</li>
+</ul>
+<h3 id="removed">Removed</h3>
+<ul>
+<li>Eliminated <code>edgeToTriangles</code> and <code>triangleToEdges</code> mappings.</li>
+<li>Removed the internal <code>Triangle</code> struct.</li>
+</ul>
+<h2 id="220--2023-10-03"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.2.0">2.2.0</a> ⁠– 2023-10-03</h2>
+<h3 id="changed-3">Changed</h3>
+<ul>
+<li>Simplified constrained triangulation scheduling jobs pipeline.</li>
+<li>Adapted constrained triangulation for <code>half-edges</code> approach, which significantly improved performance. The algorithm no longer relies on triangulation mappings, such as edge-to-triangle and triangle-to-edge relationships (or circles). The complexity of the intersection searching algorithm has been reduced from a naive <code>O(n^2)</code> solution to <code>O(n log n)</code>.</li>
+</ul>
+<h3 id="fixed-1">Fixed</h3>
+<ul>
+<li>Resolved Sloan algorithm corner cases. In previous releases, constrained triangulation may get stuck. Constrained triangulation is now more robust.</li>
+</ul>
+<h3 id="added-1">Added</h3>
+<ul>
+<li>Added constrained triangulation benchmark test. The results may be found at <a href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md#benchmark"><code>README.md</code></a>.</li>
+</ul>
+<h2 id="210--2023-09-17"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.1.0">2.1.0</a> ⁠– 2023-09-17</h2>
+<h3 id="changed-4">Changed</h3>
+<ul>
+<li>Replaced the <em>classic</em> Delaunay algorithm (without refinement/constraints) with an implementation based on <code>half-edges</code> (see <a href="https://github.com/mapbox/delaunator"><code>delaunator</code></a> and <a href="https://github.com/nol1fe/delaunator-sharp/"><code>delaunator-sharp</code></a> for more details). This change has led to a significant performance boost in unconstrained triangulation. See <a href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md#benchmark"><code>README.md</code></a> for more details.</li>
+<li>Refactored some internal math utilities.</li>
+</ul>
+<h2 id="200--2023-09-09"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.0.0">2.0.0</a> ⁠– 2023-09-09</h2>
+<h3 id="added-2">Added</h3>
+<ul>
+<li>Introduced the <code>Preprocessor</code> enum with the following options: <code>None</code>, <code>COM</code>, and <code>PCA</code>. This enum replaces the previous transformation settings (<code>UseLocalTransformation</code>/<code>UsePCATransformation</code>).</li>
+<li>Introduced the <code>Status</code> (with values <code>OK</code>, <code>ERR</code>) enum along with corresponding native data. This enum is now utilized for input validation, with functionality extending beyond the Unity editor to encompass validation in builds as well.</li>
+<li>Added a benchmark test for mesh refinement, which will be used for future performance measurement.</li>
+</ul>
+<h3 id="changed-5">Changed</h3>
+<ul>
+<li>Default values for <code>TriangulationSettings</code>.</li>
+<li>Updated Unity Editor to version <code>2022.2.1f1</code>.</li>
+<li>Bumped dependencies: Burst to <code>1.8.7</code>, Collections to <code>2.2.0</code>.</li>
+</ul>
+<h3 id="removed-1">Removed</h3>
+<ul>
+<li>Removed the following deprecated methods: <code>Schedule(NativeArray&lt;float2&gt;, ...)</code>.</li>
+<li>Removed the following deprecated properties: <code>Positions</code>, <code>Triangles</code>, <code>PositionsDeferred</code>, <code>PositionsDeferred</code>.</li>
+<li>Removed the internal <code>TriangulatorNativeData</code> as part of a significant refactor to simplify the code structure. Internal implementations were cleaned up, and code structure was simplified.</li>
+</ul>
+<h2 id="150--2023-04-12"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.5.0">1.5.0</a> ⁠– 2023-04-12</h2>
+<h3 id="added-3">Added</h3>
+<ul>
+<li>Added PCA transformation for input positions and holes.</li>
+</ul>
+<h3 id="fixed-2">Fixed</h3>
+<ul>
+<li>Editor hangs during Sloan algorithm for specific input data (issues <a href="https://github.com/andywiecko/BurstTriangulator/issues/30">#30</a> and <a href="https://github.com/andywiecko/BurstTriangulator/issues/31">#31</a>).</li>
+</ul>
+<h2 id="140--2022-11-01"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.4.0">1.4.0</a> ⁠– 2022-11-01</h2>
+<h3 id="added-4">Added</h3>
+<ul>
+<li>Added option for transforming input positions (as well as holes) into normalized local space, i.e. [-1, 1] box. Converting points into normalized local space could increase numerical accuracy.</li>
+</ul>
+<h3 id="fixed-3">Fixed</h3>
+<ul>
+<li>Fix deferred array support in triangulator input.</li>
+<li>Add missing constraint position range validation.</li>
+<li>Fix whitespaces in code and <code>README.md</code>.</li>
+</ul>
+<h2 id="130--2022-04-09"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.3.0">1.3.0</a> ⁠– 2022-04-09</h2>
+<h3 id="added-5">Added</h3>
+<ul>
+<li>Restoring input boundaries. The feature allows for restoring a given boundary from triangulation input.
+It is necessary to provide constraints, as well as enable corresponding
+options in the triangulation settings, aka <code>RestoreBoundary</code>.</li>
+<li>Support for holes in the mesh.</li>
+<li>Upload project's logo generated using the above features.</li>
+</ul>
+<h3 id="changed-6">Changed</h3>
+<ul>
+<li>More verbose warnings during input validation.</li>
+</ul>
+<h2 id="120--2022-04-02"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.2.0">1.2.0</a> ⁠– 2022-04-02</h2>
+<h3 id="added-6">Added</h3>
+<ul>
+<li>Add support for the Constraint Delaunay Triangulation with mesh refinement.</li>
+</ul>
+<h3 id="changed-7">Changed</h3>
+<ul>
+<li>Performance: Bower-Watson point insertion algorithm has been optimised and is based on the breadth-first search.</li>
+<li>Refactor: moved a few methods from jobs into <code>TriangulatorNativeData</code>.</li>
+<li>Refactor: structures have more compact layout.</li>
+</ul>
+<h2 id="110--2022-03-27"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.1.0">1.1.0</a> ⁠– 2022-03-27</h2>
+<h3 id="added-7">Added</h3>
+<ul>
+<li>Add support for Constraint Delaunay Triangulation. Selected edges can be constrained e.g. for restoring the boundary. The feature currently does not support mesh refinement.</li>
+<li>Basic validation of the input positions as well as input constraint edges.</li>
+</ul>
+<h3 id="deprecated-2">Deprecated</h3>
+<ul>
+<li>Refactor of input/output data buffers, some of them are marked as obsoletes.</li>
+</ul>
+<h2 id="101--2021-11-24"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.0.1">1.0.1</a> ⁠– 2021-11-24</h2>
+<h3 id="changed-8">Changed</h3>
+<ul>
+<li>Util function <code>GetCircumcenter</code> has been optimized. It is faster and more stable.</li>
+<li>Unity packages have been updated (Note: there was API changed in <code>FixedList&lt;T&gt;</code>).</li>
+</ul>
+<h2 id="100--2021-10-26"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.0.0">1.0.0</a> ⁠– 2021-10-26</h2>
+<h3 id="added-8">Added</h3>
+<ul>
+<li>Initial release version</li>
+</ul>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </body>
+</html>
