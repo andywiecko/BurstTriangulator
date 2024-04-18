@@ -68,13 +68,13 @@ For online version see [Github Releases].
 
 ### Added
 
-- Added constrained triangulation benchmark test. The results may be found at [`README.md`](README.md#benchmark).
+- Added constrained triangulation benchmark test. The results may be found at [`README.md`](https://github.com/andywiecko/BurstTriangulator/blob/main/README.md#benchmark).
 
 ## [2.1.0] ⁠– 2023-09-17
 
 ### Changed
 
-- Replaced the *classic* Delaunay algorithm (without refinement/constraints) with an implementation based on `half-edges` (see [`delaunator`](https://github.com/mapbox/delaunator) and [`delaunator-sharp`](https://github.com/nol1fe/delaunator-sharp/) for more details). This change has led to a significant performance boost in unconstrained triangulation. See [`README.md`](README.md#benchmark) for more details.
+- Replaced the *classic* Delaunay algorithm (without refinement/constraints) with an implementation based on `half-edges` (see [`delaunator`](https://github.com/mapbox/delaunator) and [`delaunator-sharp`](https://github.com/nol1fe/delaunator-sharp/) for more details). This change has led to a significant performance boost in unconstrained triangulation. See [`README.md`](https://github.com/andywiecko/BurstTriangulator/blob/main/README.md#benchmark) for more details.
 - Refactored some internal math utilities.
 
 ## [2.0.0] ⁠– 2023-09-09
