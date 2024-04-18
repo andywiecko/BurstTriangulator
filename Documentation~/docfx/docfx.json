@@ -1,0 +1,40 @@
+{
+  "metadata": [
+    {
+      "src": [{"src": "../../Runtime", "files": ["**/*.cs"]}],
+      "dest": "api",
+      "allowCompilationErrors": true,
+      "memberLayout": "separatePages"
+    }
+  ],
+  "build": {
+    "xref":[
+      "https://learn.microsoft.com/en-us/dotnet/.xrefmap.json",
+      "unity-xrefmap.yml"
+    ],
+    "content": [
+      {"files": ["*.md", "toc.yml"]},
+      {"src": "api", "files": ["*.yml", "index.md", "andywiecko.md"], "dest": "api"},
+      {"src": "changelog", "files": ["toc.yml", "CHANGELOG.md"], "dest": "changelog"},
+      {"src": "license", "files": ["toc.yml", "LICENSE.md"], "dest": "license"}
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "output": "_site",
+    "template": ["default", "override"],
+    "globalMetadata": {
+      "_appName": "BurstTriangulator",
+      "_appTitle": "BurstTriangulator",
+      "_enableSearch": true,
+      "pdf": false,
+      "_disableContribution": true,
+      "_appLogoPath": "images/logo.svg",
+      "_appFaviconPath": "images/favicon.ico"
+    }
+  }
+}

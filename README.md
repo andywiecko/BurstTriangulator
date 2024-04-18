@@ -25,6 +25,7 @@ As an illustrative example, we present the triangulation of Lake Superior with v
 - [Burst Triangulator](#burst-triangulator)
   - [Table of contents](#table-of-contents)
   - [Getting started](#getting-started)
+  - [Scripting API](#scripting-api)
   - [Example usage](#example-usage)
     - [Delaunay triangulation](#delaunay-triangulation)
     - [Delaunay triangulation with mesh refinement](#delaunay-triangulation-with-mesh-refinement)
@@ -84,6 +85,11 @@ Clone or download this repository and then select <code>package.json</code> usin
 <summary> Copy <code>Runtime/Triangulator.cs</code> </summary>
 Since the package is single-file only, one can put the file <code>Runtime/Triangulator.cs</code> somewhere in the project to use it independently.
 </details>
+
+## Scripting API
+
+To view the documentation for the scripting API locally, navigate to `Documentation~/docfx`, or access it online [**here**](https://andywiecko.github.io/BurstTriangulator).
+The manual content in this `README.md` will soon be migrated into DocFX.
 
 ## Example usage
 

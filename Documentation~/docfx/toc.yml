@@ -1,0 +1,11 @@
+- name: Scripting API
+  href: api/
+  homepage: api/index.md
+
+- name: Changelog
+  href: changelog/
+  homepage: changelog/CHANGELOG.md
+
+- name: License
+  href: license/
+  homepage: license/LICENSE.md
