@@ -4,7 +4,8 @@
       "src": [{"src": "../../Runtime", "files": ["**/*.cs"]}],
       "dest": "api",
       "allowCompilationErrors": true,
-      "memberLayout": "separatePages"
+      "memberLayout": "separatePages",
+      "references": "dlls/*"
     }
   ],
   "build": {
