@@ -2,8 +2,8 @@ install:
 	dotnet tool update -g docfx
 
 copy: 
-	cp ../../CHANGELOG.md changelog/
-	cp ../../LICENSE.md license/
+	cp ../CHANGELOG.md changelog/
+	cp ../LICENSE.md license/
 
 build: copy
 	docfx docfx.json
