@@ -1,7 +1,7 @@
 {
   "metadata": [
     {
-      "src": [{"src": "../../Runtime", "files": ["**/*.cs"]}],
+      "src": [{"src": "../Runtime", "files": ["**/*.cs"]}],
       "dest": "api",
       "allowCompilationErrors": true,
       "memberLayout": "separatePages",
@@ -13,8 +13,13 @@
       "https://learn.microsoft.com/en-us/dotnet/.xrefmap.json",
       "unity-xrefmap.yml"
     ],
+    "markdownEngineName": "markdig",
+    "markdownEngineProperties": {
+      "markdigExtensions": [ "footnotes" ]
+    },
     "content": [
       {"files": ["*.md", "toc.yml"]},
+      {"src": "manual", "files": ["*.yml", "*.md", "**/*.md"], "dest": "manual"},
       {"src": "api", "files": ["*.yml", "index.md", "andywiecko.md"], "dest": "api"},
       {"src": "changelog", "files": ["toc.yml", "CHANGELOG.md"], "dest": "changelog"},
       {"src": "license", "files": ["toc.yml", "LICENSE.md"], "dest": "license"}

@@ -1,0 +1,37 @@
+items:
+- name: Manual
+  href: index.md
+
+- name: Introduction
+  href: introduction.md
+
+- name: Getting started
+  href: getting-started.md
+
+- name: Examples
+  href: examples/index.md
+  items:
+  - name: Classic triangulation
+    href: examples/triangulation.md
+  - name: Mesh refinement
+    href: examples/mesh-refinement.md
+  - name: Constrained triangulation
+    href: examples/constrained-triangulation.md
+  - name: Holes and boundaries
+    href: examples/holes-and-boundaries.md
+
+- name: Advanced
+  href: advanced/input-validation.md
+  items:
+  - name: Input validation
+    href: advanced/input-validation.md
+  - name: Unity.Jobs support
+    href: advanced/input-jobs.md
+  - name: Preprocessor
+    href: advanced/preprocessor.md
+
+- name: Benchmark
+  href: benchmark.md
+
+- name: Known issues
+  href: known-issues.md
