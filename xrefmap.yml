@@ -400,18 +400,6 @@ references:
   commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
   fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
   nameWithType: Triangulator.TriangulationSettings.ValidateInput
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
-  name: Verbose
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_Verbose
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
-  nameWithType: Triangulator.TriangulationSettings.Verbose
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose*
-  name: Verbose
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
-  nameWithType: Triangulator.TriangulationSettings.Verbose
 - uid: example-holes-and-boundaries
   name: Holes and boundaries
   href: manual/examples/holes-and-boundaries.html
