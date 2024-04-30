@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Getting started | BurstTriangulator </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Getting started | BurstTriangulator ">
+    
+    
+      <link rel="shortcut icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/logo.svg" alt="BurstTriangulator">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+                <!-- Added by me -->
+                <div style="margin-right: 15px;"><a href="https://github.com/andywiecko/BurstTriangulator/"><i class="fa fa-github" style="font-size:30px; color: white"></i></a></div>
+              </form>
+            </div>
+          </div>
+        </nav>        <div class="subnav navbar navbar-default">
+            <div class="container" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div class="container hide-when-search" id="breadcrumb">
+                 <ul class="breadcrumb">
+                   <li></li>
+                 </ul>
+                </div>
+                <div class="container" style="
+                    width: 80px;
+                    line-height: 40px;
+                "><b>v2.5.0</b></div>
+          </div>
+        </div>      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="getting-started">Getting started</h1>
+
+<p>Install the package using one of the following methods. Using OpenUPM is <strong>recommended</strong>.</p>
+<div class="tabGroup" id="tabgroup_1">
+<ul role="tablist">
+<li role="presentation">
+<a href="#tabpanel_1_openupm" role="tab" aria-controls="tabpanel_1_openupm" data-tab="openupm" tabindex="0" aria-selected="true"><strong>OpenUPM</strong></a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_1_git" role="tab" aria-controls="tabpanel_1_git" data-tab="git" tabindex="-1">git</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_1_manual" role="tab" aria-controls="tabpanel_1_manual" data-tab="manual" tabindex="-1">Manual</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_1_copy" role="tab" aria-controls="tabpanel_1_copy" data-tab="copy" tabindex="-1">Copy</a>
+</li>
+</ul>
+<section id="tabpanel_1_openupm" role="tabpanel" data-tab="openupm">
+
+<p>Follow the tutorial at <a href="https://openupm.com/docs/getting-started.html">OpenUPM docs</a>.</p>
+<p>Alternatively, you can set up <code>manifest.json</code> manually. Add or modify scoped registries in the manifest:</p>
+<pre><code class="lang-json">  &quot;scopedRegistries&quot;: [
+    {
+      &quot;name&quot;: &quot;OpenUPM&quot;,
+      &quot;url&quot;: &quot;https://package.openupm.com/&quot;,
+      &quot;scopes&quot;: [
+        &quot;com.andywiecko&quot;
+      ]
+    }
+  ]
+</code></pre>
+<p>Then, in the dependencies section, provide the desired version of the package:</p>
+<pre><code class="lang-json">&quot;dependencies&quot;: {
+    &quot;com.andywiecko.burst.triangulator&quot;: &quot;2.5.0&quot;,
+    ...
+</code></pre>
+<p>Refer to the <a href="https://docs.unity3d.com/2021.1/Documentation/Manual/upm-scoped.html">Unity docs</a> for more details.</p>
+</section>
+<section id="tabpanel_1_git" role="tabpanel" data-tab="git" aria-hidden="true" hidden="hidden">
+
+<p>Use the package manager via git install: <code>https://github.com/andywiecko/BurstTriangulator.git</code></p>
+<p><img src="../images/getting-started-git-install.png" alt="git-install"></p>
+<p>Alternatively, you can edit <code>manifest.json</code> manually:</p>
+<pre><code class="lang-json">&quot;dependencies&quot;: {
+    &quot;com.andywiecko.burst.triangulator&quot;: &quot;https://github.com/andywiecko/BurstTriangulator.git&quot;,
+    ...
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>By default this method will install the latest commit from the <code>main</code> branch of the project repo.
+You can specify a tag or commit by providing an additional hash, e.g.</p>
+<ul>
+<li>to install package <code>v2.4.0</code> use: <code>https://github.com/andywiecko/BurstTriangulator.git#v2.4.0</code>;</li>
+<li>to install package at commit <code>f206441912d8b3fda00fe7438db2a1eec4da5a64</code> use: <code>https://github.com/andywiecko/BurstTriangulator.git#f206441912d8b3fda00fe7438db2a1eec4da5a64</code>.</li>
+</ul>
+</div>
+</section>
+<section id="tabpanel_1_manual" role="tabpanel" data-tab="manual" aria-hidden="true" hidden="hidden">
+
+<p>Clone or download this repository and then select <code>package.json</code> using Package Manager (<code>Window/Package Manager</code>).</p>
+<p><img src="../images/getting-started-manual-install.png" alt="manual-install"></p>
+</section>
+<section id="tabpanel_1_copy" role="tabpanel" data-tab="copy" aria-hidden="true" hidden="hidden">
+
+<p>Since the package is single-file only, one can place the file <a href="https://github.com/andywiecko/BurstTriangulator/blob/main/Runtime/Triangulator.cs"><code>Runtime/Triangulator.cs</code></a> somewhere in the project to use it independently.
+Just remember to install the proper package dependencies.</p>
+</section>
+</div>
+<h2 id="dependencies">Dependencies</h2>
+<p><code>BurstTriangulator</code> has the following dependencies:</p>
+<ul>
+<li><a href="https://docs.unity3d.com/Packages/com.unity.burst@1.8"><code>Unity.Burst@1.8.7</code></a></li>
+<li><a href="https://docs.unity3d.com/Packages/com.unity.collections@2.2"><code>Unity.Collections@2.2.0</code></a></li>
+</ul>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+    .hljs {
+        background: #f5f5f5;
+    }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </body>
+</html>

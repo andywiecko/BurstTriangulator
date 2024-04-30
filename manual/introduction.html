@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Introduction | BurstTriangulator </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Introduction | BurstTriangulator ">
+    
+    
+      <link rel="shortcut icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/logo.svg" alt="BurstTriangulator">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+                <!-- Added by me -->
+                <div style="margin-right: 15px;"><a href="https://github.com/andywiecko/BurstTriangulator/"><i class="fa fa-github" style="font-size:30px; color: white"></i></a></div>
+              </form>
+            </div>
+          </div>
+        </nav>        <div class="subnav navbar navbar-default">
+            <div class="container" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div class="container hide-when-search" id="breadcrumb">
+                 <ul class="breadcrumb">
+                   <li></li>
+                 </ul>
+                </div>
+                <div class="container" style="
+                    width: 80px;
+                    line-height: 40px;
+                "><b>v2.5.0</b></div>
+          </div>
+        </div>      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="introduction">Introduction</h1>
+
+<h2 id="delaunay-triangulation">Delaunay triangulation</h2>
+<p>Triangulation is a process that converts a set of points into a triangles mesh. This package implements <a href="https://en.wikipedia.org/wiki/Delaunay_triangulation">Delaunay triangulation</a>, ensuring that every triangle's circumcircle contains no points from within the mesh. It's important to note that the result will be the convex hull of the input points. Given a set of positions <span class="math">\(\{p_i\}\)</span> as input, the output is the triangulation <span class="math">\(\mathcal{T}\)</span>.</p>
+<br>
+<p align="center"><img src="../images/introduction-triangulation.svg" width="500"></p>
+<br>
+<h2 id="constrained-triangulation">Constrained triangulation</h2>
+<p>In addition to basic triangulation, users may want to enforce certain edges in the final mesh. This can be achieved by providing additional input specifying edge vertices. However, it's worth noting that the resulting triangulation may not maintain the Delaunay property. The input for constrained triangulation includes a set of positions <span class="math">\(\{p_i\}\)</span> and constraint edges <span class="math">\(\{(i, j)\}\)</span>, with the output being the triangulation <span class="math">\(\mathcal{T}\)</span>.</p>
+<br>
+<p align="center"><img src="../images/introduction-constraints.svg" width="500"></p>
+<br>
+<h2 id="mesh-refinement">Mesh refinement</h2>
+<p>In computational simulations, accurately representing long, thin triangles is often challenging. To address this issue, additional points can be strategically inserted into the triangulation to eliminate these problematic elements. Since simulation time is typically proportional to the number of triangles, it's crucial to strike a balance: minimizing the number of triangles while maintaining sufficient detail for accurate results. In this process, denoted as mesh refinement, the input triangulation <span class="math">\(\mathcal{T}\)</span> is transformed into <span class="math">\(\mathcal{T'}\)</span> by inserting additional points to split edges or triangles.</p>
+<br>
+<p align="center"><img src="../images/introduction-mesh-refinement.svg" width="500"></p>
+<br>
+<h2 id="restore-boundary">Restore boundary</h2>
+<p>As previously mentioned, Delaunay triangulation produces the convex hull of points. To support non-convex shapes, edge constraints are introduced, and triangles not included in the boundary of the constraints are removed. Given a set of positions <span class="math">\(\{p_i\}\)</span> and constraints <span class="math">\(\{(i, j)\}\)</span> as input, the output is the triangulation <span class="math">\(\mathcal{T}\)</span>, ensuring that the resulting mesh adheres to the specified boundary constraints.</p>
+<br>
+<p align="center"><img src="../images/introduction-restore-boundary.svg" width="500"></p>
+<br>
+<h2 id="holes">Holes</h2>
+<p>Triangulation can be extended to support meshes with holes. Additional input data, such as hole seeds <span class="math">\(\{h_i\}\)</span>, is required for this purpose. Although automation of this process is currently not implemented, it is planned for future development.</p>
+<p>Hole seeds act as starting points for a removal process resembling the spread of a virus. Starting from the triangle containing <span class="math">\(h_i\)</span>, neighboring triangles are successively removed until the search reaches the constraint edge. In this process, constraint edges act as barriers, preventing further propagation of the removal.</p>
+<br>
+<p align="center"><img src="../images/introduction-holes.svg" width="500"></p>
+<br>
+<h2 id="implementation">Implementation</h2>
+<p>In this package implemented <em>classic</em> Delaunay triangulation is based on
+<a href="https://github.com/mapbox/delaunator"><code>delaunator</code></a> and <a href="https://github.com/nol1fe/delaunator-sharp/"><code>delaunator-sharp</code></a>.
+Refinement algorithm is based on <a href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert%27s_algorithm">Ruppert's algorithm</a><a id="fnref:1" href="#fn:1" class="footnote-ref"><sup>1</sup></a> with <a href="https://en.wikipedia.org/wiki/Bowyer%E2%80%93Watson_algorithm">Bowyer–Watson algorithm</a><a id="fnref:2" href="#fn:2" class="footnote-ref"><sup>2</sup></a> <a id="fnref:3" href="#fn:3" class="footnote-ref"><sup>3</sup></a> point insertion.
+Refinement procedure is inspired by Shewchuk's <em>terminator</em> algorithm<a id="fnref:4" href="#fn:4" class="footnote-ref"><sup>4</sup></a>.
+The package provides also constrained triangulation (with mesh refinement) which is based on Sloan's algorithm<a id="fnref:5" href="#fn:5" class="footnote-ref"><sup>5</sup></a>.
+Throughout these algorithms, the package utilizes the <em>half-edges</em> data structure.
+For further exploration, we recommend referring to the following <a href="https://mapbox.github.io/delaunator/">article</a>.</p>
+<p>Currently, the sequence of actions in the implementation follows:</p>
+<div class="math">
+\[
+\begin{array}{c}
+\boxed{\text{Preprocessor}}\\
+\Downarrow\\
+\boxed{\text{Delaunay triangulation}}\\
+\Downarrow\\
+\boxed{\text{Edge constraints}}\\
+\Downarrow\\
+\boxed{\text{Planting holes}}\\
+\Downarrow\\
+\boxed{\text{Refine mesh}}\\
+\Downarrow\\
+\boxed{\text{Postprocessor}}\\
+\end{array}
+\]</div>
+<h2 id="bibliography">Bibliography</h2>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>J. Ruppert. &quot;A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation&quot;. <a href="https://doi.org/10.1006/jagm.1995.1021"><em>J. Algorithms</em> 18(3):548-585 (1995)</a>.<a href="#fnref:1" class="footnote-back-ref">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p>A. Bowyer. &quot;Computing Dirichlet tessellations&quot;. <a href="https://doi.org/10.1093%2Fcomjnl%2F24.2.162"><em>Comput. J.</em> 24 (2): 162–166 (1981)</a>.<a href="#fnref:2" class="footnote-back-ref">&#8617;</a></p>
+</li>
+<li id="fn:3">
+<p>D. F. Watson. &quot;Computing the n-dimensional Delaunay tessellation with application to Voronoi polytopes&quot;. <a href="https://doi.org/10.1093%2Fcomjnl%2F24.2.167"><em>Comput. J.</em> 24 (2): 167–172 (1981)</a>.<a href="#fnref:3" class="footnote-back-ref">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p>J. R. Shewchuk. &quot;Delaunay refinement algorithms for triangular mesh generation.&quot; <a href="https://doi.org/10.1016/S0925-7721(01)00047-5"><em>Comput. Geom.</em> 22.1-3 (2002)</a>.<a href="#fnref:4" class="footnote-back-ref">&#8617;</a></p>
+</li>
+<li id="fn:5">
+<p>S. W. Sloan. &quot;A fast algorithm for generating constrained Delaunay triangulations.&quot; <a href="https://doi.org/10.1016/0045-7949(93)90239-A"><em>Comput. Struct.</em> 47.3:441-450 (1993)</a>.<a href="#fnref:5" class="footnote-back-ref">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+    .hljs {
+        background: #f5f5f5;
+    }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </body>
+</html>

@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Preprocessor | BurstTriangulator </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Preprocessor | BurstTriangulator ">
+    
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.svg" alt="BurstTriangulator">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+                <!-- Added by me -->
+                <div style="margin-right: 15px;"><a href="https://github.com/andywiecko/BurstTriangulator/"><i class="fa fa-github" style="font-size:30px; color: white"></i></a></div>
+              </form>
+            </div>
+          </div>
+        </nav>        <div class="subnav navbar navbar-default">
+            <div class="container" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div class="container hide-when-search" id="breadcrumb">
+                 <ul class="breadcrumb">
+                   <li></li>
+                 </ul>
+                </div>
+                <div class="container" style="
+                    width: 80px;
+                    line-height: 40px;
+                "><b>v2.5.0</b></div>
+          </div>
+        </div>      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="preprocessor">Preprocessor</h1>
+
+<p>Triangulation for <em>non-uniform</em> data can be demanding, and a few algorithm steps may get stuck if the data is not preprocessed properly.
+It is highly recommended that the user prepares the input data on their own; however, this project provides a few built-in methods.</p>
+<table>
+<thead>
+<tr>
+<th><a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.Preprocessor.html"><code>Preprocessor</code></a></th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>Default, no effect.</td>
+</tr>
+<tr>
+<td>COM</td>
+<td>Transforms input into normalized local space, i.e. [-1, 1] box.</td>
+</tr>
+<tr>
+<td><a href="#pca-transformation">PCA</a></td>
+<td>Transforms input into normalized coordinate systems obtained with <em>principal component analysis</em>.</td>
+</tr>
+</tbody>
+</table>
+<p>To use one of the following preprocessors, use the corresponding settings:</p>
+<pre><code class="lang-csharp">triangulator.Settings.Preprocessor = Triangulator.Preprocessor.COM;
+</code></pre>
+<h2 id="pca-transformation">PCA transformation</h2>
+<p>This algorithm can help in situations when the Sloan algorithm gets stuck.
+The transformation can be applied using the following steps:</p>
+<ol>
+<li>Calculate com: <span class="math">\(\mu = \displaystyle\frac1n\sum_{i=1}^n x_i\)</span>.</li>
+<li>Transform points: <span class="math">\(x_i \to x_i -\mu\)</span>.</li>
+<li>Calculate covariance matrix: <span class="math">\(\text{cov} = \frac1n\sum_i x_i x_i^{\mathsf T}\)</span>.</li>
+<li>Solve eigenproblem for <span class="math">\(\text{cov}\)</span>: <span class="math">\(\text{cov}u_i =v_i u_i\)</span>.</li>
+<li>Transform points using matrix <span class="math">\(U = [u_i]\)</span>: <span class="math">\(x_i \to U^{\mathsf T} .x_i\)</span>.</li>
+<li>Calculate vector center <span class="math">\(c = \frac12[\max(x_i) + \min(x_i)]\)</span> and vector scale <span class="math">\(s=2/[\max(x_i) - \min(x_i)]\)</span>, where <span class="math">\(\min\)</span>, <span class="math">\(\max\)</span>, and &quot;<span class="math">\(/\)</span>&quot; are component wise operators.</li>
+<li>Transform points: <span class="math">\(x_i \to  s (x_i-c)\)</span>, assuming component wise multiplication.</li>
+</ol>
+<p>To summarize, the transformation is given by:</p>
+<div class="math">
+\[
+\boxed{x_i \to s[U^{\mathsf T}(x_i - \mu) - c]}
+\]</div>
+<p>and the inverse transformation:</p>
+<div class="math">
+\[
+\boxed{x_i \to U(x_i / s + c) + \mu}.
+\]</div>
+<div class="NOTE">
+<h5>Note</h5>
+<p>The PCA transformation does not preserve the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle.html#andywiecko_BurstTriangulator_Triangulator_RefinementThresholds_Angle"><code>RefinementThresholds.Angle</code></a> used for refinement.
+As a result, triangles can be classified as bad in the PCA local space.</p>
+</div>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+    .hljs {
+        background: #f5f5f5;
+    }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </body>
+</html>

@@ -13,24 +13,24 @@ references:
   commentId: T:andywiecko.BurstTriangulator.Triangulator
   fullName: andywiecko.BurstTriangulator.Triangulator
   nameWithType: Triangulator
-- uid: andywiecko.BurstTriangulator.Triangulator.#ctor(Allocator)
-  name: Triangulator(Allocator)
-  href: api/andywiecko.BurstTriangulator.Triangulator.-ctor.html#andywiecko_BurstTriangulator_Triangulator__ctor_Allocator_
-  commentId: M:andywiecko.BurstTriangulator.Triangulator.#ctor(Allocator)
-  name.vb: New(Allocator)
-  fullName: andywiecko.BurstTriangulator.Triangulator.Triangulator(Allocator)
-  fullName.vb: andywiecko.BurstTriangulator.Triangulator.New(Allocator)
-  nameWithType: Triangulator.Triangulator(Allocator)
-  nameWithType.vb: Triangulator.New(Allocator)
-- uid: andywiecko.BurstTriangulator.Triangulator.#ctor(System.Int32,Allocator)
+- uid: andywiecko.BurstTriangulator.Triangulator.#ctor(System.Int32,Unity.Collections.Allocator)
   name: Triangulator(int, Allocator)
-  href: api/andywiecko.BurstTriangulator.Triangulator.-ctor.html#andywiecko_BurstTriangulator_Triangulator__ctor_System_Int32_Allocator_
-  commentId: M:andywiecko.BurstTriangulator.Triangulator.#ctor(System.Int32,Allocator)
+  href: api/andywiecko.BurstTriangulator.Triangulator.-ctor.html#andywiecko_BurstTriangulator_Triangulator__ctor_System_Int32_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.Triangulator.#ctor(System.Int32,Unity.Collections.Allocator)
   name.vb: New(Integer, Allocator)
-  fullName: andywiecko.BurstTriangulator.Triangulator.Triangulator(int, Allocator)
-  fullName.vb: andywiecko.BurstTriangulator.Triangulator.New(Integer, Allocator)
+  fullName: andywiecko.BurstTriangulator.Triangulator.Triangulator(int, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator.New(Integer, Unity.Collections.Allocator)
   nameWithType: Triangulator.Triangulator(int, Allocator)
   nameWithType.vb: Triangulator.New(Integer, Allocator)
+- uid: andywiecko.BurstTriangulator.Triangulator.#ctor(Unity.Collections.Allocator)
+  name: Triangulator(Allocator)
+  href: api/andywiecko.BurstTriangulator.Triangulator.-ctor.html#andywiecko_BurstTriangulator_Triangulator__ctor_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.Triangulator.#ctor(Unity.Collections.Allocator)
+  name.vb: New(Allocator)
+  fullName: andywiecko.BurstTriangulator.Triangulator.Triangulator(Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator.New(Unity.Collections.Allocator)
+  nameWithType: Triangulator.Triangulator(Allocator)
+  nameWithType.vb: Triangulator.New(Allocator)
 - uid: andywiecko.BurstTriangulator.Triangulator.#ctor*
   name: Triangulator
   href: api/andywiecko.BurstTriangulator.Triangulator.-ctor.html
@@ -208,11 +208,11 @@ references:
   commentId: Overload:andywiecko.BurstTriangulator.Triangulator.Run
   fullName: andywiecko.BurstTriangulator.Triangulator.Run
   nameWithType: Triangulator.Run
-- uid: andywiecko.BurstTriangulator.Triangulator.Schedule(JobHandle)
+- uid: andywiecko.BurstTriangulator.Triangulator.Schedule(Unity.Jobs.JobHandle)
   name: Schedule(JobHandle)
-  href: api/andywiecko.BurstTriangulator.Triangulator.Schedule.html#andywiecko_BurstTriangulator_Triangulator_Schedule_JobHandle_
-  commentId: M:andywiecko.BurstTriangulator.Triangulator.Schedule(JobHandle)
-  fullName: andywiecko.BurstTriangulator.Triangulator.Schedule(JobHandle)
+  href: api/andywiecko.BurstTriangulator.Triangulator.Schedule.html#andywiecko_BurstTriangulator_Triangulator_Schedule_Unity_Jobs_JobHandle_
+  commentId: M:andywiecko.BurstTriangulator.Triangulator.Schedule(Unity.Jobs.JobHandle)
+  fullName: andywiecko.BurstTriangulator.Triangulator.Schedule(Unity.Jobs.JobHandle)
   nameWithType: Triangulator.Schedule(JobHandle)
 - uid: andywiecko.BurstTriangulator.Triangulator.Schedule*
   name: Schedule
@@ -400,3 +400,21 @@ references:
   commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
   fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
   nameWithType: Triangulator.TriangulationSettings.ValidateInput
+- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
+  name: Verbose
+  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_Verbose
+  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
+  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
+  nameWithType: Triangulator.TriangulationSettings.Verbose
+- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose*
+  name: Verbose
+  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose.html
+  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
+  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Verbose
+  nameWithType: Triangulator.TriangulationSettings.Verbose
+- uid: example-holes-and-boundaries
+  name: Holes and boundaries
+  href: manual/examples/holes-and-boundaries.html
+- uid: example-unity-jobs
+  name: Unity.Jobs support
+  href: manual/advanced/input-jobs.html
