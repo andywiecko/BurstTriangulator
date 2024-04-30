@@ -31,11 +31,16 @@ As an illustrative example, we present the triangulation of Lake Superior with v
 ## Benchmark
 
 The package utilizes the [`Burst`][burst] compiler, which generates highly optimized native code using LLVM.
-Below, you'll find a performance comparison (with Burst enabled) between `v2.0.0` and `v2.1.0`, as well as a comparison with [`delaunator-sharp`][delaunator-sharp]
- for *classic* Delaunay triangulation (without refinement or constraints).
+Below, you'll find a performance comparison for *classic* Delaunay triangulation (without refinement or constraints).
+between this package and a few alternatives:
+
+- [`delaunator-sharp`][delaunator-sharp]
+- [`CGALDotNet`][cgaldotnet]
+- [`Triangle.NET`][triangle-net]
+
 To see more benchmarks visit the [documentation][benchmark].
 
-![Delaunay Benchmark](Documentation~/images/benchmark-delaunay.png)
+![Delaunay Benchmark](Documentation~/images/benchmark.png)
 
 ## Quick start
 
@@ -77,4 +82,6 @@ Found a bug? Please open an issue. You can find a list of known issues [**here**
 [project]: https://github.com/andywiecko/BurstTriangulator/projects
 [burst]: https://docs.unity3d.com/Packages/com.unity.burst@1.8/
 [delaunator-sharp]: https://github.com/nol1fe/delaunator-sharp/
+[cgaldotnet]: https://github.com/Scrawk/CGALDotNet
+[triangle-net]: https://github.com/wo80/Triangle.NET
 [collections]: https://docs.unity3d.com/Packages/com.unity.collections@2.2
