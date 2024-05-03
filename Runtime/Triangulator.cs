@@ -231,6 +231,8 @@ namespace andywiecko.BurstTriangulator
         public class InputData
         {
             public NativeArray<float2> Positions { get; set; }
+            
+            public NativeArray<bool> IgnorePositions { get; set; }
             public NativeArray<int> ConstraintEdges { get; set; }
             public NativeArray<float2> HoleSeeds { get; set; }
         }
@@ -309,6 +311,8 @@ namespace andywiecko.BurstTriangulator
             {
                 public NativeArray<float2> Positions;
                 [NativeDisableContainerSafetyRestriction]
+                public NativeArray<bool> IgnorePositions;
+                [NativeDisableContainerSafetyRestriction]
                 public NativeArray<int> ConstraintEdges;
                 [NativeDisableContainerSafetyRestriction]
                 public NativeArray<float2> HoleSeeds;
@@ -336,6 +340,7 @@ namespace andywiecko.BurstTriangulator
                 input = new()
                 {
                     Positions = triangulator.Input.Positions,
+                    IgnorePositions = triangulator.Input.IgnorePositions,
                     ConstraintEdges = triangulator.Input.ConstraintEdges,
                     HoleSeeds = triangulator.Input.HoleSeeds,
                 };
@@ -397,6 +402,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     status = output.Status,
                     positions = localPositions.AsArray(),
+                    ignorePositions = input.IgnorePositions,
                     triangles = triangles,
                     halfedges = halfedges,
                     hullStart = int.MaxValue,
@@ -603,9 +609,11 @@ namespace andywiecko.BurstTriangulator
             public NativeList<int> triangles;
 
             public NativeList<int> halfedges;
-
+            
             [NativeDisableContainerSafetyRestriction]
-            private NativeArray<int> ids;
+            public NativeArray<bool> ignorePositions;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<int> ids;
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<float> dists;
             [NativeDisableContainerSafetyRestriction]
@@ -661,25 +669,29 @@ namespace andywiecko.BurstTriangulator
 
                 var min = (float2)float.MaxValue;
                 var max = (float2)float.MinValue;
-
+                
                 for (int i = 0; i < positions.Length; i++)
                 {
+                    if (ignorePositions.IsCreated && ignorePositions[i])
+                        continue;
+                    
                     var p = positions[i];
                     min = math.min(min, p);
                     max = math.max(max, p);
-                    ids[i] = i;
+                    ids.Add(i);
                 }
 
                 var center = 0.5f * (min + max);
 
                 int i0 = int.MaxValue, i1 = int.MaxValue, i2 = int.MaxValue;
                 var minDistSq = float.MaxValue;
-                for (int i = 0; i < positions.Length; i++)
+                for (int i = 0; i < ids.Length; i++)
                 {
-                    var distSq = math.distancesq(center, positions[i]);
+                    var id = ids[i];
+                    var distSq = math.distancesq(center, positions[id]);
                     if (distSq < minDistSq)
                     {
-                        i0 = i;
+                        i0 = id;
                         minDistSq = distSq;
                     }
                 }
@@ -688,13 +700,14 @@ namespace andywiecko.BurstTriangulator
                 var p0 = positions[i0];
 
                 minDistSq = float.MaxValue;
-                for (int i = 0; i < positions.Length; i++)
+                for (int i = 0; i < ids.Length; i++)
                 {
-                    if (i == i0) continue;
-                    var distSq = math.distancesq(p0, positions[i]);
+                    var id = ids[i];
+                    if (id == i0) continue;
+                    var distSq = math.distancesq(p0, positions[id]);
                     if (distSq < minDistSq)
                     {
-                        i1 = i;
+                        i1 = id;
                         minDistSq = distSq;
                     }
                 }
@@ -703,14 +716,15 @@ namespace andywiecko.BurstTriangulator
                 var p1 = positions[i1];
 
                 var minRadius = float.MaxValue;
-                for (int i = 0; i < positions.Length; i++)
+                for (int i = 0; i < ids.Length; i++)
                 {
-                    if (i == i0 || i == i1) continue;
-                    var p = positions[i];
+                    var id = ids[i];
+                    if (id == i0 || id == i1) continue;
+                    var p = positions[id];
                     var r = CircumRadiusSq(p0, p1, p);
                     if (r < minRadius)
                     {
-                        i2 = i;
+                        i2 = id;
                         minRadius = r;
                     }
                 }
@@ -739,9 +753,10 @@ namespace andywiecko.BurstTriangulator
 
                 // Sort all other vertices by their distance to the circumcenter of the initial triangle
                 c = CircumCenter(p0, p1, p2);
-                for (int i = 0; i < positions.Length; i++)
+                for (int i = 0; i < ids.Length; i++)
                 {
-                    dists[i] = math.distancesq(c, positions[i]);
+                    var id = ids[i];
+                    dists[id] = math.distancesq(c, positions[id]);
                 }
 
                 ids.Sort(new DistComparer(dists));
