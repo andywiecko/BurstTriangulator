@@ -1,4 +1,4 @@
-
+ 
 <p align="center"><img src="Documentation~/images/burst-triangulator-logo-light-mode.svg#gh-light-mode-only"/></p>
 <p align="center"><img src="Documentation~/images/burst-triangulator-logo-dark-mode.svg#gh-dark-mode-only"/></p>
 
