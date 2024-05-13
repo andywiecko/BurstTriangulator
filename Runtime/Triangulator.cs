@@ -669,7 +669,6 @@ namespace andywiecko.BurstTriangulator
 
                 var min = (float2)float.MaxValue;
                 var max = (float2)float.MinValue;
-                
                 for (int i = 0; i < positions.Length; i++)
                 {
                     if (ignorePositions.IsCreated && ignorePositions[i])
