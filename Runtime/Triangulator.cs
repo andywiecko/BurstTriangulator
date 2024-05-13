@@ -282,7 +282,17 @@ namespace andywiecko.BurstTriangulator
         /// <summary>
         /// Perform the job's Execute method immediately on the same thread.
         /// </summary>
-        public void Run() => Schedule().Complete(); // TODO
+        public void Run() {
+            Triangulate(Settings, new() {
+                Positions = Input.Positions,
+                ConstraintEdges = Input.ConstraintEdges,
+                HoleSeeds = Input.HoleSeeds,
+            }, new OutputData<float2> {
+                Positions = outputPositions,
+                Triangles = triangles,
+                Status = status,
+            });
+        }
 
         /// <summary>
         /// Schedule the job for execution on a worker thread.
@@ -307,40 +317,28 @@ namespace andywiecko.BurstTriangulator
             }, dependencies);
         }
 
-        public static JobHandle TriangulateAsync(TriangulationSettings settings, InputData<float2> input, OutputData<float2> output, JobHandle dependencies = default)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Triangulate(TriangulationSettings settings, InputData<float2> input, OutputData<float2> output)
         {
-            return new TriangulationJob<float2, float, FloatUtils>
-            {
-                preprocessor = settings.Preprocessor,
-                validateInput = settings.ValidateInput,
-                restoreBoundary = settings.RestoreBoundary,
-                refineMesh = settings.RefineMesh,
-                sloanMaxIters = settings.SloanMaxIters,
-                verbose = settings.Verbose,
-                concentricShellsParameter = settings.ConcentricShellsParameter,
-                refinementThresholdArea = settings.RefinementThresholds.Area,
-                refinementThresholdAngle = settings.RefinementThresholds.Angle,
-                input = input,
-                output = output
-            }.Schedule(dependencies);
+            new TriangulationJob<float2, float, FloatUtils>(settings, input, output).Run();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Triangulate(TriangulationSettings settings, InputData<int2> input, OutputData<int2> output)
+        {
+            new TriangulationJob<int2, ulong, IntUtils>(settings, input, output).Run();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static JobHandle TriangulateAsync(TriangulationSettings settings, InputData<float2> input, OutputData<float2> output, JobHandle dependencies = default)
+        {
+            return new TriangulationJob<float2, float, FloatUtils>(settings, input, output).Schedule(dependencies);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static JobHandle TriangulateAsync(TriangulationSettings settings, InputData<int2> input, OutputData<int2> output, JobHandle dependencies = default)
         {
-            return new TriangulationJob<int2, ulong, IntUtils>
-            {
-                preprocessor = settings.Preprocessor,
-                validateInput = settings.ValidateInput,
-                restoreBoundary = settings.RestoreBoundary,
-                refineMesh = settings.RefineMesh,
-                sloanMaxIters = settings.SloanMaxIters,
-                verbose = settings.Verbose,
-                concentricShellsParameter = settings.ConcentricShellsParameter,
-                refinementThresholdArea = (ulong)settings.RefinementThresholds.Area,
-                refinementThresholdAngle = settings.RefinementThresholds.Angle,
-                input = input,
-                output = output
-            }.Schedule(dependencies);
+            return new TriangulationJob<int2, ulong, IntUtils>(settings, input, output).Schedule(dependencies);
         }
 
         #region Jobs
@@ -382,6 +380,21 @@ namespace andywiecko.BurstTriangulator
             private static readonly ProfilerMarker MarkerPlantSeeds = new("PlantSeeds");
             private static readonly ProfilerMarker MarkerRefineMesh = new("RefineMesh");
             private static readonly ProfilerMarker MarkerInverseTransformation = new("InverseTransformation");
+
+            public TriangulationJob(TriangulationSettings settings, InputData<TCoord> input, OutputData<TCoord> output)
+            {
+                preprocessor = settings.Preprocessor;
+                validateInput = settings.ValidateInput;
+                restoreBoundary = settings.RestoreBoundary;
+                refineMesh = settings.RefineMesh;
+                sloanMaxIters = settings.SloanMaxIters;
+                verbose = settings.Verbose;
+                concentricShellsParameter = settings.ConcentricShellsParameter;
+                refinementThresholdArea = new TUtils().RoundToLengthSq(settings.RefinementThresholds.Area);
+                refinementThresholdAngle = settings.RefinementThresholds.Angle;
+                this.input = input;
+                this.output = output;
+            }
 
             private static void PreProcessInput(Preprocessor preprocessor, InputData<TCoord> input, OutputData<TCoord> output, out NativeList<TCoord> localPositions, out NativeArray<TCoord> localHoles, out AffineTransform2D localTransformation)
             {
@@ -2365,6 +2378,7 @@ namespace andywiecko.BurstTriangulator
         public float DistanceSq(float2 a, float2 b) => math.distancesq(a, b);
         public bool LengthSmaller (float lhs, float rhs) => lhs < rhs;
         public float MultiplyLengthSq (float lhs, float multiplier) => lhs * multiplier;
+        public float RoundToLengthSq (float value) => value;
         public float InfLengthSq => float.PositiveInfinity;
 
         public AffineTransform2D CalculatePCATransformation(NativeArray<float2> positions)
@@ -2547,6 +2561,7 @@ namespace andywiecko.BurstTriangulator
         public float Distance (int2 a, int2 b) => math.distance(a, b);
         public ulong DistanceSq(int2 a, int2 b) => (ulong)DotLong(a - b, a - b);
         public bool LengthSmaller (ulong lhs, ulong rhs) => lhs < rhs;
+        public ulong RoundToLengthSq (float value) => (ulong)System.Math.Round((double)value);
         public ulong MultiplyLengthSq (ulong lhs, float multiplier) {
             if (multiplier < 0) throw new ArgumentOutOfRangeException(nameof(multiplier), "Multiplier must be non-negative.");
             return (ulong)math.round(lhs * (double)multiplier);
@@ -2646,6 +2661,7 @@ namespace andywiecko.BurstTriangulator
         float Distance (TCoord a, TCoord b);
         TLengthSq DistanceSq(TCoord a, TCoord b);
         bool LengthSmaller (TLengthSq lhs, TLengthSq rhs);
+        TLengthSq RoundToLengthSq (float value);
         TLengthSq MultiplyLengthSq (TLengthSq lhs, float multiplier);
 
         AffineTransform2D CalculatePCATransformation(NativeArray<TCoord> positions);
