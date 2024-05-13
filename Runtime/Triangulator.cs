@@ -360,7 +360,7 @@ namespace andywiecko.BurstTriangulator
             public NativeReference<Status> Status;
         }
         [BurstCompile]
-        private struct TriangulationJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
+        private struct TriangulationJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : unmanaged, ICoordinateUtils<TCoord, TLengthSq>
         {
             public Preprocessor preprocessor;
             public bool validateInput;
@@ -545,7 +545,7 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct DelaunayTriangulator<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
+        private struct DelaunayTriangulator<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : unmanaged, ICoordinateUtils<TCoord, TLengthSq>
         {
             private struct DistComparer : IComparer<int>
             {
@@ -906,7 +906,7 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct ValidateInputConstraintEdges<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
+        private struct ValidateInputConstraintEdges<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : unmanaged, ICoordinateUtils<TCoord, TLengthSq>
         {
             [ReadOnly]
             public NativeArray<int> constraints;
@@ -1035,7 +1035,7 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct ConstrainEdgesJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
+        private struct ConstrainEdgesJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : unmanaged, ICoordinateUtils<TCoord, TLengthSq>
         {
             public NativeReference<Status> status;
             [ReadOnly]
@@ -1395,7 +1395,7 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct RefineMeshJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
+        private struct RefineMeshJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : unmanaged, ICoordinateUtils<TCoord, TLengthSq>
         {
             public TLengthSq maximumArea2;
             public float minimumAngle;
@@ -2039,7 +2039,7 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct SeedPlanter<TCoord, TLengthSq, TUtils> where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
+        private struct SeedPlanter<TCoord, TLengthSq, TUtils> where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : unmanaged, ICoordinateUtils<TCoord, TLengthSq>
         {
             private NativeReference<Status>.ReadOnly status;
             private NativeList<int> triangles;
