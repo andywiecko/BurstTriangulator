@@ -343,20 +343,41 @@ namespace andywiecko.BurstTriangulator
 
         #region Jobs
 
-        public struct InputData<TCoord> where TCoord : unmanaged
+        public struct InputData<TCoord> : IDisposable where TCoord : unmanaged
         {
             public NativeArray<TCoord> Positions;
             [NativeDisableContainerSafetyRestriction]
             public NativeArray<int> ConstraintEdges;
             [NativeDisableContainerSafetyRestriction]
             public NativeArray<TCoord> HoleSeeds;
+
+            public void Dispose()
+            {
+                Positions.Dispose();
+                ConstraintEdges.Dispose();
+                HoleSeeds.Dispose();
+            }
         }
 
-        public struct OutputData<TCoord> where TCoord : unmanaged {
+        public struct OutputData<TCoord> : IDisposable where TCoord : unmanaged {
             [NativeDisableContainerSafetyRestriction]
             public NativeList<TCoord> Positions;
             public NativeList<int> Triangles;
             public NativeReference<Status> Status;
+
+            public OutputData(Allocator allocator)
+            {
+                Positions = new NativeList<TCoord>(allocator);
+                Triangles = new NativeList<int>(allocator);
+                Status = new NativeReference<Status>(allocator);
+            }
+
+            public void Dispose ()
+            {
+                Positions.Dispose();
+                Triangles.Dispose();
+                Status.Dispose();
+            }
         }
         [BurstCompile]
         private struct TriangulationJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : unmanaged, ICoordinateUtils<TCoord, TLengthSq>
