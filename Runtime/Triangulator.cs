@@ -64,6 +64,7 @@ namespace andywiecko.BurstTriangulator
 
             public static bool operator ==(AffineTransform2D lhs, AffineTransform2D rhs) => lhs.Equals(rhs);
             public static bool operator !=(AffineTransform2D lhs, AffineTransform2D rhs) => !lhs.Equals(rhs);
+            public override int GetHashCode() => (rotScale.GetHashCode() * 397) ^ translation.GetHashCode();
             public override bool Equals(object obj) => obj is AffineTransform2D other && Equals(other);
             public bool Equals(AffineTransform2D other) => rotScale.Equals(other.rotScale) && translation.Equals(other.translation);
 
