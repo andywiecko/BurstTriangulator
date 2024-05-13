@@ -87,12 +87,12 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private readonly struct Circle<Coord, LengthSq>
+        private readonly struct Circle<TCoord, TLengthSq>
         {
-            public readonly Coord Center;
-            public readonly LengthSq RadiusSq;
-            public Circle(Coord center, LengthSq radiusSq) => (Center, RadiusSq) = (center, radiusSq);
-            public void Deconstruct(out Coord center, out LengthSq radiusSq) => (center, radiusSq) = (Center, RadiusSq);
+            public readonly TCoord Center;
+            public readonly TLengthSq RadiusSq;
+            public Circle(TCoord center, TLengthSq radiusSq) => (Center, RadiusSq) = (center, radiusSq);
+            public void Deconstruct(out TCoord center, out TLengthSq radiusSq) => (center, radiusSq) = (Center, RadiusSq);
         }
         #endregion
 
@@ -308,7 +308,7 @@ namespace andywiecko.BurstTriangulator
 
         public static JobHandle TriangulateAsync(TriangulationSettings settings, InputData<float2> input, OutputData<float2> output, JobHandle dependencies = default)
         {
-            return new TriangulationJob<float2, float, FloatCoordinateUtils>
+            return new TriangulationJob<float2, float, FloatUtils>
             {
                 preprocessor = settings.Preprocessor,
                 validateInput = settings.ValidateInput,
@@ -326,7 +326,7 @@ namespace andywiecko.BurstTriangulator
 
         public static JobHandle TriangulateAsync(TriangulationSettings settings, InputData<int2> input, OutputData<int2> output, JobHandle dependencies = default)
         {
-            return new TriangulationJob<int2, ulong, IntCoordinateUtils>
+            return new TriangulationJob<int2, ulong, IntUtils>
             {
                 preprocessor = settings.Preprocessor,
                 validateInput = settings.ValidateInput,
@@ -344,23 +344,23 @@ namespace andywiecko.BurstTriangulator
 
         #region Jobs
 
-        public struct InputData<Coord> where Coord : unmanaged
+        public struct InputData<TCoord> where TCoord : unmanaged
         {
-            public NativeArray<Coord> Positions;
+            public NativeArray<TCoord> Positions;
             [NativeDisableContainerSafetyRestriction]
             public NativeArray<int> ConstraintEdges;
             [NativeDisableContainerSafetyRestriction]
-            public NativeArray<Coord> HoleSeeds;
+            public NativeArray<TCoord> HoleSeeds;
         }
 
-        public struct OutputData<Coord> where Coord : unmanaged {
+        public struct OutputData<TCoord> where TCoord : unmanaged {
             [NativeDisableContainerSafetyRestriction]
-            public NativeList<Coord> Positions;
+            public NativeList<TCoord> Positions;
             public NativeList<int> Triangles;
             public NativeReference<Status> Status;
         }
         [BurstCompile]
-        private struct TriangulationJob<Coord, LengthSq, CoordinateUtils> : IJob where Coord : unmanaged where LengthSq : unmanaged, IComparable<LengthSq> where CoordinateUtils : ICoordinateUtils<Coord, LengthSq>, new()
+        private struct TriangulationJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
         {
             public Preprocessor preprocessor;
             public bool validateInput;
@@ -369,10 +369,10 @@ namespace andywiecko.BurstTriangulator
             public bool refineMesh;
             public int sloanMaxIters;
             public float concentricShellsParameter;
-            public LengthSq refinementThresholdArea;
+            public TLengthSq refinementThresholdArea;
             public float refinementThresholdAngle;
-            public InputData<Coord> input;
-            public OutputData<Coord> output;
+            public InputData<TCoord> input;
+            public OutputData<TCoord> output;
 
             private static readonly ProfilerMarker MarkerPreProcess = new("PreProcess");
             private static readonly ProfilerMarker MarkerValidateInput = new("ValidateInput");
@@ -382,18 +382,18 @@ namespace andywiecko.BurstTriangulator
             private static readonly ProfilerMarker MarkerRefineMesh = new("RefineMesh");
             private static readonly ProfilerMarker MarkerInverseTransformation = new("InverseTransformation");
 
-            private static void PreProcessInput(Preprocessor preprocessor, InputData<Coord> input, OutputData<Coord> output, out NativeList<Coord> localPositions, out NativeArray<Coord> localHoles, out AffineTransform2D localTransformation)
+            private static void PreProcessInput(Preprocessor preprocessor, InputData<TCoord> input, OutputData<TCoord> output, out NativeList<TCoord> localPositions, out NativeArray<TCoord> localHoles, out AffineTransform2D localTransformation)
             {
                 localPositions = output.Positions;
                 localPositions.ResizeUninitialized(input.Positions.Length);
                 if (preprocessor == Preprocessor.PCA || preprocessor == Preprocessor.COM)
                 {
-                    localTransformation = preprocessor == Preprocessor.PCA ? new CoordinateUtils().CalculatePCATransformation(input.Positions) : new CoordinateUtils().CalculateLocalTransformation(input.Positions);
-                    new CoordinateUtils().Transform(localTransformation, input.Positions, localPositions.AsArray());
+                    localTransformation = preprocessor == Preprocessor.PCA ? new TUtils().CalculatePCATransformation(input.Positions) : new TUtils().CalculateLocalTransformation(input.Positions);
+                    new TUtils().Transform(localTransformation, input.Positions, localPositions.AsArray());
                     if (input.HoleSeeds.IsCreated)
                     {
-                        localHoles = new NativeArray<Coord>(input.HoleSeeds.Length, Allocator.Temp);
-                        new CoordinateUtils().Transform(localTransformation, input.HoleSeeds, localHoles);
+                        localHoles = new NativeArray<TCoord>(input.HoleSeeds.Length, Allocator.Temp);
+                        new TUtils().Transform(localTransformation, input.HoleSeeds, localHoles);
                     }
                     else
                     {
@@ -432,7 +432,7 @@ namespace andywiecko.BurstTriangulator
                 MarkerDelaunayTriangulation.Begin();
                 using var halfedges = new NativeList<int>(localPositions.Length, Allocator.Temp);
                 var triangles = output.Triangles;
-                new DelaunayTriangulator<Coord, LengthSq, CoordinateUtils>
+                new DelaunayTriangulator<TCoord, TLengthSq, TUtils>
                 {
                     status = output.Status,
                     positions = localPositions.AsArray(),
@@ -447,7 +447,7 @@ namespace andywiecko.BurstTriangulator
                 if (input.ConstraintEdges.IsCreated)
                 {
                     MarkerConstrainEdges.Begin();
-                    new ConstrainEdgesJob<Coord, LengthSq, CoordinateUtils>
+                    new ConstrainEdgesJob<TCoord, TLengthSq, TUtils>
                     {
                         status = output.Status,
                         positions = localPositions.AsArray(),
@@ -463,7 +463,7 @@ namespace andywiecko.BurstTriangulator
                     if (localHoles.IsCreated || restoreBoundary)
                     {
                         MarkerPlantSeeds.Begin();
-                        var seedPlanter = new SeedPlanter<Coord, LengthSq, CoordinateUtils>(output.Status, triangles, localPositions, constrainedHalfedges, halfedges);
+                        var seedPlanter = new SeedPlanter<TCoord, TLengthSq, TUtils>(output.Status, triangles, localPositions, constrainedHalfedges, halfedges);
                         if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
                         if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
                         seedPlanter.Finish();
@@ -474,9 +474,9 @@ namespace andywiecko.BurstTriangulator
                 if (refineMesh && output.Status.Value == Status.OK)
                 {
                     MarkerRefineMesh.Begin();
-                    new RefineMeshJob<Coord, LengthSq, CoordinateUtils>()
+                    new RefineMeshJob<TCoord, TLengthSq, TUtils>()
                     {
-                        maximumArea2 = new CoordinateUtils().MultiplyLengthSq(refinementThresholdArea, 2 * localTransformation.areaScalingFactor),
+                        maximumArea2 = new TUtils().MultiplyLengthSq(refinementThresholdArea, 2 * localTransformation.areaScalingFactor),
                         minimumAngle = refinementThresholdAngle,
                         D = concentricShellsParameter,
                         triangles = triangles,
@@ -491,15 +491,15 @@ namespace andywiecko.BurstTriangulator
                 MarkerInverseTransformation.Begin();
                 if (preprocessor != Preprocessor.None)
                 {
-                    new CoordinateUtils().InverseTransform(localTransformation, localPositions.AsArray(), output.Positions.AsArray());
+                    new TUtils().InverseTransform(localTransformation, localPositions.AsArray(), output.Positions.AsArray());
                 }
                 MarkerInverseTransformation.End();
             }
 
-            private void ValidateInput(NativeArray<Coord> localPositions, NativeArray<int> constraintEdges, bool verbose)
+            private void ValidateInput(NativeArray<TCoord> localPositions, NativeArray<int> constraintEdges, bool verbose)
             {
                 ValidateInputPositions(localPositions, output.Status);
-                if (input.ConstraintEdges.IsCreated) new ValidateInputConstraintEdges<Coord, LengthSq, CoordinateUtils>
+                if (input.ConstraintEdges.IsCreated) new ValidateInputConstraintEdges<TCoord, TLengthSq, TUtils>
                 {
                     positions = localPositions,
                     constraints = constraintEdges,
@@ -508,7 +508,7 @@ namespace andywiecko.BurstTriangulator
                 }.Execute();
             }
 
-            private void ValidateInputPositions(NativeArray<Coord> positions, NativeReference<Status> status)
+            private void ValidateInputPositions(NativeArray<TCoord> positions, NativeReference<Status> status)
             {
                 if (positions.Length < 3)
                 {
@@ -519,7 +519,7 @@ namespace andywiecko.BurstTriangulator
                 for (int i = 0; i < positions.Length; i++)
                 {
                     var pi = positions[i];
-                    if (!new CoordinateUtils().IsValidCoordinate(pi))
+                    if (!new TUtils().IsValidCoordinate(pi))
                     {
                         Log($"[Triangulator]: Positions[{i}] does not contain finite value: {pi}!");
                         status.Value |= Status.ERR;
@@ -527,7 +527,7 @@ namespace andywiecko.BurstTriangulator
                     for (int j = i + 1; j < positions.Length; j++)
                     {
                         var pj = positions[j];
-                        if (new CoordinateUtils().Equals(pi, pj)) {
+                        if (new TUtils().Equals(pi, pj)) {
                             status.Value |= Status.ERR;
                             Log($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
                             return;
@@ -545,18 +545,18 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct DelaunayTriangulator<Coord, LengthSq, CoordinateUtils> : IJob where Coord : unmanaged where LengthSq : unmanaged, IComparable<LengthSq> where CoordinateUtils : ICoordinateUtils<Coord, LengthSq>, new()
+        private struct DelaunayTriangulator<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
         {
             private struct DistComparer : IComparer<int>
             {
-                private NativeArray<LengthSq> dist;
-                public DistComparer(NativeArray<LengthSq> dist) => this.dist = dist;
+                private NativeArray<TLengthSq> dist;
+                public DistComparer(NativeArray<TLengthSq> dist) => this.dist = dist;
                 public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
             }
 
             public NativeReference<Status> status;
             [ReadOnly]
-            public NativeArray<Coord> positions;
+            public NativeArray<TCoord> positions;
 
             public NativeList<int> triangles;
 
@@ -565,7 +565,7 @@ namespace andywiecko.BurstTriangulator
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<int> ids;
             [NativeDisableContainerSafetyRestriction]
-            private NativeArray<LengthSq> dists;
+            private NativeArray<TLengthSq> dists;
             [NativeDisableContainerSafetyRestriction]
             private NativeArray<int> hullNext;
             [NativeDisableContainerSafetyRestriction]
@@ -582,7 +582,7 @@ namespace andywiecko.BurstTriangulator
             private int hashSize;
             public bool verbose;
 
-            public Coord c;
+            public TCoord c;
 
             public void Execute()
             {
@@ -607,7 +607,7 @@ namespace andywiecko.BurstTriangulator
 
                 using var _EDGE_STACK = EDGE_STACK = new(512, Allocator.Temp);
 
-                new CoordinateUtils().BoundingBox(positions, out var min, out var max, out var center);
+                new TUtils().BoundingBox(positions, out var min, out var max, out var center);
 
                 for (int i = 0; i < positions.Length; i++)
                 {
@@ -615,11 +615,11 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 int i0 = int.MaxValue, i1 = int.MaxValue, i2 = int.MaxValue;
-                var minDistSq = new CoordinateUtils().InfLengthSq;
+                var minDistSq = new TUtils().InfLengthSq;
                 for (int i = 0; i < positions.Length; i++)
                 {
-                    var distSq = new CoordinateUtils().DistanceSq(center, positions[i]);
-                    if (new CoordinateUtils().LengthSmaller(distSq, minDistSq))
+                    var distSq = new TUtils().DistanceSq(center, positions[i]);
+                    if (new TUtils().LengthSmaller(distSq, minDistSq))
                     {
                         i0 = i;
                         minDistSq = distSq;
@@ -629,12 +629,12 @@ namespace andywiecko.BurstTriangulator
                 // Centermost vertex
                 var p0 = positions[i0];
 
-                minDistSq = new CoordinateUtils().InfLengthSq;
+                minDistSq = new TUtils().InfLengthSq;
                 for (int i = 0; i < positions.Length; i++)
                 {
                     if (i == i0) continue;
-                    var distSq = new CoordinateUtils().DistanceSq(p0, positions[i]);
-                    if (new CoordinateUtils().LengthSmaller(distSq, minDistSq))
+                    var distSq = new TUtils().DistanceSq(p0, positions[i]);
+                    if (new TUtils().LengthSmaller(distSq, minDistSq))
                     {
                         i1 = i;
                         minDistSq = distSq;
@@ -644,13 +644,13 @@ namespace andywiecko.BurstTriangulator
                 // Second closest to the center
                 var p1 = positions[i1];
 
-                var minRadius = new CoordinateUtils().InfLengthSq;
+                var minRadius = new TUtils().InfLengthSq;
                 for (int i = 0; i < positions.Length; i++)
                 {
                     if (i == i0 || i == i1) continue;
                     var p = positions[i];
-                    var r = new CoordinateUtils().CircumRadiusSq(p0, p1, p);
-                    if (new CoordinateUtils().LengthSmaller(r, minRadius))
+                    var r = new TUtils().CircumRadiusSq(p0, p1, p);
+                    if (new TUtils().LengthSmaller(r, minRadius))
                     {
                         i2 = i;
                         minRadius = r;
@@ -662,7 +662,7 @@ namespace andywiecko.BurstTriangulator
                 // are no other vertices inside this triangle.
                 var p2 = positions[i2];
 
-                if (minRadius.CompareTo(new CoordinateUtils().InfLengthSq) == 0)
+                if (minRadius.CompareTo(new TUtils().InfLengthSq) == 0)
                 {
                     if (verbose)
                     {
@@ -673,17 +673,17 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 // Swap the order of the vertices if the triangle is not oriented in the right direction
-                if (new CoordinateUtils().Orient2dFast(p0, p1, p2) < 0)
+                if (new TUtils().Orient2dFast(p0, p1, p2) < 0)
                 {
                     (i1, i2) = (i2, i1);
                     (p1, p2) = (p2, p1);
                 }
 
                 // Sort all other vertices by their distance to the circumcenter of the initial triangle
-                c = new CoordinateUtils().CircumCenter(p0, p1, p2);
+                c = new TUtils().CircumCenter(p0, p1, p2);
                 for (int i = 0; i < positions.Length; i++)
                 {
-                    dists[i] = new CoordinateUtils().DistanceSq(c, positions[i]);
+                    dists[i] = new TUtils().DistanceSq(c, positions[i]);
                 }
 
                 ids.Sort(new DistComparer(dists));
@@ -698,9 +698,9 @@ namespace andywiecko.BurstTriangulator
                 hullTri[i1] = 1;
                 hullTri[i2] = 2;
 
-                hullHash[new CoordinateUtils().HashKey(p0, c, hashSize)] = i0;
-                hullHash[new CoordinateUtils().HashKey(p1, c, hashSize)] = i1;
-                hullHash[new CoordinateUtils().HashKey(p2, c, hashSize)] = i2;
+                hullHash[new TUtils().HashKey(p0, c, hashSize)] = i0;
+                hullHash[new TUtils().HashKey(p1, c, hashSize)] = i1;
+                hullHash[new TUtils().HashKey(p2, c, hashSize)] = i2;
 
                 // Add the initial triangle
                 AddTriangle(i0, i1, i2, -1, -1, -1);
@@ -716,7 +716,7 @@ namespace andywiecko.BurstTriangulator
                     var start = 0;
                     for (var j = 0; j < hashSize; j++)
                     {
-                        var key = new CoordinateUtils().HashKey(p, c, hashSize);
+                        var key = new TUtils().HashKey(p, c, hashSize);
                         start = hullHash[(key + j) % hashSize];
                         if (start != -1 && start != hullNext[start]) break;
                     }
@@ -725,7 +725,7 @@ namespace andywiecko.BurstTriangulator
                     var e = start;
                     var q = hullNext[e];
 
-                    while (new CoordinateUtils().Orient2dFast(p, positions[e], positions[q]) >= 0)
+                    while (new TUtils().Orient2dFast(p, positions[e], positions[q]) >= 0)
                     {
                         e = q;
                         if (e == start)
@@ -751,7 +751,7 @@ namespace andywiecko.BurstTriangulator
                     q = hullNext[next];
 
                     // Walk forward through the hull, adding more triangles and flipping recursively
-                    while (new CoordinateUtils().Orient2dFast(p, positions[next], positions[q]) < 0)
+                    while (new TUtils().Orient2dFast(p, positions[next], positions[q]) < 0)
                     {
                         t = AddTriangle(next, i, q, hullTri[i], -1, hullTri[next]);
                         hullTri[i] = Legalize(t + 2);
@@ -766,7 +766,7 @@ namespace andywiecko.BurstTriangulator
                     {
                         q = hullPrev[e];
 
-                        while (new CoordinateUtils().Orient2dFast(p, positions[q], positions[e]) < 0)
+                        while (new TUtils().Orient2dFast(p, positions[q], positions[e]) < 0)
                         {
                             t = AddTriangle(q, i, e, -1, hullTri[e], hullTri[q]);
                             Legalize(t + 2);
@@ -783,8 +783,8 @@ namespace andywiecko.BurstTriangulator
                     hullNext[i] = next;
 
                     // Save the two new edges in the hash table
-                    hullHash[new CoordinateUtils().HashKey(p, c, hashSize)] = i;
-                    hullHash[new CoordinateUtils().HashKey(positions[e], c, hashSize)] = e;
+                    hullHash[new TUtils().HashKey(p, c, hashSize)] = i;
+                    hullHash[new TUtils().HashKey(positions[e], c, hashSize)] = e;
                 }
 
                 // Trim lists to their actual size
@@ -837,7 +837,7 @@ namespace andywiecko.BurstTriangulator
                     var pl = triangles[al];
                     var p1 = triangles[bl];
 
-                    var illegal = new CoordinateUtils().InCircle(positions[p0], positions[pr], positions[pl], positions[p1]);
+                    var illegal = new TUtils().InCircle(positions[p0], positions[pr], positions[pl], positions[p1]);
 
                     if (illegal)
                     {
@@ -906,12 +906,12 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct ValidateInputConstraintEdges<Coord, LengthSq, CoordinateUtils> : IJob where Coord : unmanaged where LengthSq : unmanaged, IComparable<LengthSq> where CoordinateUtils : ICoordinateUtils<Coord, LengthSq>, new()
+        private struct ValidateInputConstraintEdges<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
         {
             [ReadOnly]
             public NativeArray<int> constraints;
             [ReadOnly]
-            public NativeArray<Coord> positions;
+            public NativeArray<TCoord> positions;
             public NativeReference<Status> status;
             public bool verbose;
 
@@ -982,7 +982,7 @@ namespace andywiecko.BurstTriangulator
                     }
 
                     var p = positions[j];
-                    if (new CoordinateUtils().PointLineSegmentIntersection(p, a0, a1))
+                    if (new TUtils().PointLineSegmentIntersection(p, a0, a1))
                     {
                         Log($"[Triangulator]: ConstraintEdges[{i}] and Positions[{j}] are collinear!");
                         return false;
@@ -1025,7 +1025,7 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
-                if (new CoordinateUtils().EdgeEdgeIntersection(a0, a1, b0, b1))
+                if (new TUtils().EdgeEdgeIntersection(a0, a1, b0, b1))
                 {
                     Log($"[Triangulator]: ConstraintEdges[{i}] and [{j}] intersect!");
                     return false;
@@ -1035,11 +1035,11 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct ConstrainEdgesJob<Coord, LengthSq, CoordinateUtils> : IJob where Coord : unmanaged where LengthSq : unmanaged, IComparable<LengthSq> where CoordinateUtils : ICoordinateUtils<Coord, LengthSq>, new()
+        private struct ConstrainEdgesJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
         {
             public NativeReference<Status> status;
             [ReadOnly]
-            public NativeArray<Coord> positions;
+            public NativeArray<TCoord> positions;
             public NativeArray<int> triangles;
             [ReadOnly]
             public NativeArray<int> inputConstraintEdges;
@@ -1163,7 +1163,7 @@ namespace andywiecko.BurstTriangulator
                     var _q = triangles[h5];
 
                     var (p0, p1, p2, p3) = (positions[_i], positions[_q], positions[_j], positions[_p]);
-                    if (!new CoordinateUtils().IsConvexQuadrilateral(p0, p1, p2, p3))
+                    if (!new TUtils().IsConvexQuadrilateral(p0, p1, p2, p3))
                     {
                         unresolvedIntersections.Add(h0);
                         continue;
@@ -1241,7 +1241,7 @@ namespace andywiecko.BurstTriangulator
             {
                 var (a0, a1) = (positions[e1.x], positions[e1.y]);
                 var (b0, b1) = (positions[e2.x], positions[e2.y]);
-                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && new CoordinateUtils().EdgeEdgeIntersection(a0, a1, b0, b1);
+                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && new TUtils().EdgeEdgeIntersection(a0, a1, b0, b1);
             }
 
             private void CollectIntersections(int2 edge)
@@ -1395,19 +1395,19 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct RefineMeshJob<Coord, LengthSq, CoordinateUtils> : IJob where Coord : unmanaged where LengthSq : unmanaged, IComparable<LengthSq> where CoordinateUtils : ICoordinateUtils<Coord, LengthSq>, new()
+        private struct RefineMeshJob<TCoord, TLengthSq, TUtils> : IJob where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
         {
-            public LengthSq maximumArea2;
+            public TLengthSq maximumArea2;
             public float minimumAngle;
             public float D;
             public NativeList<int> triangles;
-            public NativeList<Coord> outputPositions;
+            public NativeList<TCoord> outputPositions;
             public NativeList<int> halfedges;
             public bool constrainBoundary;
             public NativeList<bool> constrainedHalfedges;
 
             [NativeDisableContainerSafetyRestriction]
-            private NativeList<Circle<Coord, LengthSq>> circles;
+            private NativeList<Circle<TCoord, TLengthSq>> circles;
             [NativeDisableContainerSafetyRestriction]
             private NativeQueue<int> trianglesQueue;
             [NativeDisableContainerSafetyRestriction]
@@ -1423,12 +1423,12 @@ namespace andywiecko.BurstTriangulator
             public void Execute()
             {
                 initialPointsCount = outputPositions.Length;
-                using var _circles = circles = new NativeList<Circle<Coord, LengthSq>>(triangles.Length / 3, Allocator.Temp);
+                using var _circles = circles = new NativeList<Circle<TCoord, TLengthSq>>(triangles.Length / 3, Allocator.Temp);
                 circles.Length = triangles.Length / 3;
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
                 {
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                    circles[tId] = new CoordinateUtils().CalculateCircumCircle(i, j, k, outputPositions.AsArray());
+                    circles[tId] = new TUtils().CalculateCircumCircle(i, j, k, outputPositions.AsArray());
                 }
 
                 if (constrainBoundary)
@@ -1507,7 +1507,7 @@ namespace andywiecko.BurstTriangulator
 
                 // TODO: Not quite sure what this method is supposed to do,
                 // but least this is mathematically equivalent.
-                return !new CoordinateUtils().IsAcuteAngle(p0, p2, p1);
+                return !new TUtils().IsAcuteAngle(p0, p2, p1);
             }
 
             private void SplitEdge(int he, NativeList<int> heQueue, NativeList<int> tQueue)
@@ -1515,7 +1515,7 @@ namespace andywiecko.BurstTriangulator
                 var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
                 var (e0, e1) = (outputPositions[i], outputPositions[j]);
 
-                Coord p;
+                TCoord p;
                 // Use midpoint method for:
                 // - the first segment split,
                 // - subsegment not made of input vertices.
@@ -1523,15 +1523,15 @@ namespace andywiecko.BurstTriangulator
                 if (i < initialPointsCount && j < initialPointsCount ||
                     i >= initialPointsCount && j >= initialPointsCount)
                 {
-                    p = new CoordinateUtils().Lerp(e0, e1, 0.5f);
+                    p = new TUtils().Lerp(e0, e1, 0.5f);
                 }
                 else
                 {
-                    var d = new CoordinateUtils().Distance(e0, e1);
+                    var d = new TUtils().Distance(e0, e1);
                     var k = (int)math.round(math.log2(0.5f * d / D));
                     var alpha = D / d * (1 << k);
                     alpha = i < initialPointsCount ? alpha : 1 - alpha;
-                    p = new CoordinateUtils().Lerp(e0, e1, alpha);
+                    p = new TUtils().Lerp(e0, e1, alpha);
                 }
 
                 constrainedHalfedges[he] = false;
@@ -1616,8 +1616,8 @@ namespace andywiecko.BurstTriangulator
             private bool IsBadTriangle(int tId)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                var area2 = new CoordinateUtils().Area2(i, j, k, outputPositions.AsArray());
-                return new CoordinateUtils().LengthSmaller(maximumArea2, area2) || AngleIsTooSmall(tId, minimumAngle);
+                var area2 = new TUtils().Area2(i, j, k, outputPositions.AsArray());
+                return new TUtils().LengthSmaller(maximumArea2, area2) || AngleIsTooSmall(tId, minimumAngle);
             }
 
             private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue)
@@ -1636,7 +1636,7 @@ namespace andywiecko.BurstTriangulator
                     if (halfedges[he] == -1 || i < j)
                     {
                         var (p0, p1) = (outputPositions[i], outputPositions[j]);
-                        if (!new CoordinateUtils().IsAcuteAngle(p0, c.Center, p1))
+                        if (!new TUtils().IsAcuteAngle(p0, c.Center, p1))
                         {
                             edges.Add(he);
                         }
@@ -1650,8 +1650,8 @@ namespace andywiecko.BurstTriangulator
                 else
                 {
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                    var area2 = new CoordinateUtils().Area2(i, j, k, outputPositions.AsArray());
-                    if (new CoordinateUtils().LengthSmaller(maximumArea2, area2)) // TODO split permited
+                    var area2 = new TUtils().Area2(i, j, k, outputPositions.AsArray());
+                    if (new TUtils().LengthSmaller(maximumArea2, area2)) // TODO split permited
                     {
                         foreach (var he in edges.AsReadOnly())
                         {
@@ -1671,10 +1671,10 @@ namespace andywiecko.BurstTriangulator
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 var (pA, pB, pC) = (outputPositions[i], outputPositions[j], outputPositions[k]);
-                return new CoordinateUtils().SmallestInnerAngleIsBelowThreshold(pA, pB, pC, minimumAngle);
+                return new TUtils().SmallestInnerAngleIsBelowThreshold(pA, pB, pC, minimumAngle);
             }
 
-            private int UnsafeInsertPointCommon(Coord p, int initTriangle)
+            private int UnsafeInsertPointCommon(TCoord p, int initTriangle)
             {
                 var pId = outputPositions.Length;
                 outputPositions.Add(p);
@@ -1695,7 +1695,7 @@ namespace andywiecko.BurstTriangulator
                 return pId;
             }
 
-            private void UnsafeInsertPointBulk(Coord p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+            private void UnsafeInsertPointBulk(TCoord p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
             {
                 var pId = UnsafeInsertPointCommon(p, initTriangle);
                 BuildStarPolygon();
@@ -1703,7 +1703,7 @@ namespace andywiecko.BurstTriangulator
                 BuildNewTrianglesForStar(pId, heQueue, tQueue);
             }
 
-            private void UnsafeInsertPointBoundary(Coord p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+            private void UnsafeInsertPointBoundary(TCoord p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
             {
                 var pId = UnsafeInsertPointCommon(p, initHe / 3);
                 BuildAmphitheaterPolygon(initHe);
@@ -1711,7 +1711,7 @@ namespace andywiecko.BurstTriangulator
                 BuildNewTrianglesForAmphitheater(pId, heQueue, tQueue);
             }
 
-            private void RecalculateBadTriangles(Coord p)
+            private void RecalculateBadTriangles(TCoord p)
             {
                 while (trianglesQueue.TryDequeue(out var tId))
                 {
@@ -1721,7 +1721,7 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private void VisitEdge(Coord p, int t0)
+            private void VisitEdge(TCoord p, int t0)
             {
                 var he = halfedges[t0];
                 if (he == -1 || constrainedHalfedges[he])
@@ -1736,7 +1736,7 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 var circle = circles[otherId];
-                if (new CoordinateUtils().DistanceSq(circle.Center, p).CompareTo(circle.RadiusSq) <= 0)
+                if (new TUtils().DistanceSq(circle.Center, p).CompareTo(circle.RadiusSq) <= 0)
                 {
                     badTriangles.Add(otherId);
                     trianglesQueue.Enqueue(otherId);
@@ -1914,12 +1914,12 @@ namespace andywiecko.BurstTriangulator
                     triangles[initTriangles + 3 * i + 0] = pId;
                     triangles[initTriangles + 3 * i + 1] = pathPoints[i];
                     triangles[initTriangles + 3 * i + 2] = pathPoints[i + 1];
-                    circles[initTriangles / 3 + i] = new CoordinateUtils().CalculateCircumCircle(pId, pathPoints[i], pathPoints[i + 1], outputPositions.AsArray());
+                    circles[initTriangles / 3 + i] = new TUtils().CalculateCircumCircle(pId, pathPoints[i], pathPoints[i + 1], outputPositions.AsArray());
                 }
                 triangles[^3] = pId;
                 triangles[^2] = pathPoints[^1];
                 triangles[^1] = pathPoints[0];
-                circles[^1] = new CoordinateUtils().CalculateCircumCircle(pId, pathPoints[^1], pathPoints[0], outputPositions.AsArray());
+                circles[^1] = new TUtils().CalculateCircumCircle(pId, pathPoints[^1], pathPoints[0], outputPositions.AsArray());
 
                 // Build half-edges for inserted point pId.
                 var heOffset = halfedges.Length;
@@ -1983,7 +1983,7 @@ namespace andywiecko.BurstTriangulator
                     triangles[initTriangles + 3 * i + 0] = pId;
                     triangles[initTriangles + 3 * i + 1] = pathPoints[i];
                     triangles[initTriangles + 3 * i + 2] = pathPoints[i + 1];
-                    circles[initTriangles / 3 + i] = new CoordinateUtils().CalculateCircumCircle(pId, pathPoints[i], pathPoints[i + 1], outputPositions.AsArray());
+                    circles[initTriangles / 3 + i] = new TUtils().CalculateCircumCircle(pId, pathPoints[i], pathPoints[i + 1], outputPositions.AsArray());
                 }
 
                 // Build half-edges for inserted point pId.
@@ -2039,12 +2039,12 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private struct SeedPlanter<Coord, LengthSq, CoordinateUtils> where Coord : unmanaged where LengthSq : unmanaged, IComparable<LengthSq> where CoordinateUtils : ICoordinateUtils<Coord, LengthSq>, new()
+        private struct SeedPlanter<TCoord, TLengthSq, TUtils> where TCoord : unmanaged where TLengthSq : unmanaged, IComparable<TLengthSq> where TUtils : ICoordinateUtils<TCoord, TLengthSq>, new()
         {
             private NativeReference<Status>.ReadOnly status;
             private NativeList<int> triangles;
             [ReadOnly]
-            private NativeList<Coord> positions;
+            private NativeList<TCoord> positions;
             private NativeList<bool> constrainedHalfedges;
             private NativeList<int> halfedges;
 
@@ -2052,7 +2052,7 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> badTriangles;
             private NativeQueue<int> trianglesQueue;
 
-            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<Coord> positions, NativeList<bool> constrainedHalfedges, NativeList<int> halfedges)
+            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<TCoord> positions, NativeList<bool> constrainedHalfedges, NativeList<int> halfedges)
             {
                 this.status = status;
                 this.triangles = triangles;
@@ -2078,7 +2078,7 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            public void PlantHoleSeeds(NativeArray<Coord> holeSeeds)
+            public void PlantHoleSeeds(NativeArray<TCoord> holeSeeds)
             {
                 foreach (var s in holeSeeds)
                 {
@@ -2141,13 +2141,13 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private int FindTriangle(Coord p)
+            private int FindTriangle(TCoord p)
             {
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
                 {
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     var (a, b, c) = (positions[i], positions[j], positions[k]);
-                    if (new CoordinateUtils().PointInsideTriangle(p, a, b, c))
+                    if (new TUtils().PointInsideTriangle(p, a, b, c))
                     {
                         return tId;
                     }
@@ -2256,7 +2256,7 @@ namespace andywiecko.BurstTriangulator
     #endregion
 
 #region Utils
-    struct FloatCoordinateUtils : ICoordinateUtils<float2, float> {
+    struct FloatUtils : ICoordinateUtils<float2, float> {
         public float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
 
         /// <summary>
@@ -2460,7 +2460,7 @@ namespace andywiecko.BurstTriangulator
         }
     }
 
-    struct IntCoordinateUtils : ICoordinateUtils<int2, ulong> {
+    struct IntUtils : ICoordinateUtils<int2, ulong> {
         static long DotLong (int2 a, int2 b) => (long)a.x * (long)b.x + (long)a.y * (long)b.y;
         /// <summary>
         /// True iff the angle ∠abc is acute.
@@ -2627,38 +2627,38 @@ namespace andywiecko.BurstTriangulator
         }
     }
 
-    interface ICoordinateUtils<Coord, LengthSq> where Coord : unmanaged where LengthSq : unmanaged {
-        bool IsAcuteAngle(Coord a, Coord b, Coord c);
-        LengthSq Area2(int i, int j, int k, ReadOnlySpan<Coord> positions);
-        Circle<Coord, LengthSq> CalculateCircumCircle(int i, int j, int k, NativeArray<Coord> positions);
-        LengthSq CircumRadiusSq(Coord a, Coord b, Coord c);
-        Coord CircumCenter(Coord a, Coord b, Coord c);
-        int Orient2dFast(Coord a, Coord b, Coord c);
-        bool InCircle(Coord a, Coord b, Coord c, Coord p);
-        bool PointInsideTriangle(Coord p, Coord a, Coord b, Coord c);
-        bool PointLineSegmentIntersection(Coord a, Coord b0, Coord b1);
-        bool EdgeEdgeIntersection(Coord a0, Coord a1, Coord b0, Coord b1);
-        bool IsConvexQuadrilateral(Coord a, Coord b, Coord c, Coord d);
+    interface ICoordinateUtils<TCoord, TLengthSq> where TCoord : unmanaged where TLengthSq : unmanaged {
+        bool IsAcuteAngle(TCoord a, TCoord b, TCoord c);
+        TLengthSq Area2(int i, int j, int k, ReadOnlySpan<TCoord> positions);
+        Circle<TCoord, TLengthSq> CalculateCircumCircle(int i, int j, int k, NativeArray<TCoord> positions);
+        TLengthSq CircumRadiusSq(TCoord a, TCoord b, TCoord c);
+        TCoord CircumCenter(TCoord a, TCoord b, TCoord c);
+        int Orient2dFast(TCoord a, TCoord b, TCoord c);
+        bool InCircle(TCoord a, TCoord b, TCoord c, TCoord p);
+        bool PointInsideTriangle(TCoord p, TCoord a, TCoord b, TCoord c);
+        bool PointLineSegmentIntersection(TCoord a, TCoord b0, TCoord b1);
+        bool EdgeEdgeIntersection(TCoord a0, TCoord a1, TCoord b0, TCoord b1);
+        bool IsConvexQuadrilateral(TCoord a, TCoord b, TCoord c, TCoord d);
 
-        bool IsValidCoordinate(Coord coord);
-        bool Equals (Coord a, Coord b);
-        float Distance (Coord a, Coord b);
-        LengthSq DistanceSq(Coord a, Coord b);
-        bool LengthSmaller (LengthSq lhs, LengthSq rhs);
-        LengthSq MultiplyLengthSq (LengthSq lhs, float multiplier);
+        bool IsValidCoordinate(TCoord coord);
+        bool Equals (TCoord a, TCoord b);
+        float Distance (TCoord a, TCoord b);
+        TLengthSq DistanceSq(TCoord a, TCoord b);
+        bool LengthSmaller (TLengthSq lhs, TLengthSq rhs);
+        TLengthSq MultiplyLengthSq (TLengthSq lhs, float multiplier);
 
-        AffineTransform2D CalculatePCATransformation(NativeArray<Coord> positions);
-        AffineTransform2D CalculateLocalTransformation(NativeArray<Coord> positions);
+        AffineTransform2D CalculatePCATransformation(NativeArray<TCoord> positions);
+        AffineTransform2D CalculateLocalTransformation(NativeArray<TCoord> positions);
 
-        void Transform (AffineTransform2D transform, NativeArray<Coord> points);
-        void Transform (AffineTransform2D transform, [NoAlias] NativeArray<Coord> points, [NoAlias] NativeArray<Coord> outPoints);
-        void InverseTransform (AffineTransform2D transform, [NoAlias] NativeArray<Coord> points, [NoAlias] NativeArray<Coord> outPoints);
-        LengthSq InfLengthSq { get; }
+        void Transform (AffineTransform2D transform, NativeArray<TCoord> points);
+        void Transform (AffineTransform2D transform, [NoAlias] NativeArray<TCoord> points, [NoAlias] NativeArray<TCoord> outPoints);
+        void InverseTransform (AffineTransform2D transform, [NoAlias] NativeArray<TCoord> points, [NoAlias] NativeArray<TCoord> outPoints);
+        TLengthSq InfLengthSq { get; }
 
-        int HashKey(Coord p, Coord origin, int hashSize);
-        void BoundingBox (ReadOnlySpan<Coord> positions, out Coord min, out Coord max, out Coord center);
-        Coord Lerp(Coord a, Coord b, float t);
-        bool SmallestInnerAngleIsBelowThreshold(Coord a, Coord b, Coord c, float angleThreshold);
+        int HashKey(TCoord p, TCoord origin, int hashSize);
+        void BoundingBox (ReadOnlySpan<TCoord> positions, out TCoord min, out TCoord max, out TCoord center);
+        TCoord Lerp(TCoord a, TCoord b, float t);
+        bool SmallestInnerAngleIsBelowThreshold(TCoord a, TCoord b, TCoord c, float angleThreshold);
     }
 
     private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
