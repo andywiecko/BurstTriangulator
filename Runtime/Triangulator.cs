@@ -231,7 +231,6 @@ namespace andywiecko.BurstTriangulator
         public class InputData
         {
             public NativeArray<float2> Positions { get; set; }
-            
             public NativeArray<bool> IgnorePositions { get; set; }
             public NativeArray<int> ConstraintEdges { get; set; }
             public NativeArray<float2> HoleSeeds { get; set; }
