@@ -241,6 +241,7 @@ namespace andywiecko.BurstTriangulator
             public NativeList<float2> Positions;
             public NativeList<int> Triangles;
             public NativeReference<Status> Status;
+            public NativeList<int> Halfedges;
         }
 
         public TriangulationSettings Settings { get; } = new();
@@ -250,10 +251,12 @@ namespace andywiecko.BurstTriangulator
             Positions = outputPositions,
             Triangles = triangles,
             Status = status,
+            Halfedges = halfedges,
         };
 
         private NativeList<float2> outputPositions;
         private NativeList<int> triangles;
+        private NativeList<int> halfedges;
         private NativeReference<Status> status;
 
         public Triangulator(int capacity, Allocator allocator)
@@ -261,6 +264,7 @@ namespace andywiecko.BurstTriangulator
             outputPositions = new(capacity, allocator);
             triangles = new(6 * capacity, allocator);
             status = new(Status.OK, allocator);
+            halfedges = new NativeList<int>(6 * capacity, allocator);
         }
 
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
@@ -270,6 +274,7 @@ namespace andywiecko.BurstTriangulator
             outputPositions.Dispose();
             triangles.Dispose();
             status.Dispose();
+            halfedges.Dispose();
         }
 
         /// <summary>
@@ -377,6 +382,7 @@ namespace andywiecko.BurstTriangulator
                 output.Status.Value = Status.OK;
                 output.Triangles.Clear();
                 output.Positions.Clear();
+                output.Halfedges.Clear();
 
                 MarkerPreProcess.Begin();
                 PreProcessInput(preprocessor, input, output, out var localPositions, out var localHoles, out var localTransformation);
@@ -390,7 +396,6 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 MarkerDelaunayTriangulation.Begin();
-                using var halfedges = new NativeList<int>(localPositions.Length, Allocator.Temp);
                 var triangles = output.Triangles;
                 using var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
                 new DelaunayTriangulationJob
@@ -398,14 +403,14 @@ namespace andywiecko.BurstTriangulator
                     status = output.Status,
                     positions = localPositions.AsArray(),
                     triangles = triangles,
-                    halfedges = halfedges,
+                    halfedges = output.Halfedges,
                     hullStart = int.MaxValue,
                     c = float.MaxValue,
                     verbose = verbose,
                 }.Execute();
                 MarkerDelaunayTriangulation.End();
 
-                using var constrainedHalfedges = new NativeList<bool>(Allocator.Temp) { Length = halfedges.Length };
+                using var constrainedHalfedges = new NativeList<bool>(Allocator.Temp) { Length = output.Halfedges.Length };
                 if (input.ConstraintEdges.IsCreated)
                 {
                     MarkerConstrainEdges.Begin();
@@ -415,7 +420,7 @@ namespace andywiecko.BurstTriangulator
                         positions = localPositions.AsArray(),
                         triangles = triangles.AsArray(),
                         inputConstraintEdges = input.ConstraintEdges,
-                        halfedges = halfedges,
+                        halfedges = output.Halfedges,
                         maxIters = sloanMaxIters,
                         verbose = verbose,
                         constrainedHalfedges = constrainedHalfedges,
@@ -425,7 +430,7 @@ namespace andywiecko.BurstTriangulator
                     if (localHoles.IsCreated || restoreBoundary)
                     {
                         MarkerPlantSeeds.Begin();
-                        var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, constrainedHalfedges, halfedges);
+                        var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, constrainedHalfedges, output.Halfedges);
                         if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
                         if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
                         seedPlanter.Finish();
@@ -444,7 +449,7 @@ namespace andywiecko.BurstTriangulator
                         triangles = triangles,
                         outputPositions = localPositions,
                         circles = circles,
-                        halfedges = halfedges,
+                        halfedges = output.Halfedges,
                         constrainBoundary = !input.ConstraintEdges.IsCreated || !restoreBoundary,
                         constrainedHalfedges = constrainedHalfedges,
                     }.Execute();

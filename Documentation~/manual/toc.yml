@@ -29,6 +29,8 @@ items:
     href: advanced/input-jobs.md
   - name: Preprocessor
     href: advanced/preprocessor.md
+  - name: Halfedges
+    href: advanced/output-halfedges.md
 
 - name: Benchmark
   href: benchmark.md
