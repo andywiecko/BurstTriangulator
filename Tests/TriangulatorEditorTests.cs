@@ -2011,5 +2011,114 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.Triangles, Has.Length.GreaterThan(0));
             triangulator.Draw();
         }
+
+        [Test]
+        public void HalfedgesForDelaunayTriangulationTest()
+        {
+            using var positions = new NativeArray<float2>(new float2[]
+            {
+                new(0),
+                new(1),
+                new(2),
+                new(3),
+                new(4),
+                new(4, 0),
+            }, Allocator.Persistent);
+            using var triangulator = new Triangulator(Allocator.Persistent)
+            {
+                Input = { Positions = positions },
+            };
+
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Halfedges.AsArray(), Is.EqualTo(new[]
+            {
+                8, 5, -1, -1, -1, 1, -1, 11, 0, -1, -1, 7,
+            }));
+        }
+
+        [Test]
+        public void HalfedgesForConstrainedDelaunayTriangulationTest()
+        {
+            using var positions = new NativeArray<float2>(new float2[]
+            {
+                new(0, 0),
+                new(1, 0),
+                new(2, 0),
+                new(2, 1),
+                new(1, 1),
+                new(0, 1),
+            }, Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new[] { 0, 3 }, Allocator.Persistent);
+            using var triangulator = new Triangulator(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints },
+            };
+
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Halfedges.AsArray(), Is.EqualTo(new[]
+            {
+                -1, 10, 8, -1, -1, 11, -1, -1, 2, -1, 1, 5,
+            }));
+        }
+
+        [Test]
+        public void HalfedgesForConstrainedDelaunayTriangulationWithHolesTest()
+        {
+            using var positions = new NativeArray<float2>(new float2[]
+            {
+                math.float2(0, 0),
+                math.float2(4, 0),
+                math.float2(2, 4),
+                math.float2(2, 2),
+                math.float2(1.5f, 1),
+                math.float2(2.5f, 1),
+            }, Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new[]
+            {
+                0, 1, 1, 2, 2, 0,
+                3, 4, 4, 5, 5, 3,
+            }, Allocator.Persistent);
+            using var holes = new NativeArray<float2>(new[] { math.float2(2, 1.5f) }, Allocator.Persistent);
+            using var triangulator = new Triangulator(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints, HoleSeeds = holes }
+            };
+
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Halfedges.AsArray(), Is.EqualTo(new[]
+            {
+                11, 3, -1, 1, 14, -1, 17, 9, -1, 7, -1, 0, -1, 15, 4, 13, -1, 6,
+            }));
+        }
+
+        [Test]
+        public void HalfedgesForTriangulationWithRefinementTest()
+        {
+            using var positions = new NativeArray<float2>(new float2[]
+            {
+                math.float2(0, 0),
+                math.float2(2, 0),
+                math.float2(1, 2),
+            }, Allocator.Persistent);
+            using var triangulator = new Triangulator(Allocator.Persistent)
+            {
+                Input = { Positions = positions },
+                Settings = { RefineMesh = true, RefinementThresholds =
+                {
+                    Angle = math.radians(0),
+                    Area = 0.5f
+                }}
+            };
+
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Halfedges.AsArray(), Is.EqualTo(new[]
+            {
+                -1, -1, 7, -1, -1, 6, 5, 2, 9, 8, -1, -1,
+            }));
+        }
     }
 }
