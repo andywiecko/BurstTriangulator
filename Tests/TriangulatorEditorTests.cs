@@ -2120,5 +2120,36 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 -1, -1, 7, -1, -1, 6, 5, 2, 9, 8, -1, -1,
             }));
         }
+
+        [Test]
+        public void AutoHolesTest()
+        {
+            using var positions = new NativeArray<float2>(LakeSuperior.Points, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
+            using var holes = new NativeArray<float2>(LakeSuperior.Holes, Allocator.Persistent);
+
+            using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
+            {
+                Input = {
+                    Positions = positions,
+                    ConstraintEdges = constraintEdges,
+                },
+                Settings = { AutoHolesAndBoundary = true, },
+            };
+
+            triangulator.Run();
+
+            var autoResult = triangulator.Output.Triangles.AsArray().ToArray();
+
+            triangulator.Draw(color: UnityEngine.Color.green);
+
+            triangulator.Input.HoleSeeds = holes;
+            triangulator.Settings.AutoHolesAndBoundary = false;
+            triangulator.Settings.RestoreBoundary = true;
+            triangulator.Run();
+
+            var manualResult = triangulator.Output.Triangles.AsArray().ToArray();
+            Assert.That(autoResult, Is.EqualTo(manualResult));
+        }
     }
 }

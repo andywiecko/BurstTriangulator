@@ -138,6 +138,16 @@ namespace andywiecko.BurstTriangulator
         [Serializable]
         public class TriangulationSettings
         {
+            /// <summary>
+            /// If set to <see langword="true"/>, holes and boundaries will be created automatically 
+            /// depending on the provided <see cref="InputData.ConstraintEdges"/>.
+            /// </summary>
+            /// <remarks>
+            /// The current implementation detects only <em>1-level islands</em>.
+            /// It will not detect holes in <em>solid</em> meshes inside other holes.
+            /// </remarks>
+            [field: SerializeField]
+            public bool AutoHolesAndBoundary { get; set; } = false;
             [field: SerializeField]
             public RefinementThresholds RefinementThresholds { get; } = new();
             /// <summary>
@@ -298,6 +308,7 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct TriangulationJob : IJob
         {
+            private readonly bool autoHoles;
             public Preprocessor preprocessor;
             public bool validateInput;
             public bool verbose;
@@ -329,6 +340,7 @@ namespace andywiecko.BurstTriangulator
 
             public TriangulationJob(Triangulator triangulator)
             {
+                autoHoles = triangulator.Settings.AutoHolesAndBoundary;
                 preprocessor = triangulator.Settings.Preprocessor;
                 validateInput = triangulator.Settings.ValidateInput;
                 verbose = triangulator.Settings.Verbose;
@@ -427,10 +439,11 @@ namespace andywiecko.BurstTriangulator
                     }.Execute();
                     MarkerConstrainEdges.End();
 
-                    if (localHoles.IsCreated || restoreBoundary)
+                    if (localHoles.IsCreated || restoreBoundary || autoHoles)
                     {
                         MarkerPlantSeeds.Begin();
                         var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, constrainedHalfedges, output.Halfedges);
+                        if (autoHoles) seedPlanter.PlantAuto();
                         if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
                         if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
                         seedPlanter.Finish();
@@ -531,7 +544,7 @@ namespace andywiecko.BurstTriangulator
 
             private void Log(string message)
             {
-                if(verbose)
+                if (verbose)
                 {
                     Debug.LogError(message);
                 }
@@ -2336,6 +2349,117 @@ namespace andywiecko.BurstTriangulator
 
                 pointToHalfedge.Dispose();
                 pointsOffset.Dispose();
+            }
+
+            public void PlantAuto()
+            {
+                using var heQueue = new NativeQueue<int>(Allocator.Temp);
+                using var loop = new NativeList<int>(Allocator.Temp);
+                var heVisited = new NativeArray<bool>(halfedges.Length, Allocator.Temp);
+
+                // Build boundary loop: 1st sweep
+                for (int he = 0; he < halfedges.Length; he++)
+                {
+                    if (halfedges[he] != -1 || heVisited[he])
+                    {
+                        continue;
+                    }
+
+                    heVisited[he] = true;
+                    if (constrainedHalfedges[he])
+                    {
+                        loop.Add(he);
+                    }
+                    else
+                    {
+                        if (!visitedTriangles[he / 3])
+                        {
+                            PlantSeed(he / 3);
+                        }
+
+                        var h2 = NextHalfedge(he);
+                        if (halfedges[h2] != -1 && !heVisited[h2])
+                        {
+                            heQueue.Enqueue(h2);
+                            heVisited[h2] = true;
+                        }
+
+                        var h3 = NextHalfedge(h2);
+                        if (halfedges[h3] != -1 && !heVisited[h3])
+                        {
+                            heQueue.Enqueue(h3);
+                            heVisited[h3] = true;
+                        }
+                    }
+                }
+
+                // Build boundary loop: 2nd sweep
+                while (heQueue.TryDequeue(out var he))
+                {
+                    var ohe = halfedges[he]; // valid `ohe` should always exist, -1 are eliminated in the 1st sweep!
+                    if (constrainedHalfedges[ohe])
+                    {
+                        heVisited[ohe] = true;
+                        loop.Add(ohe);
+                    }
+                    else
+                    {
+                        ohe = NextHalfedge(ohe);
+                        if (!heVisited[ohe])
+                        {
+                            heQueue.Enqueue(ohe);
+                        }
+
+                        ohe = NextHalfedge(ohe);
+                        if (!heVisited[ohe])
+                        {
+                            heQueue.Enqueue(ohe);
+                        }
+                    }
+                }
+
+                // Plant seeds for non visited constraint edges
+                foreach (var h1 in loop)
+                {
+                    var h2 = NextHalfedge(h1);
+                    if (!heVisited[h2])
+                    {
+                        heQueue.Enqueue(h2);
+                        heVisited[h2] = true;
+                    }
+
+                    var h3 = NextHalfedge(h2);
+                    if (!heVisited[h3])
+                    {
+                        heQueue.Enqueue(h3);
+                        heVisited[h3] = true;
+                    }
+                }
+                while (heQueue.TryDequeue(out var he))
+                {
+                    var ohe = halfedges[he];
+                    if (constrainedHalfedges[ohe])
+                    {
+                        heVisited[ohe] = true;
+                        PlantSeed(ohe / 3);
+                    }
+                    else
+                    {
+                        ohe = NextHalfedge(ohe);
+                        if (!heVisited[ohe])
+                        {
+                            heQueue.Enqueue(ohe);
+                            heVisited[ohe] = true;
+                        }
+
+                        ohe = NextHalfedge(ohe);
+                        if (!heVisited[ohe])
+                        {
+                            heQueue.Enqueue(ohe);
+                            heVisited[ohe] = true;
+                        }
+                    }
+                }
             }
         }
         #endregion
