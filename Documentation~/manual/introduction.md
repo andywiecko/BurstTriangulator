@@ -34,7 +34,7 @@ As previously mentioned, Delaunay triangulation produces the convex hull of poin
 
 ## Holes
 
-Triangulation can be extended to support meshes with holes. Additional input data, such as hole seeds $\{h_i\}$, is required for this purpose. Although automation of this process is currently not implemented, it is planned for future development.
+Triangulation can be extended to support meshes with holes by using additional input data, such as hole seeds $\{h_i\}$. However, this process can be automated in some cases, so the holes do not need to be present in the input data.
 
 Hole seeds act as starting points for a removal process resembling the spread of a virus. Starting from the triangle containing $h_i$, neighboring triangles are successively removed until the search reaches the constraint edge. In this process, constraint edges act as barriers, preventing further propagation of the removal.
 

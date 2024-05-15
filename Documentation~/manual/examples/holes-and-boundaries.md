@@ -55,6 +55,32 @@ triangulator.Run();
 var triangles = triangulator.Output.Triangles;
 ```
 
+## Auto holes and boundary
+
+The package also provides automatic hole detection and restoring boundary. If one sets [`Settings.AutoHolesAndBoundary`][auto-holes-property] to `true`, then holes will be created automatically depending on the provided constraints.
+
+```csharp
+using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var constraintEdges = new NativeArray<int>(..., Allocator.Persistent);
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+  Input = { 
+    Positions = positions,
+    ConstraintEdges = constraintEdges,
+  },
+  Settings = { AutoHolesAndBoundary = true, },
+};
+
+triangulator.Run();
+
+var triangles = triangulator.Output.Triangles;
+```
+
+> [!WARNING]  
+> The current implementation of [`AutoHolesAndBoundary`][auto-holes-property] detects only *1-level islands*.
+> It will not detect holes in *solid* meshes inside other holes.
+
 [restore-boundary-property]: xref:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary
 [input-constraint-edges]: xref:andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges
 [input-positions]: xref:andywiecko.BurstTriangulator.Triangulator.InputData.Positions
+[auto-holes-property]: xref:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.AutoHolesAndBoundary
