@@ -2194,11 +2194,31 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                using var potentialPointsToRemove = new NativeHashSet<int>(initialCapacity: 3 * badTriangles.Length, Allocator.Temp);
+                badTriangles.Sort();
+                for (int t = badTriangles.Length - 1; t >= 0; t--)
+                {
+                    var tId = badTriangles[t];
+                    triangles.RemoveAt(3 * tId + 2);
+                    triangles.RemoveAt(3 * tId + 1);
+                    triangles.RemoveAt(3 * tId + 0);
+                    circles.RemoveAt(tId);
+                    RemoveHalfedge(3 * tId + 2, 0);
+                    RemoveHalfedge(3 * tId + 1, 1);
+                    RemoveHalfedge(3 * tId + 0, 2);
+                    constrainedHalfedges.RemoveAt(3 * tId + 2);
+                    constrainedHalfedges.RemoveAt(3 * tId + 1);
+                    constrainedHalfedges.RemoveAt(3 * tId + 0);
 
-                GeneratePotentialPointsToRemove(initialPointsCount: positions.Length, potentialPointsToRemove, badTriangles);
-                RemoveBadTriangles(badTriangles);
-                RemovePoints(potentialPointsToRemove);
+                    for (int i = 3 * tId; i < halfedges.Length; i++)
+                    {
+                        var he = halfedges[i];
+                        if (he == -1)
+                        {
+                            continue;
+                        }
+                        halfedges[he < 3 * tId ? he : i] -= 3;
+                    }
+                }
             }
 
             private void PlantSeed(int tId)
@@ -2253,50 +2273,6 @@ namespace andywiecko.BurstTriangulator
                 return -1;
             }
 
-            private void GeneratePotentialPointsToRemove(int initialPointsCount, NativeHashSet<int> potentialPointsToRemove, NativeList<int> badTriangles)
-            {
-                foreach (var tId in badTriangles.AsReadOnly())
-                {
-                    for (int t = 0; t < 3; t++)
-                    {
-                        var id = triangles[3 * tId + t];
-                        if (id >= initialPointsCount)
-                        {
-                            potentialPointsToRemove.Add(id);
-                        }
-                    }
-                }
-            }
-
-            private void RemoveBadTriangles(NativeList<int> badTriangles)
-            {
-                badTriangles.Sort();
-                for (int t = badTriangles.Length - 1; t >= 0; t--)
-                {
-                    var tId = badTriangles[t];
-                    triangles.RemoveAt(3 * tId + 2);
-                    triangles.RemoveAt(3 * tId + 1);
-                    triangles.RemoveAt(3 * tId + 0);
-                    circles.RemoveAt(tId);
-                    RemoveHalfedge(3 * tId + 2, 0);
-                    RemoveHalfedge(3 * tId + 1, 1);
-                    RemoveHalfedge(3 * tId + 0, 2);
-                    constrainedHalfedges.RemoveAt(3 * tId + 2);
-                    constrainedHalfedges.RemoveAt(3 * tId + 1);
-                    constrainedHalfedges.RemoveAt(3 * tId + 0);
-
-                    for (int i = 3 * tId; i < halfedges.Length; i++)
-                    {
-                        var he = halfedges[i];
-                        if (he == -1)
-                        {
-                            continue;
-                        }
-                        halfedges[he < 3 * tId ? he : i] -= 3;
-                    }
-                }
-            }
-
             private void RemoveHalfedge(int he, int offset)
             {
                 var ohe = halfedges[he];
@@ -2306,49 +2282,6 @@ namespace andywiecko.BurstTriangulator
                     halfedges[o] = -1;
                 }
                 halfedges.RemoveAt(he);
-            }
-
-            private void RemovePoints(NativeHashSet<int> potentialPointsToRemove)
-            {
-                var pointToHalfedge = new NativeArray<int>(positions.Length, Allocator.Temp);
-                var pointsOffset = new NativeArray<int>(positions.Length, Allocator.Temp);
-
-                for (int i = 0; i < pointToHalfedge.Length; i++)
-                {
-                    pointToHalfedge[i] = -1;
-                }
-
-                for (int i = 0; i < triangles.Length; i++)
-                {
-                    pointToHalfedge[triangles[i]] = i;
-                }
-
-                // TODO: Optimize
-                using var tmp = potentialPointsToRemove.ToNativeArray(Allocator.Temp);
-                tmp.Sort();
-
-                for (int p = tmp.Length - 1; p >= 0; p--)
-                {
-                    var pId = tmp[p];
-                    if (pointToHalfedge[pId] != -1)
-                    {
-                        continue;
-                    }
-
-                    positions.RemoveAt(pId);
-                    for (int i = pId; i < pointsOffset.Length; i++)
-                    {
-                        pointsOffset[i]--;
-                    }
-                }
-
-                for (int i = 0; i < triangles.Length; i++)
-                {
-                    triangles[i] += pointsOffset[triangles[i]];
-                }
-
-                pointToHalfedge.Dispose();
-                pointsOffset.Dispose();
             }
 
             public void PlantAuto()
