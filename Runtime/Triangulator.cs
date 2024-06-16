@@ -254,6 +254,28 @@ namespace andywiecko.BurstTriangulator
             public NativeList<int> Halfedges;
         }
 
+        private readonly struct Args
+        {
+            public readonly Preprocessor Preprocessor;
+            public readonly int SloanMaxIters;
+            public readonly bool AutoHolesAndBoundary, RefineMesh, RestoreBoundary, ValidateInput, Verbose;
+            public readonly float ConcentricShellsParameter, RefinementThresholdAngle, RefinementThresholdArea;
+
+            public Args(TriangulationSettings settings)
+            {
+                AutoHolesAndBoundary = settings.AutoHolesAndBoundary;
+                ConcentricShellsParameter = settings.ConcentricShellsParameter;
+                Preprocessor = settings.Preprocessor;
+                RefineMesh = settings.RefineMesh;
+                RestoreBoundary = settings.RestoreBoundary;
+                SloanMaxIters = settings.SloanMaxIters;
+                ValidateInput = settings.ValidateInput;
+                Verbose = settings.Verbose;
+                RefinementThresholdAngle = settings.RefinementThresholds.Angle;
+                RefinementThresholdArea = settings.RefinementThresholds.Area;
+            }
+        }
+
         public TriangulationSettings Settings { get; } = new();
         public InputData Input { get; set; } = new();
         public OutputData Output => new()
@@ -308,16 +330,7 @@ namespace andywiecko.BurstTriangulator
         [BurstCompile]
         private struct TriangulationJob : IJob
         {
-            private readonly bool autoHoles;
-            public Preprocessor preprocessor;
-            public bool validateInput;
-            public bool verbose;
-            public bool restoreBoundary;
-            public bool refineMesh;
-            public int sloanMaxIters;
-            public float concentricShellsParameter;
-            public float refinementThresholdArea;
-            public float refinementThresholdAngle;
+            private readonly Args args;
             public InputData input;
             public OutputData output;
 
@@ -340,16 +353,7 @@ namespace andywiecko.BurstTriangulator
 
             public TriangulationJob(Triangulator triangulator)
             {
-                autoHoles = triangulator.Settings.AutoHolesAndBoundary;
-                preprocessor = triangulator.Settings.Preprocessor;
-                validateInput = triangulator.Settings.ValidateInput;
-                verbose = triangulator.Settings.Verbose;
-                restoreBoundary = triangulator.Settings.RestoreBoundary;
-                refineMesh = triangulator.Settings.RefineMesh;
-                sloanMaxIters = triangulator.Settings.SloanMaxIters;
-                concentricShellsParameter = triangulator.Settings.ConcentricShellsParameter;
-                refinementThresholdArea = triangulator.Settings.RefinementThresholds.Area;
-                refinementThresholdAngle = triangulator.Settings.RefinementThresholds.Angle;
+                args = new(triangulator.Settings);
                 input = new()
                 {
                     Positions = triangulator.Input.Positions,
@@ -397,13 +401,13 @@ namespace andywiecko.BurstTriangulator
                 output.Halfedges.Clear();
 
                 MarkerPreProcess.Begin();
-                PreProcessInput(preprocessor, input, output, out var localPositions, out var localHoles, out var localTransformation);
+                PreProcessInput(args.Preprocessor, input, output, out var localPositions, out var localHoles, out var localTransformation);
                 MarkerPreProcess.End();
 
-                if (validateInput)
+                if (args.ValidateInput)
                 {
                     MarkerValidateInput.Begin();
-                    ValidateInput(localPositions.AsArray(), input.ConstraintEdges, verbose);
+                    ValidateInput(localPositions.AsArray(), input.ConstraintEdges, args.Verbose);
                     MarkerValidateInput.End();
                 }
 
@@ -418,7 +422,7 @@ namespace andywiecko.BurstTriangulator
                     halfedges = output.Halfedges,
                     hullStart = int.MaxValue,
                     c = float.MaxValue,
-                    verbose = verbose,
+                    verbose = args.Verbose,
                 }.Execute();
                 MarkerDelaunayTriangulation.End();
 
@@ -433,44 +437,44 @@ namespace andywiecko.BurstTriangulator
                         triangles = triangles.AsArray(),
                         inputConstraintEdges = input.ConstraintEdges,
                         halfedges = output.Halfedges,
-                        maxIters = sloanMaxIters,
-                        verbose = verbose,
+                        maxIters = args.SloanMaxIters,
+                        verbose = args.Verbose,
                         constrainedHalfedges = constrainedHalfedges,
                     }.Execute();
                     MarkerConstrainEdges.End();
 
-                    if (localHoles.IsCreated || restoreBoundary || autoHoles)
+                    if (localHoles.IsCreated || args.RestoreBoundary || args.AutoHolesAndBoundary)
                     {
                         MarkerPlantSeeds.Begin();
                         var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, constrainedHalfedges, output.Halfedges);
-                        if (autoHoles) seedPlanter.PlantAuto();
+                        if (args.AutoHolesAndBoundary) seedPlanter.PlantAuto();
                         if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
-                        if (restoreBoundary) seedPlanter.PlantBoundarySeeds();
+                        if (args.RestoreBoundary) seedPlanter.PlantBoundarySeeds();
                         seedPlanter.Finish();
                         MarkerPlantSeeds.End();
                     }
                 }
 
-                if (refineMesh && output.Status.Value == Status.OK)
+                if (args.RefineMesh && output.Status.Value == Status.OK)
                 {
                     MarkerRefineMesh.Begin();
                     new RefineMeshJob()
                     {
-                        maximumArea2 = 2 * refinementThresholdArea * localTransformation.areaScalingFactor,
-                        minimumAngle = refinementThresholdAngle,
-                        D = concentricShellsParameter,
+                        maximumArea2 = 2 * args.RefinementThresholdArea * localTransformation.areaScalingFactor,
+                        minimumAngle = args.RefinementThresholdAngle,
+                        D = args.ConcentricShellsParameter,
                         triangles = triangles,
                         outputPositions = localPositions,
                         circles = circles,
                         halfedges = output.Halfedges,
-                        constrainBoundary = !input.ConstraintEdges.IsCreated || !restoreBoundary,
+                        constrainBoundary = !input.ConstraintEdges.IsCreated || !args.RestoreBoundary,
                         constrainedHalfedges = constrainedHalfedges,
                     }.Execute();
                     MarkerRefineMesh.End();
                 }
 
                 MarkerInverseTransformation.Begin();
-                if (preprocessor != Preprocessor.None)
+                if (args.Preprocessor != Preprocessor.None)
                 {
                     localTransformation.InverseTransform(localPositions.AsArray(), output.Positions.AsArray());
                 }
