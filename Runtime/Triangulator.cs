@@ -151,51 +151,11 @@ namespace andywiecko.BurstTriangulator
             [field: SerializeField]
             public RefinementThresholds RefinementThresholds { get; } = new();
             /// <summary>
-            /// Batch count used in parallel jobs.
-            /// </summary>
-            [Obsolete("This property is no longer used. Setting it has no effect.")]
-            public int BatchCount { get; set; } = 64;
-            /// <summary>
-            /// Specifies the refinement angle constraint for triangles in the resulting mesh.
-            /// Ensures that no triangle in the mesh has an angle smaller than the specified value.
-            /// <para>Expressed in <em>radians</em>.</para>
-            /// </summary>
-            /// <remarks>
-            /// <b>Obsolete:</b> use <see cref="RefinementThresholds.Angle"/> instead.
-            /// </remarks>
-            [Obsolete]
-            public float MinimumAngle { get => RefinementThresholds.Angle; set => RefinementThresholds.Angle = value; }
-            /// <summary>
-            /// Specifies the maximum area constraint for triangles in the resulting mesh refinement.
-            /// Ensures that no triangle in the mesh has an area larger than the specified value.
-            /// </summary>
-            /// <remarks>
-            /// <b>Obsolete:</b> use <see cref="RefinementThresholds.Area"/> instead.
-            /// </remarks>
-            [Obsolete]
-            public float MinimumArea { get => RefinementThresholds.Area; set => RefinementThresholds.Area = value; }
-            /// <summary>
-            /// Specifies the maximum area constraint for triangles in the resulting mesh refinement.
-            /// Ensures that no triangle in the mesh has an area larger than the specified value.
-            /// </summary>
-            /// <remarks>
-            /// <b>Obsolete:</b> use <see cref="RefinementThresholds.Area"/> instead.
-            /// </remarks>
-            [Obsolete]
-            public float MaximumArea { get => RefinementThresholds.Area; set => RefinementThresholds.Area = value; }
-            /// <summary>
             /// If <see langword="true"/> refines mesh using
             /// <see href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</see>.
             /// </summary>
             [field: SerializeField]
             public bool RefineMesh { get; set; } = false;
-            /// <summary>
-            /// If <see langword="true"/> constrains edges defined in <see cref="Input"/> using
-            /// <see href="https://www.sciencedirect.com/science/article/abs/pii/004579499390239A">Sloan's algorithm</see>.
-            /// </summary>
-            [Obsolete("To enable constraint edges, pass the corresponding array into Input.ConstraintEdges. Setting this property is unnecessary.", error: true)]
-            [field: SerializeField]
-            public bool ConstrainEdges { get; set; } = false;
             /// <summary>
             /// If set to <see langword="true"/>, the provided data will be validated before running the triangulation procedure.
             /// Input positions, as well as input constraints, have a few restrictions.
