@@ -13,7 +13,6 @@ namespace andywiecko.BurstTriangulator
 {
     public class Triangulator : IDisposable
     {
-        #region Primitives
         /// <summary>
         /// Supports rotation, scaling and translation in 2D.
         /// </summary>
@@ -25,11 +24,17 @@ namespace andywiecko.BurstTriangulator
         /// </remarks>
         private readonly struct AffineTransform2D
         {
+            public static readonly AffineTransform2D Identity = new(float2x2.identity, float2.zero);
+
+            /// <summary>
+            /// How much the area of a shape is scaled by this transformation
+            /// </summary>
+            public float AreaScalingFactor => math.abs(math.determinant(rotScale));
+
             private readonly float2x2 rotScale;
             private readonly float2 translation;
 
             public AffineTransform2D(float2x2 rotScale, float2 translation) => (this.rotScale, this.translation) = (rotScale, translation);
-            public static readonly AffineTransform2D identity = new(float2x2.identity, float2.zero);
 
             // R(T + x) = y
             // Solve for x:
@@ -37,12 +42,7 @@ namespace andywiecko.BurstTriangulator
             // x = R^-1(y) - T
             // x = R^-1(y - RT)
             // x = R^-1(y + R(-T))
-            public AffineTransform2D inverse => new(math.inverse(rotScale), math.mul(rotScale, -translation));
-
-            /// <summary>
-            /// How much the area of a shape is scaled by this transformation
-            /// </summary>
-            public float areaScalingFactor => math.abs(math.determinant(rotScale));
+            public AffineTransform2D Inverse() => new(math.inverse(rotScale), math.mul(rotScale, -translation));
 
             public float2 Transform(float2 point) => math.mul(rotScale, point + translation);
             public static AffineTransform2D Translate(float2 offset) => new(float2x2.identity, offset);
@@ -50,7 +50,7 @@ namespace andywiecko.BurstTriangulator
             public static AffineTransform2D Rotate(float2x2 rotation) => new(rotation, float2.zero);
 
             // result.transform(x) = R1(T1 + R2(x + T2)) = R1((T1 + R2T2) + R2(x)) = R1*R2(R2^-1(T1 + R2T2) + x) = R1*R2(R2^-1(T1) + T2 + x)
-            public static AffineTransform2D operator *(AffineTransform2D lhs, AffineTransform2D rhs) => new AffineTransform2D(
+            public static AffineTransform2D operator *(AffineTransform2D lhs, AffineTransform2D rhs) => new(
                 math.mul(lhs.rotScale, rhs.rotScale),
                 math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
             );
@@ -88,7 +88,6 @@ namespace andywiecko.BurstTriangulator
             public Circle(float2 center, float radius) => (Center, Radius, RadiusSq) = (center, radius, radius * radius);
             public void Deconstruct(out float2 center, out float radius) => (center, radius) = (Center, Radius);
         }
-        #endregion
 
         public enum Status
         {
@@ -286,7 +285,6 @@ namespace andywiecko.BurstTriangulator
         /// </returns>
         public JobHandle Schedule(JobHandle dependencies = default) => new TriangulationJob(this).Schedule(dependencies);
 
-        #region Jobs
         [BurstCompile]
         private struct TriangulationJob : IJob
         {
@@ -303,13 +301,15 @@ namespace andywiecko.BurstTriangulator
                 public NativeArray<float2> HoleSeeds;
             }
 
-            private static readonly ProfilerMarker MarkerPreProcess = new("PreProcess");
-            private static readonly ProfilerMarker MarkerValidateInput = new("ValidateInput");
-            private static readonly ProfilerMarker MarkerDelaunayTriangulation = new("DelaunayTriangulation");
-            private static readonly ProfilerMarker MarkerConstrainEdges = new("ConstrainEdges");
-            private static readonly ProfilerMarker MarkerPlantSeeds = new("PlantSeeds");
-            private static readonly ProfilerMarker MarkerRefineMesh = new("RefineMesh");
-            private static readonly ProfilerMarker MarkerInverseTransformation = new("InverseTransformation");
+            private static readonly ProfilerMarker
+                MarkerPreProcess = new("PreProcess"),
+                MarkerValidateInput = new("ValidateInput"),
+                MarkerDelaunayTriangulation = new("DelaunayTriangulation"),
+                MarkerConstrainEdges = new("ConstrainEdges"),
+                MarkerPlantSeeds = new("PlantSeeds"),
+                MarkerRefineMesh = new("RefineMesh"),
+                MarkerInverseTransformation = new("InverseTransformation")
+            ;
 
             public TriangulationJob(Triangulator triangulator)
             {
@@ -345,11 +345,11 @@ namespace andywiecko.BurstTriangulator
                 {
                     localPositions.CopyFrom(input.Positions);
                     localHoles = input.HoleSeeds;
-                    localTransformation = AffineTransform2D.identity;
+                    localTransformation = AffineTransform2D.Identity;
                 }
                 else
                 {
-                    throw new System.ArgumentException();
+                    throw new ArgumentException();
                 }
             }
 
@@ -420,7 +420,7 @@ namespace andywiecko.BurstTriangulator
                     MarkerRefineMesh.Begin();
                     new RefineMeshJob()
                     {
-                        maximumArea2 = 2 * args.RefinementThresholdArea * localTransformation.areaScalingFactor,
+                        maximumArea2 = 2 * args.RefinementThresholdArea * localTransformation.AreaScalingFactor,
                         minimumAngle = args.RefinementThresholdAngle,
                         D = args.ConcentricShellsParameter,
                         triangles = triangles,
@@ -506,7 +506,7 @@ namespace andywiecko.BurstTriangulator
                 return true;
             }
 
-            private void Log(string message)
+            private readonly void Log(string message)
             {
                 if (verbose)
                 {
@@ -978,7 +978,7 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
-            private void Log(string message)
+            private readonly void Log(string message)
             {
                 if (verbose)
                 {
@@ -2359,9 +2359,7 @@ namespace andywiecko.BurstTriangulator
                 }
             }
         }
-        #endregion
 
-        #region Utils
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         private static float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
         private static float Area2(int i, int j, int k, ReadOnlySpan<float2> positions)
@@ -2454,6 +2452,5 @@ namespace andywiecko.BurstTriangulator
         private static bool IsConvexQuadrilateral(float2 a, float2 b, float2 c, float2 d) =>
             CCW(a, c, b) != 0 && CCW(a, c, d) != 0 && CCW(b, d, a) != 0 && CCW(b, d, c) != 0 &&
             CCW(a, c, b) != CCW(a, c, d) && CCW(b, d, a) != CCW(b, d, c);
-        #endregion
     }
 }
