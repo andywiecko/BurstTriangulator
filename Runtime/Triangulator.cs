@@ -289,8 +289,8 @@ namespace andywiecko.BurstTriangulator
         private struct TriangulationJob : IJob
         {
             private readonly Args args;
-            public InputData input;
-            public OutputData output;
+            private InputData input;
+            private OutputData output;
 
             public struct InputData
             {
@@ -372,18 +372,8 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 MarkerDelaunayTriangulation.Begin();
-                var triangles = output.Triangles;
                 using var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
-                new DelaunayTriangulationJob
-                {
-                    status = output.Status,
-                    positions = localPositions.AsArray(),
-                    triangles = triangles,
-                    halfedges = output.Halfedges,
-                    hullStart = int.MaxValue,
-                    c = float.MaxValue,
-                    verbose = args.Verbose,
-                }.Execute();
+                new DelaunayTriangulationStep(this, localPositions.AsArray()).Execute();
                 MarkerDelaunayTriangulation.End();
 
                 using var constrainedHalfedges = new NativeList<bool>(Allocator.Temp) { Length = output.Halfedges.Length };
@@ -394,7 +384,7 @@ namespace andywiecko.BurstTriangulator
                     {
                         status = output.Status,
                         positions = localPositions.AsArray(),
-                        triangles = triangles.AsArray(),
+                        triangles = output.Triangles.AsArray(),
                         inputConstraintEdges = input.ConstraintEdges,
                         halfedges = output.Halfedges,
                         maxIters = args.SloanMaxIters,
@@ -406,7 +396,7 @@ namespace andywiecko.BurstTriangulator
                     if (localHoles.IsCreated || args.RestoreBoundary || args.AutoHolesAndBoundary)
                     {
                         MarkerPlantSeeds.Begin();
-                        var seedPlanter = new SeedPlanter(output.Status, triangles, localPositions, circles, constrainedHalfedges, output.Halfedges);
+                        var seedPlanter = new SeedPlanter(output.Status, output.Triangles, localPositions, circles, constrainedHalfedges, output.Halfedges);
                         if (args.AutoHolesAndBoundary) seedPlanter.PlantAuto();
                         if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
                         if (args.RestoreBoundary) seedPlanter.PlantBoundarySeeds();
@@ -423,7 +413,7 @@ namespace andywiecko.BurstTriangulator
                         maximumArea2 = 2 * args.RefinementThresholdArea * localTransformation.AreaScalingFactor,
                         minimumAngle = args.RefinementThresholdAngle,
                         D = args.ConcentricShellsParameter,
-                        triangles = triangles,
+                        triangles = output.Triangles,
                         outputPositions = localPositions,
                         circles = circles,
                         halfedges = output.Halfedges,
@@ -456,6 +446,385 @@ namespace andywiecko.BurstTriangulator
                     status = output.Status,
                     verbose = verbose,
                 }.Execute();
+            }
+
+            private struct DelaunayTriangulationStep
+            {
+                private struct DistComparer : IComparer<int>
+                {
+                    private NativeArray<float> dist;
+                    public DistComparer(NativeArray<float> dist) => this.dist = dist;
+                    public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
+                }
+
+                private NativeReference<Status> status;
+                [ReadOnly]
+                private NativeArray<float2> positions;
+                private NativeList<int> triangles;
+                private NativeList<int> halfedges;
+
+                private NativeArray<int> hullNext, hullPrev, hullTri, hullHash;
+                private NativeArray<int> EDGE_STACK;
+
+                private readonly int hashSize;
+                private readonly bool verbose;
+                private int hullStart;
+                private int trianglesLen;
+                private float2 c;
+
+                public DelaunayTriangulationStep(TriangulationJob @this, NativeArray<float2> localPositions)
+                {
+                    status = @this.output.Status;
+                    positions = localPositions;
+                    triangles = @this.output.Triangles;
+                    halfedges = @this.output.Halfedges;
+                    hullStart = int.MaxValue;
+                    c = float.MaxValue;
+                    verbose = @this.args.Verbose;
+                    hashSize = (int)math.ceil(math.sqrt(positions.Length));
+                    trianglesLen = default;
+
+                    hullNext = default;
+                    hullPrev = default;
+                    hullTri = default;
+                    hullHash = default;
+                    EDGE_STACK = default;
+                }
+
+                private readonly int HashKey(float2 p)
+                {
+                    return (int)math.floor(pseudoAngle(p.x - c.x, p.y - c.y) * hashSize) % hashSize;
+
+                    static float pseudoAngle(float dx, float dy)
+                    {
+                        var p = dx / (math.abs(dx) + math.abs(dy));
+                        return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
+                    }
+                }
+
+                public void Execute()
+                {
+                    if (status.Value == Status.ERR)
+                    {
+                        return;
+                    }
+
+                    var n = positions.Length;
+                    var maxTriangles = math.max(2 * n - 5, 0);
+                    triangles.Length = 3 * maxTriangles;
+                    halfedges.Length = 3 * maxTriangles;
+
+                    using var _hullPrev = hullPrev = new(n, Allocator.Temp);
+                    using var _hullNext = hullNext = new(n, Allocator.Temp);
+                    using var _hullTri = hullTri = new(n, Allocator.Temp);
+                    using var _hullHash = hullHash = new(hashSize, Allocator.Temp);
+                    using var _EDGE_STACK = EDGE_STACK = new(512, Allocator.Temp);
+
+                    var ids = new NativeArray<int>(n, Allocator.Temp);
+                    var dists = new NativeArray<float>(n, Allocator.Temp);
+
+                    var min = (float2)float.MaxValue;
+                    var max = (float2)float.MinValue;
+                    for (int i = 0; i < positions.Length; i++)
+                    {
+                        var p = positions[i];
+                        min = math.min(min, p);
+                        max = math.max(max, p);
+                        ids[i] = i;
+                    }
+
+                    var center = 0.5f * (min + max);
+
+                    int i0 = int.MaxValue, i1 = int.MaxValue, i2 = int.MaxValue;
+                    var minDistSq = float.MaxValue;
+                    for (int i = 0; i < positions.Length; i++)
+                    {
+                        var distSq = math.distancesq(center, positions[i]);
+                        if (distSq < minDistSq)
+                        {
+                            i0 = i;
+                            minDistSq = distSq;
+                        }
+                    }
+
+                    // Centermost vertex
+                    var p0 = positions[i0];
+
+                    minDistSq = float.MaxValue;
+                    for (int i = 0; i < positions.Length; i++)
+                    {
+                        if (i == i0) continue;
+                        var distSq = math.distancesq(p0, positions[i]);
+                        if (distSq < minDistSq)
+                        {
+                            i1 = i;
+                            minDistSq = distSq;
+                        }
+                    }
+
+                    // Second closest to the center
+                    var p1 = positions[i1];
+
+                    var minRadius = float.MaxValue;
+                    for (int i = 0; i < positions.Length; i++)
+                    {
+                        if (i == i0 || i == i1) continue;
+                        var p = positions[i];
+                        var r = CircumRadiusSq(p0, p1, p);
+                        if (r < minRadius)
+                        {
+                            i2 = i;
+                            minRadius = r;
+                        }
+                    }
+
+                    // Vertex closest to p1 and p2, as measured by the circumscribed circle radius of p1, p2, p3
+                    // Thus (p1,p2,p3) form a triangle close to the center of the point set, and it's guaranteed that there
+                    // are no other vertices inside this triangle.
+                    var p2 = positions[i2];
+
+                    if (minRadius == float.MaxValue)
+                    {
+                        if (verbose)
+                        {
+                            Debug.LogError("[Triangulator]: Provided input is not supported!");
+                        }
+                        status.Value |= Status.ERR;
+                        return;
+                    }
+
+                    // Swap the order of the vertices if the triangle is not oriented in the right direction
+                    if (Orient2dFast(p0, p1, p2) < 0)
+                    {
+                        (i1, i2) = (i2, i1);
+                        (p1, p2) = (p2, p1);
+                    }
+
+                    // Sort all other vertices by their distance to the circumcenter of the initial triangle
+                    c = CircumCenter(p0, p1, p2);
+                    for (int i = 0; i < positions.Length; i++)
+                    {
+                        dists[i] = math.distancesq(c, positions[i]);
+                    }
+
+                    ids.Sort(new DistComparer(dists));
+
+                    hullStart = i0;
+
+                    hullNext[i0] = hullPrev[i2] = i1;
+                    hullNext[i1] = hullPrev[i0] = i2;
+                    hullNext[i2] = hullPrev[i1] = i0;
+
+                    hullTri[i0] = 0;
+                    hullTri[i1] = 1;
+                    hullTri[i2] = 2;
+
+                    hullHash[HashKey(p0)] = i0;
+                    hullHash[HashKey(p1)] = i1;
+                    hullHash[HashKey(p2)] = i2;
+
+                    // Add the initial triangle
+                    AddTriangle(i0, i1, i2, -1, -1, -1);
+
+                    for (var k = 0; k < ids.Length; k++)
+                    {
+                        var i = ids[k];
+                        if (i == i0 || i == i1 || i == i2) continue;
+
+                        var p = positions[i];
+
+                        // Find a visible edge on the convex hull using edge hash
+                        var start = 0;
+                        for (var j = 0; j < hashSize; j++)
+                        {
+                            var key = HashKey(p);
+                            start = hullHash[(key + j) % hashSize];
+                            if (start != -1 && start != hullNext[start]) break;
+                        }
+
+                        start = hullPrev[start];
+                        var e = start;
+                        var q = hullNext[e];
+
+                        while (Orient2dFast(p, positions[e], positions[q]) >= 0)
+                        {
+                            e = q;
+                            if (e == start)
+                            {
+                                e = int.MaxValue;
+                                break;
+                            }
+
+                            q = hullNext[e];
+                        }
+
+                        if (e == int.MaxValue) continue;
+
+                        // Add the first triangle from the point
+                        var t = AddTriangle(e, i, hullNext[e], -1, -1, hullTri[e]);
+
+                        // Recursively flip triangles from the point until they satisfy the Delaunay condition
+                        hullTri[i] = Legalize(t + 2);
+                        // Keep track of boundary triangles on the hull
+                        hullTri[e] = t;
+
+                        var next = hullNext[e];
+                        q = hullNext[next];
+
+                        // Walk forward through the hull, adding more triangles and flipping recursively
+                        while (Orient2dFast(p, positions[next], positions[q]) < 0)
+                        {
+                            t = AddTriangle(next, i, q, hullTri[i], -1, hullTri[next]);
+                            hullTri[i] = Legalize(t + 2);
+                            hullNext[next] = next;
+                            next = q;
+
+                            q = hullNext[next];
+                        }
+
+                        // Walk backward from the other side, adding more triangles and flipping
+                        if (e == start)
+                        {
+                            q = hullPrev[e];
+
+                            while (Orient2dFast(p, positions[q], positions[e]) < 0)
+                            {
+                                t = AddTriangle(q, i, e, -1, hullTri[e], hullTri[q]);
+                                Legalize(t + 2);
+                                hullTri[q] = t;
+                                hullNext[e] = e; // mark as removed
+                                e = q;
+                                q = hullPrev[e];
+                            }
+                        }
+
+                        // Update the hull indices
+                        hullStart = hullPrev[i] = e;
+                        hullNext[e] = hullPrev[next] = i;
+                        hullNext[i] = next;
+
+                        // Save the two new edges in the hash table
+                        hullHash[HashKey(p)] = i;
+                        hullHash[HashKey(positions[e])] = e;
+                    }
+
+                    // Trim lists to their actual size
+                    triangles.Length = trianglesLen;
+                    halfedges.Length = trianglesLen;
+                }
+
+                private int Legalize(int a)
+                {
+                    var i = 0;
+                    int ar;
+
+                    // recursion eliminated with a fixed-size stack
+                    while (true)
+                    {
+                        var b = halfedges[a];
+                        /* if the pair of triangles doesn't satisfy the Delaunay condition
+                         * (p1 is inside the circumcircle of [p0, pl, pr]), flip them,
+                         * then do the same check/flip recursively for the new pair of triangles
+                         *
+                         *           pl                    pl
+                         *          /||\                  /  \
+                         *       al/ || \bl            al/    \a
+                         *        /  ||  \              /      \
+                         *       /  a||b  \    flip    /___ar___\
+                         *     p0\   ||   /p1   =>   p0\---bl---/p1
+                         *        \  ||  /              \      /
+                         *       ar\ || /br             b\    /br
+                         *          \||/                  \  /
+                         *           pr                    pr
+                         */
+
+                        int a0 = a - a % 3;
+                        ar = a0 + (a + 2) % 3;
+
+                        // Check if we are on a convex hull edge
+                        if (b == -1)
+                        {
+                            if (i == 0) break;
+                            a = EDGE_STACK[--i];
+                            continue;
+                        }
+
+                        var b0 = b - b % 3;
+                        var al = a0 + (a + 1) % 3;
+                        var bl = b0 + (b + 2) % 3;
+
+                        var p0 = triangles[ar];
+                        var pr = triangles[a];
+                        var pl = triangles[al];
+                        var p1 = triangles[bl];
+
+                        var illegal = InCircle(positions[p0], positions[pr], positions[pl], positions[p1]);
+
+                        if (illegal)
+                        {
+                            triangles[a] = p1;
+                            triangles[b] = p0;
+
+                            var hbl = halfedges[bl];
+
+                            // Edge swapped on the other side of the hull (rare); fix the halfedge reference
+                            if (hbl == -1)
+                            {
+                                var e = hullStart;
+                                do
+                                {
+                                    if (hullTri[e] == bl)
+                                    {
+                                        hullTri[e] = a;
+                                        break;
+                                    }
+                                    e = hullPrev[e];
+                                } while (e != hullStart);
+                            }
+                            Link(a, hbl);
+                            Link(b, halfedges[ar]);
+                            Link(ar, bl);
+
+                            var br = b0 + (b + 1) % 3;
+
+                            // Don't worry about hitting the cap: it can only happen on extremely degenerate input
+                            if (i < EDGE_STACK.Length)
+                            {
+                                EDGE_STACK[i++] = br;
+                            }
+                        }
+                        else
+                        {
+                            if (i == 0) break;
+                            a = EDGE_STACK[--i];
+                        }
+                    }
+
+                    return ar;
+                }
+
+                private int AddTriangle(int i0, int i1, int i2, int a, int b, int c)
+                {
+                    var t = trianglesLen;
+
+                    triangles[t + 0] = i0;
+                    triangles[t + 1] = i1;
+                    triangles[t + 2] = i2;
+
+                    Link(t + 0, a);
+                    Link(t + 1, b);
+                    Link(t + 2, c);
+
+                    trianglesLen += 3;
+
+                    return t;
+                }
+
+                private void Link(int a, int b)
+                {
+                    halfedges[a] = b;
+                    if (b != -1) halfedges[b] = a;
+                }
             }
         }
 
@@ -566,384 +935,6 @@ namespace andywiecko.BurstTriangulator
             com /= positions.Length;
             var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
             return AffineTransform2D.Scale(scale) * AffineTransform2D.Translate(-com);
-        }
-
-        [BurstCompile]
-        private struct DelaunayTriangulationJob : IJob
-        {
-            private struct DistComparer : IComparer<int>
-            {
-                private NativeArray<float> dist;
-                public DistComparer(NativeArray<float> dist) => this.dist = dist;
-                public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
-            }
-
-            public NativeReference<Status> status;
-            [ReadOnly]
-            public NativeArray<float2> positions;
-
-            public NativeList<int> triangles;
-
-            public NativeList<int> halfedges;
-
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<int> ids;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<float> dists;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<int> hullNext;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<int> hullPrev;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<int> hullTri;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<int> hullHash;
-            [NativeDisableContainerSafetyRestriction]
-            private NativeArray<int> EDGE_STACK;
-
-            public int hullStart;
-            private int trianglesLen;
-            private int hashSize;
-            public float2 c;
-            public bool verbose;
-
-            private readonly int HashKey(float2 p)
-            {
-                return (int)math.floor(pseudoAngle(p.x - c.x, p.y - c.y) * hashSize) % hashSize;
-
-                static float pseudoAngle(float dx, float dy)
-                {
-                    var p = dx / (math.abs(dx) + math.abs(dy));
-                    return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
-                }
-            }
-
-            public void Execute()
-            {
-                if (status.Value == Status.ERR)
-                {
-                    return;
-                }
-
-                var n = positions.Length;
-                var maxTriangles = math.max(2 * n - 5, 0);
-                triangles.Length = 3 * maxTriangles;
-                halfedges.Length = 3 * maxTriangles;
-
-                hashSize = (int)math.ceil(math.sqrt(n));
-                using var _hullPrev = hullPrev = new(n, Allocator.Temp);
-                using var _hullNext = hullNext = new(n, Allocator.Temp);
-                using var _hullTri = hullTri = new(n, Allocator.Temp);
-                using var _hullHash = hullHash = new(hashSize, Allocator.Temp);
-
-                using var _ids = ids = new(n, Allocator.Temp);
-                using var _dists = dists = new(n, Allocator.Temp);
-
-                using var _EDGE_STACK = EDGE_STACK = new(512, Allocator.Temp);
-
-                var min = (float2)float.MaxValue;
-                var max = (float2)float.MinValue;
-
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    var p = positions[i];
-                    min = math.min(min, p);
-                    max = math.max(max, p);
-                    ids[i] = i;
-                }
-
-                var center = 0.5f * (min + max);
-
-                int i0 = int.MaxValue, i1 = int.MaxValue, i2 = int.MaxValue;
-                var minDistSq = float.MaxValue;
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    var distSq = math.distancesq(center, positions[i]);
-                    if (distSq < minDistSq)
-                    {
-                        i0 = i;
-                        minDistSq = distSq;
-                    }
-                }
-
-                // Centermost vertex
-                var p0 = positions[i0];
-
-                minDistSq = float.MaxValue;
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    if (i == i0) continue;
-                    var distSq = math.distancesq(p0, positions[i]);
-                    if (distSq < minDistSq)
-                    {
-                        i1 = i;
-                        minDistSq = distSq;
-                    }
-                }
-
-                // Second closest to the center
-                var p1 = positions[i1];
-
-                var minRadius = float.MaxValue;
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    if (i == i0 || i == i1) continue;
-                    var p = positions[i];
-                    var r = CircumRadiusSq(p0, p1, p);
-                    if (r < minRadius)
-                    {
-                        i2 = i;
-                        minRadius = r;
-                    }
-                }
-
-                // Vertex closest to p1 and p2, as measured by the circumscribed circle radius of p1, p2, p3
-                // Thus (p1,p2,p3) form a triangle close to the center of the point set, and it's guaranteed that there
-                // are no other vertices inside this triangle.
-                var p2 = positions[i2];
-
-                if (minRadius == float.MaxValue)
-                {
-                    if (verbose)
-                    {
-                        Debug.LogError("[Triangulator]: Provided input is not supported!");
-                    }
-                    status.Value |= Status.ERR;
-                    return;
-                }
-
-                // Swap the order of the vertices if the triangle is not oriented in the right direction
-                if (Orient2dFast(p0, p1, p2) < 0)
-                {
-                    (i1, i2) = (i2, i1);
-                    (p1, p2) = (p2, p1);
-                }
-
-                // Sort all other vertices by their distance to the circumcenter of the initial triangle
-                c = CircumCenter(p0, p1, p2);
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    dists[i] = math.distancesq(c, positions[i]);
-                }
-
-                ids.Sort(new DistComparer(dists));
-
-                hullStart = i0;
-
-                hullNext[i0] = hullPrev[i2] = i1;
-                hullNext[i1] = hullPrev[i0] = i2;
-                hullNext[i2] = hullPrev[i1] = i0;
-
-                hullTri[i0] = 0;
-                hullTri[i1] = 1;
-                hullTri[i2] = 2;
-
-                hullHash[HashKey(p0)] = i0;
-                hullHash[HashKey(p1)] = i1;
-                hullHash[HashKey(p2)] = i2;
-
-                // Add the initial triangle
-                AddTriangle(i0, i1, i2, -1, -1, -1);
-
-                for (var k = 0; k < ids.Length; k++)
-                {
-                    var i = ids[k];
-                    if (i == i0 || i == i1 || i == i2) continue;
-
-                    var p = positions[i];
-
-                    // Find a visible edge on the convex hull using edge hash
-                    var start = 0;
-                    for (var j = 0; j < hashSize; j++)
-                    {
-                        var key = HashKey(p);
-                        start = hullHash[(key + j) % hashSize];
-                        if (start != -1 && start != hullNext[start]) break;
-                    }
-
-                    start = hullPrev[start];
-                    var e = start;
-                    var q = hullNext[e];
-
-                    while (Orient2dFast(p, positions[e], positions[q]) >= 0)
-                    {
-                        e = q;
-                        if (e == start)
-                        {
-                            e = int.MaxValue;
-                            break;
-                        }
-
-                        q = hullNext[e];
-                    }
-
-                    if (e == int.MaxValue) continue;
-
-                    // Add the first triangle from the point
-                    var t = AddTriangle(e, i, hullNext[e], -1, -1, hullTri[e]);
-
-                    // Recursively flip triangles from the point until they satisfy the Delaunay condition
-                    hullTri[i] = Legalize(t + 2);
-                    // Keep track of boundary triangles on the hull
-                    hullTri[e] = t;
-
-                    var next = hullNext[e];
-                    q = hullNext[next];
-
-                    // Walk forward through the hull, adding more triangles and flipping recursively
-                    while (Orient2dFast(p, positions[next], positions[q]) < 0)
-                    {
-                        t = AddTriangle(next, i, q, hullTri[i], -1, hullTri[next]);
-                        hullTri[i] = Legalize(t + 2);
-                        hullNext[next] = next;
-                        next = q;
-
-                        q = hullNext[next];
-                    }
-
-                    // Walk backward from the other side, adding more triangles and flipping
-                    if (e == start)
-                    {
-                        q = hullPrev[e];
-
-                        while (Orient2dFast(p, positions[q], positions[e]) < 0)
-                        {
-                            t = AddTriangle(q, i, e, -1, hullTri[e], hullTri[q]);
-                            Legalize(t + 2);
-                            hullTri[q] = t;
-                            hullNext[e] = e; // mark as removed
-                            e = q;
-                            q = hullPrev[e];
-                        }
-                    }
-
-                    // Update the hull indices
-                    hullStart = hullPrev[i] = e;
-                    hullNext[e] = hullPrev[next] = i;
-                    hullNext[i] = next;
-
-                    // Save the two new edges in the hash table
-                    hullHash[HashKey(p)] = i;
-                    hullHash[HashKey(positions[e])] = e;
-                }
-
-                // Trim lists to their actual size
-                triangles.Length = trianglesLen;
-                halfedges.Length = trianglesLen;
-            }
-
-            private int Legalize(int a)
-            {
-                var i = 0;
-                int ar;
-
-                // recursion eliminated with a fixed-size stack
-                while (true)
-                {
-                    var b = halfedges[a];
-                    /* if the pair of triangles doesn't satisfy the Delaunay condition
-                     * (p1 is inside the circumcircle of [p0, pl, pr]), flip them,
-                     * then do the same check/flip recursively for the new pair of triangles
-                     *
-                     *           pl                    pl
-                     *          /||\                  /  \
-                     *       al/ || \bl            al/    \a
-                     *        /  ||  \              /      \
-                     *       /  a||b  \    flip    /___ar___\
-                     *     p0\   ||   /p1   =>   p0\---bl---/p1
-                     *        \  ||  /              \      /
-                     *       ar\ || /br             b\    /br
-                     *          \||/                  \  /
-                     *           pr                    pr
-                     */
-
-                    int a0 = a - a % 3;
-                    ar = a0 + (a + 2) % 3;
-
-                    // Check if we are on a convex hull edge
-                    if (b == -1)
-                    {
-                        if (i == 0) break;
-                        a = EDGE_STACK[--i];
-                        continue;
-                    }
-
-                    var b0 = b - b % 3;
-                    var al = a0 + (a + 1) % 3;
-                    var bl = b0 + (b + 2) % 3;
-
-                    var p0 = triangles[ar];
-                    var pr = triangles[a];
-                    var pl = triangles[al];
-                    var p1 = triangles[bl];
-
-                    var illegal = InCircle(positions[p0], positions[pr], positions[pl], positions[p1]);
-
-                    if (illegal)
-                    {
-                        triangles[a] = p1;
-                        triangles[b] = p0;
-
-                        var hbl = halfedges[bl];
-
-                        // Edge swapped on the other side of the hull (rare); fix the halfedge reference
-                        if (hbl == -1)
-                        {
-                            var e = hullStart;
-                            do
-                            {
-                                if (hullTri[e] == bl)
-                                {
-                                    hullTri[e] = a;
-                                    break;
-                                }
-                                e = hullPrev[e];
-                            } while (e != hullStart);
-                        }
-                        Link(a, hbl);
-                        Link(b, halfedges[ar]);
-                        Link(ar, bl);
-
-                        var br = b0 + (b + 1) % 3;
-
-                        // Don't worry about hitting the cap: it can only happen on extremely degenerate input
-                        if (i < EDGE_STACK.Length)
-                        {
-                            EDGE_STACK[i++] = br;
-                        }
-                    }
-                    else
-                    {
-                        if (i == 0) break;
-                        a = EDGE_STACK[--i];
-                    }
-                }
-
-                return ar;
-            }
-
-            private int AddTriangle(int i0, int i1, int i2, int a, int b, int c)
-            {
-                var t = trianglesLen;
-
-                triangles[t + 0] = i0;
-                triangles[t + 1] = i1;
-                triangles[t + 2] = i2;
-
-                Link(t + 0, a);
-                Link(t + 1, b);
-                Link(t + 2, c);
-
-                trianglesLen += 3;
-
-                return t;
-            }
-
-            private void Link(int a, int b)
-            {
-                halfedges[a] = b;
-                if (b != -1) halfedges[b] = a;
-            }
         }
 
         [BurstCompile]
