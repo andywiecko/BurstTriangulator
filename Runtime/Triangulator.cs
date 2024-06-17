@@ -367,7 +367,7 @@ namespace andywiecko.BurstTriangulator
                 if (args.ValidateInput)
                 {
                     MarkerValidateInput.Begin();
-                    ValidateInput(localPositions.AsArray(), input.ConstraintEdges, args.Verbose);
+                    new ValidateInputStep(this, localPositions.AsArray()).Execute();
                     MarkerValidateInput.End();
                 }
 
@@ -412,21 +412,182 @@ namespace andywiecko.BurstTriangulator
                 MarkerInverseTransformation.End();
             }
 
-            private void ValidateInput(NativeArray<float2> localPositions, NativeArray<int> constraintEdges, bool verbose)
+            private struct ValidateInputStep
             {
-                new ValidateInputPositionsJob
+                [ReadOnly]
+                public NativeArray<float2> positions;
+                public NativeReference<Status> status;
+                public bool verbose;
+                [ReadOnly]
+                public NativeArray<int> constraints;
+
+                public ValidateInputStep(TriangulationJob @this, NativeArray<float2> localPositions)
                 {
-                    positions = localPositions,
-                    status = output.Status,
-                    verbose = verbose,
-                }.Execute();
-                if (input.ConstraintEdges.IsCreated) new ValidateInputConstraintEdges
+                    positions = localPositions;
+                    status = @this.output.Status;
+                    verbose = @this.args.Verbose;
+                    constraints = @this.input.ConstraintEdges;
+                }
+
+                public void Execute()
                 {
-                    positions = localPositions,
-                    constraints = constraintEdges,
-                    status = output.Status,
-                    verbose = verbose,
-                }.Execute();
+                    if (positions.Length < 3)
+                    {
+                        Log($"[Triangulator]: Positions.Length is less then 3!");
+                        status.Value |= Status.ERR;
+                    }
+
+                    for (int i = 0; i < positions.Length; i++)
+                    {
+                        if (!PointValidation(i))
+                        {
+                            Log($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
+                            status.Value |= Status.ERR;
+                        }
+                        if (!PointPointValidation(i))
+                        {
+                            status.Value |= Status.ERR;
+                        }
+                    }
+
+                    if(!constraints.IsCreated)
+                    {
+                        return;
+                    }
+
+                    if (constraints.Length % 2 == 1)
+                    {
+                        Log($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
+                        status.Value |= Status.ERR;
+                        return;
+                    }
+
+                    for (int i = 0; i < constraints.Length / 2; i++)
+                    {
+                        if (!EdgePositionsRangeValidation(i) ||
+                            !EdgeValidation(i) ||
+                            !EdgePointValidation(i) ||
+                            !EdgeEdgeValidation(i))
+                        {
+                            status.Value |= Status.ERR;
+                            return;
+                        }
+                    }
+                }
+
+                private bool PointValidation(int i) => math.all(math.isfinite(positions[i]));
+
+                private bool PointPointValidation(int i)
+                {
+                    var pi = positions[i];
+                    for (int j = i + 1; j < positions.Length; j++)
+                    {
+                        var pj = positions[j];
+                        if (math.all(pi == pj))
+                        {
+                            Log($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
+                private bool EdgePositionsRangeValidation(int i)
+                {
+                    var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                    var count = positions.Length;
+                    if (a0Id >= count || a0Id < 0 || a1Id >= count || a1Id < 0)
+                    {
+                        Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                private bool EdgeValidation(int i)
+                {
+                    var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                    if (a0Id == a1Id)
+                    {
+                        Log($"[Triangulator]: ConstraintEdges[{i}] is length zero!");
+                        return false;
+                    }
+                    return true;
+                }
+
+                private bool EdgePointValidation(int i)
+                {
+                    var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                    var (a0, a1) = (positions[a0Id], positions[a1Id]);
+
+                    for (int j = 0; j < positions.Length; j++)
+                    {
+                        if (j == a0Id || j == a1Id)
+                        {
+                            continue;
+                        }
+
+                        var p = positions[j];
+                        if (PointLineSegmentIntersection(p, a0, a1))
+                        {
+                            Log($"[Triangulator]: ConstraintEdges[{i}] and Positions[{j}] are collinear!");
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+
+                private bool EdgeEdgeValidation(int i)
+                {
+                    for (int j = i + 1; j < constraints.Length / 2; j++)
+                    {
+                        if (!ValidatePair(i, j))
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+
+                private bool ValidatePair(int i, int j)
+                {
+                    var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                    var (b0Id, b1Id) = (constraints[2 * j], constraints[2 * j + 1]);
+
+                    // Repeated indicies
+                    if (a0Id == b0Id && a1Id == b1Id ||
+                        a0Id == b1Id && a1Id == b0Id)
+                    {
+                        Log($"[Triangulator]: ConstraintEdges[{i}] and [{j}] are equivalent!");
+                        return false;
+                    }
+
+                    // One common point, cases should be filtered out at EdgePointValidation
+                    if (a0Id == b0Id || a0Id == b1Id || a1Id == b0Id || a1Id == b1Id)
+                    {
+                        return true;
+                    }
+
+                    var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
+                    if (EdgeEdgeIntersection(a0, a1, b0, b1))
+                    {
+                        Log($"[Triangulator]: ConstraintEdges[{i}] and [{j}] intersect!");
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                private readonly void Log(string message)
+                {
+                    if (verbose)
+                    {
+                        Debug.LogError(message);
+                    }
+                }
             }
 
             private struct DelaunayTriangulationStep
@@ -1848,62 +2009,6 @@ namespace andywiecko.BurstTriangulator
         }
 
         [BurstCompile]
-        private struct ValidateInputPositionsJob : IJob
-        {
-            [ReadOnly]
-            public NativeArray<float2> positions;
-            public NativeReference<Status> status;
-            public bool verbose;
-
-            public void Execute()
-            {
-                if (positions.Length < 3)
-                {
-                    Log($"[Triangulator]: Positions.Length is less then 3!");
-                    status.Value |= Status.ERR;
-                }
-
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    if (!PointValidation(i))
-                    {
-                        Log($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
-                        status.Value |= Status.ERR;
-                    }
-                    if (!PointPointValidation(i))
-                    {
-                        status.Value |= Status.ERR;
-                    }
-                }
-            }
-
-            private bool PointValidation(int i) => math.all(math.isfinite(positions[i]));
-
-            private bool PointPointValidation(int i)
-            {
-                var pi = positions[i];
-                for (int j = i + 1; j < positions.Length; j++)
-                {
-                    var pj = positions[j];
-                    if (math.all(pi == pj))
-                    {
-                        Log($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            private readonly void Log(string message)
-            {
-                if (verbose)
-                {
-                    Debug.LogError(message);
-                }
-            }
-        }
-
-        [BurstCompile]
         private static AffineTransform2D CalculatePCATransformation(NativeArray<float2> positions)
         {
             var com = (float2)0;
@@ -1954,136 +2059,6 @@ namespace andywiecko.BurstTriangulator
             com /= positions.Length;
             var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
             return AffineTransform2D.Scale(scale) * AffineTransform2D.Translate(-com);
-        }
-
-        [BurstCompile]
-        private struct ValidateInputConstraintEdges : IJob
-        {
-            [ReadOnly]
-            public NativeArray<int> constraints;
-            [ReadOnly]
-            public NativeArray<float2> positions;
-            public NativeReference<Status> status;
-            public bool verbose;
-
-            public void Execute()
-            {
-                if (constraints.Length % 2 == 1)
-                {
-                    Log($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
-                    status.Value |= Status.ERR;
-                    return;
-                }
-
-                for (int i = 0; i < constraints.Length / 2; i++)
-                {
-                    if (!EdgePositionsRangeValidation(i) ||
-                        !EdgeValidation(i) ||
-                        !EdgePointValidation(i) ||
-                        !EdgeEdgeValidation(i))
-                    {
-                        status.Value |= Status.ERR;
-                        return;
-                    }
-                }
-            }
-
-            private readonly void Log(string message)
-            {
-                if (verbose)
-                {
-                    Debug.LogError(message);
-                }
-            }
-
-            private bool EdgePositionsRangeValidation(int i)
-            {
-                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
-                var count = positions.Length;
-                if (a0Id >= count || a0Id < 0 || a1Id >= count || a1Id < 0)
-                {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
-                    return false;
-                }
-
-                return true;
-            }
-
-            private bool EdgeValidation(int i)
-            {
-                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
-                if (a0Id == a1Id)
-                {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] is length zero!");
-                    return false;
-                }
-                return true;
-            }
-
-            private bool EdgePointValidation(int i)
-            {
-                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
-                var (a0, a1) = (positions[a0Id], positions[a1Id]);
-
-                for (int j = 0; j < positions.Length; j++)
-                {
-                    if (j == a0Id || j == a1Id)
-                    {
-                        continue;
-                    }
-
-                    var p = positions[j];
-                    if (PointLineSegmentIntersection(p, a0, a1))
-                    {
-                        Log($"[Triangulator]: ConstraintEdges[{i}] and Positions[{j}] are collinear!");
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            private bool EdgeEdgeValidation(int i)
-            {
-                for (int j = i + 1; j < constraints.Length / 2; j++)
-                {
-                    if (!ValidatePair(i, j))
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            private bool ValidatePair(int i, int j)
-            {
-                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
-                var (b0Id, b1Id) = (constraints[2 * j], constraints[2 * j + 1]);
-
-                // Repeated indicies
-                if (a0Id == b0Id && a1Id == b1Id ||
-                    a0Id == b1Id && a1Id == b0Id)
-                {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] and [{j}] are equivalent!");
-                    return false;
-                }
-
-                // One common point, cases should be filtered out at EdgePointValidation
-                if (a0Id == b0Id || a0Id == b1Id || a1Id == b0Id || a1Id == b1Id)
-                {
-                    return true;
-                }
-
-                var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
-                if (EdgeEdgeIntersection(a0, a1, b0, b1))
-                {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] and [{j}] intersect!");
-                    return false;
-                }
-
-                return true;
-            }
         }
 
         private struct SeedPlanter
