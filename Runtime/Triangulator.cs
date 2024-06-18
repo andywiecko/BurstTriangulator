@@ -330,7 +330,7 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 new DelaunayTriangulationStep(this, localPositions.AsArray()).Execute();
-                
+
                 using var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
                 using var constrainedHalfedges = new NativeList<bool>(Allocator.Temp) { Length = output.Halfedges.Length };
 
@@ -355,11 +355,7 @@ namespace andywiecko.BurstTriangulator
                     new RefineMeshStep(this, localPositions, circles, constrainedHalfedges).Execute();
                 }
 
-                if (args.Preprocessor != Preprocessor.None)
-                {
-                    using var _ = new ProfilerMarker($"PostProcessorStep").Auto();
-                    localTransformation.InverseTransform(localPositions.AsArray(), output.Positions.AsArray());
-                }
+                PostProcessInputStep(localPositions.AsArray());
             }
 
             private void PreProcessInputStep(out NativeList<float2> localPositions, out NativeArray<float2> localHoles)
@@ -391,6 +387,15 @@ namespace andywiecko.BurstTriangulator
                 else
                 {
                     throw new ArgumentException();
+                }
+            }
+
+            private void PostProcessInputStep(NativeArray<float2> localPositions)
+            {
+                using var _ = new ProfilerMarker($"{nameof(PostProcessInputStep)}").Auto();
+                if (args.Preprocessor != Preprocessor.None)
+                {
+                    localTransformation.InverseTransform(localPositions, output.Positions.AsArray());
                 }
             }
 
