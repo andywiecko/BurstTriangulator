@@ -302,16 +302,6 @@ namespace andywiecko.BurstTriangulator
                 public NativeArray<float2> HoleSeeds;
             }
 
-            private static readonly ProfilerMarker
-                MarkerPreProcess = new("PreProcess"),
-                MarkerValidateInput = new("ValidateInput"),
-                MarkerDelaunayTriangulation = new("DelaunayTriangulation"),
-                MarkerConstrainEdges = new("ConstrainEdges"),
-                MarkerPlantSeeds = new("PlantSeeds"),
-                MarkerRefineMesh = new("RefineMesh"),
-                MarkerInverseTransformation = new("InverseTransformation")
-            ;
-
             public TriangulationJob(Triangulator triangulator)
             {
                 args = new(triangulator.Settings);
@@ -332,58 +322,50 @@ namespace andywiecko.BurstTriangulator
                 output.Positions.Clear();
                 output.Halfedges.Clear();
 
-                MarkerPreProcess.Begin();
-                PreProcessInput(out var localPositions, out var localHoles);
-                MarkerPreProcess.End();
+                PreProcessInputStep(out var localPositions, out var localHoles);
 
                 if (args.ValidateInput)
                 {
-                    MarkerValidateInput.Begin();
                     new ValidateInputStep(this, localPositions.AsArray()).Execute();
-                    MarkerValidateInput.End();
                 }
 
-                MarkerDelaunayTriangulation.Begin();
-                using var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
                 new DelaunayTriangulationStep(this, localPositions.AsArray()).Execute();
-                MarkerDelaunayTriangulation.End();
-
+                
+                using var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
                 using var constrainedHalfedges = new NativeList<bool>(Allocator.Temp) { Length = output.Halfedges.Length };
+
                 if (input.ConstraintEdges.IsCreated)
                 {
-                    MarkerConstrainEdges.Begin();
                     new ConstrainEdgesStep(this, localPositions.AsArray(), constrainedHalfedges).Execute();
-                    MarkerConstrainEdges.End();
 
                     if (localHoles.IsCreated || args.RestoreBoundary || args.AutoHolesAndBoundary)
                     {
-                        MarkerPlantSeeds.Begin();
+                        using var _ = new ProfilerMarker($"{nameof(SeedPlanter)}").Auto();
+
                         var seedPlanter = new SeedPlanter(output.Status, output.Triangles, localPositions, circles, constrainedHalfedges, output.Halfedges);
                         if (args.AutoHolesAndBoundary) seedPlanter.PlantAuto();
                         if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
                         if (args.RestoreBoundary) seedPlanter.PlantBoundarySeeds();
                         seedPlanter.Finish();
-                        MarkerPlantSeeds.End();
                     }
                 }
 
                 if (args.RefineMesh && output.Status.Value == Status.OK)
                 {
-                    MarkerRefineMesh.Begin();
                     new RefineMeshStep(this, localPositions, circles, constrainedHalfedges).Execute();
-                    MarkerRefineMesh.End();
                 }
 
-                MarkerInverseTransformation.Begin();
                 if (args.Preprocessor != Preprocessor.None)
                 {
+                    using var _ = new ProfilerMarker($"PostProcessorStep").Auto();
                     localTransformation.InverseTransform(localPositions.AsArray(), output.Positions.AsArray());
                 }
-                MarkerInverseTransformation.End();
             }
 
-            private void PreProcessInput(out NativeList<float2> localPositions, out NativeArray<float2> localHoles)
+            private void PreProcessInputStep(out NativeList<float2> localPositions, out NativeArray<float2> localHoles)
             {
+                using var _ = new ProfilerMarker($"{nameof(PreProcessInputStep)}").Auto();
+
                 localPositions = output.Positions;
                 localPositions.ResizeUninitialized(input.Positions.Length);
                 if (args.Preprocessor == Preprocessor.PCA || args.Preprocessor == Preprocessor.COM)
@@ -431,6 +413,8 @@ namespace andywiecko.BurstTriangulator
 
                 public void Execute()
                 {
+                    using var _ = new ProfilerMarker($"{nameof(ValidateInputStep)}").Auto();
+
                     if (positions.Length < 3)
                     {
                         Log($"[Triangulator]: Positions.Length is less then 3!");
@@ -646,6 +630,8 @@ namespace andywiecko.BurstTriangulator
 
                 public void Execute()
                 {
+                    using var _ = new ProfilerMarker($"{nameof(DelaunayTriangulationStep)}").Auto();
+
                     if (status.Value == Status.ERR)
                     {
                         return;
@@ -1005,6 +991,8 @@ namespace andywiecko.BurstTriangulator
 
                 public void Execute()
                 {
+                    using var _ = new ProfilerMarker($"{nameof(ConstrainEdgesStep)}").Auto();
+
                     if (status.Value != Status.OK)
                     {
                         return;
@@ -1388,6 +1376,8 @@ namespace andywiecko.BurstTriangulator
 
                 public void Execute()
                 {
+                    using var _ = new ProfilerMarker($"{nameof(RefineMeshStep)}").Auto();
+
                     circles.Length = triangles.Length / 3;
                     for (int tId = 0; tId < triangles.Length / 3; tId++)
                     {
