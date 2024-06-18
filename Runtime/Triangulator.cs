@@ -291,6 +291,7 @@ namespace andywiecko.BurstTriangulator
             private readonly Args args;
             private InputData input;
             private OutputData output;
+            private AffineTransform2D localTransformation;
 
             public struct InputData
             {
@@ -321,36 +322,7 @@ namespace andywiecko.BurstTriangulator
                     HoleSeeds = triangulator.Input.HoleSeeds,
                 };
                 output = triangulator.Output;
-            }
-
-            private static void PreProcessInput(Preprocessor preprocessor, InputData input, OutputData output, out NativeList<float2> localPositions, out NativeArray<float2> localHoles, out AffineTransform2D localTransformation)
-            {
-                localPositions = output.Positions;
-                localPositions.ResizeUninitialized(input.Positions.Length);
-                if (preprocessor == Preprocessor.PCA || preprocessor == Preprocessor.COM)
-                {
-                    localTransformation = preprocessor == Preprocessor.PCA ? CalculatePCATransformation(input.Positions) : CalculateLocalTransformation(input.Positions);
-                    localTransformation.Transform(input.Positions, localPositions.AsArray());
-                    if (input.HoleSeeds.IsCreated)
-                    {
-                        localHoles = new NativeArray<float2>(input.HoleSeeds.Length, Allocator.Temp);
-                        localTransformation.Transform(input.HoleSeeds, localHoles);
-                    }
-                    else
-                    {
-                        localHoles = default;
-                    }
-                }
-                else if (preprocessor == Preprocessor.None)
-                {
-                    localPositions.CopyFrom(input.Positions);
-                    localHoles = input.HoleSeeds;
-                    localTransformation = AffineTransform2D.Identity;
-                }
-                else
-                {
-                    throw new ArgumentException();
-                }
+                localTransformation = AffineTransform2D.Identity;
             }
 
             public void Execute()
@@ -361,7 +333,7 @@ namespace andywiecko.BurstTriangulator
                 output.Halfedges.Clear();
 
                 MarkerPreProcess.Begin();
-                PreProcessInput(args.Preprocessor, input, output, out var localPositions, out var localHoles, out var localTransformation);
+                PreProcessInput(out var localPositions, out var localHoles);
                 MarkerPreProcess.End();
 
                 if (args.ValidateInput)
@@ -398,9 +370,7 @@ namespace andywiecko.BurstTriangulator
                 if (args.RefineMesh && output.Status.Value == Status.OK)
                 {
                     MarkerRefineMesh.Begin();
-                    new RefineMeshStep(this, localPositions, circles, constrainedHalfedges, localTransformation, 
-                        constrainBoundary: !input.ConstraintEdges.IsCreated || !args.RestoreBoundary // Moving this inside "job" crashes burst.
-                    ).Execute();
+                    new RefineMeshStep(this, localPositions, circles, constrainedHalfedges).Execute();
                     MarkerRefineMesh.End();
                 }
 
@@ -410,6 +380,36 @@ namespace andywiecko.BurstTriangulator
                     localTransformation.InverseTransform(localPositions.AsArray(), output.Positions.AsArray());
                 }
                 MarkerInverseTransformation.End();
+            }
+
+            private void PreProcessInput(out NativeList<float2> localPositions, out NativeArray<float2> localHoles)
+            {
+                localPositions = output.Positions;
+                localPositions.ResizeUninitialized(input.Positions.Length);
+                if (args.Preprocessor == Preprocessor.PCA || args.Preprocessor == Preprocessor.COM)
+                {
+                    localTransformation = args.Preprocessor == Preprocessor.PCA ? CalculatePCATransformation(input.Positions) : CalculateLocalTransformation(input.Positions);
+                    localTransformation.Transform(input.Positions, localPositions.AsArray());
+                    if (input.HoleSeeds.IsCreated)
+                    {
+                        localHoles = new NativeArray<float2>(input.HoleSeeds.Length, Allocator.Temp);
+                        localTransformation.Transform(input.HoleSeeds, localHoles);
+                    }
+                    else
+                    {
+                        localHoles = default;
+                    }
+                }
+                else if (args.Preprocessor == Preprocessor.None)
+                {
+                    localPositions.CopyFrom(input.Positions);
+                    localHoles = input.HoleSeeds;
+                    localTransformation = AffineTransform2D.Identity;
+                }
+                else
+                {
+                    throw new ArgumentException();
+                }
             }
 
             private struct ValidateInputStep
@@ -450,7 +450,7 @@ namespace andywiecko.BurstTriangulator
                         }
                     }
 
-                    if(!constraints.IsCreated)
+                    if (!constraints.IsCreated)
                     {
                         return;
                     }
@@ -1363,11 +1363,14 @@ namespace andywiecko.BurstTriangulator
                 private readonly float D;
                 private readonly int initialPointsCount;
 
-                public RefineMeshStep(TriangulationJob @this, NativeList<float2> localPositions, NativeList<Circle> circles, NativeList<bool> constrainedHalfedges, AffineTransform2D localTransformation, bool constrainBoundary)
+                public RefineMeshStep(TriangulationJob @this, NativeList<float2> localPositions, NativeList<Circle> circles, NativeList<bool> constrainedHalfedges)
                 {
-                    this.constrainBoundary = constrainBoundary; 
+                    var constraints = @this.input.ConstraintEdges;
+                    constrainBoundary = !constraints.IsCreated || !@this.args.RestoreBoundary; // Note: Cannot be one-liner. Burst throws bit cast exception.
                     initialPointsCount = localPositions.Length;
-                    maximumArea2 = 2 * @this.args.RefinementThresholdArea * localTransformation.AreaScalingFactor;
+                    var areaThreshold = @this.args.RefinementThresholdArea;
+                    var lt = @this.localTransformation;
+                    maximumArea2 = 2 * areaThreshold * lt.AreaScalingFactor;
                     minimumAngle = @this.args.RefinementThresholdAngle;
                     D = @this.args.ConcentricShellsParameter;
                     triangles = @this.output.Triangles;
@@ -1375,7 +1378,7 @@ namespace andywiecko.BurstTriangulator
                     halfedges = @this.output.Halfedges;
                     this.circles = circles;
                     this.constrainedHalfedges = constrainedHalfedges;
-                    
+
                     trianglesQueue = default;
                     badTriangles = default;
                     pathPoints = default;
