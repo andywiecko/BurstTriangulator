@@ -964,9 +964,7 @@ namespace andywiecko.BurstTriangulator
                 private NativeArray<int> inputConstraintEdges;
                 private NativeList<int> halfedges;
                 private NativeList<bool> constrainedHalfedges;
-
-                private readonly bool verbose;
-                private readonly int maxIters;
+                private readonly Args args;
 
                 private NativeList<int> intersections;
                 private NativeList<int> unresolvedIntersections;
@@ -979,8 +977,7 @@ namespace andywiecko.BurstTriangulator
                     triangles = @this.output.Triangles;
                     inputConstraintEdges = @this.input.ConstraintEdges;
                     halfedges = @this.output.Halfedges;
-                    maxIters = @this.args.SloanMaxIters;
-                    verbose = @this.args.Verbose;
+                    args = @this.args;
                     constrainedHalfedges = constrainedHalfedges2;
 
                     intersections = default;
@@ -1042,7 +1039,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     for (int i = 0; i < intersections.Length; i++)
                     {
-                        if (IsMaxItersExceeded(iter++, maxIters))
+                        if (IsMaxItersExceeded(iter++, args.SloanMaxIters))
                         {
                             return;
                         }
@@ -1315,7 +1312,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     if (iter >= maxIters)
                     {
-                        if (verbose)
+                        if (args.Verbose)
                         {
                             Debug.LogError(
                                 $"[Triangulator]: Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +
@@ -1633,22 +1630,20 @@ namespace andywiecko.BurstTriangulator
                 private NativeList<int> pathHalfedges;
                 private NativeList<bool> visitedTriangles;
 
+                private readonly Args args;
                 private readonly bool constrainBoundary;
                 private readonly float maximumArea2;
-                private readonly float minimumAngle;
-                private readonly float D;
                 private readonly int initialPointsCount;
 
                 public RefineMeshStep(TriangulationJob @this, NativeList<float2> localPositions, NativeList<Circle> circles, NativeList<bool> constrainedHalfedges)
                 {
+                    args = @this.args;
                     var constraints = @this.input.ConstraintEdges;
                     constrainBoundary = !constraints.IsCreated || !@this.args.RestoreBoundary; // Note: Cannot be one-liner. Burst throws bit cast exception.
                     initialPointsCount = localPositions.Length;
                     var areaThreshold = @this.args.RefinementThresholdArea;
                     var lt = @this.localTransformation;
                     maximumArea2 = 2 * areaThreshold * lt.AreaScalingFactor;
-                    minimumAngle = @this.args.RefinementThresholdAngle;
-                    D = @this.args.ConcentricShellsParameter;
                     triangles = @this.output.Triangles;
                     outputPositions = localPositions;
                     halfedges = @this.output.Halfedges;
@@ -1764,6 +1759,7 @@ namespace andywiecko.BurstTriangulator
                     }
                     else
                     {
+                        var D = args.ConcentricShellsParameter;
                         var d = math.distance(e0, e1);
                         var k = (int)math.round(math.log2(0.5f * d / D));
                         var alpha = D / d * (1 << k);
@@ -1854,7 +1850,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     var area2 = Area2(i, j, k, outputPositions.AsArray());
-                    return area2 > maximumArea2 || AngleIsTooSmall(tId, minimumAngle);
+                    return area2 > maximumArea2 || AngleIsTooSmall(tId, args.RefinementThresholdAngle);
                 }
 
                 private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue)
