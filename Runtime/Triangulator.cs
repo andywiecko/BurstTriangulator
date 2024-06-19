@@ -323,32 +323,13 @@ namespace andywiecko.BurstTriangulator
                 output.Halfedges.Clear();
 
                 PreProcessInputStep(out var localPositions, out var localHoles);
-
-                if (args.ValidateInput)
-                {
-                    new ValidateInputStep(this, localPositions.AsArray()).Execute();
-                }
-
+                new ValidateInputStep(this, localPositions.AsArray()).Execute();
                 new DelaunayTriangulationStep(this, localPositions.AsArray()).Execute();
-
                 using var circles = new NativeList<Circle>(localPositions.Length, Allocator.Temp);
                 using var constrainedHalfedges = new NativeList<bool>(Allocator.Temp) { Length = output.Halfedges.Length };
-
-                if (input.ConstraintEdges.IsCreated)
-                {
-                    new ConstrainEdgesStep(this, localPositions.AsArray(), constrainedHalfedges).Execute();
-
-                    if (localHoles.IsCreated || args.RestoreBoundary || args.AutoHolesAndBoundary)
-                    {
-                        new PlantingSeedStep(this, localPositions, circles, constrainedHalfedges, localHoles).Execute();
-                    }
-                }
-
-                if (args.RefineMesh && output.Status.Value == Status.OK)
-                {
-                    new RefineMeshStep(this, localPositions, circles, constrainedHalfedges).Execute();
-                }
-
+                new ConstrainEdgesStep(this, localPositions.AsArray(), constrainedHalfedges).Execute();
+                new PlantingSeedStep(this, localPositions, circles, constrainedHalfedges, localHoles).Execute();
+                new RefineMeshStep(this, localPositions, circles, constrainedHalfedges).Execute();
                 PostProcessInputStep(localPositions.AsArray());
             }
 
@@ -396,23 +377,28 @@ namespace andywiecko.BurstTriangulator
             private struct ValidateInputStep
             {
                 [ReadOnly]
-                public NativeArray<float2> positions;
-                public NativeReference<Status> status;
-                public bool verbose;
+                private NativeArray<float2> positions;
+                private NativeReference<Status> status;
+                private readonly Args args;
                 [ReadOnly]
-                public NativeArray<int> constraints;
+                private NativeArray<int> constraints;
 
                 public ValidateInputStep(TriangulationJob @this, NativeArray<float2> localPositions)
                 {
                     positions = localPositions;
                     status = @this.output.Status;
-                    verbose = @this.args.Verbose;
+                    args = @this.args;
                     constraints = @this.input.ConstraintEdges;
                 }
 
                 public void Execute()
                 {
                     using var _ = new ProfilerMarker($"{nameof(ValidateInputStep)}").Auto();
+
+                    if (!args.ValidateInput)
+                    {
+                        return;
+                    }
 
                     if (positions.Length < 3)
                     {
@@ -566,7 +552,7 @@ namespace andywiecko.BurstTriangulator
 
                 private readonly void Log(string message)
                 {
-                    if (verbose)
+                    if (args.Verbose)
                     {
                         Debug.LogError(message);
                     }
@@ -989,7 +975,7 @@ namespace andywiecko.BurstTriangulator
                 {
                     using var _ = new ProfilerMarker($"{nameof(ConstrainEdgesStep)}").Auto();
 
-                    if (status.Value != Status.OK)
+                    if (!inputConstraintEdges.IsCreated || status.Value != Status.OK)
                     {
                         return;
                     }
@@ -1342,6 +1328,7 @@ namespace andywiecko.BurstTriangulator
                 private NativeQueue<int> trianglesQueue;
                 private NativeArray<float2> holes;
 
+                private readonly bool constraintsIsCreated;
                 private readonly Args args;
 
                 public PlantingSeedStep(TriangulationJob @this, NativeList<float2> localPositions, NativeList<Circle> circles, NativeList<bool> constrainedHalfedges, NativeArray<float2> localHoles)
@@ -1354,12 +1341,18 @@ namespace andywiecko.BurstTriangulator
                     halfedges = @this.output.Halfedges;
                     holes = localHoles;
                     args = @this.args;
+                    var input = @this.input;
+                    constraintsIsCreated = input.ConstraintEdges.IsCreated;
 
                     visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
                     badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
                     trianglesQueue = new NativeQueue<int>(Allocator.Temp);
 
                     // TODO: Shouldn't be done here
+                    if (!constraintsIsCreated)
+                    {
+                        return;
+                    }
                     if (circles.Length != triangles.Length / 3)
                     {
                         circles.Length = triangles.Length / 3;
@@ -1374,6 +1367,11 @@ namespace andywiecko.BurstTriangulator
                 public void Execute()
                 {
                     using var _ = new ProfilerMarker($"{nameof(PlantingSeedStep)}").Auto();
+
+                    if (!constraintsIsCreated)
+                    {
+                        return;
+                    }
 
                     if (args.AutoHolesAndBoundary) PlantAuto();
                     if (holes.IsCreated) PlantHoleSeeds(holes);
@@ -1618,6 +1616,7 @@ namespace andywiecko.BurstTriangulator
 
             private struct RefineMeshStep
             {
+                private NativeReference<Status>.ReadOnly status;
                 private NativeList<int> triangles;
                 private NativeList<float2> outputPositions;
                 private NativeList<Circle> circles;
@@ -1638,8 +1637,10 @@ namespace andywiecko.BurstTriangulator
                 public RefineMeshStep(TriangulationJob @this, NativeList<float2> localPositions, NativeList<Circle> circles, NativeList<bool> constrainedHalfedges)
                 {
                     args = @this.args;
+                    var s = @this.output.Status; // Note: Cannot be one-liner. Burst throws bit cast exception.
+                    status = s.AsReadOnly();
                     var constraints = @this.input.ConstraintEdges;
-                    constrainBoundary = !constraints.IsCreated || !@this.args.RestoreBoundary; // Note: Cannot be one-liner. Burst throws bit cast exception.
+                    constrainBoundary = !constraints.IsCreated || !@this.args.RestoreBoundary;
                     initialPointsCount = localPositions.Length;
                     var areaThreshold = @this.args.RefinementThresholdArea;
                     var lt = @this.localTransformation;
@@ -1660,6 +1661,11 @@ namespace andywiecko.BurstTriangulator
                 public void Execute()
                 {
                     using var _ = new ProfilerMarker($"{nameof(RefineMeshStep)}").Auto();
+
+                    if (!args.RefineMesh || status.Value != Status.OK)
+                    {
+                        return;
+                    }
 
                     circles.Length = triangles.Length / 3;
                     for (int tId = 0; tId < triangles.Length / 3; tId++)
