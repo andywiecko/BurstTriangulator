@@ -340,13 +340,7 @@ namespace andywiecko.BurstTriangulator
 
                     if (localHoles.IsCreated || args.RestoreBoundary || args.AutoHolesAndBoundary)
                     {
-                        using var _ = new ProfilerMarker($"{nameof(SeedPlanter)}").Auto();
-
-                        var seedPlanter = new SeedPlanter(output.Status, output.Triangles, localPositions, circles, constrainedHalfedges, output.Halfedges);
-                        if (args.AutoHolesAndBoundary) seedPlanter.PlantAuto();
-                        if (localHoles.IsCreated) seedPlanter.PlantHoleSeeds(localHoles);
-                        if (args.RestoreBoundary) seedPlanter.PlantBoundarySeeds();
-                        seedPlanter.Finish();
+                        new PlantingSeedStep(this, localPositions, circles, constrainedHalfedges, localHoles).Execute();
                     }
                 }
 
@@ -1336,6 +1330,295 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
+            private struct PlantingSeedStep
+            {
+                private NativeReference<Status>.ReadOnly status;
+                private NativeList<int> triangles;
+                [ReadOnly]
+                private NativeList<float2> positions;
+                private NativeList<Circle> circles;
+                private NativeList<bool> constrainedHalfedges;
+                private NativeList<int> halfedges;
+
+                private NativeArray<bool> visitedTriangles;
+                private NativeList<int> badTriangles;
+                private NativeQueue<int> trianglesQueue;
+                private NativeArray<float2> holes;
+
+                private readonly Args args;
+
+                public PlantingSeedStep(TriangulationJob @this, NativeList<float2> localPositions, NativeList<Circle> circles, NativeList<bool> constrainedHalfedges, NativeArray<float2> localHoles)
+                {
+                    status = @this.output.Status;
+                    triangles = @this.output.Triangles;
+                    positions = localPositions;
+                    this.circles = circles;
+                    this.constrainedHalfedges = constrainedHalfedges;
+                    halfedges = @this.output.Halfedges;
+                    holes = localHoles;
+                    args = @this.args;
+
+                    visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
+                    badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
+                    trianglesQueue = new NativeQueue<int>(Allocator.Temp);
+
+                    // TODO: Shouldn't be done here
+                    if (circles.Length != triangles.Length / 3)
+                    {
+                        circles.Length = triangles.Length / 3;
+                        for (int tId = 0; tId < triangles.Length / 3; tId++)
+                        {
+                            var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
+                            circles[tId] = CalculateCircumCircle(i, j, k, localPositions.AsArray());
+                        }
+                    }
+                }
+
+                public void Execute()
+                {
+                    using var _ = new ProfilerMarker($"{nameof(PlantingSeedStep)}").Auto();
+
+                    if (args.AutoHolesAndBoundary) PlantAuto();
+                    if (holes.IsCreated) PlantHoleSeeds(holes);
+                    if (args.RestoreBoundary) PlantBoundarySeeds();
+
+                    Finish();
+                }
+
+                private void PlantBoundarySeeds()
+                {
+                    for (int he = 0; he < halfedges.Length; he++)
+                    {
+                        if (halfedges[he] == -1 &&
+                            !visitedTriangles[he / 3] &&
+                            !constrainedHalfedges[he])
+                        {
+                            PlantSeed(he / 3);
+                        }
+                    }
+                }
+
+                private void PlantHoleSeeds(NativeArray<float2> holeSeeds)
+                {
+                    foreach (var s in holeSeeds)
+                    {
+                        var tId = FindTriangle(s);
+                        if (tId != -1)
+                        {
+                            PlantSeed(tId);
+                        }
+                    }
+                }
+
+                private void Finish()
+                {
+                    if (status.Value != Status.OK)
+                    {
+                        return;
+                    }
+
+                    badTriangles.Sort();
+                    for (int t = badTriangles.Length - 1; t >= 0; t--)
+                    {
+                        var tId = badTriangles[t];
+                        triangles.RemoveAt(3 * tId + 2);
+                        triangles.RemoveAt(3 * tId + 1);
+                        triangles.RemoveAt(3 * tId + 0);
+                        circles.RemoveAt(tId);
+                        RemoveHalfedge(3 * tId + 2, 0);
+                        RemoveHalfedge(3 * tId + 1, 1);
+                        RemoveHalfedge(3 * tId + 0, 2);
+                        constrainedHalfedges.RemoveAt(3 * tId + 2);
+                        constrainedHalfedges.RemoveAt(3 * tId + 1);
+                        constrainedHalfedges.RemoveAt(3 * tId + 0);
+
+                        for (int i = 3 * tId; i < halfedges.Length; i++)
+                        {
+                            var he = halfedges[i];
+                            if (he == -1)
+                            {
+                                continue;
+                            }
+                            halfedges[he < 3 * tId ? he : i] -= 3;
+                        }
+                    }
+                }
+
+                private void PlantSeed(int tId)
+                {
+                    var visitedTriangles = this.visitedTriangles;
+                    var badTriangles = this.badTriangles;
+                    var trianglesQueue = this.trianglesQueue;
+
+                    if (visitedTriangles[tId])
+                    {
+                        return;
+                    }
+
+                    visitedTriangles[tId] = true;
+                    trianglesQueue.Enqueue(tId);
+                    badTriangles.Add(tId);
+
+                    while (trianglesQueue.TryDequeue(out tId))
+                    {
+                        for (int i = 0; i < 3; i++)
+                        {
+                            var he = 3 * tId + i;
+                            var ohe = halfedges[he];
+                            if (constrainedHalfedges[he] || ohe == -1)
+                            {
+                                continue;
+                            }
+
+                            var otherId = ohe / 3;
+                            if (!visitedTriangles[otherId])
+                            {
+                                visitedTriangles[otherId] = true;
+                                trianglesQueue.Enqueue(otherId);
+                                badTriangles.Add(otherId);
+                            }
+                        }
+                    }
+                }
+
+                private int FindTriangle(float2 p)
+                {
+                    for (int tId = 0; tId < triangles.Length / 3; tId++)
+                    {
+                        var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
+                        var (a, b, c) = (positions[i], positions[j], positions[k]);
+                        if (PointInsideTriangle(p, a, b, c))
+                        {
+                            return tId;
+                        }
+                    }
+
+                    return -1;
+                }
+
+                private void RemoveHalfedge(int he, int offset)
+                {
+                    var ohe = halfedges[he];
+                    var o = ohe > he ? ohe - offset : ohe;
+                    if (o > -1)
+                    {
+                        halfedges[o] = -1;
+                    }
+                    halfedges.RemoveAt(he);
+                }
+
+                private void PlantAuto()
+                {
+                    using var heQueue = new NativeQueue<int>(Allocator.Temp);
+                    using var loop = new NativeList<int>(Allocator.Temp);
+                    var heVisited = new NativeArray<bool>(halfedges.Length, Allocator.Temp);
+
+                    // Build boundary loop: 1st sweep
+                    for (int he = 0; he < halfedges.Length; he++)
+                    {
+                        if (halfedges[he] != -1 || heVisited[he])
+                        {
+                            continue;
+                        }
+
+                        heVisited[he] = true;
+                        if (constrainedHalfedges[he])
+                        {
+                            loop.Add(he);
+                        }
+                        else
+                        {
+                            if (!visitedTriangles[he / 3])
+                            {
+                                PlantSeed(he / 3);
+                            }
+
+                            var h2 = NextHalfedge(he);
+                            if (halfedges[h2] != -1 && !heVisited[h2])
+                            {
+                                heQueue.Enqueue(h2);
+                                heVisited[h2] = true;
+                            }
+
+                            var h3 = NextHalfedge(h2);
+                            if (halfedges[h3] != -1 && !heVisited[h3])
+                            {
+                                heQueue.Enqueue(h3);
+                                heVisited[h3] = true;
+                            }
+                        }
+                    }
+
+                    // Build boundary loop: 2nd sweep
+                    while (heQueue.TryDequeue(out var he))
+                    {
+                        var ohe = halfedges[he]; // valid `ohe` should always exist, -1 are eliminated in the 1st sweep!
+                        if (constrainedHalfedges[ohe])
+                        {
+                            heVisited[ohe] = true;
+                            loop.Add(ohe);
+                        }
+                        else
+                        {
+                            ohe = NextHalfedge(ohe);
+                            if (!heVisited[ohe])
+                            {
+                                heQueue.Enqueue(ohe);
+                            }
+
+                            ohe = NextHalfedge(ohe);
+                            if (!heVisited[ohe])
+                            {
+                                heQueue.Enqueue(ohe);
+                            }
+                        }
+                    }
+
+                    // Plant seeds for non visited constraint edges
+                    foreach (var h1 in loop)
+                    {
+                        var h2 = NextHalfedge(h1);
+                        if (!heVisited[h2])
+                        {
+                            heQueue.Enqueue(h2);
+                            heVisited[h2] = true;
+                        }
+
+                        var h3 = NextHalfedge(h2);
+                        if (!heVisited[h3])
+                        {
+                            heQueue.Enqueue(h3);
+                            heVisited[h3] = true;
+                        }
+                    }
+                    while (heQueue.TryDequeue(out var he))
+                    {
+                        var ohe = halfedges[he];
+                        if (constrainedHalfedges[ohe])
+                        {
+                            heVisited[ohe] = true;
+                            PlantSeed(ohe / 3);
+                        }
+                        else
+                        {
+                            ohe = NextHalfedge(ohe);
+                            if (!heVisited[ohe])
+                            {
+                                heQueue.Enqueue(ohe);
+                                heVisited[ohe] = true;
+                            }
+
+                            ohe = NextHalfedge(ohe);
+                            if (!heVisited[ohe])
+                            {
+                                heQueue.Enqueue(ohe);
+                                heVisited[ohe] = true;
+                            }
+                        }
+                    }
+                }
+            }
+
             private struct RefineMeshStep
             {
                 private NativeList<int> triangles;
@@ -2057,279 +2340,6 @@ namespace andywiecko.BurstTriangulator
             com /= positions.Length;
             var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
             return AffineTransform2D.Scale(scale) * AffineTransform2D.Translate(-com);
-        }
-
-        private struct SeedPlanter
-        {
-            private NativeReference<Status>.ReadOnly status;
-            private NativeList<int> triangles;
-            [ReadOnly]
-            private NativeList<float2> positions;
-            private NativeList<Circle> circles;
-            private NativeList<bool> constrainedHalfedges;
-            private NativeList<int> halfedges;
-
-            private NativeArray<bool> visitedTriangles;
-            private NativeList<int> badTriangles;
-            private NativeQueue<int> trianglesQueue;
-
-            public SeedPlanter(NativeReference<Status>.ReadOnly status, NativeList<int> triangles, NativeList<float2> positions, NativeList<Circle> circles, NativeList<bool> constrainedHalfedges, NativeList<int> halfedges)
-            {
-                this.status = status;
-                this.triangles = triangles;
-                this.positions = positions;
-                this.circles = circles;
-                this.constrainedHalfedges = constrainedHalfedges;
-                this.halfedges = halfedges;
-
-                this.visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
-                this.badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
-                this.trianglesQueue = new NativeQueue<int>(Allocator.Temp);
-
-                // TODO: Shouldn't be done here
-                if (circles.Length != triangles.Length / 3)
-                {
-                    circles.Length = triangles.Length / 3;
-                    for (int tId = 0; tId < triangles.Length / 3; tId++)
-                    {
-                        var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                        circles[tId] = CalculateCircumCircle(i, j, k, positions.AsArray());
-                    }
-                }
-            }
-
-            public void PlantBoundarySeeds()
-            {
-                for (int he = 0; he < halfedges.Length; he++)
-                {
-                    if (halfedges[he] == -1 &&
-                        !visitedTriangles[he / 3] &&
-                        !constrainedHalfedges[he])
-                    {
-                        PlantSeed(he / 3);
-                    }
-                }
-            }
-
-            public void PlantHoleSeeds(NativeArray<float2> holeSeeds)
-            {
-                foreach (var s in holeSeeds)
-                {
-                    var tId = FindTriangle(s);
-                    if (tId != -1)
-                    {
-                        PlantSeed(tId);
-                    }
-                }
-            }
-
-            public void Finish()
-            {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
-                badTriangles.Sort();
-                for (int t = badTriangles.Length - 1; t >= 0; t--)
-                {
-                    var tId = badTriangles[t];
-                    triangles.RemoveAt(3 * tId + 2);
-                    triangles.RemoveAt(3 * tId + 1);
-                    triangles.RemoveAt(3 * tId + 0);
-                    circles.RemoveAt(tId);
-                    RemoveHalfedge(3 * tId + 2, 0);
-                    RemoveHalfedge(3 * tId + 1, 1);
-                    RemoveHalfedge(3 * tId + 0, 2);
-                    constrainedHalfedges.RemoveAt(3 * tId + 2);
-                    constrainedHalfedges.RemoveAt(3 * tId + 1);
-                    constrainedHalfedges.RemoveAt(3 * tId + 0);
-
-                    for (int i = 3 * tId; i < halfedges.Length; i++)
-                    {
-                        var he = halfedges[i];
-                        if (he == -1)
-                        {
-                            continue;
-                        }
-                        halfedges[he < 3 * tId ? he : i] -= 3;
-                    }
-                }
-            }
-
-            private void PlantSeed(int tId)
-            {
-                var visitedTriangles = this.visitedTriangles;
-                var badTriangles = this.badTriangles;
-                var trianglesQueue = this.trianglesQueue;
-
-                if (visitedTriangles[tId])
-                {
-                    return;
-                }
-
-                visitedTriangles[tId] = true;
-                trianglesQueue.Enqueue(tId);
-                badTriangles.Add(tId);
-
-                while (trianglesQueue.TryDequeue(out tId))
-                {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        var he = 3 * tId + i;
-                        var ohe = halfedges[he];
-                        if (constrainedHalfedges[he] || ohe == -1)
-                        {
-                            continue;
-                        }
-
-                        var otherId = ohe / 3;
-                        if (!visitedTriangles[otherId])
-                        {
-                            visitedTriangles[otherId] = true;
-                            trianglesQueue.Enqueue(otherId);
-                            badTriangles.Add(otherId);
-                        }
-                    }
-                }
-            }
-
-            private int FindTriangle(float2 p)
-            {
-                for (int tId = 0; tId < triangles.Length / 3; tId++)
-                {
-                    var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                    var (a, b, c) = (positions[i], positions[j], positions[k]);
-                    if (PointInsideTriangle(p, a, b, c))
-                    {
-                        return tId;
-                    }
-                }
-
-                return -1;
-            }
-
-            private void RemoveHalfedge(int he, int offset)
-            {
-                var ohe = halfedges[he];
-                var o = ohe > he ? ohe - offset : ohe;
-                if (o > -1)
-                {
-                    halfedges[o] = -1;
-                }
-                halfedges.RemoveAt(he);
-            }
-
-            public void PlantAuto()
-            {
-                using var heQueue = new NativeQueue<int>(Allocator.Temp);
-                using var loop = new NativeList<int>(Allocator.Temp);
-                var heVisited = new NativeArray<bool>(halfedges.Length, Allocator.Temp);
-
-                // Build boundary loop: 1st sweep
-                for (int he = 0; he < halfedges.Length; he++)
-                {
-                    if (halfedges[he] != -1 || heVisited[he])
-                    {
-                        continue;
-                    }
-
-                    heVisited[he] = true;
-                    if (constrainedHalfedges[he])
-                    {
-                        loop.Add(he);
-                    }
-                    else
-                    {
-                        if (!visitedTriangles[he / 3])
-                        {
-                            PlantSeed(he / 3);
-                        }
-
-                        var h2 = NextHalfedge(he);
-                        if (halfedges[h2] != -1 && !heVisited[h2])
-                        {
-                            heQueue.Enqueue(h2);
-                            heVisited[h2] = true;
-                        }
-
-                        var h3 = NextHalfedge(h2);
-                        if (halfedges[h3] != -1 && !heVisited[h3])
-                        {
-                            heQueue.Enqueue(h3);
-                            heVisited[h3] = true;
-                        }
-                    }
-                }
-
-                // Build boundary loop: 2nd sweep
-                while (heQueue.TryDequeue(out var he))
-                {
-                    var ohe = halfedges[he]; // valid `ohe` should always exist, -1 are eliminated in the 1st sweep!
-                    if (constrainedHalfedges[ohe])
-                    {
-                        heVisited[ohe] = true;
-                        loop.Add(ohe);
-                    }
-                    else
-                    {
-                        ohe = NextHalfedge(ohe);
-                        if (!heVisited[ohe])
-                        {
-                            heQueue.Enqueue(ohe);
-                        }
-
-                        ohe = NextHalfedge(ohe);
-                        if (!heVisited[ohe])
-                        {
-                            heQueue.Enqueue(ohe);
-                        }
-                    }
-                }
-
-                // Plant seeds for non visited constraint edges
-                foreach (var h1 in loop)
-                {
-                    var h2 = NextHalfedge(h1);
-                    if (!heVisited[h2])
-                    {
-                        heQueue.Enqueue(h2);
-                        heVisited[h2] = true;
-                    }
-
-                    var h3 = NextHalfedge(h2);
-                    if (!heVisited[h3])
-                    {
-                        heQueue.Enqueue(h3);
-                        heVisited[h3] = true;
-                    }
-                }
-                while (heQueue.TryDequeue(out var he))
-                {
-                    var ohe = halfedges[he];
-                    if (constrainedHalfedges[ohe])
-                    {
-                        heVisited[ohe] = true;
-                        PlantSeed(ohe / 3);
-                    }
-                    else
-                    {
-                        ohe = NextHalfedge(ohe);
-                        if (!heVisited[ohe])
-                        {
-                            heQueue.Enqueue(ohe);
-                            heVisited[ohe] = true;
-                        }
-
-                        ohe = NextHalfedge(ohe);
-                        if (!heVisited[ohe])
-                        {
-                            heQueue.Enqueue(ohe);
-                            heVisited[ohe] = true;
-                        }
-                    }
-                }
-            }
         }
 
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
