@@ -376,19 +376,18 @@ namespace andywiecko.BurstTriangulator
 
             private struct ValidateInputStep
             {
-                [ReadOnly]
-                private NativeArray<float2> positions;
+                private NativeArray<float2>.ReadOnly positions;
                 private NativeReference<Status> status;
                 private readonly Args args;
-                [ReadOnly]
-                private NativeArray<int> constraints;
+                private NativeArray<int>.ReadOnly constraints;
 
                 public ValidateInputStep(TriangulationJob @this, NativeArray<float2> localPositions)
                 {
-                    positions = localPositions;
+                    positions = localPositions.AsReadOnly();
                     status = @this.output.Status;
                     args = @this.args;
-                    constraints = @this.input.ConstraintEdges;
+                    var input = @this.input;
+                    constraints = input.ConstraintEdges.AsReadOnly();
                 }
 
                 public void Execute()
@@ -569,8 +568,7 @@ namespace andywiecko.BurstTriangulator
                 }
 
                 private NativeReference<Status> status;
-                [ReadOnly]
-                private NativeArray<float2> positions;
+                private NativeArray<float2>.ReadOnly positions;
                 private NativeList<int> triangles;
                 private NativeList<int> halfedges;
 
@@ -586,7 +584,7 @@ namespace andywiecko.BurstTriangulator
                 public DelaunayTriangulationStep(TriangulationJob @this, NativeArray<float2> localPositions)
                 {
                     status = @this.output.Status;
-                    positions = localPositions;
+                    positions = localPositions.AsReadOnly();
                     triangles = @this.output.Triangles;
                     halfedges = @this.output.Halfedges;
                     hullStart = int.MaxValue;
@@ -943,12 +941,10 @@ namespace andywiecko.BurstTriangulator
             private struct ConstrainEdgesStep
             {
                 private NativeReference<Status> status;
-                [ReadOnly]
-                private NativeArray<float2> positions;
-                private NativeList<int> triangles;
-                [ReadOnly]
-                private NativeArray<int> inputConstraintEdges;
-                private NativeList<int> halfedges;
+                private NativeArray<float2>.ReadOnly positions;
+                private NativeArray<int> triangles;
+                private NativeArray<int>.ReadOnly inputConstraintEdges;
+                private NativeArray<int> halfedges;
                 private NativeList<bool> constrainedHalfedges;
                 private readonly Args args;
 
@@ -956,15 +952,17 @@ namespace andywiecko.BurstTriangulator
                 private NativeList<int> unresolvedIntersections;
                 private NativeArray<int> pointToHalfedge;
 
-                public ConstrainEdgesStep(TriangulationJob @this, NativeArray<float2> localPositions, NativeList<bool> constrainedHalfedges2)
+                public ConstrainEdgesStep(TriangulationJob @this, NativeArray<float2> localPositions, NativeList<bool> constrainedHalfedges)
                 {
                     status = @this.output.Status;
-                    positions = localPositions;
-                    triangles = @this.output.Triangles;
-                    inputConstraintEdges = @this.input.ConstraintEdges;
-                    halfedges = @this.output.Halfedges;
+                    positions = localPositions.AsReadOnly();
+                    var output = @this.output;
+                    triangles = output.Triangles.AsArray();
+                    var input = @this.input;
+                    inputConstraintEdges = input.ConstraintEdges.AsReadOnly();
+                    halfedges = output.Halfedges.AsArray();
                     args = @this.args;
-                    constrainedHalfedges = constrainedHalfedges2;
+                    this.constrainedHalfedges = constrainedHalfedges;
 
                     intersections = default;
                     unresolvedIntersections = default;
