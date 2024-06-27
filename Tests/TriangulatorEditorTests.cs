@@ -580,14 +580,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestName = "Test case 1 (square)",
                 ExpectedResult = new []
                 {
-                    (5, 1, 4),
-                    (6, 4, 1),
-                    (7, 3, 4),
+                    (6, 4, 5),
+                    (6, 5, 1),
                     (8, 2, 5),
                     (8, 5, 4),
                     (9, 4, 6),
                     (9, 7, 4),
-                    (10, 4, 3),
+                    (10, 4, 7),
+                    (10, 7, 3),
                     (10, 8, 4),
                     (11, 0, 9),
                     (11, 9, 6),
