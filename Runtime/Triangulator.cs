@@ -2430,7 +2430,7 @@ namespace andywiecko.BurstTriangulator
 
     internal readonly struct AffineTransform64 : ITransform<AffineTransform64, double, double2>
     {
-        public readonly AffineTransform64 Identity => new(float2x2.identity, float2.zero);
+        public readonly AffineTransform64 Identity => new(double2x2.identity, double2.zero);
         public readonly double AreaScalingFactor => math.abs(math.determinant(rotScale));
 
         private readonly double2x2 rotScale;
@@ -2468,8 +2468,8 @@ namespace andywiecko.BurstTriangulator
             Eigen(cov, out _, out var rotationMatrix);
 
             var partialTransform = Rotate(math.transpose(rotationMatrix)) * Translate(-com);
-            double2 min = float.MaxValue;
-            double2 max = float.MinValue;
+            double2 min = double.MaxValue;
+            double2 max = double.MinValue;
             for (int i = 0; i < positions.Length; i++)
             {
                 var p = partialTransform.Transform(positions[i]);
@@ -2485,7 +2485,7 @@ namespace andywiecko.BurstTriangulator
 
         public readonly AffineTransform64 CalculateLocalTransformation(NativeArray<double2> positions)
         {
-            double2 min = float.PositiveInfinity, max = float.NegativeInfinity, com = 0;
+            double2 min = double.MaxValue, max = double.MinValue, com = 0;
             foreach (var p in positions)
             {
                 min = math.min(p, min);
