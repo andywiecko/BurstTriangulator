@@ -2391,7 +2391,7 @@ namespace andywiecko.BurstTriangulator
 
         public readonly AffineTransform32 CalculateLocalTransformation(NativeArray<float2> positions)
         {
-            float2 min = float.PositiveInfinity, max = float.NegativeInfinity, com = 0;
+            float2 min = float.MaxValue, max = float.MinValue, com = 0;
             foreach (var p in positions)
             {
                 min = math.min(p, min);

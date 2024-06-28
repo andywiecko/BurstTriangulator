@@ -25,10 +25,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
     public class Double2Comparer : IEqualityComparer<double2>
     {
-        private readonly float epsilon;
+        private readonly double epsilon;
         public static readonly Double2Comparer Instance = new(0.0001f);
-        public Double2Comparer(float epsilon) => this.epsilon = epsilon;
-        public static Double2Comparer With(float epsilon) => new(epsilon);
+        public Double2Comparer(double epsilon) => this.epsilon = epsilon;
+        public static Double2Comparer With(double epsilon) => new(epsilon);
         public bool Equals(double2 expected, double2 actual) => Equals(expected.x, actual.x) && Equals(expected.y, actual.y);
         public int GetHashCode(double2 _) => 0;
 
