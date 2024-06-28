@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -26,7 +27,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     {
         public static (int, int, int)[] GetTrisTuple(this Triangulator triangulator) =>
             triangulator.Output.Triangles.ToTrisTuple();
-
+        public static (int, int, int)[] GetTrisTuple<T>(this Triangulator<T> triangulator) where T : unmanaged =>
+            triangulator.Output.Triangles.ToTrisTuple();
         private static (int, int, int)[] ToTrisTuple(this NativeList<int> triangles) => Enumerable
             .Range(0, triangles.Length / 3)
             .Select(i => (triangles[3 * i], triangles[3 * i + 1], triangles[3 * i + 2]))
@@ -34,10 +36,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             .ToArray();
 
         public static void Draw(this Triangulator triangulator, float duration = 5f) => Draw(triangulator, Color.red, duration);
-        public static void Draw(this Triangulator triangulator, Color color, float duration = 5f)
+        public static void Draw(this Triangulator<float2> triangulator, float duration = 5f) => Draw(triangulator, Color.red, duration);
+        public static void Draw(this Triangulator triangulator, Color color, float duration = 5f) => 
+            Draw(triangulator.Output.Positions.AsArray(), triangulator.GetTrisTuple(), color, duration);
+        public static void Draw(this Triangulator<float2> triangulator, Color color, float duration = 5f) =>
+            Draw(triangulator.Output.Positions.AsArray(), triangulator.GetTrisTuple(), color, duration);
+
+        private static void Draw(ReadOnlySpan<float2> positions, ReadOnlySpan<(int,int,int)> triangles, Color color, float duration)
         {
-            var p = triangulator.Output.Positions;
-            foreach (var (i, j, k) in triangulator.GetTrisTuple())
+            var p = positions;
+            foreach (var (i, j, k) in triangles)
             {
                 var x = math.float3(p[i], 0);
                 var y = math.float3(p[j], 0);
