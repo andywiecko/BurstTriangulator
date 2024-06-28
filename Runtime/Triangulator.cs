@@ -2428,6 +2428,100 @@ namespace andywiecko.BurstTriangulator
         private static float2x2 Kron(float2 a, float2 b) => math.float2x2(a * b[0], a * b[1]);
     }
 
+    internal readonly struct AffineTransform64 : ITransform<AffineTransform64, double, double2>
+    {
+        public readonly AffineTransform64 Identity => new(float2x2.identity, float2.zero);
+        public readonly double AreaScalingFactor => math.abs(math.determinant(rotScale));
+
+        private readonly double2x2 rotScale;
+        private readonly double2 translation;
+
+        public AffineTransform64(double2x2 rotScale, double2 translation) => (this.rotScale, this.translation) = (rotScale, translation);
+        private static AffineTransform64 Translate(double2 offset) => new(double2x2.identity, offset);
+        private static AffineTransform64 Scale(double2 scale) => new(new double2x2(scale.x, 0, 0, scale.y), double2.zero);
+        private static AffineTransform64 Rotate(double2x2 rotation) => new(rotation, double2.zero);
+        public static AffineTransform64 operator *(AffineTransform64 lhs, AffineTransform64 rhs) => new(
+            math.mul(lhs.rotScale, rhs.rotScale),
+            math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
+        );
+
+        public AffineTransform64 Inverse() => new(math.inverse(rotScale), math.mul(rotScale, -translation));
+        public double2 Transform(double2 point) => math.mul(rotScale, point + translation);
+
+        public readonly AffineTransform64 CalculatePCATransformation(NativeArray<double2> positions)
+        {
+            var com = (double2)0;
+            foreach (var p in positions)
+            {
+                com += p;
+            }
+            com /= positions.Length;
+
+            var cov = double2x2.zero;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var q = positions[i] - com;
+                cov += Kron(q, q);
+            }
+            cov /= positions.Length;
+
+            Eigen(cov, out _, out var rotationMatrix);
+
+            var partialTransform = Rotate(math.transpose(rotationMatrix)) * Translate(-com);
+            double2 min = float.MaxValue;
+            double2 max = float.MinValue;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var p = partialTransform.Transform(positions[i]);
+                min = math.min(p, min);
+                max = math.max(p, max);
+            }
+
+            var c = 0.5f * (min + max);
+            var s = 2f / (max - min);
+
+            return Scale(s) * Translate(-c) * partialTransform;
+        }
+
+        public readonly AffineTransform64 CalculateLocalTransformation(NativeArray<double2> positions)
+        {
+            double2 min = float.PositiveInfinity, max = float.NegativeInfinity, com = 0;
+            foreach (var p in positions)
+            {
+                min = math.min(p, min);
+                max = math.max(p, max);
+                com += p;
+            }
+
+            com /= positions.Length;
+            var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
+            return Scale(scale) * Translate(-com);
+        }
+
+        private static void Eigen(double2x2 matrix, out double2 eigval, out double2x2 eigvec)
+        {
+            var a00 = matrix[0][0];
+            var a11 = matrix[1][1];
+            var a01 = matrix[0][1];
+
+            var a00a11 = a00 - a11;
+            var p1 = a00 + a11;
+            var p2 = (a00a11 >= 0 ? 1 : -1) * math.sqrt(a00a11 * a00a11 + 4 * a01 * a01);
+            var lambda1 = p1 + p2;
+            var lambda2 = p1 - p2;
+            eigval = 0.5f * math.double2(lambda1, lambda2);
+
+            var phi = 0.5f * math.atan2(2 * a01, a00a11);
+
+            eigvec = math.double2x2
+            (
+                m00: math.cos(phi), m01: -math.sin(phi),
+                m10: math.sin(phi), m11: math.cos(phi)
+            );
+        }
+        private static double2x2 Kron(double2 a, double2 b) => math.double2x2(a * b[0], a * b[1]);
+    }
+
     internal interface IUtils<T, T2> where T : unmanaged where T2 : unmanaged
     {
         T Const(float v);
@@ -2530,11 +2624,73 @@ namespace andywiecko.BurstTriangulator
         public readonly float sign(float a) => math.sign(a);
     }
 
+    internal readonly struct DoubleUtils : IUtils<double, double2>
+    {
+        public readonly double Const(float v) => v;
+        public readonly double MaxValue() => double.MaxValue;
+        public readonly double2 MaxValue2() => double.MaxValue;
+        public readonly double2 MinValue2() => double.MinValue;
+        public readonly double2 NewT2(double x, double y) => math.double2(x, y);
+        public readonly double X(double2 a) => a.x;
+        public readonly double Y(double2 a) => a.y;
+        public readonly double Zero() => 0;
+        public readonly double abs(double v) => math.abs(v);
+        public readonly double add(double a, double b) => a + b;
+        public readonly double alpha(double D, double d, bool initial)
+        {
+            var k = (int)math.round(math.log2(0.5f * d / D));
+            var alpha = D / d * (1 << k);
+            return initial ? alpha : 1 - alpha;
+        }
+        public readonly bool anyabslessthen(double a, double b, double c, double v) => math.any(math.abs(math.double3(a, b, c)) < v);
+        public readonly double atan2(double a, double b) => math.atan2(a, b);
+        public readonly double2 avg(double2 a, double2 b) => 0.5f * (a + b);
+        public readonly double diff(double a, double b) => a - b;
+        public readonly double2 diff(double2 a, double2 b) => a - b;
+        public readonly double distance(double2 a, double2 b) => math.distance(a, b);
+        public readonly double distancesq(double2 a, double2 b) => math.distancesq(a, b);
+        public readonly double div(double a, double b) => a / b;
+        public readonly double dot(double2 a, double2 b) => math.dot(a, b);
+        public readonly bool eq(double v, double w) => v == w;
+        public readonly bool2 eq(double2 v, double2 w) => v == w;
+        public readonly bool ge(double a, double b) => a >= b;
+        public readonly bool2 ge(double2 a, double2 b) => a >= b;
+        public readonly bool greater(double a, double b) => a > b;
+        public readonly int hashkey(double2 p, double2 c, int hashSize)
+        {
+            return (int)math.floor(pseudoAngle(p.x - c.x, p.y - c.y) * hashSize) % hashSize;
+
+            static double pseudoAngle(double dx, double dy)
+            {
+                var p = dx / (math.abs(dx) + math.abs(dy));
+                return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
+            }
+        }
+        public readonly bool2 isfinite(double2 v) => math.isfinite(v);
+        public readonly bool le(double a, double b) => a <= b;
+        public readonly bool2 le(double2 a, double2 b) => a <= b;
+        public readonly double2 lerp(double2 a, double2 b, double v) => math.lerp(a, b, v);
+        public readonly bool less(double a, double b) => a < b;
+        public readonly double max(double v, double w) => math.max(v, w);
+        public readonly double2 max(double2 v, double2 w) => math.max(v, w);
+        public readonly double2 min(double2 v, double2 w) => math.min(v, w);
+        public readonly double mul(double a, double b) => a * b;
+        public readonly double neg(double v) => -v;
+        public readonly double2 neg(double2 v) => -v;
+        public readonly bool neq(double v, double w) => v != w;
+        public readonly double sign(double a) => math.sign(a);
+    }
+
     public static class Extensions
     {
         public static void Run(this Triangulator<float2> @this) =>
             new TriangulationJob<float, float2, AffineTransform32, FloatUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<float2> @this, JobHandle dependencies = default) =>
             new TriangulationJob<float, float2, AffineTransform32, FloatUtils>(@this).Schedule(dependencies);
+
+        public static void Run(this Triangulator<double2> @this) =>
+            new TriangulationJob<double, double2, AffineTransform64, DoubleUtils>(@this).Run();
+        public static JobHandle Schedule(this Triangulator<double2> @this, JobHandle dependencies = default) =>
+            new TriangulationJob<double, double2, AffineTransform64, DoubleUtils>(@this).Schedule(dependencies);
     }
 }
