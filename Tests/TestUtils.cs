@@ -23,6 +23,24 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public int GetHashCode(float2 _) => 0;
     }
 
+    public class Double2Comparer : IEqualityComparer<double2>
+    {
+        private readonly double epsilon;
+        public static readonly Double2Comparer Instance = new(0.0001f);
+        public Double2Comparer(double epsilon) => this.epsilon = epsilon;
+        public static Double2Comparer With(double epsilon) => new(epsilon);
+        public bool Equals(double2 expected, double2 actual) => Equals(expected.x, actual.x) && Equals(expected.y, actual.y);
+        public int GetHashCode(double2 _) => 0;
+
+        private bool Equals(double expected, double actual)
+        {
+            if (expected == double.PositiveInfinity || actual == double.PositiveInfinity || expected == double.NegativeInfinity || actual == double.NegativeInfinity)
+                return expected == actual;
+
+            return math.abs(actual - expected) <= epsilon * math.max(math.max(math.abs(actual), math.abs(expected)), 1.0f);
+        }
+    }
+
     public static class TestUtils
     {
         public static (int, int, int)[] GetTrisTuple(this Triangulator triangulator) =>
@@ -37,12 +55,15 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
         public static void Draw(this Triangulator triangulator, float duration = 5f) => Draw(triangulator, Color.red, duration);
         public static void Draw(this Triangulator<float2> triangulator, float duration = 5f) => Draw(triangulator, Color.red, duration);
-        public static void Draw(this Triangulator triangulator, Color color, float duration = 5f) => 
+        public static void Draw(this Triangulator<double2> triangulator, float duration = 5f) => Draw(triangulator, Color.red, duration);
+        public static void Draw(this Triangulator triangulator, Color color, float duration = 5f) =>
             Draw(triangulator.Output.Positions.AsArray(), triangulator.GetTrisTuple(), color, duration);
         public static void Draw(this Triangulator<float2> triangulator, Color color, float duration = 5f) =>
             Draw(triangulator.Output.Positions.AsArray(), triangulator.GetTrisTuple(), color, duration);
+        public static void Draw(this Triangulator<double2> triangulator, Color color, float duration = 5f) =>
+            Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)i).ToArray(), triangulator.GetTrisTuple(), color, duration);
 
-        private static void Draw(ReadOnlySpan<float2> positions, ReadOnlySpan<(int,int,int)> triangles, Color color, float duration)
+        private static void Draw(ReadOnlySpan<float2> positions, ReadOnlySpan<(int, int, int)> triangles, Color color, float duration)
         {
             var p = positions;
             foreach (var (i, j, k) in triangles)
