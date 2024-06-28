@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
-    public class TriangulatorEditorTests
+    public class TriangulatorFloat2EditorTests
     {
         [Test]
         public void DelaunayTriangulationWithoutRefinementTest()
@@ -27,7 +27,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(0, 1)
             }, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings = { RefineMesh = false },
                 Input = { Positions = positions },
@@ -89,7 +89,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public void ValidateInputPositionsTest(float2[] managedPositions)
         {
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings = { ValidateInput = true, Verbose = true },
                 Input = { Positions = positions },
@@ -108,7 +108,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public void ValidateInputPositionsNoVerboseTest(float2[] managedPositions)
         {
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings = { ValidateInput = true, Verbose = false },
                 Input = { Positions = positions },
@@ -135,7 +135,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(0, 1)
             }, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -374,7 +374,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         {
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -492,7 +492,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         {
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -520,7 +520,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         {
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -690,7 +690,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         {
             using var positions = new NativeArray<float2>(input.managedPositions, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(input.constraints, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -748,7 +748,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -806,7 +806,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1026,7 +1026,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
             using var holes = new NativeArray<float2>(holeSeeds, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1088,7 +1088,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
             using var holes = new NativeArray<float2>(new[] { (float2)1.5f }, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1183,7 +1183,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var positions = new NativeList<float2>(64, Allocator.Persistent);
             using var constraints = new NativeList<int>(64, Allocator.Persistent);
             using var holes = new NativeList<float2>(64, Allocator.Persistent);
-            using var triangulator = new Triangulator(64, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(64, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1258,7 +1258,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             using var positions = new NativeArray<float2>(points, Allocator.Persistent);
             using var constraints = new NativeArray<int>(new[] { 1, 3 }, Allocator.Persistent);
-            using var triangulator = new Triangulator(64, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(64, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1297,7 +1297,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             managedPositions = managedPositions.Select(x => 0.1f * x + 5f).ToArray();
 
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
-            using var triangulator = new Triangulator(1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1357,7 +1357,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var holes = new NativeArray<float2>(new float2[] { 5 }, Allocator.Persistent);
             using var edges = new NativeArray<int>(constraints, Allocator.Persistent);
             using var positions = new NativeArray<float2>(managedPositions, Allocator.Persistent);
-            using var triangulator = new Triangulator(1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1446,7 +1446,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var inputPositions = new NativeArray<float2>(sloanMaxItersData.points, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(sloanMaxItersData.constraints, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1483,7 +1483,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(1, 2),
             }, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Input = { Positions = positions },
 
@@ -1512,7 +1512,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(1, 2),
             }, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Input = { Positions = positions },
 
@@ -1559,7 +1559,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             using var holes = new NativeArray<float2>(new[] { math.float2(1.5f) }, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Input =
                 {
@@ -1644,7 +1644,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 92, 92, 93, 93, 94, 94, 95, 95, 96, 96, 97
             }, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Input =
                 {
@@ -1742,7 +1742,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 149, 149, 150, 150, 151, 151, 152, 152, 153, 153, 154, 154, 155, 155, 156, 156, 157, 157, 158, 158, 0
             }, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 1024, Allocator.Persistent)
             {
                 Input =
                 {
@@ -1788,7 +1788,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 4, 5, 5, 6, 6, 7, 7, 4,
             }, Allocator.Persistent);
             using var holes = new NativeArray<float2>(new[] { math.float2(4) }, Allocator.Persistent);
-            using var triangulator = new Triangulator(Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(Allocator.Persistent)
             {
                 Input = { Positions = positions, ConstraintEdges = constraintEdges, HoleSeeds = holes },
                 Settings = {
@@ -1818,7 +1818,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 .Range(0, n)
                 .SelectMany(i => new[] { i, (i + 1) % n })
                 .ToArray(), Allocator.Persistent);
-            using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(1024 * 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1862,7 +1862,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 1, 2,
                 2, 0,
             }, Allocator.Persistent);
-            using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(1024 * 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1901,7 +1901,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 3, 0,
                 0, 2,
             }, Allocator.Persistent);
-            using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(1024 * 1024, Allocator.Persistent)
             {
                 Settings =
                 {
@@ -1991,7 +1991,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var nativePositions = new NativeArray<float2>(positions, Allocator.Persistent);
             using var holes = new NativeArray<float2>(holesSeeds, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(Allocator.Persistent)
             {
                 Settings =
                 {
@@ -2024,7 +2024,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 new(4),
                 new(4, 0),
             }, Allocator.Persistent);
-            using var triangulator = new Triangulator(Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(Allocator.Persistent)
             {
                 Input = { Positions = positions },
             };
@@ -2050,7 +2050,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 new(0, 1),
             }, Allocator.Persistent);
             using var constraints = new NativeArray<int>(new[] { 0, 3 }, Allocator.Persistent);
-            using var triangulator = new Triangulator(Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(Allocator.Persistent)
             {
                 Input = { Positions = positions, ConstraintEdges = constraints },
             };
@@ -2081,7 +2081,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 3, 4, 4, 5, 5, 3,
             }, Allocator.Persistent);
             using var holes = new NativeArray<float2>(new[] { math.float2(2, 1.5f) }, Allocator.Persistent);
-            using var triangulator = new Triangulator(Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(Allocator.Persistent)
             {
                 Input = { Positions = positions, ConstraintEdges = constraints, HoleSeeds = holes }
             };
@@ -2103,7 +2103,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(2, 0),
                 math.float2(1, 2),
             }, Allocator.Persistent);
-            using var triangulator = new Triangulator(Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(Allocator.Persistent)
             {
                 Input = { Positions = positions },
                 Settings = { RefineMesh = true, RefinementThresholds =
@@ -2128,7 +2128,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var constraintEdges = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
             using var holes = new NativeArray<float2>(LakeSuperior.Holes, Allocator.Persistent);
 
-            using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(1024 * 1024, Allocator.Persistent)
             {
                 Input = {
                     Positions = positions,
