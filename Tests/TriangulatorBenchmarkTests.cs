@@ -53,7 +53,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var positions = new NativeArray<float2>(points.ToArray(), Allocator.Persistent);
 
             var stopwatch = Stopwatch.StartNew();
-            using var triangulator = new Triangulator(capacity: count * count, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: count * count, Allocator.Persistent)
             {
                 Input = { Positions = positions },
                 Settings = {
@@ -109,7 +109,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var constraintEdges = new NativeArray<int>(constraints.ToArray(), Allocator.Persistent);
 
             var stopwatch = Stopwatch.StartNew();
-            using var triangulator = new Triangulator(capacity: count * count + N, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: count * count + N, Allocator.Persistent)
             {
                 Input = { Positions = positions, ConstraintEdges = constraintEdges },
                 Settings = {
@@ -168,7 +168,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 math.float2(+1, +1),
                 math.float2(-1, +1),
             }, Allocator.Persistent);
-            using var triangulator = new Triangulator(capacity: 64 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(capacity: 64 * 1024, Allocator.Persistent)
             {
                 Input = { Positions = points },
                 Settings = {
