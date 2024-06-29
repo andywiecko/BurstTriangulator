@@ -34,7 +34,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var positions = new NativeArray<float2>(LakeSuperior.Points, Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
             using var holeSeeds = new NativeArray<float2>(LakeSuperior.Holes, Allocator.Persistent);
-            using var triangulator = new Triangulator(1024 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<float2>(1024 * 1024, Allocator.Persistent)
             {
                 Settings =
                 {

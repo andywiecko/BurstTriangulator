@@ -139,9 +139,9 @@ namespace andywiecko.BurstTriangulator
     public class Triangulator : IDisposable
     {
         public TriangulationSettings Settings => impl.Settings;
-        public InputData<float2> Input { get => impl.Input; set => impl.Input = value; }
-        public OutputData<float2> Output => impl.Output;
-        private readonly Triangulator<float2> impl;
+        public InputData<double2> Input { get => impl.Input; set => impl.Input = value; }
+        public OutputData<double2> Output => impl.Output;
+        private readonly Triangulator<double2> impl;
         public Triangulator(int capacity, Allocator allocator) => impl = new(capacity, allocator);
         public Triangulator(Allocator allocator) => impl = new(allocator);
 

@@ -57,7 +57,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public static void Draw(this Triangulator<float2> triangulator, float duration = 5f) => Draw(triangulator, Color.red, duration);
         public static void Draw(this Triangulator<double2> triangulator, float duration = 5f) => Draw(triangulator, Color.red, duration);
         public static void Draw(this Triangulator triangulator, Color color, float duration = 5f) =>
-            Draw(triangulator.Output.Positions.AsArray(), triangulator.GetTrisTuple(), color, duration);
+            Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)i).ToArray(), triangulator.GetTrisTuple(), color, duration);
         public static void Draw(this Triangulator<float2> triangulator, Color color, float duration = 5f) =>
             Draw(triangulator.Output.Positions.AsArray(), triangulator.GetTrisTuple(), color, duration);
         public static void Draw(this Triangulator<double2> triangulator, Color color, float duration = 5f) =>
@@ -78,7 +78,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             }
         }
 
-        public static string LaTeXify(this Triangulator triangulator,
+        public static string LaTeXify(this Triangulator<float2> triangulator,
             string path = default,
             string appendTikz = "",
             int[][] loops = default
