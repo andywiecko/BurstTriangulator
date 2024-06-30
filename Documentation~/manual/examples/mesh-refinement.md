@@ -5,7 +5,7 @@
 To proceed with triangulation using mesh refinement, set [`RefineMesh`][refine-mesh] to true and specify the required [`RefinementThresholds`][thresholds]:
 
 ```csharp
-using var inputPositions = new NativeArray<float2>(..., Allocator.Persistent);
+using var inputPositions = new NativeArray<double2>(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { Positions = inputPositions },
@@ -41,7 +41,7 @@ Below, you can observe a set of results obtained by applying the refinement proc
 > [!NOTE]
 > Refinement is available for both constrained and non-constrained triangulation.
 
-[area]: xref:andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area
-[angle]: xref:andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle
-[refine-mesh]: xref:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh
-[thresholds]: xref:andywiecko.BurstTriangulator.Triangulator.RefinementThresholds
+[area]: xref:andywiecko.BurstTriangulator.RefinementThresholds.Area
+[angle]: xref:andywiecko.BurstTriangulator.RefinementThresholds.Angle
+[refine-mesh]: xref:andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh
+[thresholds]: xref:andywiecko.BurstTriangulator.RefinementThresholds

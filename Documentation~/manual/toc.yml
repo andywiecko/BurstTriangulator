@@ -31,6 +31,8 @@ items:
     href: advanced/preprocessor.md
   - name: Halfedges
     href: advanced/output-halfedges.md
+  - name: Generic coordinates
+    href: advanced/generic-coordinates.md
 
 - name: Benchmark
   href: benchmark.md

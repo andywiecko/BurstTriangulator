@@ -5,7 +5,7 @@
 To perform a *classic*, i.e., non-constrained without refinement, Delaunay triangulation, use the following:
 
 ```csharp
-using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var positions = new NativeArray<double2>(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { Positions = positions }

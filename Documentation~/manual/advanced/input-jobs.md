@@ -52,9 +52,9 @@ dependencies = new Job(triangulator).Schedule(dependencies);
 Input can be generated within a job pipeline. You have to use [deferred arrays][deferred-arrays]. Here's an example snippet:
 
 ```csharp
-using var positions = new NativeList<float2>(64, Allocator.Persistent);
+using var positions = new NativeList<double2>(64, Allocator.Persistent);
 using var constraints = new NativeList<int>(64, Allocator.Persistent);
-using var holes = new NativeList<float2>(64, Allocator.Persistent);
+using var holes = new NativeList<double2>(64, Allocator.Persistent);
 using var triangulator = new Triangulator(64, Allocator.Persistent)
 {
   Input = 

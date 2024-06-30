@@ -16,7 +16,7 @@ This corresponds to constraint edges $\{ (a_0, a_1), (b_0, b_1), (c_0, c_1), \do
 
 ```csharp
 using var constraintEdges = new NativeArray<int>(..., Allocator.Persistent);
-using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var positions = new NativeArray<double2>(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { 
@@ -48,4 +48,4 @@ After enabling refinement and the constraints, and providing the input, the resu
 > Without restoring boundaries, the result of mesh refinement, especially in cases with very acute angles,
 > can be of poor quality. Compare this with the result presented in the [holes and boundaries example](xref:example-holes-and-boundaries).
 
-[input-constraint-edges]: xref:andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges
+[input-constraint-edges]: xref:andywiecko.BurstTriangulator.InputData`1.ConstraintEdges

@@ -32,6 +32,6 @@ $$
 
 For more details follow the delaunator **[guide]**.
 
-[triangles]: xref:andywiecko.BurstTriangulator.Triangulator.OutputData.Triangles
-[halfedges]: xref:andywiecko.BurstTriangulator.Triangulator.OutputData.Halfedges
+[triangles]: xref:andywiecko.BurstTriangulator.OutputData`1.Triangles
+[halfedges]: xref:andywiecko.BurstTriangulator.OutputData`1.Halfedges
 [guide]: https://mapbox.github.io/delaunator/
