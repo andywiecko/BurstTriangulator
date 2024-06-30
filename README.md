@@ -14,10 +14,11 @@ A single-file package which provides Delaunay triangulation of the given set of 
 - **Constrained triangulation**
 - **Mesh refinement** (angle and area parameters)
 - **Restoring boundary**
-- **Holes**
+- **Holes** (manual and auto)
 - **Support for `Unity.Jobs` pipeline**
 - **Input preprocessors**
 - **Input validation**
+- **Generic coordinates**
 
 To view the documentation for the manual and scripting API access it online [**here**][manual] or navigate to `Documentation~/` and build this using `docfx.json`.
 
@@ -53,7 +54,7 @@ using andywiecko.BurstTriangulator;
 and to triangulate unit box $[(0, 0), (1, 0), (1, 1), (0, 1)]$:
 
 ```csharp
-using var positions = new NativeArray<float2>(new[]
+using var positions = new NativeArray<double2>(new[]
 { 
     new(0, 0), new(1, 0), new(1, 1), new(0, 1) 
 }, Allocator.Persistent);
