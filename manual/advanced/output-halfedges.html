@@ -5,19 +5,19 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Enum Triangulator.Preprocessor | BurstTriangulator </title>
+      <title>Halfedges | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Enum Triangulator.Preprocessor | BurstTriangulator ">
+      <meta name="title" content="Halfedges | BurstTriangulator ">
     
     
-      <link rel="shortcut icon" href="../images/favicon.ico">
-      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
-      <link rel="stylesheet" href="../styles/docfx.css">
-      <link rel="stylesheet" href="../styles/main.css">
-      <meta property="docfx:navrel" content="../toc.html">
-      <meta property="docfx:tocrel" content="toc.html">
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
     
-    <meta property="docfx:rel" content="../">
+    <meta property="docfx:rel" content="../../">
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
@@ -33,8 +33,8 @@
                 <span class="icon-bar"></span>
               </button>
 
-              <a class="navbar-brand" href="../index.html">
-                <img id="logo" class="svg" src="../images/logo.svg" alt="BurstTriangulator">
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.svg" alt="BurstTriangulator">
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v2.5.0</b></div>
+                "><b>v3.0.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -89,46 +89,35 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.Triangulator.Preprocessor">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="halfedges">Halfedges</h1>
 
+<pre><code class="lang-csharp">using var triangulator = new Triangulator(Allocator.Persistent){ Input = { ... } };
+triangulator.Run();
+var halfedges = triangulator.Output.Halfedges;
+</code></pre>
+<p>For each successful triangulation (with any settings) except triangles and positions, one can get <a class="xref" href="../../api/andywiecko.BurstTriangulator.OutputData-1.Halfedges.html#andywiecko_BurstTriangulator_OutputData_1_Halfedges"><code>Output.Halfedges</code></a>.
+Halfedges are a data structure that describes neighboring triangles.
+All triangles in the generated mesh are clockwise.
+For example, consider triangle <span class="math">\((a, b, c)\)</span> (at indexes: <span class="math">\(i, i+1, i+2\)</span> in <a class="xref" href="../../api/andywiecko.BurstTriangulator.OutputData-1.Triangles.html#andywiecko_BurstTriangulator_OutputData_1_Triangles"><code>Output.Triangles</code></a>), which is made of 3 halfedges <span class="math">\((a, b)\)</span>, <span class="math">\((b, c)\)</span>, <span class="math">\((c, a)\)</span>.
+A halfedge is a directed edge, i.e., <span class="math">\((i, j) \neq (j, i)\)</span>.
+In the halfedges buffer, one can find the <span class="math">\(\mathtt{id}\)</span> of the opposite halfedge, if it exists.
+In the case when the opposite halfedge is not present in a mesh, then <code>Output.Triangles[id] = -1</code>.</p>
+<p>Consider the following example where <span class="math">\(\triangle\)</span> stands for triangles and <span class="math">\(\mathtt{he}\)</span> for the halfedges buffer.</p>
+<br>
+<p align="center"><img src="../../images/manual-halfedges.svg" width="200"></p>
+<br>
+<div class="math">
+\[
+\begin{array} {c|ccc|ccc|ccc|ccc}
+    \mathtt{id} &amp; 0 &amp; 1 &amp; 2 &amp; 3 &amp; 4 &amp; 5 &amp; 6 &amp; 7 &amp; 8 &amp; 9 &amp; 10 &amp; 11\\\hline
+    \triangle &amp; 0 &amp; 4 &amp; 1 &amp; 1 &amp; 4 &amp; 2 &amp; 2 &amp; 4 &amp; 3 &amp; 3 &amp; 4 &amp; 0\\
+    \mathtt{he} &amp; 10 &amp; 3 &amp; -1 &amp; 1 &amp; 6 &amp; -1 &amp; 4 &amp; 9 &amp; -1 &amp; 7 &amp; 0 &amp; -1
+\end{array}
+\]</div>
+<hr>
+<p>For more details follow the delaunator <strong><a href="https://mapbox.github.io/delaunator/">guide</a></strong>.</p>
 
-
-
-  <h1 id="andywiecko_BurstTriangulator_Triangulator_Preprocessor" data-uid="andywiecko.BurstTriangulator.Triangulator.Preprocessor" class="text-break">Enum Triangulator.Preprocessor</h1>
-  <div class="markdown level0 summary"></div>
-  <div class="markdown level0 conceptual"></div>
-  <h6><strong>Namespace</strong>: <a class="xref" href="andywiecko.html">andywiecko</a>.<a class="xref" href="andywiecko.BurstTriangulator.html">BurstTriangulator</a></h6>
-  <h6><strong>Assembly</strong>: .dll</h6>
-  <h5 id="andywiecko_BurstTriangulator_Triangulator_Preprocessor_syntax">Syntax</h5>
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public enum Triangulator.Preprocessor</code></pre>
-  </div>
-  <h3 id="fields">Fields
-</h3>
-  <table class="table table-bordered table-condensed">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Description</th>
-      </tr>
-    <thead>
-    </thead></thead><tbody>
-      <tr>
-        <td id="andywiecko_BurstTriangulator_Triangulator_Preprocessor_COM">COM</td>
-        <td><p>Transforms <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Input.html#andywiecko_BurstTriangulator_Triangulator_Input">Input</a> to local coordinate system using <em>center of mass</em>.</p>
-</td>
-      </tr>
-      <tr>
-        <td id="andywiecko_BurstTriangulator_Triangulator_Preprocessor_None">None</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td id="andywiecko_BurstTriangulator_Triangulator_Preprocessor_PCA">PCA</td>
-        <td><p>Transforms <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Input.html#andywiecko_BurstTriangulator_Triangulator_Input">Input</a> using coordinate system obtained from <em>principal component analysis</em>.</p>
-</td>
-      </tr>
-    </tbody>
-  </table>
 </article>
           </div>
 
@@ -158,9 +147,9 @@
     </div>
     <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
     <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
-    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
-    <script type="text/javascript" src="../styles/docfx.js"></script>
-    <script type="text/javascript" src="../styles/main.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <style>

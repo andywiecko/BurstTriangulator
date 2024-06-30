@@ -7,6 +7,394 @@ references:
   commentId: N:andywiecko.BurstTriangulator
   fullName: andywiecko.BurstTriangulator
   nameWithType: andywiecko.BurstTriangulator
+- uid: andywiecko.BurstTriangulator.Extensions
+  name: Extensions
+  href: api/andywiecko.BurstTriangulator.Extensions.html
+  commentId: T:andywiecko.BurstTriangulator.Extensions
+  fullName: andywiecko.BurstTriangulator.Extensions
+  nameWithType: Extensions
+- uid: andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.double2})
+  name: Run(Triangulator<double2>)
+  href: api/andywiecko.BurstTriangulator.Extensions.Run.html#andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_double2__
+  commentId: M:andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.double2})
+  name.vb: Run(Triangulator(Of double2))
+  fullName: andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator<Unity.Mathematics.double2>)
+  fullName.vb: andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator(Of Unity.Mathematics.double2))
+  nameWithType: Extensions.Run(Triangulator<double2>)
+  nameWithType.vb: Extensions.Run(Triangulator(Of double2))
+- uid: andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.float2})
+  name: Run(Triangulator<float2>)
+  href: api/andywiecko.BurstTriangulator.Extensions.Run.html#andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_float2__
+  commentId: M:andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.float2})
+  name.vb: Run(Triangulator(Of float2))
+  fullName: andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator<Unity.Mathematics.float2>)
+  fullName.vb: andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator(Of Unity.Mathematics.float2))
+  nameWithType: Extensions.Run(Triangulator<float2>)
+  nameWithType.vb: Extensions.Run(Triangulator(Of float2))
+- uid: andywiecko.BurstTriangulator.Extensions.Run*
+  name: Run
+  href: api/andywiecko.BurstTriangulator.Extensions.Run.html
+  commentId: Overload:andywiecko.BurstTriangulator.Extensions.Run
+  fullName: andywiecko.BurstTriangulator.Extensions.Run
+  nameWithType: Extensions.Run
+- uid: andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.double2},Unity.Jobs.JobHandle)
+  name: Schedule(Triangulator<double2>, JobHandle)
+  href: api/andywiecko.BurstTriangulator.Extensions.Schedule.html#andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_double2__Unity_Jobs_JobHandle_
+  commentId: M:andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.double2},Unity.Jobs.JobHandle)
+  name.vb: Schedule(Triangulator(Of double2), JobHandle)
+  fullName: andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator<Unity.Mathematics.double2>, Unity.Jobs.JobHandle)
+  fullName.vb: andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator(Of Unity.Mathematics.double2), Unity.Jobs.JobHandle)
+  nameWithType: Extensions.Schedule(Triangulator<double2>, JobHandle)
+  nameWithType.vb: Extensions.Schedule(Triangulator(Of double2), JobHandle)
+- uid: andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.float2},Unity.Jobs.JobHandle)
+  name: Schedule(Triangulator<float2>, JobHandle)
+  href: api/andywiecko.BurstTriangulator.Extensions.Schedule.html#andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_float2__Unity_Jobs_JobHandle_
+  commentId: M:andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.float2},Unity.Jobs.JobHandle)
+  name.vb: Schedule(Triangulator(Of float2), JobHandle)
+  fullName: andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator<Unity.Mathematics.float2>, Unity.Jobs.JobHandle)
+  fullName.vb: andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator(Of Unity.Mathematics.float2), Unity.Jobs.JobHandle)
+  nameWithType: Extensions.Schedule(Triangulator<float2>, JobHandle)
+  nameWithType.vb: Extensions.Schedule(Triangulator(Of float2), JobHandle)
+- uid: andywiecko.BurstTriangulator.Extensions.Schedule*
+  name: Schedule
+  href: api/andywiecko.BurstTriangulator.Extensions.Schedule.html
+  commentId: Overload:andywiecko.BurstTriangulator.Extensions.Schedule
+  fullName: andywiecko.BurstTriangulator.Extensions.Schedule
+  nameWithType: Extensions.Schedule
+- uid: andywiecko.BurstTriangulator.InputData`1
+  name: InputData<T2>
+  href: api/andywiecko.BurstTriangulator.InputData-1.html
+  commentId: T:andywiecko.BurstTriangulator.InputData`1
+  name.vb: InputData(Of T2)
+  fullName: andywiecko.BurstTriangulator.InputData<T2>
+  fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2)
+  nameWithType: InputData<T2>
+  nameWithType.vb: InputData(Of T2)
+- uid: andywiecko.BurstTriangulator.InputData`1.ConstraintEdges
+  name: ConstraintEdges
+  href: api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges
+  commentId: P:andywiecko.BurstTriangulator.InputData`1.ConstraintEdges
+  fullName: andywiecko.BurstTriangulator.InputData<T2>.ConstraintEdges
+  fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).ConstraintEdges
+  nameWithType: InputData<T2>.ConstraintEdges
+  nameWithType.vb: InputData(Of T2).ConstraintEdges
+- uid: andywiecko.BurstTriangulator.InputData`1.ConstraintEdges*
+  name: ConstraintEdges
+  href: api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html
+  commentId: Overload:andywiecko.BurstTriangulator.InputData`1.ConstraintEdges
+  fullName: andywiecko.BurstTriangulator.InputData<T2>.ConstraintEdges
+  fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).ConstraintEdges
+  nameWithType: InputData<T2>.ConstraintEdges
+  nameWithType.vb: InputData(Of T2).ConstraintEdges
+- uid: andywiecko.BurstTriangulator.InputData`1.HoleSeeds
+  name: HoleSeeds
+  href: api/andywiecko.BurstTriangulator.InputData-1.HoleSeeds.html#andywiecko_BurstTriangulator_InputData_1_HoleSeeds
+  commentId: P:andywiecko.BurstTriangulator.InputData`1.HoleSeeds
+  fullName: andywiecko.BurstTriangulator.InputData<T2>.HoleSeeds
+  fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).HoleSeeds
+  nameWithType: InputData<T2>.HoleSeeds
+  nameWithType.vb: InputData(Of T2).HoleSeeds
+- uid: andywiecko.BurstTriangulator.InputData`1.HoleSeeds*
+  name: HoleSeeds
+  href: api/andywiecko.BurstTriangulator.InputData-1.HoleSeeds.html
+  commentId: Overload:andywiecko.BurstTriangulator.InputData`1.HoleSeeds
+  fullName: andywiecko.BurstTriangulator.InputData<T2>.HoleSeeds
+  fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).HoleSeeds
+  nameWithType: InputData<T2>.HoleSeeds
+  nameWithType.vb: InputData(Of T2).HoleSeeds
+- uid: andywiecko.BurstTriangulator.InputData`1.Positions
+  name: Positions
+  href: api/andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions
+  commentId: P:andywiecko.BurstTriangulator.InputData`1.Positions
+  fullName: andywiecko.BurstTriangulator.InputData<T2>.Positions
+  fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).Positions
+  nameWithType: InputData<T2>.Positions
+  nameWithType.vb: InputData(Of T2).Positions
+- uid: andywiecko.BurstTriangulator.InputData`1.Positions*
+  name: Positions
+  href: api/andywiecko.BurstTriangulator.InputData-1.Positions.html
+  commentId: Overload:andywiecko.BurstTriangulator.InputData`1.Positions
+  fullName: andywiecko.BurstTriangulator.InputData<T2>.Positions
+  fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).Positions
+  nameWithType: InputData<T2>.Positions
+  nameWithType.vb: InputData(Of T2).Positions
+- uid: andywiecko.BurstTriangulator.OutputData`1
+  name: OutputData<T2>
+  href: api/andywiecko.BurstTriangulator.OutputData-1.html
+  commentId: T:andywiecko.BurstTriangulator.OutputData`1
+  name.vb: OutputData(Of T2)
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2)
+  nameWithType: OutputData<T2>
+  nameWithType.vb: OutputData(Of T2)
+- uid: andywiecko.BurstTriangulator.OutputData`1.#ctor(andywiecko.BurstTriangulator.Triangulator{`0})
+  name: OutputData(Triangulator<T2>)
+  href: api/andywiecko.BurstTriangulator.OutputData-1.-ctor.html#andywiecko_BurstTriangulator_OutputData_1__ctor_andywiecko_BurstTriangulator_Triangulator__0__
+  commentId: M:andywiecko.BurstTriangulator.OutputData`1.#ctor(andywiecko.BurstTriangulator.Triangulator{`0})
+  name.vb: New(Triangulator(Of T2))
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.OutputData(andywiecko.BurstTriangulator.Triangulator<T2>)
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).New(andywiecko.BurstTriangulator.Triangulator(Of T2))
+  nameWithType: OutputData<T2>.OutputData(Triangulator<T2>)
+  nameWithType.vb: OutputData(Of T2).New(Triangulator(Of T2))
+- uid: andywiecko.BurstTriangulator.OutputData`1.#ctor*
+  name: OutputData
+  href: api/andywiecko.BurstTriangulator.OutputData-1.-ctor.html
+  commentId: Overload:andywiecko.BurstTriangulator.OutputData`1.#ctor
+  name.vb: New
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.OutputData
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).New
+  nameWithType: OutputData<T2>.OutputData
+  nameWithType.vb: OutputData(Of T2).New
+- uid: andywiecko.BurstTriangulator.OutputData`1.Halfedges
+  name: Halfedges
+  href: api/andywiecko.BurstTriangulator.OutputData-1.Halfedges.html#andywiecko_BurstTriangulator_OutputData_1_Halfedges
+  commentId: P:andywiecko.BurstTriangulator.OutputData`1.Halfedges
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.Halfedges
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).Halfedges
+  nameWithType: OutputData<T2>.Halfedges
+  nameWithType.vb: OutputData(Of T2).Halfedges
+- uid: andywiecko.BurstTriangulator.OutputData`1.Halfedges*
+  name: Halfedges
+  href: api/andywiecko.BurstTriangulator.OutputData-1.Halfedges.html
+  commentId: Overload:andywiecko.BurstTriangulator.OutputData`1.Halfedges
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.Halfedges
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).Halfedges
+  nameWithType: OutputData<T2>.Halfedges
+  nameWithType.vb: OutputData(Of T2).Halfedges
+- uid: andywiecko.BurstTriangulator.OutputData`1.Positions
+  name: Positions
+  href: api/andywiecko.BurstTriangulator.OutputData-1.Positions.html#andywiecko_BurstTriangulator_OutputData_1_Positions
+  commentId: P:andywiecko.BurstTriangulator.OutputData`1.Positions
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.Positions
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).Positions
+  nameWithType: OutputData<T2>.Positions
+  nameWithType.vb: OutputData(Of T2).Positions
+- uid: andywiecko.BurstTriangulator.OutputData`1.Positions*
+  name: Positions
+  href: api/andywiecko.BurstTriangulator.OutputData-1.Positions.html
+  commentId: Overload:andywiecko.BurstTriangulator.OutputData`1.Positions
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.Positions
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).Positions
+  nameWithType: OutputData<T2>.Positions
+  nameWithType.vb: OutputData(Of T2).Positions
+- uid: andywiecko.BurstTriangulator.OutputData`1.Status
+  name: Status
+  href: api/andywiecko.BurstTriangulator.OutputData-1.Status.html#andywiecko_BurstTriangulator_OutputData_1_Status
+  commentId: P:andywiecko.BurstTriangulator.OutputData`1.Status
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.Status
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).Status
+  nameWithType: OutputData<T2>.Status
+  nameWithType.vb: OutputData(Of T2).Status
+- uid: andywiecko.BurstTriangulator.OutputData`1.Status*
+  name: Status
+  href: api/andywiecko.BurstTriangulator.OutputData-1.Status.html
+  commentId: Overload:andywiecko.BurstTriangulator.OutputData`1.Status
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.Status
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).Status
+  nameWithType: OutputData<T2>.Status
+  nameWithType.vb: OutputData(Of T2).Status
+- uid: andywiecko.BurstTriangulator.OutputData`1.Triangles
+  name: Triangles
+  href: api/andywiecko.BurstTriangulator.OutputData-1.Triangles.html#andywiecko_BurstTriangulator_OutputData_1_Triangles
+  commentId: P:andywiecko.BurstTriangulator.OutputData`1.Triangles
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.Triangles
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).Triangles
+  nameWithType: OutputData<T2>.Triangles
+  nameWithType.vb: OutputData(Of T2).Triangles
+- uid: andywiecko.BurstTriangulator.OutputData`1.Triangles*
+  name: Triangles
+  href: api/andywiecko.BurstTriangulator.OutputData-1.Triangles.html
+  commentId: Overload:andywiecko.BurstTriangulator.OutputData`1.Triangles
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.Triangles
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).Triangles
+  nameWithType: OutputData<T2>.Triangles
+  nameWithType.vb: OutputData(Of T2).Triangles
+- uid: andywiecko.BurstTriangulator.Preprocessor
+  name: Preprocessor
+  href: api/andywiecko.BurstTriangulator.Preprocessor.html
+  commentId: T:andywiecko.BurstTriangulator.Preprocessor
+  fullName: andywiecko.BurstTriangulator.Preprocessor
+  nameWithType: Preprocessor
+- uid: andywiecko.BurstTriangulator.Preprocessor.COM
+  name: COM
+  href: api/andywiecko.BurstTriangulator.Preprocessor.html#andywiecko_BurstTriangulator_Preprocessor_COM
+  commentId: F:andywiecko.BurstTriangulator.Preprocessor.COM
+  fullName: andywiecko.BurstTriangulator.Preprocessor.COM
+  nameWithType: Preprocessor.COM
+- uid: andywiecko.BurstTriangulator.Preprocessor.None
+  name: None
+  href: api/andywiecko.BurstTriangulator.Preprocessor.html#andywiecko_BurstTriangulator_Preprocessor_None
+  commentId: F:andywiecko.BurstTriangulator.Preprocessor.None
+  fullName: andywiecko.BurstTriangulator.Preprocessor.None
+  nameWithType: Preprocessor.None
+- uid: andywiecko.BurstTriangulator.Preprocessor.PCA
+  name: PCA
+  href: api/andywiecko.BurstTriangulator.Preprocessor.html#andywiecko_BurstTriangulator_Preprocessor_PCA
+  commentId: F:andywiecko.BurstTriangulator.Preprocessor.PCA
+  fullName: andywiecko.BurstTriangulator.Preprocessor.PCA
+  nameWithType: Preprocessor.PCA
+- uid: andywiecko.BurstTriangulator.RefinementThresholds
+  name: RefinementThresholds
+  href: api/andywiecko.BurstTriangulator.RefinementThresholds.html
+  commentId: T:andywiecko.BurstTriangulator.RefinementThresholds
+  fullName: andywiecko.BurstTriangulator.RefinementThresholds
+  nameWithType: RefinementThresholds
+- uid: andywiecko.BurstTriangulator.RefinementThresholds.Angle
+  name: Angle
+  href: api/andywiecko.BurstTriangulator.RefinementThresholds.Angle.html#andywiecko_BurstTriangulator_RefinementThresholds_Angle
+  commentId: P:andywiecko.BurstTriangulator.RefinementThresholds.Angle
+  fullName: andywiecko.BurstTriangulator.RefinementThresholds.Angle
+  nameWithType: RefinementThresholds.Angle
+- uid: andywiecko.BurstTriangulator.RefinementThresholds.Angle*
+  name: Angle
+  href: api/andywiecko.BurstTriangulator.RefinementThresholds.Angle.html
+  commentId: Overload:andywiecko.BurstTriangulator.RefinementThresholds.Angle
+  fullName: andywiecko.BurstTriangulator.RefinementThresholds.Angle
+  nameWithType: RefinementThresholds.Angle
+- uid: andywiecko.BurstTriangulator.RefinementThresholds.Area
+  name: Area
+  href: api/andywiecko.BurstTriangulator.RefinementThresholds.Area.html#andywiecko_BurstTriangulator_RefinementThresholds_Area
+  commentId: P:andywiecko.BurstTriangulator.RefinementThresholds.Area
+  fullName: andywiecko.BurstTriangulator.RefinementThresholds.Area
+  nameWithType: RefinementThresholds.Area
+- uid: andywiecko.BurstTriangulator.RefinementThresholds.Area*
+  name: Area
+  href: api/andywiecko.BurstTriangulator.RefinementThresholds.Area.html
+  commentId: Overload:andywiecko.BurstTriangulator.RefinementThresholds.Area
+  fullName: andywiecko.BurstTriangulator.RefinementThresholds.Area
+  nameWithType: RefinementThresholds.Area
+- uid: andywiecko.BurstTriangulator.Status
+  name: Status
+  href: api/andywiecko.BurstTriangulator.Status.html
+  commentId: T:andywiecko.BurstTriangulator.Status
+  fullName: andywiecko.BurstTriangulator.Status
+  nameWithType: Status
+- uid: andywiecko.BurstTriangulator.Status.ERR
+  name: ERR
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR
+  fullName: andywiecko.BurstTriangulator.Status.ERR
+  nameWithType: Status.ERR
+- uid: andywiecko.BurstTriangulator.Status.OK
+  name: OK
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_OK
+  commentId: F:andywiecko.BurstTriangulator.Status.OK
+  fullName: andywiecko.BurstTriangulator.Status.OK
+  nameWithType: Status.OK
+- uid: andywiecko.BurstTriangulator.TriangulationSettings
+  name: TriangulationSettings
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.html
+  commentId: T:andywiecko.BurstTriangulator.TriangulationSettings
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings
+  nameWithType: TriangulationSettings
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary
+  name: AutoHolesAndBoundary
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary
+  nameWithType: TriangulationSettings.AutoHolesAndBoundary
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary*
+  name: AutoHolesAndBoundary
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary
+  nameWithType: TriangulationSettings.AutoHolesAndBoundary
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter
+  name: ConcentricShellsParameter
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter.html#andywiecko_BurstTriangulator_TriangulationSettings_ConcentricShellsParameter
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter
+  nameWithType: TriangulationSettings.ConcentricShellsParameter
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter*
+  name: ConcentricShellsParameter
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter
+  nameWithType: TriangulationSettings.ConcentricShellsParameter
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor
+  name: Preprocessor
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor.html#andywiecko_BurstTriangulator_TriangulationSettings_Preprocessor
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor
+  nameWithType: TriangulationSettings.Preprocessor
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor*
+  name: Preprocessor
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor
+  nameWithType: TriangulationSettings.Preprocessor
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh
+  name: RefineMesh
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh.html#andywiecko_BurstTriangulator_TriangulationSettings_RefineMesh
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh
+  nameWithType: TriangulationSettings.RefineMesh
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh*
+  name: RefineMesh
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh
+  nameWithType: TriangulationSettings.RefineMesh
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds
+  name: RefinementThresholds
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds.html#andywiecko_BurstTriangulator_TriangulationSettings_RefinementThresholds
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds
+  nameWithType: TriangulationSettings.RefinementThresholds
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds*
+  name: RefinementThresholds
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds
+  nameWithType: TriangulationSettings.RefinementThresholds
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary
+  name: RestoreBoundary
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_RestoreBoundary
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary
+  nameWithType: TriangulationSettings.RestoreBoundary
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary*
+  name: RestoreBoundary
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary
+  nameWithType: TriangulationSettings.RestoreBoundary
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters
+  name: SloanMaxIters
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters.html#andywiecko_BurstTriangulator_TriangulationSettings_SloanMaxIters
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters
+  nameWithType: TriangulationSettings.SloanMaxIters
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters*
+  name: SloanMaxIters
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters
+  nameWithType: TriangulationSettings.SloanMaxIters
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput
+  name: ValidateInput
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput.html#andywiecko_BurstTriangulator_TriangulationSettings_ValidateInput
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput
+  nameWithType: TriangulationSettings.ValidateInput
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput*
+  name: ValidateInput
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput
+  nameWithType: TriangulationSettings.ValidateInput
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.Verbose
+  name: Verbose
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.Verbose.html#andywiecko_BurstTriangulator_TriangulationSettings_Verbose
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.Verbose
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.Verbose
+  nameWithType: TriangulationSettings.Verbose
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.Verbose*
+  name: Verbose
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.Verbose.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.Verbose
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.Verbose
+  nameWithType: TriangulationSettings.Verbose
 - uid: andywiecko.BurstTriangulator.Triangulator
   name: Triangulator
   href: api/andywiecko.BurstTriangulator.Triangulator.html
@@ -64,48 +452,6 @@ references:
   commentId: Overload:andywiecko.BurstTriangulator.Triangulator.Input
   fullName: andywiecko.BurstTriangulator.Triangulator.Input
   nameWithType: Triangulator.Input
-- uid: andywiecko.BurstTriangulator.Triangulator.InputData
-  name: Triangulator.InputData
-  href: api/andywiecko.BurstTriangulator.Triangulator.InputData.html
-  commentId: T:andywiecko.BurstTriangulator.Triangulator.InputData
-  fullName: andywiecko.BurstTriangulator.Triangulator.InputData
-  nameWithType: Triangulator.InputData
-- uid: andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges
-  name: ConstraintEdges
-  href: api/andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges.html#andywiecko_BurstTriangulator_Triangulator_InputData_ConstraintEdges
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges
-  fullName: andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges
-  nameWithType: Triangulator.InputData.ConstraintEdges
-- uid: andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges*
-  name: ConstraintEdges
-  href: api/andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges
-  fullName: andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges
-  nameWithType: Triangulator.InputData.ConstraintEdges
-- uid: andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds
-  name: HoleSeeds
-  href: api/andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds.html#andywiecko_BurstTriangulator_Triangulator_InputData_HoleSeeds
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds
-  fullName: andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds
-  nameWithType: Triangulator.InputData.HoleSeeds
-- uid: andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds*
-  name: HoleSeeds
-  href: api/andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds
-  fullName: andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds
-  nameWithType: Triangulator.InputData.HoleSeeds
-- uid: andywiecko.BurstTriangulator.Triangulator.InputData.Positions
-  name: Positions
-  href: api/andywiecko.BurstTriangulator.Triangulator.InputData.Positions.html#andywiecko_BurstTriangulator_Triangulator_InputData_Positions
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.InputData.Positions
-  fullName: andywiecko.BurstTriangulator.Triangulator.InputData.Positions
-  nameWithType: Triangulator.InputData.Positions
-- uid: andywiecko.BurstTriangulator.Triangulator.InputData.Positions*
-  name: Positions
-  href: api/andywiecko.BurstTriangulator.Triangulator.InputData.Positions.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.InputData.Positions
-  fullName: andywiecko.BurstTriangulator.Triangulator.InputData.Positions
-  nameWithType: Triangulator.InputData.Positions
 - uid: andywiecko.BurstTriangulator.Triangulator.Output
   name: Output
   href: api/andywiecko.BurstTriangulator.Triangulator.Output.html#andywiecko_BurstTriangulator_Triangulator_Output
@@ -118,84 +464,6 @@ references:
   commentId: Overload:andywiecko.BurstTriangulator.Triangulator.Output
   fullName: andywiecko.BurstTriangulator.Triangulator.Output
   nameWithType: Triangulator.Output
-- uid: andywiecko.BurstTriangulator.Triangulator.OutputData
-  name: Triangulator.OutputData
-  href: api/andywiecko.BurstTriangulator.Triangulator.OutputData.html
-  commentId: T:andywiecko.BurstTriangulator.Triangulator.OutputData
-  fullName: andywiecko.BurstTriangulator.Triangulator.OutputData
-  nameWithType: Triangulator.OutputData
-- uid: andywiecko.BurstTriangulator.Triangulator.OutputData.Positions
-  name: Positions
-  href: api/andywiecko.BurstTriangulator.Triangulator.OutputData.Positions.html
-  commentId: F:andywiecko.BurstTriangulator.Triangulator.OutputData.Positions
-  fullName: andywiecko.BurstTriangulator.Triangulator.OutputData.Positions
-  nameWithType: Triangulator.OutputData.Positions
-- uid: andywiecko.BurstTriangulator.Triangulator.OutputData.Status
-  name: Status
-  href: api/andywiecko.BurstTriangulator.Triangulator.OutputData.Status.html
-  commentId: F:andywiecko.BurstTriangulator.Triangulator.OutputData.Status
-  fullName: andywiecko.BurstTriangulator.Triangulator.OutputData.Status
-  nameWithType: Triangulator.OutputData.Status
-- uid: andywiecko.BurstTriangulator.Triangulator.OutputData.Triangles
-  name: Triangles
-  href: api/andywiecko.BurstTriangulator.Triangulator.OutputData.Triangles.html
-  commentId: F:andywiecko.BurstTriangulator.Triangulator.OutputData.Triangles
-  fullName: andywiecko.BurstTriangulator.Triangulator.OutputData.Triangles
-  nameWithType: Triangulator.OutputData.Triangles
-- uid: andywiecko.BurstTriangulator.Triangulator.Preprocessor
-  name: Triangulator.Preprocessor
-  href: api/andywiecko.BurstTriangulator.Triangulator.Preprocessor.html
-  commentId: T:andywiecko.BurstTriangulator.Triangulator.Preprocessor
-  fullName: andywiecko.BurstTriangulator.Triangulator.Preprocessor
-  nameWithType: Triangulator.Preprocessor
-- uid: andywiecko.BurstTriangulator.Triangulator.Preprocessor.COM
-  name: COM
-  href: api/andywiecko.BurstTriangulator.Triangulator.Preprocessor.html#andywiecko_BurstTriangulator_Triangulator_Preprocessor_COM
-  commentId: F:andywiecko.BurstTriangulator.Triangulator.Preprocessor.COM
-  fullName: andywiecko.BurstTriangulator.Triangulator.Preprocessor.COM
-  nameWithType: Triangulator.Preprocessor.COM
-- uid: andywiecko.BurstTriangulator.Triangulator.Preprocessor.None
-  name: None
-  href: api/andywiecko.BurstTriangulator.Triangulator.Preprocessor.html#andywiecko_BurstTriangulator_Triangulator_Preprocessor_None
-  commentId: F:andywiecko.BurstTriangulator.Triangulator.Preprocessor.None
-  fullName: andywiecko.BurstTriangulator.Triangulator.Preprocessor.None
-  nameWithType: Triangulator.Preprocessor.None
-- uid: andywiecko.BurstTriangulator.Triangulator.Preprocessor.PCA
-  name: PCA
-  href: api/andywiecko.BurstTriangulator.Triangulator.Preprocessor.html#andywiecko_BurstTriangulator_Triangulator_Preprocessor_PCA
-  commentId: F:andywiecko.BurstTriangulator.Triangulator.Preprocessor.PCA
-  fullName: andywiecko.BurstTriangulator.Triangulator.Preprocessor.PCA
-  nameWithType: Triangulator.Preprocessor.PCA
-- uid: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds
-  name: Triangulator.RefinementThresholds
-  href: api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.html
-  commentId: T:andywiecko.BurstTriangulator.Triangulator.RefinementThresholds
-  fullName: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds
-  nameWithType: Triangulator.RefinementThresholds
-- uid: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle
-  name: Angle
-  href: api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle.html#andywiecko_BurstTriangulator_Triangulator_RefinementThresholds_Angle
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle
-  fullName: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle
-  nameWithType: Triangulator.RefinementThresholds.Angle
-- uid: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle*
-  name: Angle
-  href: api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle
-  fullName: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle
-  nameWithType: Triangulator.RefinementThresholds.Angle
-- uid: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area
-  name: Area
-  href: api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area.html#andywiecko_BurstTriangulator_Triangulator_RefinementThresholds_Area
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area
-  fullName: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area
-  nameWithType: Triangulator.RefinementThresholds.Area
-- uid: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area*
-  name: Area
-  href: api/andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area
-  fullName: andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Area
-  nameWithType: Triangulator.RefinementThresholds.Area
 - uid: andywiecko.BurstTriangulator.Triangulator.Run
   name: Run()
   href: api/andywiecko.BurstTriangulator.Triangulator.Run.html#andywiecko_BurstTriangulator_Triangulator_Run
@@ -232,174 +500,109 @@ references:
   commentId: Overload:andywiecko.BurstTriangulator.Triangulator.Settings
   fullName: andywiecko.BurstTriangulator.Triangulator.Settings
   nameWithType: Triangulator.Settings
-- uid: andywiecko.BurstTriangulator.Triangulator.Status
-  name: Triangulator.Status
-  href: api/andywiecko.BurstTriangulator.Triangulator.Status.html
-  commentId: T:andywiecko.BurstTriangulator.Triangulator.Status
-  fullName: andywiecko.BurstTriangulator.Triangulator.Status
-  nameWithType: Triangulator.Status
-- uid: andywiecko.BurstTriangulator.Triangulator.Status.ERR
-  name: ERR
-  href: api/andywiecko.BurstTriangulator.Triangulator.Status.html#andywiecko_BurstTriangulator_Triangulator_Status_ERR
-  commentId: F:andywiecko.BurstTriangulator.Triangulator.Status.ERR
-  fullName: andywiecko.BurstTriangulator.Triangulator.Status.ERR
-  nameWithType: Triangulator.Status.ERR
-- uid: andywiecko.BurstTriangulator.Triangulator.Status.OK
-  name: OK
-  href: api/andywiecko.BurstTriangulator.Triangulator.Status.html#andywiecko_BurstTriangulator_Triangulator_Status_OK
-  commentId: F:andywiecko.BurstTriangulator.Triangulator.Status.OK
-  fullName: andywiecko.BurstTriangulator.Triangulator.Status.OK
-  nameWithType: Triangulator.Status.OK
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings
-  name: Triangulator.TriangulationSettings
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.html
-  commentId: T:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings
-  nameWithType: Triangulator.TriangulationSettings
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount
-  name: BatchCount
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_BatchCount
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount
-  nameWithType: Triangulator.TriangulationSettings.BatchCount
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount*
-  name: BatchCount
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.BatchCount
-  nameWithType: Triangulator.TriangulationSettings.BatchCount
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter
-  name: ConcentricShellsParameter
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_ConcentricShellsParameter
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter
-  nameWithType: Triangulator.TriangulationSettings.ConcentricShellsParameter
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter*
-  name: ConcentricShellsParameter
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConcentricShellsParameter
-  nameWithType: Triangulator.TriangulationSettings.ConcentricShellsParameter
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges
-  name: ConstrainEdges
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_ConstrainEdges
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges
-  nameWithType: Triangulator.TriangulationSettings.ConstrainEdges
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges*
-  name: ConstrainEdges
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ConstrainEdges
-  nameWithType: Triangulator.TriangulationSettings.ConstrainEdges
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea
-  name: MaximumArea
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_MaximumArea
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea
-  nameWithType: Triangulator.TriangulationSettings.MaximumArea
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea*
-  name: MaximumArea
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MaximumArea
-  nameWithType: Triangulator.TriangulationSettings.MaximumArea
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle
-  name: MinimumAngle
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_MinimumAngle
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle
-  nameWithType: Triangulator.TriangulationSettings.MinimumAngle
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle*
-  name: MinimumAngle
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumAngle
-  nameWithType: Triangulator.TriangulationSettings.MinimumAngle
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea
-  name: MinimumArea
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_MinimumArea
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea
-  nameWithType: Triangulator.TriangulationSettings.MinimumArea
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea*
-  name: MinimumArea
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.MinimumArea
-  nameWithType: Triangulator.TriangulationSettings.MinimumArea
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor
-  name: Preprocessor
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_Preprocessor
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor
-  nameWithType: Triangulator.TriangulationSettings.Preprocessor
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor*
-  name: Preprocessor
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.Preprocessor
-  nameWithType: Triangulator.TriangulationSettings.Preprocessor
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh
-  name: RefineMesh
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_RefineMesh
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh
-  nameWithType: Triangulator.TriangulationSettings.RefineMesh
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh*
-  name: RefineMesh
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefineMesh
-  nameWithType: Triangulator.TriangulationSettings.RefineMesh
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds
-  name: RefinementThresholds
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_RefinementThresholds
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds
-  nameWithType: Triangulator.TriangulationSettings.RefinementThresholds
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds*
-  name: RefinementThresholds
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RefinementThresholds
-  nameWithType: Triangulator.TriangulationSettings.RefinementThresholds
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary
-  name: RestoreBoundary
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_RestoreBoundary
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary
-  nameWithType: Triangulator.TriangulationSettings.RestoreBoundary
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary*
-  name: RestoreBoundary
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary
-  nameWithType: Triangulator.TriangulationSettings.RestoreBoundary
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters
-  name: SloanMaxIters
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_SloanMaxIters
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters
-  nameWithType: Triangulator.TriangulationSettings.SloanMaxIters
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters*
-  name: SloanMaxIters
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.SloanMaxIters
-  nameWithType: Triangulator.TriangulationSettings.SloanMaxIters
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
-  name: ValidateInput
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_ValidateInput
-  commentId: P:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
-  nameWithType: Triangulator.TriangulationSettings.ValidateInput
-- uid: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput*
-  name: ValidateInput
-  href: api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput.html
-  commentId: Overload:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
-  fullName: andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
-  nameWithType: Triangulator.TriangulationSettings.ValidateInput
+- uid: andywiecko.BurstTriangulator.Triangulator`1
+  name: Triangulator<T2>
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.html
+  commentId: T:andywiecko.BurstTriangulator.Triangulator`1
+  name.vb: Triangulator(Of T2)
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2)
+  nameWithType: Triangulator<T2>
+  nameWithType.vb: Triangulator(Of T2)
+- uid: andywiecko.BurstTriangulator.Triangulator`1.#ctor(System.Int32,Unity.Collections.Allocator)
+  name: Triangulator(int, Allocator)
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.-ctor.html#andywiecko_BurstTriangulator_Triangulator_1__ctor_System_Int32_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.Triangulator`1.#ctor(System.Int32,Unity.Collections.Allocator)
+  name.vb: New(Integer, Allocator)
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Triangulator(int, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).New(Integer, Unity.Collections.Allocator)
+  nameWithType: Triangulator<T2>.Triangulator(int, Allocator)
+  nameWithType.vb: Triangulator(Of T2).New(Integer, Allocator)
+- uid: andywiecko.BurstTriangulator.Triangulator`1.#ctor(Unity.Collections.Allocator)
+  name: Triangulator(Allocator)
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.-ctor.html#andywiecko_BurstTriangulator_Triangulator_1__ctor_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.Triangulator`1.#ctor(Unity.Collections.Allocator)
+  name.vb: New(Allocator)
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Triangulator(Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).New(Unity.Collections.Allocator)
+  nameWithType: Triangulator<T2>.Triangulator(Allocator)
+  nameWithType.vb: Triangulator(Of T2).New(Allocator)
+- uid: andywiecko.BurstTriangulator.Triangulator`1.#ctor*
+  name: Triangulator
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.-ctor.html
+  commentId: Overload:andywiecko.BurstTriangulator.Triangulator`1.#ctor
+  name.vb: New
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Triangulator
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).New
+  nameWithType: Triangulator<T2>.Triangulator
+  nameWithType.vb: Triangulator(Of T2).New
+- uid: andywiecko.BurstTriangulator.Triangulator`1.Dispose
+  name: Dispose()
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.Dispose.html#andywiecko_BurstTriangulator_Triangulator_1_Dispose
+  commentId: M:andywiecko.BurstTriangulator.Triangulator`1.Dispose
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Dispose()
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Dispose()
+  nameWithType: Triangulator<T2>.Dispose()
+  nameWithType.vb: Triangulator(Of T2).Dispose()
+- uid: andywiecko.BurstTriangulator.Triangulator`1.Dispose*
+  name: Dispose
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.Dispose.html
+  commentId: Overload:andywiecko.BurstTriangulator.Triangulator`1.Dispose
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Dispose
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Dispose
+  nameWithType: Triangulator<T2>.Dispose
+  nameWithType.vb: Triangulator(Of T2).Dispose
+- uid: andywiecko.BurstTriangulator.Triangulator`1.Input
+  name: Input
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.Input.html#andywiecko_BurstTriangulator_Triangulator_1_Input
+  commentId: P:andywiecko.BurstTriangulator.Triangulator`1.Input
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Input
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Input
+  nameWithType: Triangulator<T2>.Input
+  nameWithType.vb: Triangulator(Of T2).Input
+- uid: andywiecko.BurstTriangulator.Triangulator`1.Input*
+  name: Input
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.Input.html
+  commentId: Overload:andywiecko.BurstTriangulator.Triangulator`1.Input
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Input
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Input
+  nameWithType: Triangulator<T2>.Input
+  nameWithType.vb: Triangulator(Of T2).Input
+- uid: andywiecko.BurstTriangulator.Triangulator`1.Output
+  name: Output
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.Output.html#andywiecko_BurstTriangulator_Triangulator_1_Output
+  commentId: P:andywiecko.BurstTriangulator.Triangulator`1.Output
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Output
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Output
+  nameWithType: Triangulator<T2>.Output
+  nameWithType.vb: Triangulator(Of T2).Output
+- uid: andywiecko.BurstTriangulator.Triangulator`1.Output*
+  name: Output
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.Output.html
+  commentId: Overload:andywiecko.BurstTriangulator.Triangulator`1.Output
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Output
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Output
+  nameWithType: Triangulator<T2>.Output
+  nameWithType.vb: Triangulator(Of T2).Output
+- uid: andywiecko.BurstTriangulator.Triangulator`1.Settings
+  name: Settings
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.Settings.html#andywiecko_BurstTriangulator_Triangulator_1_Settings
+  commentId: P:andywiecko.BurstTriangulator.Triangulator`1.Settings
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Settings
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Settings
+  nameWithType: Triangulator<T2>.Settings
+  nameWithType.vb: Triangulator(Of T2).Settings
+- uid: andywiecko.BurstTriangulator.Triangulator`1.Settings*
+  name: Settings
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.Settings.html
+  commentId: Overload:andywiecko.BurstTriangulator.Triangulator`1.Settings
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Settings
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Settings
+  nameWithType: Triangulator<T2>.Settings
+  nameWithType.vb: Triangulator(Of T2).Settings
+- uid: benchmark-md
+  name: Benchmark
+  href: manual/benchmark.html
 - uid: example-holes-and-boundaries
   name: Holes and boundaries
   href: manual/examples/holes-and-boundaries.html

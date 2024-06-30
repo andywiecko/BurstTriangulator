@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v2.5.0</b></div>
+                "><b>v3.0.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -94,7 +94,7 @@
 
 <p><img src="../../images/guitar-light-dt.svg" alt="guitar-light-dt"></p>
 <p>To perform a <em>classic</em>, i.e., non-constrained without refinement, Delaunay triangulation, use the following:</p>
-<pre><code class="lang-csharp">using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { Positions = positions }

@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Class Triangulator.InputData | BurstTriangulator </title>
+      <title>Class TriangulationSettings | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Class Triangulator.InputData | BurstTriangulator ">
+      <meta name="title" content="Class TriangulationSettings | BurstTriangulator ">
     
     
       <link rel="shortcut icon" href="../images/favicon.ico">
@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v2.5.0</b></div>
+                "><b>v3.0.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -89,17 +89,17 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.Triangulator.InputData">
+            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.TriangulationSettings">
 
 
 
-  <h1 id="andywiecko_BurstTriangulator_Triangulator_InputData" data-uid="andywiecko.BurstTriangulator.Triangulator.InputData" class="text-break">Class Triangulator.InputData</h1>
+  <h1 id="andywiecko_BurstTriangulator_TriangulationSettings" data-uid="andywiecko.BurstTriangulator.TriangulationSettings" class="text-break">Class TriangulationSettings</h1>
   <div class="markdown level0 summary"></div>
   <div class="markdown level0 conceptual"></div>
   <div class="inheritance">
     <h5>Inheritance</h5>
     <div class="level0"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
-    <div class="level1"><span class="xref">Triangulator.InputData</span></div>
+    <div class="level1"><span class="xref">TriangulationSettings</span></div>
   </div>
   <div class="inheritedMembers">
     <h5>Inherited Members</h5>
@@ -127,9 +127,10 @@
   </div>
   <h6><strong>Namespace</strong>: <a class="xref" href="andywiecko.html">andywiecko</a>.<a class="xref" href="andywiecko.BurstTriangulator.html">BurstTriangulator</a></h6>
   <h6><strong>Assembly</strong>: .dll</h6>
-  <h5 id="andywiecko_BurstTriangulator_Triangulator_InputData_syntax">Syntax</h5>
+  <h5 id="andywiecko_BurstTriangulator_TriangulationSettings_syntax">Syntax</h5>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class Triangulator.InputData</code></pre>
+    <pre><code class="lang-csharp hljs">[Serializable]
+public class TriangulationSettings</code></pre>
   </div>
   <h3 id="properties">Properties
 </h3>
@@ -142,22 +143,75 @@
     </thead>
     <tbody>
       <tr>
-        <td id="andywiecko_BurstTriangulator_Triangulator_InputData_ConstraintEdges" data-uid="andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges">
-          <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges.html#andywiecko_BurstTriangulator_Triangulator_InputData_ConstraintEdges">ConstraintEdges</a>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary">AutoHolesAndBoundary</a>
+        </td>
+        <td class="markdown level1 summary"><p>If set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, holes and boundaries will be created automatically
+depending on the provided <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_ConcentricShellsParameter" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter.html#andywiecko_BurstTriangulator_TriangulationSettings_ConcentricShellsParameter">ConcentricShellsParameter</a>
+        </td>
+        <td class="markdown level1 summary"><p>Constant used in <em>concentric shells</em> segment splitting.
+<b>Modify this only if you know what you are doing!</b></p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_Preprocessor" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor.html#andywiecko_BurstTriangulator_TriangulationSettings_Preprocessor">Preprocessor</a>
+        </td>
+        <td class="markdown level1 summary"><p>Preprocessing algorithm for the input data. Default is <a class="xref" href="andywiecko.BurstTriangulator.Preprocessor.html#andywiecko_BurstTriangulator_Preprocessor_None">None</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_RefineMesh" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh.html#andywiecko_BurstTriangulator_TriangulationSettings_RefineMesh">RefineMesh</a>
+        </td>
+        <td class="markdown level1 summary"><p>If <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a> refines mesh using
+<a href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_RefinementThresholds" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds.html#andywiecko_BurstTriangulator_TriangulationSettings_RefinementThresholds">RefinementThresholds</a>
         </td>
         <td class="markdown level1 summary"></td>
       </tr>
       <tr>
-        <td id="andywiecko_BurstTriangulator_Triangulator_InputData_HoleSeeds" data-uid="andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds">
-          <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.InputData.HoleSeeds.html#andywiecko_BurstTriangulator_Triangulator_InputData_HoleSeeds">HoleSeeds</a>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_RestoreBoundary" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_RestoreBoundary">RestoreBoundary</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>If <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a> the mesh boundary is restored using <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a>.</p>
+</td>
       </tr>
       <tr>
-        <td id="andywiecko_BurstTriangulator_Triangulator_InputData_Positions" data-uid="andywiecko.BurstTriangulator.Triangulator.InputData.Positions">
-          <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.InputData.Positions.html#andywiecko_BurstTriangulator_Triangulator_InputData_Positions">Positions</a>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_SloanMaxIters" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters.html#andywiecko_BurstTriangulator_TriangulationSettings_SloanMaxIters">SloanMaxIters</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Max iteration count during Sloan's algorithm (constraining edges).
+<b>Modify this only if you know what you are doing.</b></p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_ValidateInput" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput.html#andywiecko_BurstTriangulator_TriangulationSettings_ValidateInput">ValidateInput</a>
+        </td>
+        <td class="markdown level1 summary"><p>If set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, the provided data will be validated before running the triangulation procedure.
+Input positions, as well as input constraints, have a few restrictions.
+See <a href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md">README.md</a> for more details.
+If one of the conditions fails, the triangulation will not be calculated.
+This can be detected as an error by inspecting <a class="xref" href="andywiecko.BurstTriangulator.OutputData-1.Status.html#andywiecko_BurstTriangulator_OutputData_1_Status">Status</a> value (native, can be used in jobs).
+Additionally, if <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.Verbose.html#andywiecko_BurstTriangulator_TriangulationSettings_Verbose">Verbose</a> is set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, the corresponding error will be logged in the Console.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_Verbose" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.Verbose">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.Verbose.html#andywiecko_BurstTriangulator_TriangulationSettings_Verbose">Verbose</a>
+        </td>
+        <td class="markdown level1 summary"><p>If set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, caught errors with <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.html">Triangulator</a> will be logged in the Console.</p>
+</td>
       </tr>
     </tbody>
   </table>

@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v2.5.0</b></div>
+                "><b>v3.0.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -93,7 +93,7 @@
 <h1 id="example-usage">Example usage</h1>
 
 <p>Below is an example usage of the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.html"><code>Triangulator</code></a> with an input set consisting of four points that form the unit square:</p>
-<pre><code class="lang-csharp">using var positions = new NativeArray&lt;float2&gt;(new float2[]
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;double2&gt;(new double2[]
 {
   new(0, 0), new(1, 0), new(1, 1), new(0, 1),
 }, Allocator.Persistent);
@@ -112,7 +112,7 @@ var triangles = triangulator.Output.Triangles;
 If you want to call this within a jobs pipeline, schedule a job using <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.Schedule.html#andywiecko_BurstTriangulator_Triangulator_Schedule_Unity_Jobs_JobHandle_"><code>triangulator.Schedule(dependencies)</code></a>.
 Click <a class="xref" href="../advanced/input-jobs.html"><strong>here</strong></a> to learn how to use triangulation within a jobs pipeline.</p>
 </div>
-<p>If triangulation fails for some reason, you can catch the information using <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.OutputData.Status.html"><code>Status</code></a></p>
+<p>If triangulation fails for some reason, you can catch the information using <a class="xref" href="../../api/andywiecko.BurstTriangulator.OutputData-1.Status.html#andywiecko_BurstTriangulator_OutputData_1_Status"><code>Status</code></a></p>
 <pre><code class="lang-csharp">status = triangulator.Output.Status.Value;
 if (status == Triangulator.Status.ERR) // ERROR!
 {
@@ -120,7 +120,7 @@ if (status == Triangulator.Status.ERR) // ERROR!
 }
 </code></pre>
 <p>The result of the triangulation procedure will depend on the selected settings.
-There are a few settings for triangulation, which are briefly described in the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.html">API documentation</a>.
+There are a few settings for triangulation, which are briefly described in the <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.html">API documentation</a>.
 Follow the articles in the manual to learn more about settings.
 In other examples, the following <em>cool</em> guitar was used as an input test case:</p>
 <p><img src="../../images/guitar-light.svg" alt="guitar-light"></p>

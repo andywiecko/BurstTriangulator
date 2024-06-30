@@ -5,19 +5,19 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Triangulation with refinement | BurstTriangulator </title>
+      <title>Property Input | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Triangulation with refinement | BurstTriangulator ">
+      <meta name="title" content="Property Input | BurstTriangulator ">
     
     
-      <link rel="shortcut icon" href="../../images/favicon.ico">
-      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
-      <link rel="stylesheet" href="../../styles/docfx.css">
-      <link rel="stylesheet" href="../../styles/main.css">
-      <meta property="docfx:navrel" content="../../toc.html">
-      <meta property="docfx:tocrel" content="../toc.html">
+      <link rel="shortcut icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
     
-    <meta property="docfx:rel" content="../../">
+    <meta property="docfx:rel" content="../">
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
@@ -33,8 +33,8 @@
                 <span class="icon-bar"></span>
               </button>
 
-              <a class="navbar-brand" href="../../index.html">
-                <img id="logo" class="svg" src="../../images/logo.svg" alt="BurstTriangulator">
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/logo.svg" alt="BurstTriangulator">
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -89,44 +89,37 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="">
-<h1 id="triangulation-with-refinement">Triangulation with refinement</h1>
+            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.Triangulator`1.Input*">
 
-<p><img src="../../images/guitar-light-dtr.svg" alt="guitar-light-dtr"></p>
-<p>To proceed with triangulation using mesh refinement, set <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh.html#andywiecko_BurstTriangulator_TriangulationSettings_RefineMesh"><code>RefineMesh</code></a> to true and specify the required <a class="xref" href="../../api/andywiecko.BurstTriangulator.RefinementThresholds.html"><code>RefinementThresholds</code></a>:</p>
-<pre><code class="lang-csharp">using var inputPositions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
-using var triangulator = new Triangulator(Allocator.Persistent)
-{
-  Input = { Positions = inputPositions },
-  Settings = {
-    RefineMesh = true,
-    RefinementThresholds = {
-      Area = 1f,
-      Angle = math.radians(20f)
-    },
-  }
-};
 
-triangulator.Run();
 
-var triangles = triangulator.Output.Triangles;
-var positions = triangulator.Output.Positions;
-</code></pre>
-<p>The refinement process is controlled by two threshold parameters:</p>
-<ul>
-<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.RefinementThresholds.Area.html#andywiecko_BurstTriangulator_RefinementThresholds_Area"><code>Area</code></a>: denoted as <span class="math">\(C_\triangle\)</span></li>
-<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.RefinementThresholds.Angle.html#andywiecko_BurstTriangulator_RefinementThresholds_Angle"><code>Angle</code></a>: denoted as <span class="math">\(C_\theta\)</span></li>
-</ul>
-<p>These parameters allow fine-tuning of the refinement results based on specific criteria.
-Below, you can observe a set of results obtained by applying the refinement process to input data from Lake Superior (open the image in a new tab to see the details).</p>
-<br>
-<p><img src="../../images/lake-full-light.png" alt="lake-full-light"></p>
-<br>
-<div class="NOTE">
-<h5>Note</h5>
-<p>Refinement is available for both constrained and non-constrained triangulation.</p>
+<h1 id="andywiecko_BurstTriangulator_Triangulator_1_Input_" data-uid="andywiecko.BurstTriangulator.Triangulator`1.Input*">Property Input</h1>
+<div class="markdown level0 summary"></div>
+<div class="markdown level0 conceptual"></div>
+
+<a id="andywiecko_BurstTriangulator_Triangulator_1_Input_" data-uid="andywiecko.BurstTriangulator.Triangulator`1.Input*"></a>
+<h4 id="andywiecko_BurstTriangulator_Triangulator_1_Input" data-uid="andywiecko.BurstTriangulator.Triangulator`1.Input">Input</h4>
+<div class="markdown level1 summary"></div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">public InputData&lt;T2&gt; Input { get; set; }</code></pre>
 </div>
-
+<h5 class="propertyValue">Property Value</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.InputData-1.html">InputData</a>&lt;T2&gt;</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
 </article>
           </div>
 
@@ -156,9 +149,9 @@ Below, you can observe a set of results obtained by applying the refinement proc
     </div>
     <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
     <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
-    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
-    <script type="text/javascript" src="../../styles/docfx.js"></script>
-    <script type="text/javascript" src="../../styles/main.js"></script>
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <style>

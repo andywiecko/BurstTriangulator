@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v2.5.0</b></div>
+                "><b>v3.0.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -113,7 +113,7 @@
 <p align="center"><img src="../images/introduction-restore-boundary.svg" width="500"></p>
 <br>
 <h2 id="holes">Holes</h2>
-<p>Triangulation can be extended to support meshes with holes. Additional input data, such as hole seeds <span class="math">\(\{h_i\}\)</span>, is required for this purpose. Although automation of this process is currently not implemented, it is planned for future development.</p>
+<p>Triangulation can be extended to support meshes with holes by using additional input data, such as hole seeds <span class="math">\(\{h_i\}\)</span>. However, this process can be automated in some cases, so the holes do not need to be present in the input data.</p>
 <p>Hole seeds act as starting points for a removal process resembling the spread of a virus. Starting from the triangle containing <span class="math">\(h_i\)</span>, neighboring triangles are successively removed until the search reaches the constraint edge. In this process, constraint edges act as barriers, preventing further propagation of the removal.</p>
 <br>
 <p align="center"><img src="../images/introduction-holes.svg" width="500"></p>

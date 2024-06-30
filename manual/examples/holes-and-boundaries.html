@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v2.5.0</b></div>
+                "><b>v3.0.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -94,9 +94,9 @@
 
 <p><img src="../../images/guitar-light-cdtrbh.svg" alt="guitar-light-cdtrbh"></p>
 <h2 id="restoring-boundaries">Restoring boundaries</h2>
-<p>The package also provides an option for restoring boundaries. In addition to setting the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_RestoreBoundary"><code>RestoreBoundary</code></a> property, one needs to provide edge constraints to restore the boundaries.</p>
+<p>The package also provides an option for restoring boundaries. In addition to setting the <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_RestoreBoundary"><code>RestoreBoundary</code></a> property, one needs to provide edge constraints to restore the boundaries.</p>
 <pre><code class="lang-csharp">using var constraintEdges = new NativeArray&lt;int&gt;(..., Allocator.Persistent);
-using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
+using var positions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { 
@@ -114,10 +114,10 @@ var triangles = triangulator.Output.Triangles;
 </code></pre>
 <h2 id="holes-supports">Holes supports</h2>
 <p>The package also provides an option for creating holes.
-In addition to setting the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges.html#andywiecko_BurstTriangulator_Triangulator_InputData_ConstraintEdges"><code>Input.ConstraintEdges</code></a>, a user needs to provide positions of the holes in the same space as the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.InputData.Positions.html#andywiecko_BurstTriangulator_Triangulator_InputData_Positions"><code>Input.Positions</code></a>. Enabling the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary.html#andywiecko_BurstTriangulator_Triangulator_TriangulationSettings_RestoreBoundary"><code>RestoreBoundary</code></a> option is not mandatory; holes could be introduced independently of preserving the boundaries.</p>
+In addition to setting the <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges"><code>Input.ConstraintEdges</code></a>, a user needs to provide positions of the holes in the same space as the <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions"><code>Input.Positions</code></a>. Enabling the <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_RestoreBoundary"><code>RestoreBoundary</code></a> option is not mandatory; holes could be introduced independently of preserving the boundaries.</p>
 <pre><code class="lang-csharp">using var constraintEdges = new NativeArray&lt;int&gt;(..., Allocator.Persistent);
-using var holes = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
-using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
+using var holes = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
+using var positions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { 
@@ -134,6 +134,28 @@ triangulator.Run();
 
 var triangles = triangulator.Output.Triangles;
 </code></pre>
+<h2 id="auto-holes-and-boundary">Auto holes and boundary</h2>
+<p>The package also provides automatic hole detection and restoring boundary. If one sets <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary"><code>Settings.AutoHolesAndBoundary</code></a> to <code>true</code>, then holes will be created automatically depending on the provided constraints.</p>
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
+using var constraintEdges = new NativeArray&lt;int&gt;(..., Allocator.Persistent);
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+  Input = { 
+    Positions = positions,
+    ConstraintEdges = constraintEdges,
+  },
+  Settings = { AutoHolesAndBoundary = true, },
+};
+
+triangulator.Run();
+
+var triangles = triangulator.Output.Triangles;
+</code></pre>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>The current implementation of <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary"><code>AutoHolesAndBoundary</code></a> detects only <em>1-level islands</em>.
+It will not detect holes in <em>solid</em> meshes inside other holes.</p>
+</div>
 
 </article>
           </div>

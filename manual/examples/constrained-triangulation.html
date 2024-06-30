@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v2.5.0</b></div>
+                "><b>v3.0.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -95,7 +95,7 @@
 <p><img src="../../images/guitar-light-cdt.svg" alt="guitar-light-cdt"></p>
 <h2 id="constraintedges-input"><code>ConstraintEdges</code> Input</h2>
 <p>It is not guaranteed that all edges in the input will be present in the <em>classic</em> Delaunay triangulation result.
-To ensure specific edges <span class="math">\(\{(i, j)\}\)</span> are included in the final triangulation, specify the constraints in <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges.html#andywiecko_BurstTriangulator_Triangulator_InputData_ConstraintEdges"><code>Input.ConstraintEdges</code></a>.
+To ensure specific edges <span class="math">\(\{(i, j)\}\)</span> are included in the final triangulation, specify the constraints in <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges"><code>Input.ConstraintEdges</code></a>.
 Provide additional input data as a continuous index array:</p>
 <div class="math">
 \[
@@ -103,7 +103,7 @@ Provide additional input data as a continuous index array:</p>
 \]</div>
 <p>This corresponds to constraint edges <span class="math">\(\{ (a_0, a_1), (b_0, b_1), (c_0, c_1), \dots\}\)</span>.</p>
 <pre><code class="lang-csharp">using var constraintEdges = new NativeArray&lt;int&gt;(..., Allocator.Persistent);
-using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
+using var positions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { 

@@ -5,19 +5,19 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Triangulation with refinement | BurstTriangulator </title>
+      <title>Method Run | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Triangulation with refinement | BurstTriangulator ">
+      <meta name="title" content="Method Run | BurstTriangulator ">
     
     
-      <link rel="shortcut icon" href="../../images/favicon.ico">
-      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
-      <link rel="stylesheet" href="../../styles/docfx.css">
-      <link rel="stylesheet" href="../../styles/main.css">
-      <meta property="docfx:navrel" content="../../toc.html">
-      <meta property="docfx:tocrel" content="../toc.html">
+      <link rel="shortcut icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
     
-    <meta property="docfx:rel" content="../../">
+    <meta property="docfx:rel" content="../">
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
@@ -33,8 +33,8 @@
                 <span class="icon-bar"></span>
               </button>
 
-              <a class="navbar-brand" href="../../index.html">
-                <img id="logo" class="svg" src="../../images/logo.svg" alt="BurstTriangulator">
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/logo.svg" alt="BurstTriangulator">
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -89,44 +89,64 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="">
-<h1 id="triangulation-with-refinement">Triangulation with refinement</h1>
+            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.Extensions.Run*">
 
-<p><img src="../../images/guitar-light-dtr.svg" alt="guitar-light-dtr"></p>
-<p>To proceed with triangulation using mesh refinement, set <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh.html#andywiecko_BurstTriangulator_TriangulationSettings_RefineMesh"><code>RefineMesh</code></a> to true and specify the required <a class="xref" href="../../api/andywiecko.BurstTriangulator.RefinementThresholds.html"><code>RefinementThresholds</code></a>:</p>
-<pre><code class="lang-csharp">using var inputPositions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
-using var triangulator = new Triangulator(Allocator.Persistent)
-{
-  Input = { Positions = inputPositions },
-  Settings = {
-    RefineMesh = true,
-    RefinementThresholds = {
-      Area = 1f,
-      Angle = math.radians(20f)
-    },
-  }
-};
 
-triangulator.Run();
 
-var triangles = triangulator.Output.Triangles;
-var positions = triangulator.Output.Positions;
-</code></pre>
-<p>The refinement process is controlled by two threshold parameters:</p>
-<ul>
-<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.RefinementThresholds.Area.html#andywiecko_BurstTriangulator_RefinementThresholds_Area"><code>Area</code></a>: denoted as <span class="math">\(C_\triangle\)</span></li>
-<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.RefinementThresholds.Angle.html#andywiecko_BurstTriangulator_RefinementThresholds_Angle"><code>Angle</code></a>: denoted as <span class="math">\(C_\theta\)</span></li>
-</ul>
-<p>These parameters allow fine-tuning of the refinement results based on specific criteria.
-Below, you can observe a set of results obtained by applying the refinement process to input data from Lake Superior (open the image in a new tab to see the details).</p>
-<br>
-<p><img src="../../images/lake-full-light.png" alt="lake-full-light"></p>
-<br>
-<div class="NOTE">
-<h5>Note</h5>
-<p>Refinement is available for both constrained and non-constrained triangulation.</p>
+<h1 id="andywiecko_BurstTriangulator_Extensions_Run_" data-uid="andywiecko.BurstTriangulator.Extensions.Run*">Method Run</h1>
+<div class="markdown level0 summary"></div>
+<div class="markdown level0 conceptual"></div>
+
+<a id="andywiecko_BurstTriangulator_Extensions_Run_" data-uid="andywiecko.BurstTriangulator.Extensions.Run*"></a>
+<h4 id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_float2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.float2})">Run(Triangulator&lt;float2&gt;)</h4>
+<div class="markdown level1 summary"></div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">public static void Run(this Triangulator&lt;float2&gt; @this)</code></pre>
 </div>
-
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html">float2</a>&gt;</td>
+      <td><span class="parametername">this</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<a id="andywiecko_BurstTriangulator_Extensions_Run_" data-uid="andywiecko.BurstTriangulator.Extensions.Run*"></a>
+<h4 id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_double2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.double2})">Run(Triangulator&lt;double2&gt;)</h4>
+<div class="markdown level1 summary"></div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">public static void Run(this Triangulator&lt;double2&gt; @this)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>&gt;</td>
+      <td><span class="parametername">this</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
 </article>
           </div>
 
@@ -156,9 +176,9 @@ Below, you can observe a set of results obtained by applying the refinement proc
     </div>
     <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
     <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
-    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
-    <script type="text/javascript" src="../../styles/docfx.js"></script>
-    <script type="text/javascript" src="../../styles/main.js"></script>
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
     <style>

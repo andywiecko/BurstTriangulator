@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Triangulation with refinement | BurstTriangulator </title>
+      <title>Generic coordinates | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Triangulation with refinement | BurstTriangulator ">
+      <meta name="title" content="Generic coordinates | BurstTriangulator ">
     
     
       <link rel="shortcut icon" href="../../images/favicon.ico">
@@ -90,42 +90,61 @@
         <div class="article row grid-right">
           <div class="col-md-10">
             <article class="content wrap" id="_content" data-uid="">
-<h1 id="triangulation-with-refinement">Triangulation with refinement</h1>
+<h1 id="generic-coordinates">Generic coordinates</h1>
 
-<p><img src="../../images/guitar-light-dtr.svg" alt="guitar-light-dtr"></p>
-<p>To proceed with triangulation using mesh refinement, set <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh.html#andywiecko_BurstTriangulator_TriangulationSettings_RefineMesh"><code>RefineMesh</code></a> to true and specify the required <a class="xref" href="../../api/andywiecko.BurstTriangulator.RefinementThresholds.html"><code>RefinementThresholds</code></a>:</p>
-<pre><code class="lang-csharp">using var inputPositions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
-using var triangulator = new Triangulator(Allocator.Persistent)
+<p>The package supports generic coordinates.
+Currently, support is provided for <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html"><code>float2</code></a> and <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html"><code>double2</code></a> types.
+Support for <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html"><code>int2</code></a> is planned for the future.</p>
+<p>By default, the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.html"><code>Triangulator</code></a> class is based on the <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html"><code>double2</code></a> type. To manually select the desired coordinate type, use the generic version, namely, <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator-1.html"><code>Triangulator&lt;T2&gt;</code></a>.</p>
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
+using var triangulator = new Triangulator&lt;float2&gt;(Allocator.Persistent)
 {
-  Input = { Positions = inputPositions },
-  Settings = {
-    RefineMesh = true,
-    RefinementThresholds = {
-      Area = 1f,
-      Angle = math.radians(20f)
-    },
-  }
+  Input = { Positions = positions },
 };
 
 triangulator.Run();
-
-var triangles = triangulator.Output.Triangles;
-var positions = triangulator.Output.Positions;
 </code></pre>
-<p>The refinement process is controlled by two threshold parameters:</p>
-<ul>
-<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.RefinementThresholds.Area.html#andywiecko_BurstTriangulator_RefinementThresholds_Area"><code>Area</code></a>: denoted as <span class="math">\(C_\triangle\)</span></li>
-<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.RefinementThresholds.Angle.html#andywiecko_BurstTriangulator_RefinementThresholds_Angle"><code>Angle</code></a>: denoted as <span class="math">\(C_\theta\)</span></li>
-</ul>
-<p>These parameters allow fine-tuning of the refinement results based on specific criteria.
-Below, you can observe a set of results obtained by applying the refinement process to input data from Lake Superior (open the image in a new tab to see the details).</p>
-<br>
-<p><img src="../../images/lake-full-light.png" alt="lake-full-light"></p>
-<br>
-<div class="NOTE">
-<h5>Note</h5>
-<p>Refinement is available for both constrained and non-constrained triangulation.</p>
-</div>
+<p><a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator-1.html"><code>Triangulator&lt;T2&gt;</code></a> has the same API (through <a class="xref" href="../../api/andywiecko.BurstTriangulator.Extensions.html">Extensions</a>), as <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator.html"><code>Triangulator</code></a>.
+The only difference is that the input/output types are the same as <code>T2</code>.</p>
+<p>See benchmark for the generic coordinates <a class="xref" href="../benchmark.html#generic-coordinates"><strong>here</strong></a>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">type</th>
+<th style="text-align: center;">implemented?</th>
+<th style="text-align: center;">delaunay</th>
+<th style="text-align: center;">constraints</th>
+<th style="text-align: center;">refinement</th>
+<th style="text-align: center;">preprocessors</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html"><code>float2</code></a></td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html"><code>double2</code></a></td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+</tr>
+<tr>
+<td style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html"><code>int2</code></a></td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
 
 </article>
           </div>

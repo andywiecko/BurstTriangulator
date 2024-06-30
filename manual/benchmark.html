@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v2.5.0</b></div>
+                "><b>v3.0.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -89,24 +89,41 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="">
+            <article class="content wrap" id="_content" data-uid="benchmark-md">
 <h1 id="benchmark">Benchmark</h1>
 
 <p>The package utilizes the <a href="https://docs.unity3d.com/Packages/com.unity.burst@1.8"><code>Burst</code></a> compiler, which generates highly optimized native code using LLVM.</p>
-<h2 id="classic-delaunay-triangulation"><em>Classic</em> Delaunay triangulation</h2>
-<p>Below, you'll find a performance comparison (with Burst enabled) between <code>v2.0.0</code> and <code>v2.1.0</code>, as well as a comparison with <a href="https://github.com/nol1fe/delaunator-sharp/"><code>delaunator-sharp</code></a> for <em>classic</em> Delaunay triangulation (without refinement or constraints).</p>
+<h2 id="other-packages">Other packages</h2>
+<p>Below, you'll find a performance comparison for <em>classic</em> Delaunay triangulation (without refinement or constraints).
+between this package and a few alternatives:</p>
+<ul>
+<li><a href="https://github.com/nol1fe/delaunator-sharp/"><code>delaunator-sharp</code></a></li>
+<li><a href="https://github.com/Scrawk/CGALDotNet"><code>CGALDotNet</code></a></li>
+<li><a href="https://github.com/wo80/Triangle.NET"><code>Triangle.NET</code></a></li>
+</ul>
+<p><img src="../images/benchmark.png" alt="Benchmark"></p>
+<h2 id="delaunay-triangulation">Delaunay triangulation</h2>
+<p>Below, you'll find a performance comparison (with Burst enabled) between <code>v2.0</code>, <code>v2.1</code>, and <code>v3.0</code> for <em>classic</em> Delaunay triangulation (without refinement or constraints).
+The presented result is for <code>T2 = float2</code>.</p>
 <p><img src="../images/benchmark-delaunay.png" alt="Delaunay Benchmark"></p>
 <h2 id="contrained-triangulation">Contrained triangulation</h2>
-<p>Below, you can find a benchmark for constrained triangulation for both <code>v2.1</code> and <code>v2.2</code>. The test specimen consists of a 100×100 grid with additional <code>#constraints</code>-points distributed in a circle at the center of the grid. In some cases of <code>v2.1</code>, the algorithm gets stuck. Reference timings for non-constrained triangulation are marked with a gray line.
-In the figure below, you can also see example test cases: red represents resulting triangles, and blue represents constrained edges.</p>
+<p>Below, you can find a benchmark for constrained triangulation for <code>v2.1</code>, <code>v2.2</code>, and <code>v3.0</code>. The test specimen consists of a 100×100 grid with additional <code>#constraints</code>-points distributed in a circle at the center of the grid. In some cases of <code>v2.1</code>, the algorithm gets stuck.
+Reference timings for non-constrained triangulation for <code>v2.2</code> and <code>v3.0</code> are marked with a dashed line.
+In the figure below, you can also see example test cases: red represents resulting triangles, and blue represents constrained edges.
+The presented result is for <code>T2 = float2</code>.</p>
 <p><img src="../images/benchmark-constraint.png" alt="Constraint Benchmark"></p>
 <h2 id="delaunay-triangulation-with-mesh-refinement">Delaunay triangulation with mesh refinement</h2>
-<p>Furthermore, we present a performance comparison (with Burst enabled) between <code>v1.0</code>, <code>v2.0</code>, <code>v2.3</code>, and <code>v2.4</code> for the refinement task.</p>
+<p>Furthermore, we present a performance comparison (with Burst enabled) between <code>v1.0</code>, <code>v2.0</code>, <code>v2.3</code>, <code>v2.4</code>, and <code>v3.0</code> for the refinement task.
+The presented result is for <code>T2 = float2</code>.</p>
 <p><img src="../images/benchmark-refinement.png" alt="Refinement Benchmark"></p>
 <div class="NOTE">
 <h5>Note</h5>
-<p>Since v2.4, the triangulation refinement algorithm has been updated, resulting in improved mesh quality.</p>
+<p>Since <code>v2.4</code>, the triangulation refinement algorithm has been updated, resulting in improved mesh quality.</p>
 </div>
+<h2 id="generic-coordinates">Generic coordinates</h2>
+<p>Below, one can see the benchmark for generic coordinates for Delaunay triangulation.
+<code>float2</code> seems to be slightly faster than <code>double2</code>, however, any significant difference is noticeable only for very <em>large</em> inputs.</p>
+<p><img src="../images/benchmark-generics.png" alt="Generic Benchmark"></p>
 
 </article>
           </div>

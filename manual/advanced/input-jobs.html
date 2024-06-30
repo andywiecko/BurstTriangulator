@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v2.5.0</b></div>
+                "><b>v3.0.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -129,9 +129,9 @@ dependencies = new Job(triangulator).Schedule(dependencies);
 </code></pre>
 <h2 id="generating-input-in-the-job">Generating input in the job</h2>
 <p>Input can be generated within a job pipeline. You have to use <a href="https://docs.unity3d.com/Packages/com.unity.collections@2.4/api/Unity.Collections.NativeList-1.html#Unity_Collections_NativeList_1_AsDeferredJobArray">deferred arrays</a>. Here's an example snippet:</p>
-<pre><code class="lang-csharp">using var positions = new NativeList&lt;float2&gt;(64, Allocator.Persistent);
+<pre><code class="lang-csharp">using var positions = new NativeList&lt;double2&gt;(64, Allocator.Persistent);
 using var constraints = new NativeList&lt;int&gt;(64, Allocator.Persistent);
-using var holes = new NativeList&lt;float2&gt;(64, Allocator.Persistent);
+using var holes = new NativeList&lt;double2&gt;(64, Allocator.Persistent);
 using var triangulator = new Triangulator(64, Allocator.Persistent)
 {
   Input = 
