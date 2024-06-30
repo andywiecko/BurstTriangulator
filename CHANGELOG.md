@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.0.0] – 2024-06-30
+
+### Added
+
+- **New** online documentation (including manual and scripting API): <https://andywiecko.github.io/BurstTriangulator/>
+- `Verbose` option in triangulation settings.
+- `Halfedges` for triangulation output.
+- `AutoHolesAndBoundary` option in triangulation settings. This option allows for automatic hole detection, eliminating the need for the user to provide hole positions. Holes are calculated using constraint edges.
+- Support for generic coordinates. Users can specify the type of coordinates used in the triangulation with `Triangulator<T2>`. The API for this class is the same as `Triangulator`, except the input/output is of type `T2`. Supported coordinate types: `float2`, `double2` (`int2` will be implemented in the future).
+
+### Changed
+
+- Increased performance for `constrainedHalfedges` generation.
+- `Circle` based calculations now use `RadiusSq` instead of `Radius`. This results in increased performance in the refinement step, however, the final results may be slightly different.
+- **Breaking change:** Moved most of the inner types (e.g., `Status`, `TriangulatorSettings`, etc.) to the global namespace. They can now be accessed directly using `using andywiecko.BurstTriangulator;`.
+- **Breaking change:** The default coordinate type for `Triangulator` is now `double2` instead of `float2`.
+- (Internal) Greatly simplified job logic replaced with steps. Overall triangulation logic is now easier to follow and read. Some internal structs were removed or hidden inside steps.
+
+### Removed
+
+- Obsolete settings: `BatchCount`, `MinimumAngle`, `MinimumArea`, `MaximumArea`, and `ConstrainEdges`.
+
+### Fixed
+
+- Run triangulator on the main thread using the `Run()` method.
+
 ## [2.5.0] – 2024-04-03
 
 ### Changed
@@ -171,6 +197,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.0.0
 [2.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.5.0
 [2.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.4.0
 [2.3.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.3.0
