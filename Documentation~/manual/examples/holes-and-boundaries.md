@@ -12,7 +12,7 @@ The package also provides an option for restoring boundaries. In addition to set
 
 ```csharp
 using var constraintEdges = new NativeArray<int>(..., Allocator.Persistent);
-using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var positions = new NativeArray<double2>(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { 
@@ -36,8 +36,8 @@ In addition to setting the [`Input.ConstraintEdges`][input-constraint-edges], a 
 
 ```csharp
 using var constraintEdges = new NativeArray<int>(..., Allocator.Persistent);
-using var holes = new NativeArray<float2>(..., Allocator.Persistent);
-using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var holes = new NativeArray<double2>(..., Allocator.Persistent);
+using var positions = new NativeArray<double2>(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { 
@@ -60,7 +60,7 @@ var triangles = triangulator.Output.Triangles;
 The package also provides automatic hole detection and restoring boundary. If one sets [`Settings.AutoHolesAndBoundary`][auto-holes-property] to `true`, then holes will be created automatically depending on the provided constraints.
 
 ```csharp
-using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var positions = new NativeArray<double2>(..., Allocator.Persistent);
 using var constraintEdges = new NativeArray<int>(..., Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
@@ -80,7 +80,7 @@ var triangles = triangulator.Output.Triangles;
 > The current implementation of [`AutoHolesAndBoundary`][auto-holes-property] detects only *1-level islands*.
 > It will not detect holes in *solid* meshes inside other holes.
 
-[restore-boundary-property]: xref:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.RestoreBoundary
-[input-constraint-edges]: xref:andywiecko.BurstTriangulator.Triangulator.InputData.ConstraintEdges
-[input-positions]: xref:andywiecko.BurstTriangulator.Triangulator.InputData.Positions
-[auto-holes-property]: xref:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.AutoHolesAndBoundary
+[restore-boundary-property]: xref:andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary
+[input-constraint-edges]: xref:andywiecko.BurstTriangulator.InputData`1.ConstraintEdges
+[input-positions]: xref:andywiecko.BurstTriangulator.InputData`1.Positions
+[auto-holes-property]: xref:andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary

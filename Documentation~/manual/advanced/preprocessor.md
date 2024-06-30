@@ -44,5 +44,5 @@ $$
 > The PCA transformation does not preserve the [`RefinementThresholds.Angle`][angle] used for refinement.
 > As a result, triangles can be classified as bad in the PCA local space.
 
-[angle]: xref:andywiecko.BurstTriangulator.Triangulator.RefinementThresholds.Angle
-[preprocessor]: xref:andywiecko.BurstTriangulator.Triangulator.Preprocessor
+[angle]: xref:andywiecko.BurstTriangulator.RefinementThresholds.Angle
+[preprocessor]: xref:andywiecko.BurstTriangulator.Preprocessor

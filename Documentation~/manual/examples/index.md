@@ -3,7 +3,7 @@
 Below is an example usage of the [`Triangulator`][triangulator] with an input set consisting of four points that form the unit square:
 
 ```csharp
-using var positions = new NativeArray<float2>(new float2[]
+using var positions = new NativeArray<double2>(new double2[]
 {
   new(0, 0), new(1, 0), new(1, 1), new(0, 1),
 }, Allocator.Persistent);
@@ -40,7 +40,7 @@ In other examples, the following *cool* guitar was used as an input test case:
 ![guitar-light](../../images/guitar-light.svg)
 
 [triangulator]: xref:andywiecko.BurstTriangulator.Triangulator
-[settings]: xref:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings
+[settings]: xref:andywiecko.BurstTriangulator.TriangulationSettings
 [run]: xref:andywiecko.BurstTriangulator.Triangulator.Run
 [schedule]: xref:andywiecko.BurstTriangulator.Triangulator.Schedule(Unity.Jobs.JobHandle)
-[status]: xref:andywiecko.BurstTriangulator.Triangulator.OutputData.Status
+[status]: xref:andywiecko.BurstTriangulator.OutputData`1.Status

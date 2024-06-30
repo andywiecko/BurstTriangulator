@@ -29,5 +29,5 @@ var status = triangulator.Output.Status.Value;
 > [!WARNING]  
 > Input validation can be expensive. If you are certain of your input, consider disabling this option for additional performance.
 
-[validate]: xref:andywiecko.BurstTriangulator.Triangulator.TriangulationSettings.ValidateInput
-[status]: xref:andywiecko.BurstTriangulator.Triangulator.Status
+[validate]: xref:andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput
+[status]: xref:andywiecko.BurstTriangulator.Status
