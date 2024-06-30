@@ -19,6 +19,8 @@ triangulator.Run();
 [`Triangulator<T2>`][triangulatorT2] has the same API (through [Extensions][extensions]), as [`Triangulator`][triangulator].
 The only difference is that the input/output types are the same as `T2`.
 
+See benchmark for the generic coordinates [**here**][benchmark].
+
 | type                 | implemented? | delaunay | constraints | refinement | preprocessors |
 | :------------------: | :----------: | :------: | :---------: | :--------: | :-----------: |
 | [`float2`][float2]   | ✔️          | ✔️       | ✔️         | ✔️         |✔️            |
@@ -31,3 +33,4 @@ The only difference is that the input/output types are the same as `T2`.
 [float2]: xref:Unity.Mathematics.float2
 [double2]: xref:Unity.Mathematics.double2
 [int2]: xref:Unity.Mathematics.int2
+[benchmark]: xref:benchmark-md#generic-coordinates
