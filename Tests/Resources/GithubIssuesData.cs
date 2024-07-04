@@ -1,4 +1,8 @@
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -133,6 +137,27 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 139, 139, 140, 140, 141, 141, 142, 142, 143, 143, 144, 144, 145, 145, 146, 146, 147, 147, 148, 148,
                 149, 149, 150, 150, 151, 151, 152, 152, 153, 153, 154, 154, 155, 155, 156, 156, 157, 157, 158, 158, 0
             }
+        );
+
+        private static double2[] LoadResource(string name)
+        {
+            var lines = Resources.Load<TextAsset>(name).text.Split('\n');
+            var points = new double2[lines.Length];
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var r = lines[i].Split(',');
+                var x = double.Parse(r[0], CultureInfo.InvariantCulture);
+                var y = double.Parse(r[1], CultureInfo.InvariantCulture);
+                points[i] = new(x, y);
+            }
+
+            return points;
+        }
+        private static double2[] cacheIssue105;
+        public static (double2[] points, int[] constraints) Issue105 => (
+            cacheIssue105 ??= LoadResource(nameof(Issue105)),
+            cacheIssue105.SelectMany((_, i) => new[] { i, (i + 1) % cacheIssue105.Length }).ToArray()
         );
 
         public static readonly (double2[] points, int[] constraints, double2[] holes) Issue111 = (
