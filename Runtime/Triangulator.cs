@@ -1,3 +1,4 @@
+using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -126,7 +127,7 @@ namespace andywiecko.BurstTriangulator
         public NativeArray<T2> HoleSeeds { get; set; }
     }
 
-    public class OutputData<T2> where T2: unmanaged
+    public class OutputData<T2> where T2 : unmanaged
     {
         public NativeList<T2> Positions => owner.outputPositions;
         public NativeList<int> Triangles => owner.triangles;
@@ -196,6 +197,22 @@ namespace andywiecko.BurstTriangulator
         }
     }
 
+    public static class Extensions
+    {
+        public static void Run(this Triangulator<float2> @this) =>
+            new TriangulationJob<float, float2, AffineTransform32, FloatUtils>(@this).Run();
+        public static JobHandle Schedule(this Triangulator<float2> @this, JobHandle dependencies = default) =>
+            new TriangulationJob<float, float2, AffineTransform32, FloatUtils>(@this).Schedule(dependencies);
+
+        public static void Run(this Triangulator<double2> @this) =>
+            new TriangulationJob<double, double2, AffineTransform64, DoubleUtils>(@this).Run();
+        public static JobHandle Schedule(this Triangulator<double2> @this, JobHandle dependencies = default) =>
+            new TriangulationJob<double, double2, AffineTransform64, DoubleUtils>(@this).Schedule(dependencies);
+    }
+}
+
+namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
+{
     [BurstCompile]
     internal struct TriangulationJob<T, T2, TTransform, TUtils> : IJob
         where T : unmanaged, IComparable<T>
@@ -203,124 +220,108 @@ namespace andywiecko.BurstTriangulator
         where TTransform : unmanaged, ITransform<TTransform, T, T2>
         where TUtils : unmanaged, IUtils<T, T2>
     {
-        private static readonly TUtils utils = default;
-        private readonly Args args;
-        private InputData input;
-        private OutputData output;
-        private TTransform localTransformation;
+        private NativeArray<T2> inputPositions;
+        [NativeDisableContainerSafetyRestriction]
+        private NativeArray<int> constraints;
+        [NativeDisableContainerSafetyRestriction]
+        private NativeArray<T2> holeSeeds;
 
-        public readonly struct Args
-        {
-            public readonly Preprocessor Preprocessor;
-            public readonly int SloanMaxIters;
-            public readonly bool AutoHolesAndBoundary, RefineMesh, RestoreBoundary, ValidateInput, Verbose;
-            public readonly T ConcentricShellsParameter, RefinementThresholdAngle, RefinementThresholdArea;
+        private NativeList<T2> outputPositions;
+        private NativeList<int> triangles;
+        private NativeList<int> halfedges;
+        private NativeReference<Status> status;
 
-            public Args(Triangulator<T2> @this)
-            {
-                var settings = @this.Settings;
-                AutoHolesAndBoundary = settings.AutoHolesAndBoundary;
-                ConcentricShellsParameter = utils.Const(settings.ConcentricShellsParameter);
-                Preprocessor = settings.Preprocessor;
-                RefineMesh = settings.RefineMesh;
-                RestoreBoundary = settings.RestoreBoundary;
-                SloanMaxIters = settings.SloanMaxIters;
-                ValidateInput = settings.ValidateInput;
-                Verbose = settings.Verbose;
-                RefinementThresholdAngle = utils.Const(settings.RefinementThresholds.Angle);
-                RefinementThresholdArea = utils.Const(settings.RefinementThresholds.Area);
-            }
-        }
-
-        public struct InputData
-        {
-            public NativeArray<T2> Positions;
-            [NativeDisableContainerSafetyRestriction]
-            public NativeArray<int> ConstraintEdges;
-            [NativeDisableContainerSafetyRestriction]
-            public NativeArray<T2> HoleSeeds;
-
-            public InputData(Triangulator<T2> @this)
-            {
-                Positions = @this.Input.Positions;
-                ConstraintEdges = @this.Input.ConstraintEdges;
-                HoleSeeds = @this.Input.HoleSeeds;
-            }
-        }
-
-        public struct OutputData
-        {
-            public NativeList<T2> Positions;
-            public NativeList<int> Triangles;
-            public NativeReference<Status> Status;
-            public NativeList<int> Halfedges;
-
-            public OutputData(Triangulator<T2> @this)
-            {
-                Positions = @this.Output.Positions;
-                Triangles = @this.Output.Triangles;
-                Status = @this.Output.Status;
-                Halfedges = @this.Output.Halfedges;
-            }
-        }
+        private readonly Args<T> args;
 
         public TriangulationJob(Triangulator<T2> @this)
         {
-            args = new(@this);
-            input = new(@this);
-            output = new(@this);
-            localTransformation = default(TTransform).Identity;
+            inputPositions = @this.Input.Positions;
+            constraints = @this.Input.ConstraintEdges;
+            holeSeeds = @this.Input.HoleSeeds;
+
+            outputPositions = @this.Output.Positions;
+            triangles = @this.Output.Triangles;
+            halfedges = @this.Output.Halfedges;
+            status = @this.Output.Status;
+
+            args = Args<T>.Create(@this, default(TUtils));
         }
 
         public void Execute()
+        {
+            new UnsafeTriangulator<T, T2, TTransform, TUtils>().Triangulate(
+                input: new()
+                {
+                    Positions = inputPositions,
+                    ConstraintEdges = constraints,
+                    HoleSeeds = holeSeeds,
+                },
+                output: new()
+                {
+                    Positions = outputPositions,
+                    Triangles = triangles,
+                    Halfedges = halfedges,
+                    Status = status,
+                }, args, Allocator.Temp);
+        }
+    }
+
+    internal readonly struct UnsafeTriangulator<T, T2, TTransform, TUtils>
+        where T : unmanaged, IComparable<T>
+        where T2 : unmanaged
+        where TTransform : unmanaged, ITransform<TTransform, T, T2>
+        where TUtils : unmanaged, IUtils<T, T2>
+    {
+        private static readonly TUtils utils = default;
+
+        public void Triangulate(InputData<T2> input, OutputData<T2> output, Args<T> args, Allocator allocator)
         {
             output.Status.Value = Status.OK;
             output.Triangles.Clear();
             output.Positions.Clear();
             output.Halfedges.Clear();
 
-            PreProcessInputStep(out var localPositions, out var localHoles);
-            new ValidateInputStep(this, localPositions.AsArray()).Execute();
-            new DelaunayTriangulationStep(this, localPositions.AsArray()).Execute();
+            PreProcessInputStep(input, output, args, out var localHoles, out var lt, allocator);
+            new ValidateInputStep(input, output, args).Execute();
+            new DelaunayTriangulationStep(input, output, args).Execute(allocator);
             // TODO: make this public as output, can be useful for consumers.
-            using var constrainedHalfedges = new NativeList<bool>(Allocator.Temp) { Length = output.Halfedges.Length };
-            new ConstrainEdgesStep(this, localPositions.AsArray(), constrainedHalfedges).Execute();
-            new PlantingSeedStep(this, localPositions, constrainedHalfedges, localHoles).Execute();
-            new RefineMeshStep(this, localPositions, constrainedHalfedges).Execute();
-            PostProcessInputStep(localPositions.AsArray());
+            using var constrainedHalfedges = new NativeList<bool>(allocator) { Length = output.Halfedges.Length };
+            new ConstrainEdgesStep(input, output, args, constrainedHalfedges).Execute(allocator);
+            new PlantingSeedStep(input, output, args, constrainedHalfedges, localHoles).Execute(allocator);
+            new RefineMeshStep(input, output, args, constrainedHalfedges, lt).Execute(allocator);
+            PostProcessInputStep(output, args, lt);
+
+            if (localHoles.IsCreated)
+            {
+                localHoles.Dispose();
+            }
         }
 
-        private void PreProcessInputStep(out NativeList<T2> localPositions, out NativeArray<T2> localHoles)
+        private void PreProcessInputStep(InputData<T2> input, OutputData<T2> output, Args<T> args, out NativeArray<T2> localHoles, out TTransform lt, Allocator allocator)
         {
             using var _ = new ProfilerMarker($"{nameof(PreProcessInputStep)}").Auto();
 
-            localPositions = output.Positions;
+            var localPositions = output.Positions;
             localPositions.ResizeUninitialized(input.Positions.Length);
             if (args.Preprocessor == Preprocessor.PCA || args.Preprocessor == Preprocessor.COM)
             {
-                localTransformation = args.Preprocessor == Preprocessor.PCA ? default(TTransform).CalculatePCATransformation(input.Positions) : default(TTransform).CalculateLocalTransformation(input.Positions);
+                lt = args.Preprocessor == Preprocessor.PCA ? default(TTransform).CalculatePCATransformation(input.Positions) : default(TTransform).CalculateLocalTransformation(input.Positions);
                 for (int i = 0; i < input.Positions.Length; i++)
                 {
-                    localPositions[i] = localTransformation.Transform(input.Positions[i]);
+                    localPositions[i] = lt.Transform(input.Positions[i]);
                 }
-                if (input.HoleSeeds.IsCreated)
+
+                localHoles = input.HoleSeeds.IsCreated ? new(input.HoleSeeds.Length, allocator) : default;
+                for (int i = 0; i < input.HoleSeeds.Length; i++)
                 {
-                    localHoles = new NativeArray<T2>(input.HoleSeeds.Length, Allocator.Temp);
-                    for (int i = 0; i < input.HoleSeeds.Length; i++)
-                    {
-                        localHoles[i] = localTransformation.Transform(input.HoleSeeds[i]);
-                    }
-                }
-                else
-                {
-                    localHoles = default;
+                    localHoles[i] = lt.Transform(input.HoleSeeds[i]);
                 }
             }
             else if (args.Preprocessor == Preprocessor.None)
             {
                 localPositions.CopyFrom(input.Positions);
-                localHoles = input.HoleSeeds;
-                localTransformation = default(TTransform).Identity;
+                localHoles = input.HoleSeeds.IsCreated ? new(input.HoleSeeds, allocator) : default;
+                lt = default(TTransform).Identity;
             }
             else
             {
@@ -328,15 +329,15 @@ namespace andywiecko.BurstTriangulator
             }
         }
 
-        private void PostProcessInputStep(NativeArray<T2> localPositions)
+        private void PostProcessInputStep(OutputData<T2> output, Args<T> args, TTransform lt)
         {
             using var _ = new ProfilerMarker($"{nameof(PostProcessInputStep)}").Auto();
             if (args.Preprocessor != Preprocessor.None)
             {
-                var inverse = localTransformation.Inverse();
-                for (int i = 0; i < localPositions.Length; i++)
+                var inverse = lt.Inverse();
+                for (int i = 0; i < output.Positions.Length; i++)
                 {
-                    output.Positions[i] = inverse.Transform(localPositions[i]);
+                    output.Positions[i] = inverse.Transform(output.Positions[i]);
                 }
             }
         }
@@ -345,15 +346,14 @@ namespace andywiecko.BurstTriangulator
         {
             private NativeArray<T2>.ReadOnly positions;
             private NativeReference<Status> status;
-            private readonly Args args;
+            private readonly Args<T> args;
             private NativeArray<int>.ReadOnly constraints;
 
-            public ValidateInputStep(TriangulationJob<T, T2, TTransform, TUtils> @this, NativeArray<T2> localPositions)
+            public ValidateInputStep(InputData<T2> input, OutputData<T2> output, Args<T> args)
             {
-                positions = localPositions.AsReadOnly();
-                status = @this.output.Status;
-                args = @this.args;
-                var input = @this.input;
+                positions = output.Positions.AsReadOnly();
+                status = output.Status;
+                this.args = args;
                 constraints = input.ConstraintEdges.AsReadOnly();
             }
 
@@ -548,15 +548,15 @@ namespace andywiecko.BurstTriangulator
             private int trianglesLen;
             private T2 c;
 
-            public DelaunayTriangulationStep(TriangulationJob<T, T2, TTransform, TUtils> @this, NativeArray<T2> localPositions)
+            public DelaunayTriangulationStep(InputData<T2> input, OutputData<T2> output, Args<T> args)
             {
-                status = @this.output.Status;
-                positions = localPositions.AsReadOnly();
-                triangles = @this.output.Triangles;
-                halfedges = @this.output.Halfedges;
+                status = output.Status;
+                positions = output.Positions.AsReadOnly();
+                triangles = output.Triangles;
+                halfedges = output.Halfedges;
                 hullStart = int.MaxValue;
                 c = utils.MaxValue2();
-                verbose = @this.args.Verbose;
+                verbose = args.Verbose;
                 hashSize = (int)math.ceil(math.sqrt(positions.Length));
                 trianglesLen = default;
 
@@ -567,7 +567,7 @@ namespace andywiecko.BurstTriangulator
                 EDGE_STACK = default;
             }
 
-            public void Execute()
+            public void Execute(Allocator allocator)
             {
                 using var _ = new ProfilerMarker($"{nameof(DelaunayTriangulationStep)}").Auto();
 
@@ -581,14 +581,14 @@ namespace andywiecko.BurstTriangulator
                 triangles.Length = 3 * maxTriangles;
                 halfedges.Length = 3 * maxTriangles;
 
-                using var _hullPrev = hullPrev = new(n, Allocator.Temp);
-                using var _hullNext = hullNext = new(n, Allocator.Temp);
-                using var _hullTri = hullTri = new(n, Allocator.Temp);
-                using var _hullHash = hullHash = new(hashSize, Allocator.Temp);
-                using var _EDGE_STACK = EDGE_STACK = new(512, Allocator.Temp);
+                using var _hullPrev = hullPrev = new(n, allocator);
+                using var _hullNext = hullNext = new(n, allocator);
+                using var _hullTri = hullTri = new(n, allocator);
+                using var _hullHash = hullHash = new(hashSize, allocator);
+                using var _EDGE_STACK = EDGE_STACK = new(512, allocator);
 
-                var ids = new NativeArray<int>(n, Allocator.Temp);
-                var dists = new NativeArray<T>(n, Allocator.Temp);
+                var ids = new NativeArray<int>(n, allocator);
+                var dists = new NativeArray<T>(n, allocator);
 
                 var min = utils.MaxValue2();
                 var max = utils.MinValue2();
@@ -778,6 +778,9 @@ namespace andywiecko.BurstTriangulator
                 // Trim lists to their actual size
                 triangles.Length = trianglesLen;
                 halfedges.Length = trianglesLen;
+
+                ids.Dispose();
+                dists.Dispose();
             }
 
             private int Legalize(int a)
@@ -902,22 +905,20 @@ namespace andywiecko.BurstTriangulator
             private NativeArray<int>.ReadOnly inputConstraintEdges;
             private NativeArray<int> halfedges;
             private NativeList<bool> constrainedHalfedges;
-            private readonly Args args;
+            private readonly Args<T> args;
 
             private NativeList<int> intersections;
             private NativeList<int> unresolvedIntersections;
             private NativeArray<int> pointToHalfedge;
 
-            public ConstrainEdgesStep(TriangulationJob<T, T2, TTransform, TUtils> @this, NativeArray<T2> localPositions, NativeList<bool> constrainedHalfedges)
+            public ConstrainEdgesStep(InputData<T2> input, OutputData<T2> output, Args<T> args, NativeList<bool> constrainedHalfedges)
             {
-                status = @this.output.Status;
-                positions = localPositions.AsReadOnly();
-                var output = @this.output;
+                status = output.Status;
+                positions = output.Positions.AsReadOnly();
                 triangles = output.Triangles.AsArray();
-                var input = @this.input;
                 inputConstraintEdges = input.ConstraintEdges.AsReadOnly();
                 halfedges = output.Halfedges.AsArray();
-                args = @this.args;
+                this.args = args;
                 this.constrainedHalfedges = constrainedHalfedges;
 
                 intersections = default;
@@ -925,7 +926,7 @@ namespace andywiecko.BurstTriangulator
                 pointToHalfedge = default;
             }
 
-            public void Execute()
+            public void Execute(Allocator allocator)
             {
                 using var _ = new ProfilerMarker($"{nameof(ConstrainEdgesStep)}").Auto();
 
@@ -934,9 +935,9 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                using var _intersections = intersections = new NativeList<int>(Allocator.Temp);
-                using var _unresolvedIntersections = unresolvedIntersections = new NativeList<int>(Allocator.Temp);
-                using var _pointToHalfedge = pointToHalfedge = new NativeArray<int>(positions.Length, Allocator.Temp);
+                using var _intersections = intersections = new NativeList<int>(allocator);
+                using var _unresolvedIntersections = unresolvedIntersections = new NativeList<int>(allocator);
+                using var _pointToHalfedge = pointToHalfedge = new NativeArray<int>(positions.Length, allocator);
 
                 // build point to halfedge
                 for (int i = 0; i < triangles.Length; i++)
@@ -1113,7 +1114,7 @@ namespace andywiecko.BurstTriangulator
             {
                 var (a0, a1) = (positions[e1.x], positions[e1.y]);
                 var (b0, b1) = (positions[e2.x], positions[e2.y]);
-                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && TriangulationJob<T, T2, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
+                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && UnsafeTriangulator<T, T2, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
             }
 
             private void CollectIntersections(int2 edge)
@@ -1282,26 +1283,25 @@ namespace andywiecko.BurstTriangulator
             private NativeArray<T2> holes;
 
             private readonly bool constraintsIsCreated;
-            private readonly Args args;
+            private readonly Args<T> args;
 
-            public PlantingSeedStep(TriangulationJob<T, T2, TTransform, TUtils> @this, NativeList<T2> localPositions, NativeList<bool> constrainedHalfedges, NativeArray<T2> localHoles)
+            public PlantingSeedStep(InputData<T2> input, OutputData<T2> output, Args<T> args, NativeList<bool> constrainedHalfedges, NativeArray<T2> localHoles)
             {
-                status = @this.output.Status;
-                triangles = @this.output.Triangles;
-                positions = localPositions;
+                status = output.Status;
+                triangles = output.Triangles;
+                positions = output.Positions;
                 this.constrainedHalfedges = constrainedHalfedges;
-                halfedges = @this.output.Halfedges;
+                halfedges = output.Halfedges;
                 holes = localHoles;
-                args = @this.args;
-                var input = @this.input;
+                this.args = args;
                 constraintsIsCreated = input.ConstraintEdges.IsCreated;
 
-                visitedTriangles = new NativeArray<bool>(triangles.Length / 3, Allocator.Temp);
-                badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
-                trianglesQueue = new NativeQueue<int>(Allocator.Temp);
+                visitedTriangles = default;
+                badTriangles = default;
+                trianglesQueue = default;
             }
 
-            public void Execute()
+            public void Execute(Allocator allocator)
             {
                 using var _ = new ProfilerMarker($"{nameof(PlantingSeedStep)}").Auto();
 
@@ -1310,7 +1310,11 @@ namespace andywiecko.BurstTriangulator
                     return;
                 }
 
-                if (args.AutoHolesAndBoundary) PlantAuto();
+                visitedTriangles = new(triangles.Length / 3, allocator);
+                badTriangles = new(triangles.Length / 3, allocator);
+                trianglesQueue = new(allocator);
+
+                if (args.AutoHolesAndBoundary) PlantAuto(allocator);
                 if (holes.IsCreated) PlantHoleSeeds(holes);
                 if (args.RestoreBoundary) PlantBoundarySeeds();
 
@@ -1438,11 +1442,11 @@ namespace andywiecko.BurstTriangulator
                 halfedges.RemoveAt(he);
             }
 
-            private void PlantAuto()
+            private void PlantAuto(Allocator allocator)
             {
-                using var heQueue = new NativeQueue<int>(Allocator.Temp);
-                using var loop = new NativeList<int>(Allocator.Temp);
-                var heVisited = new NativeArray<bool>(halfedges.Length, Allocator.Temp);
+                using var heQueue = new NativeQueue<int>(allocator);
+                using var loop = new NativeList<int>(allocator);
+                var heVisited = new NativeArray<bool>(halfedges.Length, allocator);
 
                 // Build boundary loop: 1st sweep
                 for (int he = 0; he < halfedges.Length; he++)
@@ -1547,6 +1551,8 @@ namespace andywiecko.BurstTriangulator
                         }
                     }
                 }
+
+                heVisited.Dispose();
             }
         }
 
@@ -1574,25 +1580,22 @@ namespace andywiecko.BurstTriangulator
             private NativeList<int> pathHalfedges;
             private NativeList<bool> visitedTriangles;
 
-            private readonly Args args;
+            private readonly Args<T> args;
             private readonly bool constrainBoundary;
             private readonly T maximumArea2;
             private readonly int initialPointsCount;
 
-            public RefineMeshStep(TriangulationJob<T, T2, TTransform, TUtils> @this, NativeList<T2> localPositions, NativeList<bool> constrainedHalfedges)
+            public RefineMeshStep(InputData<T2> input, OutputData<T2> output, Args<T> args, NativeList<bool> constrainedHalfedges, TTransform lt)
             {
-                args = @this.args;
-                var s = @this.output.Status; // Note: Cannot be one-liner. Burst throws bit cast exception.
-                status = s.AsReadOnly();
-                var constraints = @this.input.ConstraintEdges;
-                constrainBoundary = !constraints.IsCreated || !@this.args.RestoreBoundary;
-                initialPointsCount = localPositions.Length;
-                var areaThreshold = @this.args.RefinementThresholdArea;
-                var lt = @this.localTransformation;
+                this.args = args;
+                status = output.Status.AsReadOnly();
+                constrainBoundary = !input.ConstraintEdges.IsCreated || !args.RestoreBoundary;
+                initialPointsCount = output.Positions.Length;
+                var areaThreshold = args.RefinementThresholdArea;
                 maximumArea2 = utils.mul(utils.mul(utils.Const(2), areaThreshold), lt.AreaScalingFactor);
-                triangles = @this.output.Triangles;
-                outputPositions = localPositions;
-                halfedges = @this.output.Halfedges;
+                triangles = output.Triangles;
+                outputPositions = output.Positions;
+                halfedges = output.Halfedges;
                 this.constrainedHalfedges = constrainedHalfedges;
 
                 circles = default;
@@ -1603,7 +1606,7 @@ namespace andywiecko.BurstTriangulator
                 visitedTriangles = default;
             }
 
-            public void Execute()
+            public void Execute(Allocator allocator)
             {
                 using var _ = new ProfilerMarker($"{nameof(RefineMeshStep)}").Auto();
 
@@ -1620,15 +1623,15 @@ namespace andywiecko.BurstTriangulator
                     }
                 }
 
-                using var _circles = circles = new(Allocator.Temp) { Length = triangles.Length / 3 };
-                using var _trianglesQueue = trianglesQueue = new NativeQueue<int>(Allocator.Temp);
-                using var _badTriangles = badTriangles = new NativeList<int>(triangles.Length / 3, Allocator.Temp);
-                using var _pathPoints = pathPoints = new NativeList<int>(Allocator.Temp);
-                using var _pathHalfedges = pathHalfedges = new NativeList<int>(Allocator.Temp);
-                using var _visitedTriangles = visitedTriangles = new NativeList<bool>(triangles.Length / 3, Allocator.Temp);
+                using var _circles = circles = new(allocator) { Length = triangles.Length / 3 };
+                using var _trianglesQueue = trianglesQueue = new(allocator);
+                using var _badTriangles = badTriangles = new(triangles.Length / 3, allocator);
+                using var _pathPoints = pathPoints = new(allocator);
+                using var _pathHalfedges = pathHalfedges = new(allocator);
+                using var _visitedTriangles = visitedTriangles = new(triangles.Length / 3, allocator);
 
-                using var heQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
-                using var tQueue = new NativeList<int>(triangles.Length, Allocator.Temp);
+                using var heQueue = new NativeList<int>(triangles.Length, allocator);
+                using var tQueue = new NativeList<int>(triangles.Length, allocator);
 
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
                 {
@@ -1662,7 +1665,7 @@ namespace andywiecko.BurstTriangulator
                     var tId = tQueue[i];
                     if (tId != -1)
                     {
-                        SplitTriangle(tId, heQueue, tQueue);
+                        SplitTriangle(tId, heQueue, tQueue, allocator);
                     }
                 }
             }
@@ -1800,10 +1803,10 @@ namespace andywiecko.BurstTriangulator
                 return utils.greater(area2, maximumArea2) || AngleIsTooSmall(tId, args.RefinementThresholdAngle);
             }
 
-            private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue)
+            private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue, Allocator allocator)
             {
                 var c = circles[tId];
-                var edges = new NativeList<int>(Allocator.Temp);
+                var edges = new NativeList<int>(allocator);
 
                 for (int he = 0; he < constrainedHalfedges.Length; he++)
                 {
@@ -1844,6 +1847,8 @@ namespace andywiecko.BurstTriangulator
                         SplitEncroachedEdges(heQueue, tQueue);
                     }
                 }
+
+                edges.Dispose();
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2681,16 +2686,64 @@ namespace andywiecko.BurstTriangulator
         public readonly double sign(double a) => math.sign(a);
     }
 
-    public static class Extensions
+    internal struct InputData<T2> where T2 : unmanaged
     {
-        public static void Run(this Triangulator<float2> @this) =>
-            new TriangulationJob<float, float2, AffineTransform32, FloatUtils>(@this).Run();
-        public static JobHandle Schedule(this Triangulator<float2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<float, float2, AffineTransform32, FloatUtils>(@this).Schedule(dependencies);
+        public NativeArray<T2> Positions;
+        public NativeArray<int> ConstraintEdges;
+        public NativeArray<T2> HoleSeeds;
+    }
 
-        public static void Run(this Triangulator<double2> @this) =>
-            new TriangulationJob<double, double2, AffineTransform64, DoubleUtils>(@this).Run();
-        public static JobHandle Schedule(this Triangulator<double2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<double, double2, AffineTransform64, DoubleUtils>(@this).Schedule(dependencies);
+    internal struct OutputData<T2> where T2 : unmanaged
+    {
+        public NativeList<T2> Positions;
+        public NativeList<int> Triangles;
+        public NativeReference<Status> Status;
+        public NativeList<int> Halfedges;
+    }
+
+    internal readonly struct Args<T> where T : unmanaged
+    {
+        public readonly Preprocessor Preprocessor;
+        public readonly int SloanMaxIters;
+        public readonly bool AutoHolesAndBoundary, RefineMesh, RestoreBoundary, ValidateInput, Verbose;
+        public readonly T ConcentricShellsParameter, RefinementThresholdAngle, RefinementThresholdArea;
+
+        private Args(
+            bool autoHolesAndBoundary,
+            T concentricShellsParameter,
+            Preprocessor preprocessor,
+            bool refineMesh,
+            bool restoreBoundary,
+            int sloanMaxIters,
+            bool validateInput,
+            bool verbose,
+            T refinementThresholdAngle,
+            T refinementThresholdArea
+        )
+        {
+            AutoHolesAndBoundary = autoHolesAndBoundary;
+            ConcentricShellsParameter = concentricShellsParameter;
+            Preprocessor = preprocessor;
+            RefineMesh = refineMesh;
+            RestoreBoundary = restoreBoundary;
+            SloanMaxIters = sloanMaxIters;
+            ValidateInput = validateInput;
+            Verbose = verbose;
+            RefinementThresholdAngle = refinementThresholdAngle;
+            RefinementThresholdArea = refinementThresholdArea;
+        }
+
+        internal static Args<T> Create<T2, TUtils>(Triangulator<T2> @this, TUtils utils) where T2 : unmanaged where TUtils : IUtils<T, T2> => new(
+            autoHolesAndBoundary: @this.Settings.AutoHolesAndBoundary,
+            concentricShellsParameter: utils.Const(@this.Settings.ConcentricShellsParameter),
+            preprocessor: @this.Settings.Preprocessor,
+            refineMesh: @this.Settings.RefineMesh,
+            restoreBoundary: @this.Settings.RestoreBoundary,
+            sloanMaxIters: @this.Settings.SloanMaxIters,
+            validateInput: @this.Settings.ValidateInput,
+            verbose: @this.Settings.Verbose,
+            refinementThresholdAngle: utils.Const(@this.Settings.RefinementThresholds.Angle),
+            refinementThresholdArea: utils.Const(@this.Settings.RefinementThresholds.Area)
+        );
     }
 }
