@@ -33,6 +33,8 @@ items:
     href: advanced/output-halfedges.md
   - name: Generic coordinates
     href: advanced/generic-coordinates.md
+  - name: Managed input
+    href: advanced/input-managed.md
 
 - name: Benchmark
   href: benchmark.md

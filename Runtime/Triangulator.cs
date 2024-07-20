@@ -127,6 +127,37 @@ namespace andywiecko.BurstTriangulator
         public NativeArray<T2> HoleSeeds { get; set; }
     }
 
+    /// <summary>
+    /// Allocation free input class with implicit cast to <see cref="InputData{T2}"/>.
+    /// </summary>
+    public class ManagedInput<T2> where T2 : unmanaged
+    {
+        public T2[] Positions { get; set; }
+        public int[] ConstraintEdges { get; set; }
+        public T2[] HoleSeeds { get; set; }
+
+        public static implicit operator InputData<T2>(ManagedInput<T2> input) => new()
+        {
+            Positions = input.Positions == null ? default : Convert(input.Positions),
+            ConstraintEdges = input.ConstraintEdges == null ? default : Convert(input.ConstraintEdges),
+            HoleSeeds = input.HoleSeeds == null ? default : Convert(input.HoleSeeds),
+        };
+
+        unsafe private static NativeArray<T> Convert<T>(T[] managed) where T : unmanaged
+        {
+            var ret = default(NativeArray<T>);
+            // In Unity 2023.2+ pointers are not required, one can use Span<T> instead.
+            fixed (void* ptr = managed)
+            {
+                ret = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(ptr, managed.Length, Allocator.None);
+            }
+            var m_SafetyHandle = AtomicSafetyHandle.Create();
+            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref ret, m_SafetyHandle);
+
+            return ret;
+        }
+    }
+
     public class OutputData<T2> where T2 : unmanaged
     {
         public NativeList<T2> Positions => owner.outputPositions;
