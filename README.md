@@ -8,7 +8,7 @@
 
 A single-file package which provides Delaunay triangulation of the given set of points with constraints and mesh refinement.
 
-## Supported Features
+## ✨ Supported Features
 
 - **Delaunay triangulation**
 - **Constrained triangulation**
@@ -22,14 +22,14 @@ A single-file package which provides Delaunay triangulation of the given set of 
 
 To view the documentation for the manual and scripting API access it online [**here**][manual] or navigate to `Documentation~/` and build this using `docfx.json`.
 
-## Example results
+## 📐 Example results
 
 As an illustrative example, we present the triangulation of Lake Superior with various refinement parameters. The top-left image shows the result without any refinement.
 
 ![lake-preview-light](Documentation~/images/lake-preview-light.png#gh-light-mode-only)
 ![lake-preview-dark](Documentation~/images/lake-preview-dark.png#gh-dark-mode-only)
 
-## Benchmark
+## ⏱️ Benchmark
 
 The package utilizes the [`Burst`][burst] compiler, which generates highly optimized native code using LLVM.
 Below, you'll find a performance comparison for *classic* Delaunay triangulation (without refinement or constraints).
@@ -43,7 +43,7 @@ To see more benchmarks visit the [documentation][benchmark].
 
 ![Delaunay Benchmark](Documentation~/images/benchmark.png)
 
-## Quick start
+## 🚀 Quick start
 
 Install the package and add `using` in your code
 
@@ -68,12 +68,12 @@ triangulator.Run();
 var triangles = triangulator.Output.Triangles;
 ```
 
-## Dependencies
+## 📦 Dependencies
 
 - [`Unity.Burst@1.8.7`][burst]
 - [`Unity.Collections@2.2.0`][collections]
 
-## Contributions
+## 🤝 Contributions
 
 Found a bug? Please open an issue. You can find a list of known issues [**here**][issues]. Interested in contributing to the project? Feel free to open an issue or submit a pull request. For updates on current and future work related to this package, check out the package [project].
 
