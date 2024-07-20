@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.TestTools.Utils;
@@ -39,6 +40,30 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             return math.abs(actual - expected) <= epsilon * math.max(math.max(math.abs(actual), math.abs(expected)), 1.0f);
         }
+    }
+
+    public static class TestExtensions
+    {
+        public static void Triangulate<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.InputData<T> input, LowLevel.Unsafe.OutputData<T> output, LowLevel.Unsafe.Args args, Allocator allocator) where T : unmanaged =>
+            LowLevel.Unsafe.Extensions.Triangulate((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
+        public static void Run<T>(this Triangulator<T> triangulator) where T : unmanaged =>
+            Extensions.Run((dynamic)triangulator);
+        public static JobHandle Schedule<T>(this Triangulator<T> triangulator, JobHandle dependencies = default) where T : unmanaged =>
+            Extensions.Schedule((dynamic)triangulator, dependencies);
+        public static T[] DynamicCast<T>(this IEnumerable<float2> data) where T : unmanaged =>
+            data.Select(i => (T)(dynamic)i).ToArray();
+        public static T[] DynamicCast<T>(this IEnumerable<double2> data) where T : unmanaged =>
+            data.Select(i => (T)(dynamic)i).ToArray();
+        public static IEqualityComparer<T> Comparer<T>(float epsilon = 0.0001f) => default(T) switch
+        {
+            float2 _ => Float2Comparer.With(epsilon) as IEqualityComparer<T>,
+            double2 _ => Double2Comparer.With(epsilon) as IEqualityComparer<T>,
+            _ => throw new NotImplementedException()
+        };
+        public static void Draw<T>(this Triangulator<T> triangulator, float duration = 5f) where T : unmanaged =>
+            TestUtils.Draw((dynamic)triangulator, duration);
+        public static void Draw<T>(this Triangulator<T> triangulator, Color color, float duration = 5f) where T : unmanaged =>
+            TestUtils.Draw((dynamic)triangulator, color, duration);
     }
 
     public static class TestUtils

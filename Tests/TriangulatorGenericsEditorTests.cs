@@ -11,30 +11,6 @@ using UnityEngine.TestTools;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
-    public static class TestExtensions
-    {
-        public static void Triangulate<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.InputData<T> input, LowLevel.Unsafe.OutputData<T> output, LowLevel.Unsafe.Args args, Allocator allocator) where T : unmanaged =>
-            LowLevel.Unsafe.Extensions.Triangulate((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
-        public static void Run<T>(this Triangulator<T> triangulator) where T : unmanaged =>
-            Extensions.Run((dynamic)triangulator);
-        public static JobHandle Schedule<T>(this Triangulator<T> triangulator, JobHandle dependencies = default) where T : unmanaged =>
-            Extensions.Schedule((dynamic)triangulator, dependencies);
-        public static T[] DynamicCast<T>(this IEnumerable<float2> data) where T : unmanaged =>
-            data.Select(i => (T)(dynamic)i).ToArray();
-        public static T[] DynamicCast<T>(this IEnumerable<double2> data) where T : unmanaged =>
-            data.Select(i => (T)(dynamic)i).ToArray();
-        public static IEqualityComparer<T> Comparer<T>(float epsilon = 0.0001f) => default(T) switch
-        {
-            float2 _ => Float2Comparer.With(epsilon) as IEqualityComparer<T>,
-            double2 _ => Double2Comparer.With(epsilon) as IEqualityComparer<T>,
-            _ => throw new NotImplementedException()
-        };
-        public static void Draw<T>(this Triangulator<T> triangulator, float duration = 5f) where T : unmanaged =>
-            TestUtils.Draw((dynamic)triangulator, duration);
-        public static void Draw<T>(this Triangulator<T> triangulator, UnityEngine.Color color, float duration = 5f) where T : unmanaged =>
-            TestUtils.Draw((dynamic)triangulator, color, duration);
-    }
-
     [TestFixture(typeof(float2))]
     [TestFixture(typeof(double2))]
     public class TriangulatorGenericsEditorTests<T> where T : unmanaged
