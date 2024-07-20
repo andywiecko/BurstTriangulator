@@ -151,9 +151,10 @@ namespace andywiecko.BurstTriangulator
             {
                 ret = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(ptr, managed.Length, Allocator.None);
             }
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
             var m_SafetyHandle = AtomicSafetyHandle.Create();
             NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref ret, m_SafetyHandle);
-
+#endif
             return ret;
         }
     }
