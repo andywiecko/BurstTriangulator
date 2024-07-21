@@ -10,8 +10,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void ArgsDefaultTest()
         {
-            using var triangulator = new Triangulator(Allocator.Persistent);
-            var settings = triangulator.Settings;
+            var settings = new TriangulationSettings();
             var args = Args.Default();
 
             Assert.That(args.Preprocessor, Is.EqualTo(settings.Preprocessor));
@@ -25,6 +24,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(args.RefinementThresholdAngle, Is.EqualTo(settings.RefinementThresholds.Angle));
             Assert.That(args.RefinementThresholdArea, Is.EqualTo(settings.RefinementThresholds.Area));
         }
+
+        [Test] public void ArgsImplicitSettingsCastTest() => Assert.That((Args)new TriangulationSettings(), Is.EqualTo(Args.Default()));
     }
 
     [TestFixture(typeof(float2))]
