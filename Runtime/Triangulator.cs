@@ -298,17 +298,17 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             concentricShellsParameter, refinementThresholdAngle, refinementThresholdArea
         );
 
-        internal static Args Create<T2>(Triangulator<T2> @this) where T2 : unmanaged => new(
-            autoHolesAndBoundary: @this.Settings.AutoHolesAndBoundary,
-            concentricShellsParameter: @this.Settings.ConcentricShellsParameter,
-            preprocessor: @this.Settings.Preprocessor,
-            refineMesh: @this.Settings.RefineMesh,
-            restoreBoundary: @this.Settings.RestoreBoundary,
-            sloanMaxIters: @this.Settings.SloanMaxIters,
-            validateInput: @this.Settings.ValidateInput,
-            verbose: @this.Settings.Verbose,
-            refinementThresholdAngle: @this.Settings.RefinementThresholds.Angle,
-            refinementThresholdArea: @this.Settings.RefinementThresholds.Area
+        public static implicit operator Args(TriangulationSettings settings) => new(
+            autoHolesAndBoundary: settings.AutoHolesAndBoundary,
+            concentricShellsParameter: settings.ConcentricShellsParameter,
+            preprocessor: settings.Preprocessor,
+            refineMesh: settings.RefineMesh,
+            restoreBoundary: settings.RestoreBoundary,
+            sloanMaxIters: settings.SloanMaxIters,
+            validateInput: settings.ValidateInput,
+            verbose: settings.Verbose,
+            refinementThresholdAngle: settings.RefinementThresholds.Angle,
+            refinementThresholdArea: settings.RefinementThresholds.Area
         );
     }
 
@@ -353,7 +353,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             halfedges = @this.Output.Halfedges;
             status = @this.Output.Status;
 
-            args = Args.Create(@this);
+            args = @this.Settings;
         }
 
         public void Execute()
