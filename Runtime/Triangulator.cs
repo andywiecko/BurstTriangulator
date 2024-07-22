@@ -138,25 +138,10 @@ namespace andywiecko.BurstTriangulator
 
         public static implicit operator InputData<T2>(ManagedInput<T2> input) => new()
         {
-            Positions = input.Positions == null ? default : Convert(input.Positions),
-            ConstraintEdges = input.ConstraintEdges == null ? default : Convert(input.ConstraintEdges),
-            HoleSeeds = input.HoleSeeds == null ? default : Convert(input.HoleSeeds),
+            Positions = input.Positions == null ? default : input.Positions.AsNativeArray(),
+            ConstraintEdges = input.ConstraintEdges == null ? default : input.ConstraintEdges.AsNativeArray(),
+            HoleSeeds = input.HoleSeeds == null ? default : input.HoleSeeds.AsNativeArray(),
         };
-
-        unsafe private static NativeArray<T> Convert<T>(T[] managed) where T : unmanaged
-        {
-            var ret = default(NativeArray<T>);
-            // In Unity 2023.2+ pointers are not required, one can use Span<T> instead.
-            fixed (void* ptr = managed)
-            {
-                ret = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(ptr, managed.Length, Allocator.None);
-            }
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            var m_SafetyHandle = AtomicSafetyHandle.Create();
-            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref ret, m_SafetyHandle);
-#endif
-            return ret;
-        }
     }
 
     public class OutputData<T2> where T2 : unmanaged
@@ -231,6 +216,27 @@ namespace andywiecko.BurstTriangulator
 
     public static class Extensions
     {
+        /// <summary>
+        /// Returns <see cref="NativeArray{T}"/> view on managed <paramref name="array"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        /// <param name="array">Array to </param>
+        /// <returns>View on managed <paramref name="array"/> with <see cref="NativeArray{T}"/>.</returns>
+        unsafe public static NativeArray<T> AsNativeArray<T>(this T[] array) where T : unmanaged
+        {
+            var ret = default(NativeArray<T>);
+            // In Unity 2023.2+ pointers are not required, one can use Span<T> instead.
+            fixed (void* ptr = array)
+            {
+                ret = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(ptr, array.Length, Allocator.None);
+            }
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            var m_SafetyHandle = AtomicSafetyHandle.Create();
+            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref ret, m_SafetyHandle);
+#endif
+            return ret;
+        }
+
         public static void Run(this Triangulator<float2> @this) =>
             new TriangulationJob<float, float2, AffineTransform32, FloatUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<float2> @this, JobHandle dependencies = default) =>
