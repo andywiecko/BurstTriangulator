@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using System.Linq;
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
@@ -96,6 +98,35 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(t0.Output.Triangles.AsArray().ToArray(), Is.EqualTo(t1.Output.Triangles.AsArray().ToArray()));
             Assert.That(t0.Output.Halfedges.AsArray().ToArray(), Is.EqualTo(t1.Output.Halfedges.AsArray().ToArray()));
             Assert.That(t0.Output.Positions.AsArray().ToArray(), Is.EqualTo(t1.Output.Positions.AsArray().ToArray()));
+        }
+
+        [Test]
+        public void AsNativeArrayTest()
+        {
+            int[] a = { 1, 2, 3, 4, 5, 6, };
+            var view = a.AsNativeArray();
+            Assert.That(view, Is.EqualTo(a));
+        }
+
+        [BurstCompile]
+        private struct AsNativeArrayJob : IJob
+        {
+            public NativeArray<int> a;
+            public void Execute()
+            {
+                for (int i = 0; i < a.Length; i++)
+                {
+                    a[i] += 1;
+                }
+            }
+        }
+
+        [Test]
+        public void AsNativeArrayInJobTest()
+        {
+            int[] a = { 1, 2, 3, 4, 5, 6, };
+            new AsNativeArrayJob { a = a.AsNativeArray() }.Run();
+            Assert.That(a, Is.EqualTo(new[] { 2, 3, 4, 5, 6, 7 }));
         }
     }
 }
