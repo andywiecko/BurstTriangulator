@@ -61,6 +61,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.Positions.AsArray().ToArray(), Is.EqualTo(impl.Output.Positions.AsArray().ToArray()));
             Assert.That(triangulator.Output.Triangles.AsArray().ToArray(), Is.EqualTo(impl.Output.Triangles.AsArray().ToArray()));
             Assert.That(triangulator.Output.Halfedges.AsArray().ToArray(), Is.EqualTo(impl.Output.Halfedges.AsArray().ToArray()));
+            Assert.That(triangulator.Output.ConstrainedHalfedges.AsArray().ToArray(), Is.EqualTo(impl.Output.ConstrainedHalfedges.AsArray().ToArray()));
 
             if (holes.IsCreated) { holes.Dispose(); }
             if (constraints.IsCreated) { constraints.Dispose(); }
