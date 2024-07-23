@@ -1049,8 +1049,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeArray<T2>.ReadOnly positions;
             private NativeArray<int> triangles;
             private NativeArray<int>.ReadOnly inputConstraintEdges;
-            private NativeArray<int> halfedges;
-            private NativeArray<bool> constrainedHalfedges;
+            // NOTE: `halfedges` and `constrainedHalfedges` can be NativeArray, however, Job system can throw here the exception:
+            //
+            // ```
+            // InvalidOperationException: The Unity.Collections.NativeList`1[System.Int32]
+            // has been declared as [WriteOnly] in the job, but you are reading from it.
+            // ```
+            //
+            // See the `UsingTempAllocatorInJobTest` to learn more.
+            private NativeList<int> halfedges;
+            private NativeList<bool> constrainedHalfedges;
             private readonly Args args;
 
             private NativeList<int> intersections;
@@ -1063,8 +1071,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 positions = output.Positions.AsReadOnly();
                 triangles = output.Triangles.AsArray();
                 inputConstraintEdges = input.ConstraintEdges.AsReadOnly();
-                halfedges = output.Halfedges.AsArray();
-                constrainedHalfedges = output.ConstrainedHalfedges.AsArray();
+                halfedges = output.Halfedges;
+                constrainedHalfedges = output.ConstrainedHalfedges;
                 this.args = args;
 
                 intersections = default;
