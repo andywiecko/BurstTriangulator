@@ -35,6 +35,8 @@ items:
     href: advanced/generic-coordinates.md
   - name: Managed input
     href: advanced/input-managed.md
+  - name: Unsafe Triangulator
+    href: advanced/unsafe-triangulator.md
 
 - name: Benchmark
   href: benchmark.md
