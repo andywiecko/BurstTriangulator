@@ -1778,6 +1778,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 8, 5, -1, -1, -1, 1, -1, 11, 0, -1, -1, 7,
             }));
+            Assert.That(triangulator.Output.ConstrainedHalfedges.AsArray(), Is.EqualTo(new[]
+            {
+                false, false, false, false, false, false, false, false, false, false, false, false,
+            }));
         }
 
         [Test]
@@ -1803,6 +1807,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.Halfedges.AsArray(), Is.EqualTo(new[]
             {
                 -1, 10, 8, -1, -1, 11, -1, -1, 2, -1, 1, 5,
+            }));
+            Assert.That(triangulator.Output.ConstrainedHalfedges.AsArray(), Is.EqualTo(new[]
+            {
+                false, true, false, false, false, false, false, false, false, false, true, false,
             }));
         }
 
@@ -1835,6 +1843,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 11, 3, -1, 1, 14, -1, 17, 9, -1, 7, -1, 0, -1, 15, 4, 13, -1, 6,
             }));
+            Assert.That(triangulator.Output.ConstrainedHalfedges.AsArray(), Is.EqualTo(new[]
+            {
+                false, false, true, false, false, true,
+                false, false, true, false, true, false,
+                true, false, false, false, true, false,
+            }));
         }
 
         [Test]
@@ -1861,6 +1875,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.Halfedges.AsArray(), Is.EqualTo(new[]
             {
                 -1, -1, 7, -1, -1, 6, 5, 2, 9, 8, -1, -1,
+            }));
+            Assert.That(triangulator.Output.ConstrainedHalfedges.AsArray(), Is.EqualTo(new[]
+            {
+                // without edge constraints, only boundary halfedges are constrained!
+                true, true, false, true, true, false,
+                false, false, false, false, true, true,
             }));
         }
 

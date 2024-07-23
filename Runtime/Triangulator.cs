@@ -150,6 +150,7 @@ namespace andywiecko.BurstTriangulator
         public NativeList<int> Triangles => owner.triangles;
         public NativeReference<Status> Status => owner.status;
         public NativeList<int> Halfedges => owner.halfedges;
+        public NativeList<bool> ConstrainedHalfedges => owner.constrainedHalfedges;
         private readonly Triangulator<T2> owner;
         public OutputData(Triangulator<T2> owner) => this.owner = owner;
     }
@@ -192,6 +193,7 @@ namespace andywiecko.BurstTriangulator
         internal NativeList<T2> outputPositions;
         internal NativeList<int> triangles;
         internal NativeList<int> halfedges;
+        internal NativeList<bool> constrainedHalfedges;
         internal NativeReference<Status> status;
 
         public Triangulator(int capacity, Allocator allocator)
@@ -199,7 +201,8 @@ namespace andywiecko.BurstTriangulator
             outputPositions = new(capacity, allocator);
             triangles = new(6 * capacity, allocator);
             status = new(Status.OK, allocator);
-            halfedges = new NativeList<int>(6 * capacity, allocator);
+            halfedges = new(6 * capacity, allocator);
+            constrainedHalfedges = new(6 * capacity, allocator);
             Output = new(this);
         }
 
@@ -211,6 +214,7 @@ namespace andywiecko.BurstTriangulator
             triangles.Dispose();
             status.Dispose();
             halfedges.Dispose();
+            constrainedHalfedges.Dispose();
         }
     }
 
@@ -264,6 +268,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public NativeList<int> Triangles;
         public NativeReference<Status> Status;
         public NativeList<int> Halfedges;
+        public NativeList<bool> ConstrainedHalfedges;
     }
 
     public readonly struct Args
@@ -356,6 +361,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         private NativeList<T2> outputPositions;
         private NativeList<int> triangles;
         private NativeList<int> halfedges;
+        private NativeList<bool> constrainedHalfedges;
         private NativeReference<Status> status;
 
         private readonly Args args;
@@ -369,6 +375,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             outputPositions = @this.Output.Positions;
             triangles = @this.Output.Triangles;
             halfedges = @this.Output.Halfedges;
+            constrainedHalfedges = @this.Output.ConstrainedHalfedges;
             status = @this.Output.Status;
 
             args = @this.Settings;
@@ -388,6 +395,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     Positions = outputPositions,
                     Triangles = triangles,
                     Halfedges = halfedges,
+                    ConstrainedHalfedges = constrainedHalfedges,
                     Status = status,
                 }, args, Allocator.Temp);
         }
@@ -406,29 +414,31 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var tmpStatus = default(NativeReference<Status>);
             var tmpPositions = default(NativeList<T2>);
             var tmpHalfedges = default(NativeList<int>);
+            var tmpConstrainedHalfedges = default(NativeList<bool>);
             output.Status = output.Status.IsCreated ? output.Status : tmpStatus = new(allocator);
             output.Positions = output.Positions.IsCreated ? output.Positions : tmpPositions = new(16 * 1024, allocator);
             output.Halfedges = output.Halfedges.IsCreated ? output.Halfedges : tmpHalfedges = new(6 * 16 * 1024, allocator);
+            output.ConstrainedHalfedges = output.ConstrainedHalfedges.IsCreated ? output.ConstrainedHalfedges : tmpConstrainedHalfedges = new(6 * 16 * 1024, allocator);
 
             output.Status.Value = Status.OK;
             output.Triangles.Clear();
             output.Positions.Clear();
             output.Halfedges.Clear();
+            output.ConstrainedHalfedges.Clear();
 
             PreProcessInputStep(input, output, args, out var localHoles, out var lt, allocator);
             new ValidateInputStep(input, output, args).Execute();
             new DelaunayTriangulationStep(input, output, args).Execute(allocator);
-            // TODO: make this public as output, can be useful for consumers.
-            using var constrainedHalfedges = new NativeList<bool>(allocator) { Length = output.Halfedges.Length };
-            new ConstrainEdgesStep(input, output, args, constrainedHalfedges).Execute(allocator);
-            new PlantingSeedStep(input, output, args, constrainedHalfedges, localHoles).Execute(allocator);
-            new RefineMeshStep(input, output, args, constrainedHalfedges, lt).Execute(allocator);
+            new ConstrainEdgesStep(input, output, args).Execute(allocator);
+            new PlantingSeedStep(input, output, args, localHoles).Execute(allocator);
+            new RefineMeshStep(input, output, args, lt).Execute(allocator);
             PostProcessInputStep(output, args, lt);
 
             if (localHoles.IsCreated) localHoles.Dispose();
             if (tmpStatus.IsCreated) tmpStatus.Dispose();
             if (tmpPositions.IsCreated) tmpPositions.Dispose();
             if (tmpHalfedges.IsCreated) tmpHalfedges.Dispose();
+            if (tmpConstrainedHalfedges.IsCreated) tmpConstrainedHalfedges.Dispose();
         }
 
         private void PreProcessInputStep(InputData<T2> input, OutputData<T2> output, Args args, out NativeArray<T2> localHoles, out TTransform lt, Allocator allocator)
@@ -672,7 +682,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeArray<T2>.ReadOnly positions;
             private NativeList<int> triangles;
             private NativeList<int> halfedges;
-
+            private NativeList<bool> constrainedHalfedges;
             private NativeArray<int> hullNext, hullPrev, hullTri, hullHash;
             private NativeArray<int> EDGE_STACK;
 
@@ -688,6 +698,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 positions = output.Positions.AsReadOnly();
                 triangles = output.Triangles;
                 halfedges = output.Halfedges;
+                constrainedHalfedges = output.ConstrainedHalfedges;
                 hullStart = int.MaxValue;
                 c = utils.MaxValue2();
                 verbose = args.Verbose;
@@ -912,6 +923,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 // Trim lists to their actual size
                 triangles.Length = trianglesLen;
                 halfedges.Length = trianglesLen;
+                constrainedHalfedges.Length = trianglesLen;
 
                 ids.Dispose();
                 dists.Dispose();
@@ -1038,22 +1050,22 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeArray<int> triangles;
             private NativeArray<int>.ReadOnly inputConstraintEdges;
             private NativeArray<int> halfedges;
-            private NativeList<bool> constrainedHalfedges;
+            private NativeArray<bool> constrainedHalfedges;
             private readonly Args args;
 
             private NativeList<int> intersections;
             private NativeList<int> unresolvedIntersections;
             private NativeArray<int> pointToHalfedge;
 
-            public ConstrainEdgesStep(InputData<T2> input, OutputData<T2> output, Args args, NativeList<bool> constrainedHalfedges)
+            public ConstrainEdgesStep(InputData<T2> input, OutputData<T2> output, Args args)
             {
                 status = output.Status;
                 positions = output.Positions.AsReadOnly();
                 triangles = output.Triangles.AsArray();
                 inputConstraintEdges = input.ConstraintEdges.AsReadOnly();
                 halfedges = output.Halfedges.AsArray();
+                constrainedHalfedges = output.ConstrainedHalfedges.AsArray();
                 this.args = args;
-                this.constrainedHalfedges = constrainedHalfedges;
 
                 intersections = default;
                 unresolvedIntersections = default;
@@ -1419,12 +1431,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private readonly bool constraintsIsCreated;
             private readonly Args args;
 
-            public PlantingSeedStep(InputData<T2> input, OutputData<T2> output, Args args, NativeList<bool> constrainedHalfedges, NativeArray<T2> localHoles)
+            public PlantingSeedStep(InputData<T2> input, OutputData<T2> output, Args args, NativeArray<T2> localHoles)
             {
                 status = output.Status;
                 triangles = output.Triangles;
                 positions = output.Positions;
-                this.constrainedHalfedges = constrainedHalfedges;
+                constrainedHalfedges = output.ConstrainedHalfedges;
                 halfedges = output.Halfedges;
                 holes = localHoles;
                 this.args = args;
@@ -1719,7 +1731,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private readonly T maximumArea2;
             private readonly int initialPointsCount;
 
-            public RefineMeshStep(InputData<T2> input, OutputData<T2> output, Args args, NativeList<bool> constrainedHalfedges, TTransform lt)
+            public RefineMeshStep(InputData<T2> input, OutputData<T2> output, Args args, TTransform lt)
             {
                 this.args = args;
                 status = output.Status.AsReadOnly();
@@ -1729,7 +1741,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 triangles = output.Triangles;
                 outputPositions = output.Positions;
                 halfedges = output.Halfedges;
-                this.constrainedHalfedges = constrainedHalfedges;
+                constrainedHalfedges = output.ConstrainedHalfedges;
 
                 circles = default;
                 trianglesQueue = default;
