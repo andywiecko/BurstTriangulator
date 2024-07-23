@@ -1,6 +1,8 @@
 using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using NUnit.Framework;
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
@@ -26,6 +28,23 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }
 
         [Test] public void ArgsImplicitSettingsCastTest() => Assert.That((Args)new TriangulationSettings(), Is.EqualTo(Args.Default()));
+
+        [Test] public void ArgsWithTest([Values] bool value) => Assert.That(Args.Default().With(autoHolesAndBoundary: value).AutoHolesAndBoundary, Is.EqualTo(value));
+
+        [BurstCompile]
+        private struct ArgsWithJob : IJob
+        {
+            public NativeReference<Args> argsRef;
+            public void Execute() => argsRef.Value = argsRef.Value.With(autoHolesAndBoundary: true);
+        }
+
+        [Test]
+        public void ArgsWithJobTest()
+        {
+            using var argsRef = new NativeReference<Args>(Args.Default(autoHolesAndBoundary: false), Allocator.Persistent);
+            new ArgsWithJob { argsRef = argsRef }.Run();
+            Assert.That(argsRef.Value.AutoHolesAndBoundary, Is.True);
+        }
     }
 
     [TestFixture(typeof(float2))]

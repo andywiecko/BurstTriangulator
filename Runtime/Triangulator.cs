@@ -316,6 +316,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             refinementThresholdAngle: settings.RefinementThresholds.Angle,
             refinementThresholdArea: settings.RefinementThresholds.Area
         );
+
+        public Args With(
+            Preprocessor? preprocessor = null,
+            int? sloanMaxIters = null,
+            bool? autoHolesAndBoundary = null, bool? refineMesh = null, bool? restoreBoundary = null, bool? validateInput = null, bool? verbose = null,
+            float? concentricShellsParameter = null, float? refinementThresholdAngle = null, float? refinementThresholdArea = null
+        ) => new(
+            preprocessor ?? Preprocessor,
+            sloanMaxIters ?? SloanMaxIters,
+            autoHolesAndBoundary ?? AutoHolesAndBoundary, refineMesh ?? RefineMesh, restoreBoundary ?? RestoreBoundary, validateInput ?? ValidateInput, verbose ?? Verbose,
+            concentricShellsParameter ?? ConcentricShellsParameter, refinementThresholdAngle ?? RefinementThresholdAngle, refinementThresholdArea ?? RefinementThresholdArea
+        );
     }
 
     public readonly struct UnsafeTriangulator { }
