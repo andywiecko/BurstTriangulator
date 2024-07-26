@@ -45,6 +45,55 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             new ArgsWithJob { argsRef = argsRef }.Run();
             Assert.That(argsRef.Value.AutoHolesAndBoundary, Is.True);
         }
+
+        [BurstCompile]
+        private struct UnsafeTriangulatorWithTempAllocatorJob : IJob
+        {
+            public NativeArray<float2> positions;
+            public NativeArray<int> constraints;
+            public NativeList<int> triangles;
+
+            public void Execute()
+            {
+                LowLevel.Unsafe.Extensions.Triangulate(new UnsafeTriangulator<float2>(),
+                    input: new() { Positions = positions, ConstraintEdges = constraints },
+                    output: new() { Triangles = triangles },
+                    args: Args.Default(),
+                    allocator: Allocator.Temp
+                );
+            }
+        }
+
+        [Test]
+        public void UsingTempAllocatorInJobTest()
+        {
+            // When using Temp allocation e.g. for native it can throw exception:
+            //
+            // ```
+            // InvalidOperationException: The Unity.Collections.NativeList`1[System.Int32]
+            // has been declared as [WriteOnly] in the job, but you are reading from it.
+            // ```
+            //
+            // This seems to be a known issue in current Unity.Collections package
+            // https://docs.unity3d.com/Packages/com.unity.collections@2.2/manual/issues.html
+            //
+            // ```
+            // All containers allocated with Allocator.Temp on the same thread use a shared
+            // AtomicSafetyHandle instance rather than each having their own. Most of the time,
+            // this isn't an issue because you can't pass Temp allocated collections into a job.
+            // 
+            // However, when you use Native*HashMap, NativeParallelMultiHashMap, Native*HashSet,
+            // and NativeList together with their secondary safety handle, this shared AtomicSafetyHandle
+            // instance is a problem.
+            //
+            // A secondary safety handle ensures that a NativeArray which aliases a NativeList
+            // is invalidated when the NativeList is reallocated due to resizing
+            // ```
+            using var positions = new NativeArray<float2>(new float2[] { new(0, 0), new(1, 0), new(1, 1), new(0, 1) }, Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new[] { 0, 1, 1, 2, 2, 3, 3, 0 }, Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            new UnsafeTriangulatorWithTempAllocatorJob { positions = positions, constraints = constraints, triangles = triangles }.Run();
+        }
     }
 
     [TestFixture(typeof(float2))]
@@ -175,53 +224,80 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(status.Value, Is.EqualTo(triangulator.Output.Status.Value));
         }
 
-        [BurstCompile]
-        private struct UnsafeTriangulatorWithTempAllocatorJob : IJob
+        [Test]
+        public void UnsafeTriangulatorPlantHoleSeedsAutoTest()
         {
-            public NativeArray<float2> positions;
-            public NativeArray<int> constraints;
-            public NativeList<int> triangles;
-
-            public void Execute()
+            var t = new UnsafeTriangulator<T>();
+            var input = new LowLevel.Unsafe.InputData<T>()
             {
-                new UnsafeTriangulator<float2>().Triangulate(
-                    input: new() { Positions = positions, ConstraintEdges = constraints },
-                    output: new() { Triangles = triangles },
-                    args: Args.Default(),
-                    allocator: Allocator.Temp
-                );
-            }
+                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+            };
+            var args = Args.Default(validateInput: false);
+
+            using var triangles1 = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(input, new() { Triangles = triangles1 }, args.With(autoHolesAndBoundary: true), Allocator.Persistent);
+
+            using var triangles2 = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+
+            t.Triangulate(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(autoHolesAndBoundary: false), Allocator.Persistent);
+            t.PlantHoleSeeds(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(autoHolesAndBoundary: true), Allocator.Persistent);
+
+            Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
 
         [Test]
-        public void UsingTempAllocatorInJobTest()
+        public void UnsafeTriangulatorPlantHoleSeedsRestoreBoundaryTest()
         {
-            // When using Temp allocation e.g. for native it can throw exception:
-            //
-            // ```
-            // InvalidOperationException: The Unity.Collections.NativeList`1[System.Int32]
-            // has been declared as [WriteOnly] in the job, but you are reading from it.
-            // ```
-            //
-            // This seems to be a known issue in current Unity.Collections package
-            // https://docs.unity3d.com/Packages/com.unity.collections@2.2/manual/issues.html
-            //
-            // ```
-            // All containers allocated with Allocator.Temp on the same thread use a shared
-            // AtomicSafetyHandle instance rather than each having their own. Most of the time,
-            // this isn't an issue because you can't pass Temp allocated collections into a job.
-            // 
-            // However, when you use Native*HashMap, NativeParallelMultiHashMap, Native*HashSet,
-            // and NativeList together with their secondary safety handle, this shared AtomicSafetyHandle
-            // instance is a problem.
-            //
-            // A secondary safety handle ensures that a NativeArray which aliases a NativeList
-            // is invalidated when the NativeList is reallocated due to resizing
-            // ```
-            using var positions = new NativeArray<float2>(new float2[] { new(0, 0), new(1, 0), new(1, 1), new(0, 1) }, Allocator.Persistent);
-            using var constraints = new NativeArray<int>(new[] { 0, 1, 1, 2, 2, 3, 3, 0 }, Allocator.Persistent);
-            using var triangles = new NativeList<int>(Allocator.Persistent);
-            new UnsafeTriangulatorWithTempAllocatorJob { positions = positions, constraints = constraints, triangles = triangles }.Run();
+            var t = new UnsafeTriangulator<T>();
+            var input = new LowLevel.Unsafe.InputData<T>()
+            {
+                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+            };
+            var args = Args.Default(validateInput: false);
+
+            using var triangles1 = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(input, new() { Triangles = triangles1 }, args.With(restoreBoundary: true), Allocator.Persistent);
+
+            using var triangles2 = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+
+            t.Triangulate(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(restoreBoundary: false), Allocator.Persistent);
+            t.PlantHoleSeeds(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(restoreBoundary: true), Allocator.Persistent);
+
+            Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
+        }
+
+        [Test]
+        public void UnsafeTriangulatorPlantHoleSeedsHolesTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+            var inputWithHoles = new LowLevel.Unsafe.InputData<T>()
+            {
+                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+                HoleSeeds = LakeSuperior.Holes.DynamicCast<T>().AsNativeArray(),
+            };
+            var inputWithoutHoles = inputWithHoles;
+            inputWithoutHoles.HoleSeeds = default;
+            var args = Args.Default(validateInput: false);
+
+            using var triangles1 = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(inputWithHoles, new() { Triangles = triangles1 }, args, Allocator.Persistent);
+
+            using var triangles2 = new NativeList<int>(Allocator.Persistent);
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+
+            t.Triangulate(inputWithoutHoles, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions }, args, Allocator.Persistent);
+            t.PlantHoleSeeds(inputWithHoles, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions }, args, Allocator.Persistent);
+
+            Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
     }
 }
