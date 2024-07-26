@@ -341,8 +341,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     public static class Extensions
     {
         public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
+
         public static void Triangulate(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, AffineTransform32, FloatUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, AffineTransform32, FloatUtils>().PlantHoleSeeds(input, output, args, allocator);
+
         public static void Triangulate(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
     }
 
     [BurstCompile]
@@ -430,7 +435,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             new ValidateInputStep(input, output, args).Execute();
             new DelaunayTriangulationStep(input, output, args).Execute(allocator);
             new ConstrainEdgesStep(input, output, args).Execute(allocator);
-            new PlantingSeedStep(input, output, args, localHoles).Execute(allocator);
+            new PlantingSeedStep(input, output, args, localHoles).Execute(allocator, input.ConstraintEdges.IsCreated);
             new RefineMeshStep(input, output, args, lt).Execute(allocator);
             PostProcessInputStep(output, args, lt);
 
@@ -439,6 +444,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             if (tmpPositions.IsCreated) tmpPositions.Dispose();
             if (tmpHalfedges.IsCreated) tmpHalfedges.Dispose();
             if (tmpConstrainedHalfedges.IsCreated) tmpConstrainedHalfedges.Dispose();
+        }
+
+        public void PlantHoleSeeds(InputData<T2> input, OutputData<T2> output, Args args, Allocator allocator)
+        {
+            new PlantingSeedStep(input, output, args).Execute(allocator, true);
         }
 
         private void PreProcessInputStep(InputData<T2> input, OutputData<T2> output, Args args, out NativeArray<T2> localHoles, out TTransform lt, Allocator allocator)
@@ -1424,7 +1434,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         private struct PlantingSeedStep
         {
-            private NativeReference<Status>.ReadOnly status;
+            private NativeReference<Status> status;
             private NativeList<int> triangles;
             [ReadOnly]
             private NativeList<T2> positions;
@@ -1436,8 +1446,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeQueue<int> trianglesQueue;
             private NativeArray<T2> holes;
 
-            private readonly bool constraintsIsCreated;
             private readonly Args args;
+
+            public PlantingSeedStep(InputData<T2> input, OutputData<T2> output, Args args) : this(input, output, args, input.HoleSeeds) { }
 
             public PlantingSeedStep(InputData<T2> input, OutputData<T2> output, Args args, NativeArray<T2> localHoles)
             {
@@ -1448,18 +1459,17 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 halfedges = output.Halfedges;
                 holes = localHoles;
                 this.args = args;
-                constraintsIsCreated = input.ConstraintEdges.IsCreated;
 
                 visitedTriangles = default;
                 badTriangles = default;
                 trianglesQueue = default;
             }
 
-            public void Execute(Allocator allocator)
+            public void Execute(Allocator allocator, bool constraintsIsCreated)
             {
                 using var _ = new ProfilerMarker($"{nameof(PlantingSeedStep)}").Auto();
 
-                if (!constraintsIsCreated)
+                if (!constraintsIsCreated || status.IsCreated && status.Value != Status.OK)
                 {
                     return;
                 }
@@ -1502,11 +1512,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             private void Finish()
             {
-                if (status.Value != Status.OK)
-                {
-                    return;
-                }
-
                 badTriangles.Sort();
                 for (int t = badTriangles.Length - 1; t >= 0; t--)
                 {
