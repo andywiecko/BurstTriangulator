@@ -342,12 +342,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     {
         public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void RefineMesh(this UnsafeTriangulator @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>
+            new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
 
         public static void Triangulate(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, AffineTransform32, FloatUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, AffineTransform32, FloatUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void RefineMesh(this UnsafeTriangulator<float2> @this, OutputData<float2> output, Allocator allocator, float areaThreshold = 1, float angleThreshold = 0.0872664626f, float concentricShells = 0.001f, bool constrainBoundary = false) =>
+            new UnsafeTriangulator<float, float2, AffineTransform32, FloatUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
 
         public static void Triangulate(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void RefineMesh(this UnsafeTriangulator<double2> @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>
+            new UnsafeTriangulator<double, double2, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
     }
 
     [BurstCompile]
@@ -436,7 +442,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             new DelaunayTriangulationStep(input, output, args).Execute(allocator);
             new ConstrainEdgesStep(input, output, args).Execute(allocator);
             new PlantingSeedStep(input, output, args, localHoles).Execute(allocator, input.ConstraintEdges.IsCreated);
-            new RefineMeshStep(input, output, args, lt).Execute(allocator);
+            new RefineMeshStep(output, args, lt).Execute(allocator, refineMesh: args.RefineMesh, constrainBoundary: !input.ConstraintEdges.IsCreated || !args.RestoreBoundary);
             PostProcessInputStep(output, args, lt);
 
             if (localHoles.IsCreated) localHoles.Dispose();
@@ -449,6 +455,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public void PlantHoleSeeds(InputData<T2> input, OutputData<T2> output, Args args, Allocator allocator)
         {
             new PlantingSeedStep(input, output, args).Execute(allocator, true);
+        }
+
+        public void RefineMesh(OutputData<T2> output, Allocator allocator, T area2Threshold, T angleThreshold, T shells, bool constrainBoundary = false)
+        {
+            new RefineMeshStep(output, area2Threshold, angleThreshold, shells).Execute(allocator, refineMesh: true, constrainBoundary);
         }
 
         private void PreProcessInputStep(InputData<T2> input, OutputData<T2> output, Args args, out NativeArray<T2> localHoles, out TTransform lt, Allocator allocator)
@@ -1726,7 +1737,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public Circle((T2 center, T radiusSq) circle) => (Center, RadiusSq, offset) = (circle.center, circle.radiusSq, default);
             }
 
-            private NativeReference<Status>.ReadOnly status;
+            private NativeReference<Status> status;
             private NativeList<int> triangles;
             private NativeList<T2> outputPositions;
             private NativeList<int> halfedges;
@@ -1739,18 +1750,22 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<int> pathHalfedges;
             private NativeList<bool> visitedTriangles;
 
-            private readonly Args args;
-            private readonly bool constrainBoundary;
-            private readonly T maximumArea2;
+            private readonly T maximumArea2, angleThreshold, shells;
             private readonly int initialPointsCount;
 
-            public RefineMeshStep(InputData<T2> input, OutputData<T2> output, Args args, TTransform lt)
+            public RefineMeshStep(OutputData<T2> output, Args args, TTransform lt) : this(output,
+                area2Threshold: utils.mul(utils.mul(utils.Const(2), utils.Const(args.RefinementThresholdArea)), lt.AreaScalingFactor),
+                angleThreshold: utils.Const(args.RefinementThresholdAngle),
+                shells: utils.Const(args.ConcentricShellsParameter))
+            { }
+
+            public RefineMeshStep(OutputData<T2> output, T area2Threshold, T angleThreshold, T shells)
             {
-                this.args = args;
-                status = output.Status.AsReadOnly();
-                constrainBoundary = !input.ConstraintEdges.IsCreated || !args.RestoreBoundary;
+                status = output.Status;
                 initialPointsCount = output.Positions.Length;
-                maximumArea2 = utils.mul(utils.mul(utils.Const(2), utils.Const(args.RefinementThresholdArea)), lt.AreaScalingFactor);
+                maximumArea2 = area2Threshold;
+                this.angleThreshold = angleThreshold;
+                this.shells = shells;
                 triangles = output.Triangles;
                 outputPositions = output.Positions;
                 halfedges = output.Halfedges;
@@ -1764,11 +1779,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 visitedTriangles = default;
             }
 
-            public void Execute(Allocator allocator)
+            public void Execute(Allocator allocator, bool refineMesh, bool constrainBoundary)
             {
                 using var _ = new ProfilerMarker($"{nameof(RefineMeshStep)}").Auto();
 
-                if (!args.RefineMesh || status.Value != Status.OK)
+                if (!refineMesh || status.IsCreated && status.Value != Status.OK)
                 {
                     return;
                 }
@@ -1871,7 +1886,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 else
                 {
-                    var alpha = utils.alpha(D: utils.Const(args.ConcentricShellsParameter), d: utils.distance(e0, e1), i < initialPointsCount);
+                    var alpha = utils.alpha(D: shells, d: utils.distance(e0, e1), i < initialPointsCount);
                     p = utils.lerp(e0, e1, alpha);
                 }
 
@@ -1958,7 +1973,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 var area2 = Area2(i, j, k, outputPositions.AsArray());
-                return utils.greater(area2, maximumArea2) || AngleIsTooSmall(tId, utils.Const(args.RefinementThresholdAngle));
+                return utils.greater(area2, maximumArea2) || AngleIsTooSmall(tId, angleThreshold);
             }
 
             private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue, Allocator allocator)

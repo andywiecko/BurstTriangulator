@@ -1,5 +1,6 @@
 using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using NUnit.Framework;
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -296,6 +297,97 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             t.Triangulate(inputWithoutHoles, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions }, args, Allocator.Persistent);
             t.PlantHoleSeeds(inputWithHoles, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions }, args, Allocator.Persistent);
+
+            Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
+        }
+
+        [Test]
+        public void UnsafeTriangulatorRefineMeshTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+            var input = new LowLevel.Unsafe.InputData<T>()
+            {
+                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
+            };
+
+            using var triangles1 = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(input, new() { Triangles = triangles1 }, Args.Default(validateInput: false, refineMesh: true), Allocator.Persistent);
+
+            using var triangles2 = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            var output = new LowLevel.Unsafe.OutputData<T>
+            {
+                Triangles = triangles2,
+                Halfedges = halfedges,
+                Positions = outputPositions,
+                ConstrainedHalfedges = constrainedHalfedges
+            };
+
+            t.Triangulate(input, new() { Triangles = triangles2, Positions = outputPositions, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges }, Args.Default(validateInput: false, refineMesh: false), Allocator.Persistent);
+            LowLevel.Unsafe.Extensions.RefineMesh((dynamic)t, (dynamic)output, Allocator.Persistent, constrainBoundary: true);
+
+            Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
+        }
+
+        [Test]
+        public void UnsafeTriangulatorRefineMeshConstrainedTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+            var input = new LowLevel.Unsafe.InputData<T>()
+            {
+                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+            };
+            var args = Args.Default(validateInput: false, refineMesh: true, restoreBoundary: true);
+
+            using var triangles1 = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(input, new() { Triangles = triangles1 }, args, Allocator.Persistent);
+
+            using var triangles2 = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            var output = new LowLevel.Unsafe.OutputData<T>
+            {
+                Triangles = triangles2,
+                Halfedges = halfedges,
+                Positions = outputPositions,
+                ConstrainedHalfedges = constrainedHalfedges
+            };
+
+            t.Triangulate(input, new() { Triangles = triangles2, Positions = outputPositions, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges }, args.With(refineMesh: false), Allocator.Persistent);
+            LowLevel.Unsafe.Extensions.RefineMesh((dynamic)t, (dynamic)output, Allocator.Persistent, constrainBoundary: false);
+
+            Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
+        }
+
+        [Test]
+        public void UnsafeTriangulatorPlantHoleSeedsRefineMeshTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+            var inputWithHoles = new LowLevel.Unsafe.InputData<T>()
+            {
+                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+                HoleSeeds = LakeSuperior.Holes.DynamicCast<T>().AsNativeArray(),
+            };
+            var inputWithoutHoles = inputWithHoles;
+            inputWithoutHoles.HoleSeeds = default;
+            var args = Args.Default(validateInput: false, refineMesh: true, restoreBoundary: true);
+
+            using var triangles1 = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(inputWithHoles, new() { Triangles = triangles1 }, args, Allocator.Persistent);
+
+            using var triangles2 = new NativeList<int>(Allocator.Persistent);
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            var output = new LowLevel.Unsafe.OutputData<T> { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions };
+            t.Triangulate(inputWithoutHoles, output, args.With(refineMesh: false), Allocator.Persistent);
+            t.PlantHoleSeeds(inputWithHoles, output, args, Allocator.Persistent);
+            LowLevel.Unsafe.Extensions.RefineMesh((dynamic)t, (dynamic)output, Allocator.Persistent);
 
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
