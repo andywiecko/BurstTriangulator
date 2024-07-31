@@ -10,6 +10,8 @@ using Unity.Mathematics;
 using Unity.Profiling;
 using UnityEngine;
 
+[assembly: InternalsVisibleTo("andywiecko.BurstTriangulator.Tests")]
+
 namespace andywiecko.BurstTriangulator
 {
     public enum Status
@@ -1972,7 +1974,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private bool IsBadTriangle(int tId)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                var area2 = Area2(i, j, k, outputPositions.AsArray());
+                var (a, b, c) = (outputPositions[i], outputPositions[j], outputPositions[k]);
+                var area2 = Area2(a, b, c);
                 return utils.greater(area2, maximumArea2) || AngleIsTooSmall(tId, angleThreshold);
             }
 
@@ -2006,7 +2009,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 else
                 {
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
-                    var area2 = Area2(i, j, k, outputPositions.AsArray());
+                    var (xi, xj, xk) = (outputPositions[i], outputPositions[j], outputPositions[k]);
+                    var area2 = Area2(xi, xj, xk);
                     if (utils.greater(area2, maximumArea2)) // TODO split permited
                     {
                         foreach (var he in edges.AsReadOnly())
@@ -2407,16 +2411,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
         }
 
-        private static T Angle(T2 a, T2 b) => utils.atan2(Cross(a, b), utils.dot(a, b));
-        private static T Area2(int i, int j, int k, ReadOnlySpan<T2> positions)
-        {
-            var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
-            var pAB = utils.diff(pB, pA);
-            var pAC = utils.diff(pC, pA);
-            return utils.abs(Cross(pAB, pAC));
-        }
+        internal static T Angle(T2 a, T2 b) => utils.atan2(Cross(a, b), utils.dot(a, b));
+        internal static T Area2(T2 a, T2 b, T2 c) => utils.abs(Cross(utils.diff(b, a), utils.diff(c, a)));
         private static T Cross(T2 a, T2 b) => utils.diff(utils.mul(utils.X(a), utils.Y(b)), utils.mul(utils.Y(a), utils.X(b)));
-        private static T CCW(T2 a, T2 b, T2 c) => utils.sign(Cross(utils.diff(b, a), utils.diff(b, c)));
         private static T2 CircumCenter(T2 a, T2 b, T2 c)
         {
             var dx = utils.diff(utils.X(b), utils.X(a));
@@ -2440,7 +2437,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
             return (CircumCenter(pA, pB, pC), CircumRadiusSq(pA, pB, pC));
         }
-        private static bool EdgeEdgeIntersection(T2 a0, T2 a1, T2 b0, T2 b1) => utils.neq(CCW(a0, a1, b0), CCW(a0, a1, b1)) && utils.neq(CCW(b0, b1, a0), CCW(b0, b1, a1));
+        private static bool ccw(T2 a, T2 b, T2 c) => utils.greater(
+            utils.mul(utils.diff(utils.Y(c), utils.Y(a)), utils.diff(utils.X(b), utils.X(a))),
+            utils.mul(utils.diff(utils.Y(b), utils.Y(a)), utils.diff(utils.X(c), utils.X(a)))
+        );
+        internal static bool EdgeEdgeIntersection(T2 a0, T2 a1, T2 b0, T2 b1) => ccw(a0, a1, b0) != ccw(a0, a1, b1) && ccw(b0, b1, a0) != ccw(b0, b1, a1);
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         private static bool InCircle(T2 a, T2 b, T2 c, T2 p)
         {
@@ -2467,24 +2468,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 utils.Zero()
             );
         }
-
-        private static bool IsConvexQuadrilateral(T2 a, T2 b, T2 c, T2 d) => true
-            && utils.neq(CCW(a, c, b), utils.Zero())
-            && utils.neq(CCW(a, c, d), utils.Zero())
-            && utils.neq(CCW(b, d, a), utils.Zero())
-            && utils.neq(CCW(b, d, c), utils.Zero())
-            && utils.neq(CCW(a, c, b), CCW(a, c, d))
-            && utils.neq(CCW(b, d, a), CCW(b, d, c));
-        // (a.y - c.y) * (b.x - c.x) - (a.x - c.x) * (b.y - c.y)
+        internal static bool IsConvexQuadrilateral(T2 a, T2 b, T2 c, T2 d) => true
+            && utils.greater(utils.abs(Orient2dFast(a, c, b)), utils.EPSILON())
+            && utils.greater(utils.abs(Orient2dFast(a, c, d)), utils.EPSILON())
+            && utils.greater(utils.abs(Orient2dFast(b, d, a)), utils.EPSILON())
+            && utils.greater(utils.abs(Orient2dFast(b, d, c)), utils.EPSILON())
+            && EdgeEdgeIntersection(a, c, b, d)
+        ;
         private static T Orient2dFast(T2 a, T2 b, T2 c) => utils.diff(
             utils.mul(utils.diff(utils.Y(a), utils.Y(c)), utils.diff(utils.X(b), utils.X(c))),
             utils.mul(utils.diff(utils.X(a), utils.X(c)), utils.diff(utils.Y(b), utils.Y(c)))
         );
-        private static bool PointLineSegmentIntersection(T2 a, T2 b0, T2 b1) => true
-            && utils.eq(CCW(b0, b1, a), utils.Zero())
+        internal static bool PointLineSegmentIntersection(T2 a, T2 b0, T2 b1) => true
+            && utils.le(utils.abs(Orient2dFast(a, b0, b1)), utils.EPSILON())
             && math.all(utils.ge(a, utils.min(b0, b1)) & utils.le(a, utils.max(b0, b1)));
-
-        private static (T b0, T b1, T b2) Barycentric(T2 a, T2 b, T2 c, T2 p)
+        private static (T b0, T b1, T b2) bar(T2 a, T2 b, T2 c, T2 p)
         {
             var (v0, v1, v2) = (utils.diff(b, a), utils.diff(c, a), utils.diff(p, a));
             var denInv = utils.div(utils.Const(1), Cross(v0, v1));
@@ -2493,11 +2491,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var u = utils.diff(utils.diff(utils.Const(1), v), w);
             return (u, v, w);
         }
-
-        private static bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c)
+        internal static bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c)
         {
-            var (u, v, w) = Barycentric(a, b, c, p);
-            // math.cmax(-Barycentric(a, b, c, p)) <= 0
+            var (u, v, w) = bar(a, b, c, p);
+            // math.cmax(-bar(a, b, c, p)) <= 0 
             return utils.le(utils.max(utils.max(utils.neg(u), utils.neg(v)), utils.neg(w)), utils.Zero());
         }
     }
@@ -2703,6 +2700,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     internal interface IUtils<T, T2> where T : unmanaged where T2 : unmanaged
     {
         T Const(float v);
+        T EPSILON();
         T MaxValue();
         T2 MaxValue2();
         T2 MinValue2();
@@ -2740,14 +2738,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T mul(T a, T b);
         T neg(T v);
         T2 neg(T2 v);
-        bool neq(T v, T w);
-        T sign(T a);
 #pragma warning restore IDE1006
     }
 
     internal readonly struct FloatUtils : IUtils<float, float2>
     {
         public readonly float Const(float v) => v;
+        public readonly float EPSILON() => math.EPSILON;
         public readonly float MaxValue() => float.MaxValue;
         public readonly float2 MaxValue2() => float.MaxValue;
         public readonly float2 MinValue2() => float.MinValue;
@@ -2798,13 +2795,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float mul(float a, float b) => a * b;
         public readonly float neg(float v) => -v;
         public readonly float2 neg(float2 v) => -v;
-        public readonly bool neq(float v, float w) => v != w;
-        public readonly float sign(float a) => math.sign(a);
     }
 
     internal readonly struct DoubleUtils : IUtils<double, double2>
     {
         public readonly double Const(float v) => v;
+        public readonly double EPSILON() => math.EPSILON_DBL;
         public readonly double MaxValue() => double.MaxValue;
         public readonly double2 MaxValue2() => double.MaxValue;
         public readonly double2 MinValue2() => double.MinValue;
@@ -2855,7 +2851,5 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double mul(double a, double b) => a * b;
         public readonly double neg(double v) => -v;
         public readonly double2 neg(double2 v) => -v;
-        public readonly bool neq(double v, double w) => v != w;
-        public readonly double sign(double a) => math.sign(a);
     }
 }
