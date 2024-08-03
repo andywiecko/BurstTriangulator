@@ -24,7 +24,7 @@ Then, in the dependencies section, provide the desired version of the package:
 
 ```json
 "dependencies": {
-    "com.andywiecko.burst.triangulator": "3.0.0",
+    "com.andywiecko.burst.triangulator": "3.1.0",
     ...
 ```
 

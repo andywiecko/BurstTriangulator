@@ -18,7 +18,9 @@ A single-file package which provides Delaunay triangulation of the given set of 
 - **Support for `Unity.Jobs` pipeline**
 - **Input preprocessors**
 - **Input validation**
-- **Generic coordinates**
+- **Generic coordinates** (`float2`, `double2`)
+- **Native support** (low level API)
+- **Managed input support**
 
 To view the documentation for the manual and scripting API access it online [**here**][manual] or navigate to `Documentation~/` and build this using `docfx.json`.
 

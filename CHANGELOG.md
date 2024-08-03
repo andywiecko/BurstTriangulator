@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.1.0] – 2024-08-01
+
+### Added
+
+- Native support with a low-level API for triangulation via `UnsafeTriangulator<T>`. This allows for customization of steps and calling triangulation directly from jobs.
+- Extensions for `UnsafeTriangulator<T>`: `Triangulate`, `PlantHoleSeeds`, and `RefineMesh`.
+- Support for managed input.
+- Public `ConstrainedHalfedges` in triangulation output.
+
+### Fixed
+
+- Edge-edge intersection for collinear non-intersecting edges (issue [#173]).
+
 ## [3.0.0] – 2024-06-30
 
 ### Added
@@ -197,6 +210,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.1.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.1.0
 [3.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.0.0
 [2.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.5.0
 [2.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.4.0
@@ -212,6 +226,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 [1.0.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.0.1
 [1.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.0.0
 
-[#30]: https://github.com/andywiecko/BurstTriangulator/issues/30
-[#31]: https://github.com/andywiecko/BurstTriangulator/issues/31
+[#173]: https://github.com/andywiecko/BurstTriangulator/issues/173
 [#111]: https://github.com/andywiecko/BurstTriangulator/issues/111
+[#31]: https://github.com/andywiecko/BurstTriangulator/issues/31
+[#30]: https://github.com/andywiecko/BurstTriangulator/issues/30
