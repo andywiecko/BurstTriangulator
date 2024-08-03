@@ -13,6 +13,21 @@ references:
   commentId: T:andywiecko.BurstTriangulator.Extensions
   fullName: andywiecko.BurstTriangulator.Extensions
   nameWithType: Extensions
+- uid: andywiecko.BurstTriangulator.Extensions.AsNativeArray*
+  name: AsNativeArray
+  href: api/andywiecko.BurstTriangulator.Extensions.AsNativeArray.html
+  commentId: Overload:andywiecko.BurstTriangulator.Extensions.AsNativeArray
+  fullName: andywiecko.BurstTriangulator.Extensions.AsNativeArray
+  nameWithType: Extensions.AsNativeArray
+- uid: andywiecko.BurstTriangulator.Extensions.AsNativeArray``1(``0[])
+  name: AsNativeArray<T>(T[])
+  href: api/andywiecko.BurstTriangulator.Extensions.AsNativeArray.html#andywiecko_BurstTriangulator_Extensions_AsNativeArray__1___0___
+  commentId: M:andywiecko.BurstTriangulator.Extensions.AsNativeArray``1(``0[])
+  name.vb: AsNativeArray(Of T)(T())
+  fullName: andywiecko.BurstTriangulator.Extensions.AsNativeArray<T>(T[])
+  fullName.vb: andywiecko.BurstTriangulator.Extensions.AsNativeArray(Of T)(T())
+  nameWithType: Extensions.AsNativeArray<T>(T[])
+  nameWithType.vb: Extensions.AsNativeArray(Of T)(T())
 - uid: andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.double2})
   name: Run(Triangulator<double2>)
   href: api/andywiecko.BurstTriangulator.Extensions.Run.html#andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_double2__
@@ -118,6 +133,421 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).Positions
   nameWithType: InputData<T2>.Positions
   nameWithType.vb: InputData(Of T2).Positions
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe
+  name: andywiecko.BurstTriangulator.LowLevel.Unsafe
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.html
+  commentId: N:andywiecko.BurstTriangulator.LowLevel.Unsafe
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe
+  nameWithType: andywiecko.BurstTriangulator.LowLevel.Unsafe
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args
+  name: Args
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.html
+  commentId: T:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args
+  nameWithType: Args
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.#ctor(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single)
+  name: Args(Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.-ctor.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args__ctor_andywiecko_BurstTriangulator_Preprocessor_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Single_System_Single_System_Single_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.#ctor(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single)
+  name.vb: New(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Args(andywiecko.BurstTriangulator.Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.New(andywiecko.BurstTriangulator.Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
+  nameWithType: Args.Args(Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
+  nameWithType.vb: Args.New(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.#ctor*
+  name: Args
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.-ctor.html
+  commentId: Overload:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.#ctor
+  name.vb: New
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Args
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.New
+  nameWithType: Args.Args
+  nameWithType.vb: Args.New
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary
+  name: AutoHolesAndBoundary
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary
+  nameWithType: Args.AutoHolesAndBoundary
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter
+  name: ConcentricShellsParameter
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter
+  nameWithType: Args.ConcentricShellsParameter
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single)
+  name: Default(Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Default_andywiecko_BurstTriangulator_Preprocessor_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Single_System_Single_System_Single_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single)
+  name.vb: Default(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
+  nameWithType: Args.Default(Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
+  nameWithType.vb: Args.Default(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default*
+  name: Default
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default.html
+  commentId: Overload:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default
+  nameWithType: Args.Default
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Preprocessor
+  name: Preprocessor
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Preprocessor.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Preprocessor
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Preprocessor
+  nameWithType: Args.Preprocessor
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefineMesh
+  name: RefineMesh
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefineMesh.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefineMesh
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefineMesh
+  nameWithType: Args.RefineMesh
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdAngle
+  name: RefinementThresholdAngle
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdAngle.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdAngle
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdAngle
+  nameWithType: Args.RefinementThresholdAngle
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdArea
+  name: RefinementThresholdArea
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdArea.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdArea
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdArea
+  nameWithType: Args.RefinementThresholdArea
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary
+  name: RestoreBoundary
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary
+  nameWithType: Args.RestoreBoundary
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.SloanMaxIters
+  name: SloanMaxIters
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.SloanMaxIters.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.SloanMaxIters
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.SloanMaxIters
+  nameWithType: Args.SloanMaxIters
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ValidateInput
+  name: ValidateInput
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ValidateInput.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ValidateInput
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ValidateInput
+  nameWithType: Args.ValidateInput
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Verbose
+  name: Verbose
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Verbose.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Verbose
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Verbose
+  nameWithType: Args.Verbose
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(System.Nullable{andywiecko.BurstTriangulator.Preprocessor},System.Nullable{System.Int32},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Single},System.Nullable{System.Single},System.Nullable{System.Single})
+  name: With(Preprocessor?, int?, bool?, bool?, bool?, bool?, bool?, float?, float?, float?)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_With_System_Nullable_andywiecko_BurstTriangulator_Preprocessor__System_Nullable_System_Int32__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Single__System_Nullable_System_Single__System_Nullable_System_Single__
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(System.Nullable{andywiecko.BurstTriangulator.Preprocessor},System.Nullable{System.Int32},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Single},System.Nullable{System.Single},System.Nullable{System.Single})
+  name.vb: With(Preprocessor?, Integer?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Single?, Single?, Single?)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(andywiecko.BurstTriangulator.Preprocessor?, int?, bool?, bool?, bool?, bool?, bool?, float?, float?, float?)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(andywiecko.BurstTriangulator.Preprocessor?, Integer?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Single?, Single?, Single?)
+  nameWithType: Args.With(Preprocessor?, int?, bool?, bool?, bool?, bool?, bool?, float?, float?, float?)
+  nameWithType.vb: Args.With(Preprocessor?, Integer?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Single?, Single?, Single?)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With*
+  name: With
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With.html
+  commentId: Overload:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With
+  nameWithType: Args.With
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.op_Implicit(andywiecko.BurstTriangulator.TriangulationSettings)~andywiecko.BurstTriangulator.LowLevel.Unsafe.Args
+  name: implicit operator Args(TriangulationSettings)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.op_Implicit.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_op_Implicit_andywiecko_BurstTriangulator_TriangulationSettings__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.op_Implicit(andywiecko.BurstTriangulator.TriangulationSettings)~andywiecko.BurstTriangulator.LowLevel.Unsafe.Args
+  name.vb: CType(TriangulationSettings)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.implicit operator andywiecko.BurstTriangulator.LowLevel.Unsafe.Args(andywiecko.BurstTriangulator.TriangulationSettings)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.CType(andywiecko.BurstTriangulator.TriangulationSettings)
+  nameWithType: Args.implicit operator Args(TriangulationSettings)
+  nameWithType.vb: Args.CType(TriangulationSettings)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.op_Implicit*
+  name: implicit operator
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.op_Implicit.html
+  commentId: Overload:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.op_Implicit
+  name.vb: CType
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.implicit operator
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.CType
+  nameWithType: Args.implicit operator
+  nameWithType.vb: Args.CType
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions
+  name: Extensions
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.html
+  commentId: T:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions
+  nameWithType: Extensions
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name: PlantHoleSeeds(UnsafeTriangulator, InputData<double2>, OutputData<double2>, Args, Allocator)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_PlantHoleSeeds_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name.vb: PlantHoleSeeds(UnsafeTriangulator, InputData(Of double2), OutputData(Of double2), Args, Allocator)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator, andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator, andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  nameWithType: Extensions.PlantHoleSeeds(UnsafeTriangulator, InputData<double2>, OutputData<double2>, Args, Allocator)
+  nameWithType.vb: Extensions.PlantHoleSeeds(UnsafeTriangulator, InputData(Of double2), OutputData(Of double2), Args, Allocator)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name: PlantHoleSeeds(UnsafeTriangulator<double2>, InputData<double2>, OutputData<double2>, Args, Allocator)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_PlantHoleSeeds_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name.vb: PlantHoleSeeds(UnsafeTriangulator(Of double2), InputData(Of double2), OutputData(Of double2), Args, Allocator)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  nameWithType: Extensions.PlantHoleSeeds(UnsafeTriangulator<double2>, InputData<double2>, OutputData<double2>, Args, Allocator)
+  nameWithType.vb: Extensions.PlantHoleSeeds(UnsafeTriangulator(Of double2), InputData(Of double2), OutputData(Of double2), Args, Allocator)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name: PlantHoleSeeds(UnsafeTriangulator<float2>, InputData<float2>, OutputData<float2>, Args, Allocator)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_PlantHoleSeeds_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name.vb: PlantHoleSeeds(UnsafeTriangulator(Of float2), InputData(Of float2), OutputData(Of float2), Args, Allocator)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.float2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<Unity.Mathematics.float2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<Unity.Mathematics.float2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.float2), andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of Unity.Mathematics.float2), andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of Unity.Mathematics.float2), andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  nameWithType: Extensions.PlantHoleSeeds(UnsafeTriangulator<float2>, InputData<float2>, OutputData<float2>, Args, Allocator)
+  nameWithType.vb: Extensions.PlantHoleSeeds(UnsafeTriangulator(Of float2), InputData(Of float2), OutputData(Of float2), Args, Allocator)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds*
+  name: PlantHoleSeeds
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds.html
+  commentId: Overload:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds
+  nameWithType: Extensions.PlantHoleSeeds
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},Unity.Collections.Allocator,System.Double,System.Double,System.Double,System.Boolean)
+  name: RefineMesh(UnsafeTriangulator, OutputData<double2>, Allocator, double, double, double, bool)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_RefineMesh_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__Unity_Collections_Allocator_System_Double_System_Double_System_Double_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},Unity.Collections.Allocator,System.Double,System.Double,System.Double,System.Boolean)
+  name.vb: RefineMesh(UnsafeTriangulator, OutputData(Of double2), Allocator, Double, Double, Double, Boolean)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<Unity.Mathematics.double2>, Unity.Collections.Allocator, double, double, double, bool)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of Unity.Mathematics.double2), Unity.Collections.Allocator, Double, Double, Double, Boolean)
+  nameWithType: Extensions.RefineMesh(UnsafeTriangulator, OutputData<double2>, Allocator, double, double, double, bool)
+  nameWithType.vb: Extensions.RefineMesh(UnsafeTriangulator, OutputData(Of double2), Allocator, Double, Double, Double, Boolean)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},Unity.Collections.Allocator,System.Double,System.Double,System.Double,System.Boolean)
+  name: RefineMesh(UnsafeTriangulator<double2>, OutputData<double2>, Allocator, double, double, double, bool)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_RefineMesh_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__Unity_Collections_Allocator_System_Double_System_Double_System_Double_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},Unity.Collections.Allocator,System.Double,System.Double,System.Double,System.Boolean)
+  name.vb: RefineMesh(UnsafeTriangulator(Of double2), OutputData(Of double2), Allocator, Double, Double, Double, Boolean)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<Unity.Mathematics.double2>, Unity.Collections.Allocator, double, double, double, bool)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of Unity.Mathematics.double2), Unity.Collections.Allocator, Double, Double, Double, Boolean)
+  nameWithType: Extensions.RefineMesh(UnsafeTriangulator<double2>, OutputData<double2>, Allocator, double, double, double, bool)
+  nameWithType.vb: Extensions.RefineMesh(UnsafeTriangulator(Of double2), OutputData(Of double2), Allocator, Double, Double, Double, Boolean)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},Unity.Collections.Allocator,System.Single,System.Single,System.Single,System.Boolean)
+  name: RefineMesh(UnsafeTriangulator<float2>, OutputData<float2>, Allocator, float, float, float, bool)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_RefineMesh_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__Unity_Collections_Allocator_System_Single_System_Single_System_Single_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},Unity.Collections.Allocator,System.Single,System.Single,System.Single,System.Boolean)
+  name.vb: RefineMesh(UnsafeTriangulator(Of float2), OutputData(Of float2), Allocator, Single, Single, Single, Boolean)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.float2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<Unity.Mathematics.float2>, Unity.Collections.Allocator, float, float, float, bool)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.float2), andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of Unity.Mathematics.float2), Unity.Collections.Allocator, Single, Single, Single, Boolean)
+  nameWithType: Extensions.RefineMesh(UnsafeTriangulator<float2>, OutputData<float2>, Allocator, float, float, float, bool)
+  nameWithType.vb: Extensions.RefineMesh(UnsafeTriangulator(Of float2), OutputData(Of float2), Allocator, Single, Single, Single, Boolean)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh*
+  name: RefineMesh
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh.html
+  commentId: Overload:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh
+  nameWithType: Extensions.RefineMesh
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name: Triangulate(UnsafeTriangulator, InputData<double2>, OutputData<double2>, Args, Allocator)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name.vb: Triangulate(UnsafeTriangulator, InputData(Of double2), OutputData(Of double2), Args, Allocator)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator, andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator, andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  nameWithType: Extensions.Triangulate(UnsafeTriangulator, InputData<double2>, OutputData<double2>, Args, Allocator)
+  nameWithType.vb: Extensions.Triangulate(UnsafeTriangulator, InputData(Of double2), OutputData(Of double2), Args, Allocator)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name: Triangulate(UnsafeTriangulator<double2>, InputData<double2>, OutputData<double2>, Args, Allocator)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name.vb: Triangulate(UnsafeTriangulator(Of double2), InputData(Of double2), OutputData(Of double2), Args, Allocator)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  nameWithType: Extensions.Triangulate(UnsafeTriangulator<double2>, InputData<double2>, OutputData<double2>, Args, Allocator)
+  nameWithType.vb: Extensions.Triangulate(UnsafeTriangulator(Of double2), InputData(Of double2), OutputData(Of double2), Args, Allocator)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name: Triangulate(UnsafeTriangulator<float2>, InputData<float2>, OutputData<float2>, Args, Allocator)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)
+  name.vb: Triangulate(UnsafeTriangulator(Of float2), InputData(Of float2), OutputData(Of float2), Args, Allocator)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.float2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<Unity.Mathematics.float2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<Unity.Mathematics.float2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.float2), andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of Unity.Mathematics.float2), andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of Unity.Mathematics.float2), andywiecko.BurstTriangulator.LowLevel.Unsafe.Args, Unity.Collections.Allocator)
+  nameWithType: Extensions.Triangulate(UnsafeTriangulator<float2>, InputData<float2>, OutputData<float2>, Args, Allocator)
+  nameWithType.vb: Extensions.Triangulate(UnsafeTriangulator(Of float2), InputData(Of float2), OutputData(Of float2), Args, Allocator)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*
+  name: Triangulate
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate.html
+  commentId: Overload:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate
+  nameWithType: Extensions.Triangulate
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1
+  name: InputData<T2>
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.html
+  commentId: T:andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1
+  name.vb: InputData(Of T2)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<T2>
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of T2)
+  nameWithType: InputData<T2>
+  nameWithType.vb: InputData(Of T2)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.ConstraintEdges
+  name: ConstraintEdges
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.ConstraintEdges.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.ConstraintEdges
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<T2>.ConstraintEdges
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of T2).ConstraintEdges
+  nameWithType: InputData<T2>.ConstraintEdges
+  nameWithType.vb: InputData(Of T2).ConstraintEdges
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.HoleSeeds
+  name: HoleSeeds
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.HoleSeeds.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.HoleSeeds
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<T2>.HoleSeeds
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of T2).HoleSeeds
+  nameWithType: InputData<T2>.HoleSeeds
+  nameWithType.vb: InputData(Of T2).HoleSeeds
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.Positions
+  name: Positions
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.Positions.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.Positions
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<T2>.Positions
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of T2).Positions
+  nameWithType: InputData<T2>.Positions
+  nameWithType.vb: InputData(Of T2).Positions
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1
+  name: OutputData<T2>
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.html
+  commentId: T:andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1
+  name.vb: OutputData(Of T2)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<T2>
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of T2)
+  nameWithType: OutputData<T2>
+  nameWithType.vb: OutputData(Of T2)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.ConstrainedHalfedges
+  name: ConstrainedHalfedges
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.ConstrainedHalfedges.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.ConstrainedHalfedges
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<T2>.ConstrainedHalfedges
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of T2).ConstrainedHalfedges
+  nameWithType: OutputData<T2>.ConstrainedHalfedges
+  nameWithType.vb: OutputData(Of T2).ConstrainedHalfedges
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.Halfedges
+  name: Halfedges
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.Halfedges.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.Halfedges
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<T2>.Halfedges
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of T2).Halfedges
+  nameWithType: OutputData<T2>.Halfedges
+  nameWithType.vb: OutputData(Of T2).Halfedges
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.Positions
+  name: Positions
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.Positions.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.Positions
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<T2>.Positions
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of T2).Positions
+  nameWithType: OutputData<T2>.Positions
+  nameWithType.vb: OutputData(Of T2).Positions
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.Status
+  name: Status
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.Status.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.Status
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<T2>.Status
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of T2).Status
+  nameWithType: OutputData<T2>.Status
+  nameWithType.vb: OutputData(Of T2).Status
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.Triangles
+  name: Triangles
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.Triangles.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.Triangles
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<T2>.Triangles
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of T2).Triangles
+  nameWithType: OutputData<T2>.Triangles
+  nameWithType.vb: OutputData(Of T2).Triangles
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator
+  name: UnsafeTriangulator
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator.html
+  commentId: T:andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator
+  nameWithType: UnsafeTriangulator
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator`1
+  name: UnsafeTriangulator<T2>
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html
+  commentId: T:andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator`1
+  name.vb: UnsafeTriangulator(Of T2)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<T2>
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of T2)
+  nameWithType: UnsafeTriangulator<T2>
+  nameWithType.vb: UnsafeTriangulator(Of T2)
+- uid: andywiecko.BurstTriangulator.ManagedInput`1
+  name: ManagedInput<T2>
+  href: api/andywiecko.BurstTriangulator.ManagedInput-1.html
+  commentId: T:andywiecko.BurstTriangulator.ManagedInput`1
+  name.vb: ManagedInput(Of T2)
+  fullName: andywiecko.BurstTriangulator.ManagedInput<T2>
+  fullName.vb: andywiecko.BurstTriangulator.ManagedInput(Of T2)
+  nameWithType: ManagedInput<T2>
+  nameWithType.vb: ManagedInput(Of T2)
+- uid: andywiecko.BurstTriangulator.ManagedInput`1.ConstraintEdges
+  name: ConstraintEdges
+  href: api/andywiecko.BurstTriangulator.ManagedInput-1.ConstraintEdges.html#andywiecko_BurstTriangulator_ManagedInput_1_ConstraintEdges
+  commentId: P:andywiecko.BurstTriangulator.ManagedInput`1.ConstraintEdges
+  fullName: andywiecko.BurstTriangulator.ManagedInput<T2>.ConstraintEdges
+  fullName.vb: andywiecko.BurstTriangulator.ManagedInput(Of T2).ConstraintEdges
+  nameWithType: ManagedInput<T2>.ConstraintEdges
+  nameWithType.vb: ManagedInput(Of T2).ConstraintEdges
+- uid: andywiecko.BurstTriangulator.ManagedInput`1.ConstraintEdges*
+  name: ConstraintEdges
+  href: api/andywiecko.BurstTriangulator.ManagedInput-1.ConstraintEdges.html
+  commentId: Overload:andywiecko.BurstTriangulator.ManagedInput`1.ConstraintEdges
+  fullName: andywiecko.BurstTriangulator.ManagedInput<T2>.ConstraintEdges
+  fullName.vb: andywiecko.BurstTriangulator.ManagedInput(Of T2).ConstraintEdges
+  nameWithType: ManagedInput<T2>.ConstraintEdges
+  nameWithType.vb: ManagedInput(Of T2).ConstraintEdges
+- uid: andywiecko.BurstTriangulator.ManagedInput`1.HoleSeeds
+  name: HoleSeeds
+  href: api/andywiecko.BurstTriangulator.ManagedInput-1.HoleSeeds.html#andywiecko_BurstTriangulator_ManagedInput_1_HoleSeeds
+  commentId: P:andywiecko.BurstTriangulator.ManagedInput`1.HoleSeeds
+  fullName: andywiecko.BurstTriangulator.ManagedInput<T2>.HoleSeeds
+  fullName.vb: andywiecko.BurstTriangulator.ManagedInput(Of T2).HoleSeeds
+  nameWithType: ManagedInput<T2>.HoleSeeds
+  nameWithType.vb: ManagedInput(Of T2).HoleSeeds
+- uid: andywiecko.BurstTriangulator.ManagedInput`1.HoleSeeds*
+  name: HoleSeeds
+  href: api/andywiecko.BurstTriangulator.ManagedInput-1.HoleSeeds.html
+  commentId: Overload:andywiecko.BurstTriangulator.ManagedInput`1.HoleSeeds
+  fullName: andywiecko.BurstTriangulator.ManagedInput<T2>.HoleSeeds
+  fullName.vb: andywiecko.BurstTriangulator.ManagedInput(Of T2).HoleSeeds
+  nameWithType: ManagedInput<T2>.HoleSeeds
+  nameWithType.vb: ManagedInput(Of T2).HoleSeeds
+- uid: andywiecko.BurstTriangulator.ManagedInput`1.Positions
+  name: Positions
+  href: api/andywiecko.BurstTriangulator.ManagedInput-1.Positions.html#andywiecko_BurstTriangulator_ManagedInput_1_Positions
+  commentId: P:andywiecko.BurstTriangulator.ManagedInput`1.Positions
+  fullName: andywiecko.BurstTriangulator.ManagedInput<T2>.Positions
+  fullName.vb: andywiecko.BurstTriangulator.ManagedInput(Of T2).Positions
+  nameWithType: ManagedInput<T2>.Positions
+  nameWithType.vb: ManagedInput(Of T2).Positions
+- uid: andywiecko.BurstTriangulator.ManagedInput`1.Positions*
+  name: Positions
+  href: api/andywiecko.BurstTriangulator.ManagedInput-1.Positions.html
+  commentId: Overload:andywiecko.BurstTriangulator.ManagedInput`1.Positions
+  fullName: andywiecko.BurstTriangulator.ManagedInput<T2>.Positions
+  fullName.vb: andywiecko.BurstTriangulator.ManagedInput(Of T2).Positions
+  nameWithType: ManagedInput<T2>.Positions
+  nameWithType.vb: ManagedInput(Of T2).Positions
+- uid: andywiecko.BurstTriangulator.ManagedInput`1.op_Implicit(andywiecko.BurstTriangulator.ManagedInput{`0})~andywiecko.BurstTriangulator.InputData{`0}
+  name: implicit operator InputData<T2>(ManagedInput<T2>)
+  href: api/andywiecko.BurstTriangulator.ManagedInput-1.op_Implicit.html#andywiecko_BurstTriangulator_ManagedInput_1_op_Implicit_andywiecko_BurstTriangulator_ManagedInput__0___andywiecko_BurstTriangulator_InputData__0_
+  commentId: M:andywiecko.BurstTriangulator.ManagedInput`1.op_Implicit(andywiecko.BurstTriangulator.ManagedInput{`0})~andywiecko.BurstTriangulator.InputData{`0}
+  name.vb: CType(ManagedInput(Of T2))
+  fullName: andywiecko.BurstTriangulator.ManagedInput<T2>.implicit operator andywiecko.BurstTriangulator.InputData<T2>(andywiecko.BurstTriangulator.ManagedInput<T2>)
+  fullName.vb: andywiecko.BurstTriangulator.ManagedInput(Of T2).CType(andywiecko.BurstTriangulator.ManagedInput(Of T2))
+  nameWithType: ManagedInput<T2>.implicit operator InputData<T2>(ManagedInput<T2>)
+  nameWithType.vb: ManagedInput(Of T2).CType(ManagedInput(Of T2))
+- uid: andywiecko.BurstTriangulator.ManagedInput`1.op_Implicit*
+  name: implicit operator
+  href: api/andywiecko.BurstTriangulator.ManagedInput-1.op_Implicit.html
+  commentId: Overload:andywiecko.BurstTriangulator.ManagedInput`1.op_Implicit
+  name.vb: CType
+  fullName: andywiecko.BurstTriangulator.ManagedInput<T2>.implicit operator
+  fullName.vb: andywiecko.BurstTriangulator.ManagedInput(Of T2).CType
+  nameWithType: ManagedInput<T2>.implicit operator
+  nameWithType.vb: ManagedInput(Of T2).CType
 - uid: andywiecko.BurstTriangulator.OutputData`1
   name: OutputData<T2>
   href: api/andywiecko.BurstTriangulator.OutputData-1.html
@@ -145,6 +575,22 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).New
   nameWithType: OutputData<T2>.OutputData
   nameWithType.vb: OutputData(Of T2).New
+- uid: andywiecko.BurstTriangulator.OutputData`1.ConstrainedHalfedges
+  name: ConstrainedHalfedges
+  href: api/andywiecko.BurstTriangulator.OutputData-1.ConstrainedHalfedges.html#andywiecko_BurstTriangulator_OutputData_1_ConstrainedHalfedges
+  commentId: P:andywiecko.BurstTriangulator.OutputData`1.ConstrainedHalfedges
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.ConstrainedHalfedges
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).ConstrainedHalfedges
+  nameWithType: OutputData<T2>.ConstrainedHalfedges
+  nameWithType.vb: OutputData(Of T2).ConstrainedHalfedges
+- uid: andywiecko.BurstTriangulator.OutputData`1.ConstrainedHalfedges*
+  name: ConstrainedHalfedges
+  href: api/andywiecko.BurstTriangulator.OutputData-1.ConstrainedHalfedges.html
+  commentId: Overload:andywiecko.BurstTriangulator.OutputData`1.ConstrainedHalfedges
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.ConstrainedHalfedges
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).ConstrainedHalfedges
+  nameWithType: OutputData<T2>.ConstrainedHalfedges
+  nameWithType.vb: OutputData(Of T2).ConstrainedHalfedges
 - uid: andywiecko.BurstTriangulator.OutputData`1.Halfedges
   name: Halfedges
   href: api/andywiecko.BurstTriangulator.OutputData-1.Halfedges.html#andywiecko_BurstTriangulator_OutputData_1_Halfedges

@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.0.0</b></div>
+                "><b>v3.1.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -96,8 +96,20 @@
 <p>The format is based on <a href="https://keepachangelog.com/en/1.1.0/">Keep a Changelog</a>,
 and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
 <p>For online version see <a href="https://github.com/andywiecko/BurstTriangulator/releases">Github Releases</a>.</p>
-<h2 id="300--2024-06-30"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.0.0">3.0.0</a> – 2024-06-30</h2>
+<h2 id="310--2024-08-01"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.1.0">3.1.0</a> – 2024-08-01</h2>
 <h3 id="added">Added</h3>
+<ul>
+<li>Native support with a low-level API for triangulation via <code>UnsafeTriangulator&lt;T&gt;</code>. This allows for customization of steps and calling triangulation directly from jobs.</li>
+<li>Extensions for <code>UnsafeTriangulator&lt;T&gt;</code>: <code>Triangulate</code>, <code>PlantHoleSeeds</code>, and <code>RefineMesh</code>.</li>
+<li>Support for managed input.</li>
+<li>Public <code>ConstrainedHalfedges</code> in triangulation output.</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li>Edge-edge intersection for collinear non-intersecting edges (issue <a href="https://github.com/andywiecko/BurstTriangulator/issues/173">#173</a>).</li>
+</ul>
+<h2 id="300--2024-06-30"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.0.0">3.0.0</a> – 2024-06-30</h2>
+<h3 id="added-1">Added</h3>
 <ul>
 <li><strong>New</strong> online documentation (including manual and scripting API): <a href="https://andywiecko.github.io/BurstTriangulator/">https://andywiecko.github.io/BurstTriangulator/</a></li>
 <li><code>Verbose</code> option in triangulation settings.</li>
@@ -117,7 +129,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <ul>
 <li>Obsolete settings: <code>BatchCount</code>, <code>MinimumAngle</code>, <code>MinimumArea</code>, <code>MaximumArea</code>, and <code>ConstrainEdges</code>.</li>
 </ul>
-<h3 id="fixed">Fixed</h3>
+<h3 id="fixed-1">Fixed</h3>
 <ul>
 <li>Run triangulator on the main thread using the <code>Run()</code> method.</li>
 </ul>
@@ -133,12 +145,12 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <li>Deprecated the <code>Triangulator.Settings.ConstrainEdges</code> property. To enable constrained edges, pass the corresponding array into input.</li>
 <li>Deprecated the <code>Triangulator.Settings.BatchCount</code> property. This property is no longer used, setting it has no effect.</li>
 </ul>
-<h3 id="fixed-1">Fixed</h3>
+<h3 id="fixed-2">Fixed</h3>
 <ul>
 <li>Fixed constructing <code>pointToHalfedges</code> during constraint resolution. This resolves GitHub issue <a href="https://github.com/andywiecko/BurstTriangulator/issues/111">#111</a>.</li>
 </ul>
 <h2 id="240--2023-12-23"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.4.0">2.4.0</a> – 2023-12-23</h2>
-<h3 id="added-1">Added</h3>
+<h3 id="added-2">Added</h3>
 <ul>
 <li>Introduce <code>ConcentricShellParameter</code> in <code>TriangulationSettings</code>, serving as a constant for <em>concentric shells</em> segment splitting.</li>
 <li>Add <code>RefinementThresholds</code> in <code>TriangulationSettings</code>, including <code>.Area</code> and <code>.Angle</code>. Previous corresponding parameters are marked with obsolete.</li>
@@ -172,11 +184,11 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <li>Simplified constrained triangulation scheduling jobs pipeline.</li>
 <li>Adapted constrained triangulation for <code>half-edges</code> approach, which significantly improved performance. The algorithm no longer relies on triangulation mappings, such as edge-to-triangle and triangle-to-edge relationships (or circles). The complexity of the intersection searching algorithm has been reduced from a naive <code>O(n^2)</code> solution to <code>O(n log n)</code>.</li>
 </ul>
-<h3 id="fixed-2">Fixed</h3>
+<h3 id="fixed-3">Fixed</h3>
 <ul>
 <li>Resolved Sloan algorithm corner cases. In previous releases, constrained triangulation may get stuck. Constrained triangulation is now more robust.</li>
 </ul>
-<h3 id="added-2">Added</h3>
+<h3 id="added-3">Added</h3>
 <ul>
 <li>Added constrained triangulation benchmark test. The results may be found at <a href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md#benchmark"><code>README.md</code></a>.</li>
 </ul>
@@ -187,7 +199,7 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <li>Refactored some internal math utilities.</li>
 </ul>
 <h2 id="200--2023-09-09"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.0.0">2.0.0</a> ⁠– 2023-09-09</h2>
-<h3 id="added-3">Added</h3>
+<h3 id="added-4">Added</h3>
 <ul>
 <li>Introduced the <code>Preprocessor</code> enum with the following options: <code>None</code>, <code>COM</code>, and <code>PCA</code>. This enum replaces the previous transformation settings (<code>UseLocalTransformation</code>/<code>UsePCATransformation</code>).</li>
 <li>Introduced the <code>Status</code> (with values <code>OK</code>, <code>ERR</code>) enum along with corresponding native data. This enum is now utilized for input validation, with functionality extending beyond the Unity editor to encompass validation in builds as well.</li>
@@ -206,27 +218,27 @@ and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semant
 <li>Removed the internal <code>TriangulatorNativeData</code> as part of a significant refactor to simplify the code structure. Internal implementations were cleaned up, and code structure was simplified.</li>
 </ul>
 <h2 id="150--2023-04-12"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.5.0">1.5.0</a> ⁠– 2023-04-12</h2>
-<h3 id="added-4">Added</h3>
+<h3 id="added-5">Added</h3>
 <ul>
 <li>Added PCA transformation for input positions and holes.</li>
 </ul>
-<h3 id="fixed-3">Fixed</h3>
+<h3 id="fixed-4">Fixed</h3>
 <ul>
 <li>Editor hangs during Sloan algorithm for specific input data (issues <a href="https://github.com/andywiecko/BurstTriangulator/issues/30">#30</a> and <a href="https://github.com/andywiecko/BurstTriangulator/issues/31">#31</a>).</li>
 </ul>
 <h2 id="140--2022-11-01"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.4.0">1.4.0</a> ⁠– 2022-11-01</h2>
-<h3 id="added-5">Added</h3>
+<h3 id="added-6">Added</h3>
 <ul>
 <li>Added option for transforming input positions (as well as holes) into normalized local space, i.e. [-1, 1] box. Converting points into normalized local space could increase numerical accuracy.</li>
 </ul>
-<h3 id="fixed-4">Fixed</h3>
+<h3 id="fixed-5">Fixed</h3>
 <ul>
 <li>Fix deferred array support in triangulator input.</li>
 <li>Add missing constraint position range validation.</li>
 <li>Fix whitespaces in code and <code>README.md</code>.</li>
 </ul>
 <h2 id="130--2022-04-09"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.3.0">1.3.0</a> ⁠– 2022-04-09</h2>
-<h3 id="added-6">Added</h3>
+<h3 id="added-7">Added</h3>
 <ul>
 <li>Restoring input boundaries. The feature allows for restoring a given boundary from triangulation input.
 It is necessary to provide constraints, as well as enable corresponding
@@ -239,7 +251,7 @@ options in the triangulation settings, aka <code>RestoreBoundary</code>.</li>
 <li>More verbose warnings during input validation.</li>
 </ul>
 <h2 id="120--2022-04-02"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.2.0">1.2.0</a> ⁠– 2022-04-02</h2>
-<h3 id="added-7">Added</h3>
+<h3 id="added-8">Added</h3>
 <ul>
 <li>Add support for the Constraint Delaunay Triangulation with mesh refinement.</li>
 </ul>
@@ -250,7 +262,7 @@ options in the triangulation settings, aka <code>RestoreBoundary</code>.</li>
 <li>Refactor: structures have more compact layout.</li>
 </ul>
 <h2 id="110--2022-03-27"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.1.0">1.1.0</a> ⁠– 2022-03-27</h2>
-<h3 id="added-8">Added</h3>
+<h3 id="added-9">Added</h3>
 <ul>
 <li>Add support for Constraint Delaunay Triangulation. Selected edges can be constrained e.g. for restoring the boundary. The feature currently does not support mesh refinement.</li>
 <li>Basic validation of the input positions as well as input constraint edges.</li>
@@ -266,7 +278,7 @@ options in the triangulation settings, aka <code>RestoreBoundary</code>.</li>
 <li>Unity packages have been updated (Note: there was API changed in <code>FixedList&lt;T&gt;</code>).</li>
 </ul>
 <h2 id="100--2021-10-26"><a href="https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.0.0">1.0.0</a> ⁠– 2021-10-26</h2>
-<h3 id="added-9">Added</h3>
+<h3 id="added-10">Added</h3>
 <ul>
 <li>Initial release version</li>
 </ul>

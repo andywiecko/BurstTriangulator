@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Method Triangulate | BurstTriangulator </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Method Triangulate | BurstTriangulator ">
+    
+    
+      <link rel="shortcut icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/logo.svg" alt="BurstTriangulator">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+                <!-- Added by me -->
+                <div style="margin-right: 15px;"><a href="https://github.com/andywiecko/BurstTriangulator/"><i class="fa fa-github" style="font-size:30px; color: white"></i></a></div>
+              </form>
+            </div>
+          </div>
+        </nav>        <div class="subnav navbar navbar-default">
+            <div class="container" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div class="container hide-when-search" id="breadcrumb">
+                 <ul class="breadcrumb">
+                   <li></li>
+                 </ul>
+                </div>
+                <div class="container" style="
+                    width: 80px;
+                    line-height: 40px;
+                "><b>v3.1.0</b></div>
+          </div>
+        </div>      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*">
+
+
+
+<h1 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*">Method Triangulate</h1>
+<div class="markdown level0 summary"></div>
+<div class="markdown level0 conceptual"></div>
+
+<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*"></a>
+<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)">Triangulate(UnsafeTriangulator, InputData&lt;double2&gt;, OutputData&lt;double2&gt;, Args, Allocator)</h4>
+<div class="markdown level1 summary"></div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">public static void Triangulate(this UnsafeTriangulator @this, InputData&lt;double2&gt; input, OutputData&lt;double2&gt; output, Args args, Allocator allocator)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator.html">UnsafeTriangulator</a></td>
+      <td><span class="parametername">this</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.html">InputData</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>&gt;</td>
+      <td><span class="parametername">input</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.html">OutputData</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>&gt;</td>
+      <td><span class="parametername">output</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.html">Args</a></td>
+      <td><span class="parametername">args</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html">Allocator</a></td>
+      <td><span class="parametername">allocator</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*"></a>
+<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)">Triangulate(UnsafeTriangulator&lt;float2&gt;, InputData&lt;float2&gt;, OutputData&lt;float2&gt;, Args, Allocator)</h4>
+<div class="markdown level1 summary"></div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">public static void Triangulate(this UnsafeTriangulator&lt;float2&gt; @this, InputData&lt;float2&gt; input, OutputData&lt;float2&gt; output, Args args, Allocator allocator)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html">UnsafeTriangulator</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html">float2</a>&gt;</td>
+      <td><span class="parametername">this</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.html">InputData</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html">float2</a>&gt;</td>
+      <td><span class="parametername">input</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.html">OutputData</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html">float2</a>&gt;</td>
+      <td><span class="parametername">output</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.html">Args</a></td>
+      <td><span class="parametername">args</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html">Allocator</a></td>
+      <td><span class="parametername">allocator</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*"></a>
+<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)">Triangulate(UnsafeTriangulator&lt;double2&gt;, InputData&lt;double2&gt;, OutputData&lt;double2&gt;, Args, Allocator)</h4>
+<div class="markdown level1 summary"></div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">public static void Triangulate(this UnsafeTriangulator&lt;double2&gt; @this, InputData&lt;double2&gt; input, OutputData&lt;double2&gt; output, Args args, Allocator allocator)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html">UnsafeTriangulator</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>&gt;</td>
+      <td><span class="parametername">this</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.html">InputData</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>&gt;</td>
+      <td><span class="parametername">input</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.html">OutputData</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>&gt;</td>
+      <td><span class="parametername">output</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.html">Args</a></td>
+      <td><span class="parametername">args</span></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html">Allocator</a></td>
+      <td><span class="parametername">allocator</span></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      
+      <span>Generated by <strong>DocFX</strong></span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+    .hljs {
+        background: #f5f5f5;
+    }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </body>
+</html>

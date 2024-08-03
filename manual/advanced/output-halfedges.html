@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.0.0</b></div>
+                "><b>v3.1.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -92,10 +92,6 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="halfedges">Halfedges</h1>
 
-<pre><code class="lang-csharp">using var triangulator = new Triangulator(Allocator.Persistent){ Input = { ... } };
-triangulator.Run();
-var halfedges = triangulator.Output.Halfedges;
-</code></pre>
 <p>For each successful triangulation (with any settings) except triangles and positions, one can get <a class="xref" href="../../api/andywiecko.BurstTriangulator.OutputData-1.Halfedges.html#andywiecko_BurstTriangulator_OutputData_1_Halfedges"><code>Output.Halfedges</code></a>.
 Halfedges are a data structure that describes neighboring triangles.
 All triangles in the generated mesh are clockwise.
@@ -103,6 +99,10 @@ For example, consider triangle <span class="math">\((a, b, c)\)</span> (at index
 A halfedge is a directed edge, i.e., <span class="math">\((i, j) \neq (j, i)\)</span>.
 In the halfedges buffer, one can find the <span class="math">\(\mathtt{id}\)</span> of the opposite halfedge, if it exists.
 In the case when the opposite halfedge is not present in a mesh, then <code>Output.Triangles[id] = -1</code>.</p>
+<pre><code class="lang-csharp">using var triangulator = new Triangulator(Allocator.Persistent){ Input = { ... } };
+triangulator.Run();
+var halfedges = triangulator.Output.Halfedges;
+</code></pre>
 <p>Consider the following example where <span class="math">\(\triangle\)</span> stands for triangles and <span class="math">\(\mathtt{he}\)</span> for the halfedges buffer.</p>
 <br>
 <p align="center"><img src="../../images/manual-halfedges.svg" width="200"></p>
@@ -115,8 +115,17 @@ In the case when the opposite halfedge is not present in a mesh, then <code>Outp
     \mathtt{he} &amp; 10 &amp; 3 &amp; -1 &amp; 1 &amp; 6 &amp; -1 &amp; 4 &amp; 9 &amp; -1 &amp; 7 &amp; 0 &amp; -1
 \end{array}
 \]</div>
-<hr>
+<br>
 <p>For more details follow the delaunator <strong><a href="https://mapbox.github.io/delaunator/">guide</a></strong>.</p>
+<h2 id="constrained-halfedges">Constrained halfedges</h2>
+<p>When performing constrained triangulation, you can determine whether a given halfedge is constrained by using <a class="xref" href="../../api/andywiecko.BurstTriangulator.OutputData-1.ConstrainedHalfedges.html#andywiecko_BurstTriangulator_OutputData_1_ConstrainedHalfedges"><code>Output.ConstrainedHalfedges</code></a>.</p>
+<pre><code class="lang-csharp">var constrainedHalfedges = triangulator.Output.ConstrainedHalfedges;
+</code></pre>
+<p>This information can be particularly useful during post-processing by the user.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>If constraint edges (<a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges"><code>Input.ConstraintEdges</code></a>) are not provided and mesh refinement (<a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh.html#andywiecko_BurstTriangulator_TriangulationSettings_RefineMesh"><code>Settings.RefineMesh</code></a>) is enabled, constrained halfedges are automatically set to <code>true</code> for boundary edges (i.e., for which <code>halfedges[i] == -1</code>).</p>
+</div>
 
 </article>
           </div>
