@@ -1,6 +1,5 @@
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Unity.Burst;
@@ -39,7 +38,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(new[] { (0, 2, 1), (0, 3, 2) }));
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(new[] { 0, 2, 1, 0, 3, 2 }).Using(TrianglesComparer.Instance));
         }
 
         private static readonly TestCaseData[] validateInputPositionsTestData = new[]
@@ -309,35 +308,33 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             }.DynamicCast<T>();
             var expectedTriangles = new[]
             {
-                (5, 1, 0),
-                (5, 2, 4),
-                (5, 3, 2),
-                (5, 4, 1),
+                5, 1, 0,
+                5, 2, 4,
+                5, 3, 2,
+                5, 4, 1,
             };
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
-            Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(expectedTriangles).Using(TrianglesComparer.Instance));
         }
 
-        private static readonly TestCaseData[] edgeConstraintsTestData = new[]
+        private static readonly TestCaseData[] edgeConstraintsTestData =
         {
-            new TestCaseData(
+            new(
                 new[]
                 {
                     math.float2(0, 0),
                     math.float2(1, 0),
                     math.float2(1, 1),
                     math.float2(0, 1),
-                }, new int[]{ }
-            )
-            {
-                TestName = "Test case 0",
-                ExpectedResult = new[]
+                },
+                new int[]{ },
+                new[]
                 {
-                    (0, 2, 1),
-                    (0, 3, 2),
+                    0, 2, 1,
+                    0, 3, 2,
                 }
-            },
-            new TestCaseData(
+            ){ TestName = "Test case 0" },
+            new(
                 //   6 ----- 5 ----- 4
                 //   |    .`   `.    |
                 //   | .`         `. |
@@ -355,21 +352,19 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 2),
                     math.float2(0, 2),
                     math.float2(0, 1),
-                }, new[] { 1, 5 })
-            {
-                TestName = "Test case 1",
-                ExpectedResult = new[]
+                },
+                new[] { 1, 5 },
+                new[]
                 {
-                    (1, 0, 7),
-                    (3, 2, 1),
-                    (5, 3, 1),
-                    (5, 4, 3),
-                    (7, 5, 1),
-                    (7, 6, 5),
+                    1, 0, 7,
+                    3, 2, 1,
+                    5, 3, 1,
+                    5, 4, 3,
+                    7, 5, 1,
+                    7, 6, 5,
                 }
-            },
-
-            new TestCaseData(
+            ){ TestName = "Test case 1" },
+            new(
                 //   6 ----- 5 ----- 4
                 //   |    .`   `.    |
                 //   | .`         `. |
@@ -387,20 +382,18 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 2),
                     math.float2(0, 2),
                     math.float2(0, 1),
-                }, new[] { 1, 5, 1, 4 })
-            {
-                TestName = "Test case 2",
-                ExpectedResult = new[]
+                },
+                new[] { 1, 5, 1, 4 },
+                new[]
                 {
-                    (1, 0, 7),
-                    (3, 2, 1),
-                    (4, 3, 1),
-                    (5, 4, 1),
-                    (7, 5, 1),
-                    (7, 6, 5),
+                    1, 0, 7,
+                    3, 2, 1,
+                    4, 3, 1,
+                    5, 4, 1,
+                    7, 5, 1,
+                    7, 6, 5,
                 }
-            },
-
+            ){ TestName = "Test case 2" },
             new TestCaseData(
                 //   9 ----- 8 ----- 7 ----- 6
                 //   |    .` `   . ``  `.    |
@@ -426,23 +419,21 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(0, 3),
                     math.float2(0, 2),
                     math.float2(0, 1),
-                }, new[] { 3, 9, 8, 5 })
-            {
-                TestName = "Test case 3",
-                ExpectedResult = new[]
+                }, new[] { 3, 9, 8, 5 },
+                new[]
                 {
-                    (1, 0, 11),
-                    (4, 3, 8),
-                    (7, 6, 5),
-                    (8, 5, 4),
-                    (8, 7, 5),
-                    (9, 8, 3),
-                    (10, 3, 2),
-                    (10, 9, 3),
-                    (11, 2, 1),
-                    (11, 10, 2),
+                    1, 0, 11,
+                    4, 3, 8,
+                    7, 6, 5,
+                    8, 5, 4,
+                    8, 7, 5,
+                    9, 8, 3,
+                    10, 3, 2,
+                    10, 9, 3,
+                    11, 2, 1,
+                    11, 10, 2,
                 }
-            },
+                ){ TestName = "Test case 3" },
             // 4   5   6   7
             // *   *   *  ,*
             //         ..;
@@ -451,31 +442,29 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             //  ;
             // *   *   *   *
             // 0   1   2   3
-            new(new[]
-            {
-                math.float2(0, 0),
-                math.float2(1, 0),
-                math.float2(2, 0),
-                math.float2(3, 0),
-                math.float2(0, 3),
-                math.float2(1, 3),
-                math.float2(2, 3),
-                math.float2(3, 3),
-            },
-            new[] { 0, 7 }
-            )
-            {
-                TestName = "Test case 4",
-                ExpectedResult = new[]
+            new(
+                new[]
                 {
-                    (1, 0, 7),
-                    (4, 5, 0),
-                    (5, 6, 0),
-                    (6, 7, 0),
-                    (7, 2, 1),
-                    (7, 3, 2),
+                    math.float2(0, 0),
+                    math.float2(1, 0),
+                    math.float2(2, 0),
+                    math.float2(3, 0),
+                    math.float2(0, 3),
+                    math.float2(1, 3),
+                    math.float2(2, 3),
+                    math.float2(3, 3),
+                },
+                new[] { 0, 7 },
+                new[]
+                {
+                    1, 0, 7,
+                    4, 5, 0,
+                    5, 6, 0,
+                    6, 7, 0,
+                    7, 2, 1,
+                    7, 3, 2,
                 }
-            },
+            ){ TestName = "Test case 4" },
             //    8   9   10  11
             //    *   *   *   *
             //             ..;
@@ -485,43 +474,41 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             //     ..;
             //    *   *   *   *
             //    0   1   2   3
-            new(new[]
-            {
-                math.float2(0, 0),
-                math.float2(1, 0),
-                math.float2(2, 0),
-                math.float2(3, 0),
-                math.float2(0, 1),
-                math.float2(0, 2),
-                math.float2(3, 1),
-                math.float2(3, 2),
-                math.float2(0, 3),
-                math.float2(1, 3),
-                math.float2(2, 3),
-                math.float2(3, 3),
-            },
-            new[]{ 0, 11 }
-            )
-            {
-                TestName = "Test case 5",
-                ExpectedResult = new[]
+            new(
+                new[]
                 {
-                    (1, 0, 11),
-                    (4, 11, 0),
-                    (5, 9, 4),
-                    (6, 2, 1),
-                    (6, 3, 2),
-                    (7, 6, 1),
-                    (8, 9, 5),
-                    (9, 10, 4),
-                    (10, 11, 4),
-                    (11, 7, 1),
+                    math.float2(0, 0),
+                    math.float2(1, 0),
+                    math.float2(2, 0),
+                    math.float2(3, 0),
+                    math.float2(0, 1),
+                    math.float2(0, 2),
+                    math.float2(3, 1),
+                    math.float2(3, 2),
+                    math.float2(0, 3),
+                    math.float2(1, 3),
+                    math.float2(2, 3),
+                    math.float2(3, 3),
+                },
+                new[]{ 0, 11 },
+                new[]
+                {
+                    1, 0, 11,
+                    4, 11, 0,
+                    5, 9, 4,
+                    6, 2, 1,
+                    6, 3, 2,
+                    7, 6, 1,
+                    8, 9, 5,
+                    9, 10, 4,
+                    10, 11, 4,
+                    11, 7, 1,
                 }
-            }
+            ){ TestName = "Test case 5" }
         };
 
         [Test, TestCaseSource(nameof(edgeConstraintsTestData))]
-        public (int, int, int)[] ConstraintDelaunayTriangulationTest(float2[] managedPositions, int[] constraints)
+        public void ConstraintDelaunayTriangulationTest(float2[] managedPositions, int[] constraints, int[] expected)
         {
             using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
@@ -540,7 +527,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            return triangulator.GetTrisTuple();
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(expected).Using(TrianglesComparer.Instance));
         }
 
         private static readonly TestCaseData[] constraintDelaunayTriangulationWithRefinementTestData =
@@ -550,7 +537,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             //  |    ' .   |
             //  |       ' .|
             //  0 -------- 1
-            new TestCaseData((
+            new((
                 new []
                 {
                     math.float2(0, 0),
@@ -578,36 +565,33 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(0.256f, 0f),
                     math.float2(0f, 0.256f),
                     math.float2(0.744f, 1f),
-                }
-            ))
-            {
-                TestName = "Test case 1 (square)",
-                ExpectedResult = new []
+                },
+                new []
                 {
-                    (6, 4, 5),
-                    (6, 5, 1),
-                    (8, 2, 5),
-                    (8, 5, 4),
-                    (9, 4, 6),
-                    (9, 7, 4),
-                    (10, 4, 7),
-                    (10, 7, 3),
-                    (10, 8, 4),
-                    (11, 0, 9),
-                    (11, 9, 6),
-                    (12, 7, 9),
-                    (12, 9, 0),
-                    (13, 2, 8),
-                    (13, 8, 10),
+                    6, 4, 5,
+                    6, 5, 1,
+                    8, 2, 5,
+                    8, 5, 4,
+                    9, 4, 6,
+                    9, 7, 4,
+                    10, 4, 7,
+                    10, 7, 3,
+                    10, 8, 4,
+                    11, 0, 9,
+                    11, 9, 6,
+                    12, 7, 9,
+                    12, 9, 0,
+                    13, 2, 8,
+                    13, 8, 10,
                 }
-            },
+            )){ TestName = "Test case 1 (square)" },
 
             //  5 -------- 4 -------- 3
             //  |       . '|      . ' |
             //  |    . '   |   . '    |
             //  |. '      .|. '       |
             //  0 -------- 1 -------- 2
-            new TestCaseData((
+            new((
                 new []
                 {
                     math.float2(0, 0),
@@ -634,26 +618,23 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1.542053f, 0.7710266f),
                     math.float2(0.5f, 0f),
                     math.float2(1.5f, 1f),
-                }
-            ))
-            {
-                TestName = "Test case 2 (rectangle)",
-                ExpectedResult = new []
+                },
+                new []
                 {
-                    (7, 0, 5),
-                    (7, 4, 6),
-                    (7, 5, 4),
-                    (7, 6, 1),
-                    (8, 1, 6),
-                    (8, 2, 1),
-                    (8, 3, 2),
-                    (8, 6, 4),
-                    (9, 0, 7),
-                    (9, 7, 1),
-                    (10, 3, 8),
-                    (10, 8, 4),
+                    7, 0, 5,
+                    7, 4, 6,
+                    7, 5, 4,
+                    7, 6, 1,
+                    8, 1, 6,
+                    8, 2, 1,
+                    8, 3, 2,
+                    8, 6, 4,
+                    9, 0, 7,
+                    9, 7, 1,
+                    10, 3, 8,
+                    10, 8, 4,
                 }
-            },
+            )){ TestName = "Test case 2 (rectangle)" },
             new((
                 managedPositions: new[]
                 {
@@ -675,22 +656,20 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 {
                     math.float2(1f, 0.5f),
                     math.float2(1f, 0.744f),
-                }
-            )){
-                TestName = "Test case 3 (strange box)",
-                ExpectedResult = new[]
+                },
+                triangles: new[]
                 {
-                    (0, 4, 3),
-                    (5, 0, 3),
-                    (5, 1, 0),
-                    (6, 3, 2),
-                    (6, 5, 3),
+                    0, 4, 3,
+                    5, 0, 3,
+                    5, 1, 0,
+                    6, 3, 2,
+                    6, 5, 3,
                 }
-            },
+            )){ TestName = "Test case 3 (strange box)" },
         };
 
         [Test, TestCaseSource(nameof(constraintDelaunayTriangulationWithRefinementTestData))]
-        public (int, int, int)[] ConstraintDelaunayTriangulationWithRefinementTest((float2[] managedPositions, int[] constraints, float2[] insertedPoints) input)
+        public void ConstraintDelaunayTriangulationWithRefinementTest((float2[] managedPositions, int[] constraints, float2[] insertedPoints, int[] triangles) input)
         {
             using var positions = new NativeArray<T>(input.managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(input.constraints, Allocator.Persistent);
@@ -713,8 +692,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             var expected = input.managedPositions.Union(input.insertedPoints).DynamicCast<T>();
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expected).Using(TestExtensions.Comparer<T>()));
-
-            return triangulator.GetTrisTuple();
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(input.triangles).Using(TrianglesComparer.Instance));
         }
 
         [Test]
@@ -771,14 +749,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             var expected = new[]
             {
-                (1, 0, 5),
-                (1, 5, 4),
-                (2, 1, 4),
-                (4, 3, 2),
-                (5, 0, 7),
-                (5, 7, 6),
+                1, 0, 5,
+                1, 5, 4,
+                2, 1, 4,
+                4, 3, 2,
+                5, 0, 7,
+                5, 7, 6,
             };
-            Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expected));
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(expected).Using(TrianglesComparer.Instance));
         }
 
         [Test]
@@ -833,16 +811,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             ).ToArray().DynamicCast<T>();
             var expectedTriangles = new[]
             {
-                (2, 1, 3),
-                (3, 0, 4),
-                (5, 0, 3),
-                (5, 3, 1),
+                2, 1, 3,
+                3, 0, 4,
+                5, 0, 3,
+                5, 3, 1,
             };
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EqualTo(expectedPositions));
-            Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expectedTriangles));
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(expectedTriangles).Using(TrianglesComparer.Instance));
         }
 
-        private static readonly TestCaseData[] triangulationWithHolesWithoutRefinementTestData = new[]
+        private static readonly TestCaseData[] triangulationWithHolesWithoutRefinementTestData =
         {
             //   * --------------------- *
             //   |                       |
@@ -854,7 +832,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             //   |                       |
             //   |                       |
             //   * --------------------- *
-            new TestCaseData(
+            new(
                 new[]
                 {
                     math.float2(0, 0),
@@ -879,24 +857,20 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     6, 7,
                     7, 4
                 },
-                new[] { (float2)1.5f }
-            )
-            {
-                TestName = "Test Case 1",
-                ExpectedResult = new[]
+                new[] { (float2)1.5f },
+                new[]
                 {
-                    (0, 3, 7),
-                    (4, 0, 7),
-                    (5, 0, 4),
-                    (5, 1, 0),
-                    (6, 1, 5),
-                    (6, 2, 1),
-                    (7, 2, 6),
-                    (7, 3, 2),
+                    0, 3, 7,
+                    4, 0, 7,
+                    5, 0, 4,
+                    5, 1, 0,
+                    6, 1, 5,
+                    6, 2, 1,
+                    7, 2, 6,
+                    7, 3, 2,
                 }
-            },
-
-            new TestCaseData(
+            ){ TestName = "Test Case 1" },
+            new(
                 new[]
                 {
                     math.float2(0, 0),
@@ -921,24 +895,20 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     6, 7,
                     7, 4
                 },
-                new[] { (float2)1.5f, (float2)1.5f }
-            )
-            {
-                TestName = "Test Case 2 (duplicated hole)",
-                ExpectedResult = new[]
+                new[] { (float2)1.5f, (float2)1.5f },
+                new[]
                 {
-                    (0, 3, 7),
-                    (4, 0, 7),
-                    (5, 0, 4),
-                    (5, 1, 0),
-                    (6, 1, 5),
-                    (6, 2, 1),
-                    (7, 2, 6),
-                    (7, 3, 2),
+                    0, 3, 7,
+                    4, 0, 7,
+                    5, 0, 4,
+                    5, 1, 0,
+                    6, 1, 5,
+                    6, 2, 1,
+                    7, 2, 6,
+                    7, 3, 2,
                 }
-            },
-
-            new TestCaseData(
+            ){ TestName = "Test Case 2 (duplicated hole)" },
+            new(
                 new[]
                 {
                     math.float2(0, 0),
@@ -963,26 +933,22 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     6, 7,
                     7, 4
                 },
-                new[] { (float2)1000 }
-            )
-            {
-                TestName = "Test Case 3 (hole out of range)",
-                ExpectedResult = new[]
+                new[] { (float2)1000 },
+                new[]
                 {
-                    (0, 3, 7),
-                    (4, 0, 7),
-                    (4, 6, 5),
-                    (4, 7, 6),
-                    (5, 0, 4),
-                    (5, 1, 0),
-                    (6, 1, 5),
-                    (6, 2, 1),
-                    (7, 2, 6),
-                    (7, 3, 2),
+                    0, 3, 7,
+                    4, 0, 7,
+                    4, 6, 5,
+                    4, 7, 6,
+                    5, 0, 4,
+                    5, 1, 0,
+                    6, 1, 5,
+                    6, 2, 1,
+                    7, 2, 6,
+                    7, 3, 2,
                 }
-            },
-
-            new TestCaseData(
+            ){ TestName = "Test Case 3 (hole out of range)" },
+            new(
                 new[]
                 {
                     math.float2(0, 0),
@@ -1007,26 +973,23 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     6, 7,
                     7, 4
                 },
-                new[] { math.float2(1.5f + 0.25f, 1.5f), math.float2(1.5f - 0.25f, 1.5f) }
-            )
-            {
-                TestName = "Test Case 4 (hole seeds in the same area)",
-                ExpectedResult = new[]
+                new[] { math.float2(1.5f + 0.25f, 1.5f), math.float2(1.5f - 0.25f, 1.5f) },
+                new[]
                 {
-                    (0, 3, 7),
-                    (4, 0, 7),
-                    (5, 0, 4),
-                    (5, 1, 0),
-                    (6, 1, 5),
-                    (6, 2, 1),
-                    (7, 2, 6),
-                    (7, 3, 2),
+                    0, 3, 7,
+                    4, 0, 7,
+                    5, 0, 4,
+                    5, 1, 0,
+                    6, 1, 5,
+                    6, 2, 1,
+                    7, 2, 6,
+                    7, 3, 2,
                 }
-            },
+            ){ TestName = "Test Case 4 (hole seeds in the same area)" },
         };
 
         [Test, TestCaseSource(nameof(triangulationWithHolesWithoutRefinementTestData))]
-        public (int, int, int)[] TriangulationWithHolesWithoutRefinementTest(float2[] managedPositions, int[] constraints, float2[] holeSeeds)
+        public void TriangulationWithHolesWithoutRefinementTest(float2[] managedPositions, int[] constraints, float2[] holeSeeds, int[] expected)
         {
             using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
@@ -1048,7 +1011,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            return triangulator.GetTrisTuple();
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(expected).Using(TrianglesComparer.Instance));
         }
 
         [Test]
@@ -1120,22 +1083,22 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             }.DynamicCast<T>());
             var expectedTriangles = new[]
             {
-                (8, 0, 4),
-                (8, 4, 5),
-                (8, 5, 1),
-                (9, 1, 5),
-                (9, 5, 6),
-                (9, 6, 2),
-                (10, 3, 7),
-                (10, 4, 0),
-                (10, 7, 4),
-                (11, 2, 6),
-                (11, 6, 7),
-                (11, 7, 3),
+                8, 0, 4,
+                8, 4, 5,
+                8, 5, 1,
+                9, 1, 5,
+                9, 5, 6,
+                9, 6, 2,
+                10, 3, 7,
+                10, 4, 0,
+                10, 7, 4,
+                11, 2, 6,
+                11, 6, 7,
+                11, 7, 3,
             };
 
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EquivalentTo(expectedPositions));
-            Assert.That(triangulator.GetTrisTuple(), Is.EquivalentTo(expectedTriangles));
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(expectedTriangles).Using(TrianglesComparer.Instance));
         }
 
         //   * --------------------- *
@@ -1283,22 +1246,22 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             }.DynamicCast<T>();
             var expectedTriangles = new[]
             {
-                (8, 0, 4),
-                (8, 4, 5),
-                (8, 5, 1),
-                (9, 1, 5),
-                (9, 5, 6),
-                (9, 6, 2),
-                (10, 3, 7),
-                (10, 4, 0),
-                (10, 7, 4),
-                (11, 2, 6),
-                (11, 6, 7),
-                (11, 7, 3),
+                8, 0, 4,
+                8, 4, 5,
+                8, 5, 1,
+                9, 1, 5,
+                9, 5, 6,
+                9, 6, 2,
+                10, 3, 7,
+                10, 4, 0,
+                10, 7, 4,
+                11, 2, 6,
+                11, 6, 7,
+                11, 7, 3,
             };
 
             Assert.That(triangulator.Output.Positions.AsArray(), Is.EquivalentTo(expectedPositions));
-            Assert.That(triangulator.GetTrisTuple(), Is.EquivalentTo(expectedTriangles));
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EquivalentTo(expectedTriangles).Using(TrianglesComparer.Instance));
         }
 
         [Test]
@@ -1331,14 +1294,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Settings.Preprocessor = Preprocessor.None;
             triangulator.Run();
-            var nonLocalTriangles = triangulator.GetTrisTuple();
+            var nonLocalTriangles = triangulator.Output.Triangles.AsArray().ToArray();
 
             triangulator.Settings.Preprocessor = Preprocessor.COM;
             triangulator.Run();
-            var localTriangles = triangulator.GetTrisTuple();
+            var localTriangles = triangulator.Output.Triangles.AsArray().ToArray();
 
-            Assert.That(nonLocalTriangles, Has.Length.LessThanOrEqualTo(2));
-            Assert.That(localTriangles, Is.EqualTo(new[] { (0, 3, 1), (3, 2, 1) }));
+            Assert.That(nonLocalTriangles, Has.Length.LessThanOrEqualTo(2 * 3));
+            Assert.That(localTriangles, Is.EqualTo(new[] { 0, 3, 1, 3, 2, 1 }).Using(TrianglesComparer.Instance));
         }
 
         [Test, Ignore("This test should be redesigned. It will be done when during refinement quality improvement refactor.")]
@@ -1370,11 +1333,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Settings.Preprocessor = Preprocessor.None;
             triangulator.Run();
-            var nonLocalTriangles = triangulator.GetTrisTuple();
+            var nonLocalTriangles = triangulator.Output.Triangles.AsArray().ToArray();
 
             triangulator.Settings.Preprocessor = Preprocessor.COM;
             triangulator.Run();
-            var localTriangles = triangulator.GetTrisTuple();
+            var localTriangles = triangulator.Output.Triangles.AsArray().ToArray();
 
             var ratio = localTriangles.Intersect(nonLocalTriangles).Count() / (float)localTriangles.Length;
             Assert.That(ratio, Is.GreaterThan(0.80), message: "Only few triangles may be flipped.");
@@ -1431,14 +1394,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Settings.Preprocessor = Preprocessor.None;
             triangulator.Run();
-            var nonLocalTriangles = triangulator.GetTrisTuple();
+            var nonLocalTriangles = triangulator.Output.Triangles.AsArray().ToArray();
 
             triangulator.Settings.Preprocessor = Preprocessor.COM;
             triangulator.Run();
-            var localTriangles = triangulator.GetTrisTuple();
+            var localTriangles = triangulator.Output.Triangles.AsArray().ToArray();
 
-            Assert.That(TestUtils.SortTrianglesIds(localTriangles), Is.EquivalentTo(TestUtils.SortTrianglesIds(nonLocalTriangles)));
-            Assert.That(localTriangles, Has.Length.EqualTo(24));
+            Assert.That(localTriangles, Is.EqualTo(nonLocalTriangles).Using(TrianglesComparer.Instance));
+            Assert.That(localTriangles, Has.Length.EqualTo(3 * 24));
         }
 
         [Test]
@@ -1580,18 +1543,18 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            (int, int, int)[] expected =
+            var expected = new[]
             {
-                (0, 3, 7),
-                (4, 0, 7),
-                (5, 0, 4),
-                (5, 1, 0),
-                (6, 1, 5),
-                (6, 2, 1),
-                (7, 2, 6),
-                (7, 3, 2),
+                0, 3, 7,
+                4, 0, 7,
+                5, 0, 4,
+                5, 1, 0,
+                6, 1, 5,
+                6, 2, 1,
+                7, 2, 6,
+                7, 3, 2,
             };
-            Assert.That(triangulator.GetTrisTuple(), Is.EqualTo(expected));
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(expected).Using(TrianglesComparer.Instance));
         }
 
         [Test]
@@ -1667,11 +1630,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            var trianglesWithConstraints = triangulator.GetTrisTuple();
+            var trianglesWithConstraints = triangulator.Output.Triangles.AsArray().ToArray();
 
             triangulator.Input.ConstraintEdges = default;
             triangulator.Run();
-            var trianglesWithoutConstraints = triangulator.GetTrisTuple();
+            var trianglesWithoutConstraints = triangulator.Output.Triangles.AsArray().ToArray();
 
             Assert.That(trianglesWithConstraints, Is.EqualTo(trianglesWithoutConstraints));
         }
