@@ -63,7 +63,7 @@ namespace andywiecko.BurstTriangulator
     public class TriangulationSettings
     {
         /// <summary>
-        /// If set to <see langword="true"/>, holes and boundaries will be created automatically 
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically
         /// depending on the provided <see cref="InputData{T2}.ConstraintEdges"/>.
         /// </summary>
         /// <remarks>
@@ -1888,7 +1888,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 else
                 {
-                    var alpha = utils.alpha(D: shells, d: utils.distance(e0, e1), i < initialPointsCount);
+                    var alpha = utils.alpha(D: shells, dSquare: utils.distancesq(e0, e1), i < initialPointsCount);
                     p = utils.lerp(e0, e1, alpha);
                 }
 
@@ -2038,7 +2038,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var pBC = utils.diff(pC, pB);
                 var pCA = utils.diff(pA, pC);
 
-                return utils.anyabslessthen(
+                // TODO: Can be done faster using dot products
+                return utils.anyabslessthan(
                     a: Angle(pAB, utils.neg(pCA)),
                     b: Angle(pBC, utils.neg(pAB)),
                     c: Angle(pCA, utils.neg(pBC)),
@@ -2494,7 +2495,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         internal static bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c)
         {
             var (u, v, w) = bar(a, b, c, p);
-            // math.cmax(-bar(a, b, c, p)) <= 0 
+            // math.cmax(-bar(a, b, c, p)) <= 0
             return utils.le(utils.max(utils.max(utils.neg(u), utils.neg(v)), utils.neg(w)), utils.Zero());
         }
     }
@@ -2711,13 +2712,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 #pragma warning disable IDE1006
         T abs(T v);
         T add(T a, T b);
-        T alpha(T D, T d, bool initial);
-        bool anyabslessthen(T a, T b, T c, T v);
+        T alpha(T D, T dSquare, bool initial);
+        bool anyabslessthan(T a, T b, T c, T v);
         T atan2(T v, T w);
         T2 avg(T2 a, T2 b);
         T diff(T a, T b);
         T2 diff(T2 a, T2 b);
-        T distance(T2 a, T2 b);
         T distancesq(T2 a, T2 b);
         T div(T a, T b);
         T dot(T2 a, T2 b);
@@ -2754,18 +2754,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float Zero() => 0;
         public readonly float abs(float v) => math.abs(v);
         public readonly float add(float a, float b) => a + b;
-        public readonly float alpha(float D, float d, bool initial)
+        public readonly float alpha(float D, float dSquare, bool initial)
         {
+            var d = math.sqrt(dSquare);
             var k = (int)math.round(math.log2(0.5f * d / D));
             var alpha = D / d * (1 << k);
             return initial ? alpha : 1 - alpha;
         }
-        public readonly bool anyabslessthen(float a, float b, float c, float v) => math.any(math.abs(math.float3(a, b, c)) < v);
+        public readonly bool anyabslessthan(float a, float b, float c, float v) => math.any(math.abs(math.float3(a, b, c)) < v);
         public readonly float atan2(float a, float b) => math.atan2(a, b);
         public readonly float2 avg(float2 a, float2 b) => 0.5f * (a + b);
         public readonly float diff(float a, float b) => a - b;
         public readonly float2 diff(float2 a, float2 b) => a - b;
-        public readonly float distance(float2 a, float2 b) => math.distance(a, b);
         public readonly float distancesq(float2 a, float2 b) => math.distancesq(a, b);
         public readonly float div(float a, float b) => a / b;
         public readonly float dot(float2 a, float2 b) => math.dot(a, b);
@@ -2810,18 +2810,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double Zero() => 0;
         public readonly double abs(double v) => math.abs(v);
         public readonly double add(double a, double b) => a + b;
-        public readonly double alpha(double D, double d, bool initial)
+        public readonly double alpha(double D, double dSquare, bool initial)
         {
+            var d = math.sqrt(dSquare);
             var k = (int)math.round(math.log2(0.5f * d / D));
             var alpha = D / d * (1 << k);
             return initial ? alpha : 1 - alpha;
         }
-        public readonly bool anyabslessthen(double a, double b, double c, double v) => math.any(math.abs(math.double3(a, b, c)) < v);
+        public readonly bool anyabslessthan(double a, double b, double c, double v) => math.any(math.abs(math.double3(a, b, c)) < v);
         public readonly double atan2(double a, double b) => math.atan2(a, b);
         public readonly double2 avg(double2 a, double2 b) => 0.5f * (a + b);
         public readonly double diff(double a, double b) => a - b;
         public readonly double2 diff(double2 a, double2 b) => a - b;
-        public readonly double distance(double2 a, double2 b) => math.distance(a, b);
         public readonly double distancesq(double2 a, double2 b) => math.distancesq(a, b);
         public readonly double div(double a, double b) => a / b;
         public readonly double dot(double2 a, double2 b) => math.dot(a, b);
