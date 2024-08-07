@@ -12,6 +12,43 @@ using UnityEngine.TestTools.Utils;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
+    public class TrianglesComparer : IEqualityComparer<IEnumerable<int>>
+    {
+        public static readonly TrianglesComparer Instance = new();
+
+        private readonly struct Int3Comparer : IComparer<int3>
+        {
+            public readonly int Compare(int3 a, int3 b) => a.x != b.x ? a.x.CompareTo(b.x) : a.y != b.y ? a.y.CompareTo(b.y) : a.z.CompareTo(b.z);
+        }
+
+        public bool Equals(IEnumerable<int> x, IEnumerable<int> y)
+        {
+            using var _x = new NativeArray<int>(x.ToArray(), Allocator.Persistent);
+            using var _y = new NativeArray<int>(y.ToArray(), Allocator.Persistent);
+
+            if (_x.Length != _y.Length) return false;
+
+            static NativeArray<int> sort(NativeArray<int> t)
+            {
+                for (int i = 0; i < t.Length / 3; i++)
+                {
+                    var (t0, t1, t2) = (t[3 * i + 0], t[3 * i + 1], t[3 * i + 2]);
+                    var (id, min) = (0, t0);
+                    (id, min) = t1 < min ? (1, t1) : (id, min);
+                    (id, min) = t2 < min ? (2, t2) : (id, min);
+                    (t[3 * i + 0], t[3 * i + 1], t[3 * i + 2]) = (t[3 * i + id], t[3 * i + (id + 1) % 3], t[3 * i + (id + 2) % 3]);
+                }
+
+                t.Reinterpret<int3>(4).Sort(default(Int3Comparer));
+                return t;
+            }
+
+            return Enumerable.SequenceEqual(sort(_x), sort(_y));
+        }
+
+        public int GetHashCode(IEnumerable<int> obj) => default;
+    }
+
     public class Float2Comparer : IEqualityComparer<float2>
     {
         private readonly float epsilon;
@@ -62,31 +99,20 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             double2 _ => Double2Comparer.With(epsilon) as IEqualityComparer<T>,
             _ => throw new NotImplementedException()
         };
-        public static void Draw(this Triangulator triangulator, Color? color = null, float duration = 5f) => TestUtils.Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)i).ToArray(), triangulator.GetTrisTuple(), color ?? Color.red, duration);
+        public static void Draw(this Triangulator triangulator, Color? color = null, float duration = 5f) => TestUtils.Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)i).ToArray(), triangulator.Output.Triangles.AsArray().AsReadOnlySpan(), color ?? Color.red, duration);
         public static void Draw<T>(this Triangulator<T> triangulator, Color? color = null, float duration = 5f) where T : unmanaged =>
-            TestUtils.Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)(dynamic)i).ToArray(), triangulator.GetTrisTuple(), color ?? Color.red, duration);
+            TestUtils.Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)(dynamic)i).ToArray(), triangulator.Output.Triangles.AsArray().AsReadOnlySpan(), color ?? Color.red, duration);
     }
 
     public static class TestUtils
     {
-        public static (int, int, int)[] GetTrisTuple(this Triangulator triangulator) =>
-            triangulator.Output.Triangles.ToTrisTuple();
-        public static (int, int, int)[] GetTrisTuple<T>(this Triangulator<T> triangulator) where T : unmanaged =>
-            triangulator.Output.Triangles.ToTrisTuple();
-        private static (int, int, int)[] ToTrisTuple(this NativeList<int> triangles) => Enumerable
-            .Range(0, triangles.Length / 3)
-            .Select(i => (triangles[3 * i], triangles[3 * i + 1], triangles[3 * i + 2]))
-            .OrderBy(i => i.Item1).ThenBy(i => i.Item2).ThenBy(i => i.Item3)
-            .ToArray();
-
-        public static void Draw(ReadOnlySpan<float2> positions, ReadOnlySpan<(int, int, int)> triangles, Color color, float duration)
+        public static void Draw(ReadOnlySpan<float2> positions, ReadOnlySpan<int> triangles, Color color, float duration)
         {
-            var p = positions;
-            foreach (var (i, j, k) in triangles)
+            for (int i = 0; i < triangles.Length / 3; i++)
             {
-                var x = math.float3(p[i], 0);
-                var y = math.float3(p[j], 0);
-                var z = math.float3(p[k], 0);
+                var x = math.float3(positions[triangles[3 * i + 0]], 0);
+                var y = math.float3(positions[triangles[3 * i + 1]], 0);
+                var z = math.float3(positions[triangles[3 * i + 2]], 0);
 
                 Debug.DrawLine(x, y, color, duration);
                 Debug.DrawLine(x, z, color, duration);
@@ -120,8 +146,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             );
 
             var p = triangulator.Output.Positions;
-            foreach (var (i, j, k) in triangulator.GetTrisTuple())
+            var t = triangulator.Output.Triangles;
+            for (int tId = 0; tId < t.Length / 3; tId++)
             {
+                var (i, j, k) = (t[3 * tId + 0], t[3 * tId + 1], t[3 * tId + 2]);
                 builder.AppendLine(
 $@"\draw[gray]({p[i].x}, {p[i].y})--({p[j].x}, {p[j].y});
 \draw[gray]({p[i].x}, {p[i].y})--({p[k].x}, {p[k].y});
@@ -157,29 +185,6 @@ $@"\draw[gray]({p[i].x}, {p[i].y})--({p[j].x}, {p[j].y});
             }
 
             return builder.ToString();
-        }
-
-        public static (int i, int j, int k)[] SortTrianglesIds((int i, int j, int k)[] triangles)
-        {
-            var copy = triangles.ToArray();
-            for (int i = 0; i < triangles.Length; i++)
-            {
-                var tri = triangles[i];
-                var t = math.int3(tri.i, tri.j, tri.k);
-                var min = math.cmin(t);
-                var id = -1;
-                for (int ti = 0; ti < 3; ti++)
-                {
-                    if (min == t[ti])
-                    {
-                        id = ti;
-                        break;
-                    }
-                }
-
-                copy[i] = (min, t[(id + 1) % 3], t[(id + 2) % 3]);
-            }
-            return copy;
         }
     }
 }
