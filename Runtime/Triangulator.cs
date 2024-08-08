@@ -361,6 +361,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
         public static void RefineMesh(this UnsafeTriangulator<double2> @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>
             new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+
+        public static void Triangulate(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, float, long, TranslationInt32, IntUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, float, long, TranslationInt32, IntUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void RefineMesh(this UnsafeTriangulator<int2> @this, OutputData<int2> output, Allocator allocator, long areaThreshold = 1, float angleThreshold = 0.0872664626f, float concentricShells = 0.001f, bool constrainBoundary = false) =>
+            new UnsafeTriangulator<int, int2, float, long, TranslationInt32, IntUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
     }
 
     [BurstCompile]
