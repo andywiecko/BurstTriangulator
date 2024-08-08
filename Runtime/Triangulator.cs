@@ -1882,9 +1882,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 public readonly T2 Center;
                 public readonly T RadiusSq;
-                private readonly T offset;
-                public Circle(T2 center, T radiusSq) => (Center, RadiusSq, offset) = (center, radiusSq, default);
-                public Circle((T2 center, T radiusSq) circle) => (Center, RadiusSq, offset) = (circle.center, circle.radiusSq, default);
+                public Circle(T2 center, T radiusSq) => (Center, RadiusSq) = (center, radiusSq);
+                public Circle((T2 center, T radiusSq) circle) => (Center, RadiusSq) = (circle.center, circle.radiusSq);
             }
 
             private NativeReference<Status> status;
