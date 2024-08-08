@@ -369,13 +369,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     }
 
     [BurstCompile]
-    internal struct TriangulationJob<T, T2, TFloat, TDistSq, TTransform, TUtils> : IJob
+    internal struct TriangulationJob<T, T2, TFloat, TSquare, TTransform, TUtils> : IJob
         where T : unmanaged, IComparable<T>
         where T2 : unmanaged
         where TFloat : unmanaged, IComparable<TFloat>
-        where TDistSq : unmanaged, IComparable<TDistSq>
-        where TTransform : unmanaged, ITransform<TTransform, T, T2, TDistSq>
-        where TUtils : unmanaged, IUtils<T, T2, TFloat, TDistSq>
+        where TSquare : unmanaged, IComparable<TSquare>
+        where TTransform : unmanaged, ITransform<TTransform, T, T2, TSquare>
+        where TUtils : unmanaged, IUtils<T, T2, TFloat, TSquare>
     {
         private NativeArray<T2> inputPositions;
         [NativeDisableContainerSafetyRestriction]
@@ -408,7 +408,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public void Execute()
         {
-            new UnsafeTriangulator<T, T2, TFloat, TDistSq, TTransform, TUtils>().Triangulate(
+            new UnsafeTriangulator<T, T2, TFloat, TSquare, TTransform, TUtils>().Triangulate(
                 input: new()
                 {
                     Positions = inputPositions,
