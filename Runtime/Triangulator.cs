@@ -1808,7 +1808,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     return;
                 }
 
-                if (typeof(T) == typeof(int)) throw new NotSupportedException("Mesh refinement is not supported for integer types.");
+                // We cannot do a typeof check here because it prevents burst compilation.
+                // But we know that IntUtils is the only one for which EPSILON==0.
+                if (utils.eq(utils.EPSILON(), utils.Zero())) throw new NotSupportedException("Mesh refinement is not supported for integer types.");
 
                 if (constrainBoundary)
                 {
