@@ -1312,6 +1312,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             private void CollectIntersections(int2 edge)
             {
+                // Collect all intersections between existing edges, and the given constrained edge.
+                // We will later get rid of all of these intersections, so that the constrained edge
+                // can be inserted.
+                //
+                // We start at one side of the edge (ci=edge.x), then we go through all existing
+                // halfedges that connect to that vertex. We check if the triangle formed
+                //
                 // 1. Check if h1 is cj
                 // 2. Check if h1-h2 intersects with ci-cj
                 // 3. After each iteration: h0 <- h0'
@@ -2448,6 +2455,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             utils.mul(utils.diff(utils.Y(c), utils.Y(a)), utils.diff(utils.X(b), utils.X(a))),
             utils.mul(utils.diff(utils.Y(b), utils.Y(a)), utils.diff(utils.X(c), utils.X(a)))
         );
+
+        /// <summary>
+        /// True if the edge (a0, a1) intersects the edge (b0, b1).
+        ///
+        /// Colinear edges will not be considered as intersecting.
+        /// Intersections only at the endpoints will not be considered as intersecting.
+        /// </summary>
         internal static bool EdgeEdgeIntersection(T2 a0, T2 a1, T2 b0, T2 b1) => ccw(a0, a1, b0) != ccw(a0, a1, b1) && ccw(b0, b1, a0) != ccw(b0, b1, a1);
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         private static bool InCircle(T2 a, T2 b, T2 c, T2 p) => utils.inCircle(a, b, c, p);
