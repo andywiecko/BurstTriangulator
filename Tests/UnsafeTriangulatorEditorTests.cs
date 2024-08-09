@@ -1,10 +1,12 @@
 using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using NUnit.Framework;
 using System;
+using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine.Animations;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -82,7 +84,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             // All containers allocated with Allocator.Temp on the same thread use a shared
             // AtomicSafetyHandle instance rather than each having their own. Most of the time,
             // this isn't an issue because you can't pass Temp allocated collections into a job.
-            // 
+            //
             // However, when you use Native*HashMap, NativeParallelMultiHashMap, Native*HashSet,
             // and NativeList together with their secondary safety handle, this shared AtomicSafetyHandle
             // instance is a problem.
@@ -99,14 +101,23 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
     [TestFixture(typeof(float2))]
     [TestFixture(typeof(double2))]
+    [TestFixture(typeof(int2))]
     public class UnsafeTriangulatorEditorTests<T> where T : unmanaged
     {
+        static float ScaleFactor() => typeof(T) == typeof(int2) ? 1000 : 1;
+
+        static NativeArray<T> LakeSuperiorPoints(Allocator allocator) => new NativeArray<T>(LakeSuperior.Points.Select(i => i * ScaleFactor()).DynamicCast<T>().ToArray(), allocator);
+        static NativeArray<int> LakeSuperiorConstraints(Allocator allocator) => new NativeArray<int>(LakeSuperior.Constraints, allocator);
+        static NativeArray<T> LakeSuperiorHoles(Allocator allocator) => new NativeArray<T>(LakeSuperior.Holes.Select(i => i * ScaleFactor()).DynamicCast<T>().ToArray(), allocator);
+
         [Test]
         public void UnsafeTriangulatorOutputTrianglesTest([Values] bool constrain, [Values] bool refine, [Values] bool holes)
         {
-            using var positions = new NativeArray<T>(LakeSuperior.Points.DynamicCast<T>(), Allocator.Persistent);
-            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holesSeeds = new NativeArray<T>(LakeSuperior.Holes.DynamicCast<T>(), Allocator.Persistent);
+            if (refine && typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types");
+
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
+            using var holesSeeds = LakeSuperiorHoles(Allocator.Persistent);
             using var triangles = new NativeList<int>(64, Allocator.Persistent);
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
@@ -128,9 +139,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorOutputPositionsTest()
         {
-            using var positions = new NativeArray<T>(LakeSuperior.Points.DynamicCast<T>(), Allocator.Persistent);
-            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holesSeeds = new NativeArray<T>(LakeSuperior.Holes.DynamicCast<T>(), Allocator.Persistent);
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
+            using var holesSeeds = LakeSuperiorHoles(Allocator.Persistent);
             using var triangles = new NativeList<int>(64, Allocator.Persistent);
             using var outputPositions = new NativeList<T>(64, Allocator.Persistent);
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
@@ -153,9 +164,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorOutputHalfedgesTest()
         {
-            using var positions = new NativeArray<T>(LakeSuperior.Points.DynamicCast<T>(), Allocator.Persistent);
-            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holesSeeds = new NativeArray<T>(LakeSuperior.Holes.DynamicCast<T>(), Allocator.Persistent);
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
+            using var holesSeeds = LakeSuperiorHoles(Allocator.Persistent);
             using var triangles = new NativeList<int>(64, Allocator.Persistent);
             using var halfedges = new NativeList<int>(64, Allocator.Persistent);
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
@@ -178,9 +189,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorOutputConstrainedHalfedgesTest()
         {
-            using var positions = new NativeArray<T>(LakeSuperior.Points.DynamicCast<T>(), Allocator.Persistent);
-            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holesSeeds = new NativeArray<T>(LakeSuperior.Holes.DynamicCast<T>(), Allocator.Persistent);
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
+            using var holesSeeds = LakeSuperiorHoles(Allocator.Persistent);
             using var triangles = new NativeList<int>(64, Allocator.Persistent);
             using var constrainedHalfedges = new NativeList<bool>(64, Allocator.Persistent);
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
@@ -203,9 +214,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorOutputStatusTest()
         {
-            using var positions = new NativeArray<T>(LakeSuperior.Points.DynamicCast<T>(), Allocator.Persistent);
-            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holesSeeds = new NativeArray<T>(LakeSuperior.Holes.DynamicCast<T>(), Allocator.Persistent);
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
+            using var holesSeeds = LakeSuperiorHoles(Allocator.Persistent);
             using var triangles = new NativeList<int>(64, Allocator.Persistent);
             using var status = new NativeReference<Status>(Allocator.Persistent);
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
@@ -228,11 +239,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorPlantHoleSeedsAutoTest()
         {
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+                Positions = positions,
+                ConstraintEdges = constraints,
             };
             var args = Args.Default(validateInput: false);
 
@@ -252,11 +265,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorPlantHoleSeedsRestoreBoundaryTest()
         {
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
+            using var holesSeeds = LakeSuperiorHoles(Allocator.Persistent);
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+                Positions = positions,
+                ConstraintEdges = constraints,
             };
             var args = Args.Default(validateInput: false);
 
@@ -276,12 +292,15 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorPlantHoleSeedsHolesTest()
         {
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
+            using var holesSeeds = LakeSuperiorHoles(Allocator.Persistent);
             var t = new UnsafeTriangulator<T>();
             var inputWithHoles = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
-                HoleSeeds = LakeSuperior.Holes.DynamicCast<T>().AsNativeArray(),
+                Positions = positions,
+                ConstraintEdges = constraints,
+                HoleSeeds = holesSeeds,
             };
             var inputWithoutHoles = inputWithHoles;
             inputWithoutHoles.HoleSeeds = default;
@@ -304,10 +323,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorRefineMeshTest()
         {
+            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types");
+
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
+                Positions = positions,
             };
 
             using var triangles1 = new NativeList<int>(Allocator.Persistent);
@@ -334,11 +356,15 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorRefineMeshConstrainedTest()
         {
+            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types");
+
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+                Positions = positions,
+                ConstraintEdges = constraints,
             };
             var args = Args.Default(validateInput: false, refineMesh: true, restoreBoundary: true);
 
@@ -366,12 +392,17 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorPlantHoleSeedsRefineMeshTest()
         {
+            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types");
+
+            using var positions = LakeSuperiorPoints(Allocator.Persistent);
+            using var constraints = LakeSuperiorConstraints(Allocator.Persistent);
+            using var holesSeeds = LakeSuperiorHoles(Allocator.Persistent);
             var t = new UnsafeTriangulator<T>();
             var inputWithHoles = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
-                HoleSeeds = LakeSuperior.Holes.DynamicCast<T>().AsNativeArray(),
+                Positions = positions,
+                ConstraintEdges = constraints,
+                HoleSeeds = holesSeeds,
             };
             var inputWithoutHoles = inputWithHoles;
             inputWithoutHoles.HoleSeeds = default;
