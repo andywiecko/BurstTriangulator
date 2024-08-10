@@ -1,9 +1,11 @@
 using NUnit.Framework;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine.TestTools;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -65,6 +67,24 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             if (holes.IsCreated) { holes.Dispose(); }
             if (constraints.IsCreated) { constraints.Dispose(); }
+        }
+
+        [Test]
+        public void MeshRefinementIntSupportTest()
+        {
+            using var positions = new NativeArray<int2>(LakeSuperior.Points.Select(i => (int2)(i * 1000)).ToArray(), Allocator.Persistent);
+            var holes = new NativeArray<int2>(LakeSuperior.Holes.Select(i => (int2)(i * 1000)).ToArray(), Allocator.Persistent);
+            var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
+
+            using var impl = new Triangulator<int2>(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints, HoleSeeds = holes },
+                Settings = { AutoHolesAndBoundary = false, RefineMesh = true, RestoreBoundary = true, Preprocessor = Preprocessor.None }
+            };
+
+            impl.Run();
+
+            LogAssert.Expect(UnityEngine.LogType.Error, new Regex("Mesh refinement is not supported for this coordinate type.*"));
         }
 
         [Test]

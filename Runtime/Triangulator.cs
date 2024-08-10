@@ -1815,9 +1815,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     return;
                 }
 
-                // We cannot do a typeof check here because it prevents burst compilation.
-                // But we know that IntUtils is the only one for which EPSILON==0.
-                if (utils.eq(utils.EPSILON(), utils.Zero())) throw new NotSupportedException("Mesh refinement is not supported for integer types.");
+                if (!utils.SupportsMeshRefinement) {
+                    Debug.LogError("Mesh refinement is not supported for this coordinate type.");
+                    status.Value |= Status.ERR;
+                    return;
+                }
 
                 if (constrainBoundary)
                 {
@@ -2758,6 +2760,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T Y(T2 v);
         T Zero();
         TSquare ZeroSq();
+        bool SupportsMeshRefinement { get; }
 #pragma warning disable IDE1006
         T abs(T v);
         TSquare abs(TSquare v);
@@ -2818,6 +2821,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float Y(float2 a) => a.y;
         public readonly float Zero() => 0;
         public readonly float ZeroSq() => 0;
+        public readonly bool SupportsMeshRefinement => true;
         public readonly float abs(float v) => math.abs(v);
         public readonly float add(float a, float b) => a + b;
         public readonly float alpha(float D, float dSquare, bool initial)
@@ -2924,6 +2928,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double Y(double2 a) => a.y;
         public readonly double Zero() => 0;
         public readonly double ZeroSq() => 0;
+        public readonly bool SupportsMeshRefinement => true;
         public readonly double abs(double v) => math.abs(v);
         public readonly double add(double a, double b) => a + b;
         public readonly double alpha(double D, double dSquare, bool initial)
@@ -3030,6 +3035,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly int Y(int2 a) => a.y;
         public readonly int Zero() => 0;
         public readonly long ZeroSq() => 0;
+        public readonly bool SupportsMeshRefinement => false;
         public readonly int abs(int v) => math.abs(v);
         public readonly long abs(long v) => math.abs(v);
         public readonly int add(int a, int b) => a + b;
