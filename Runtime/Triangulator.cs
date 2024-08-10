@@ -369,13 +369,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     }
 
     [BurstCompile]
-    internal struct TriangulationJob<T, T2, TFloat, TSquare, TTransform, TUtils> : IJob
+    internal struct TriangulationJob<T, T2, TFloat, TBig, TTransform, TUtils> : IJob
         where T : unmanaged, IComparable<T>
         where T2 : unmanaged
         where TFloat : unmanaged, IComparable<TFloat>
-        where TSquare : unmanaged, IComparable<TSquare>
-        where TTransform : unmanaged, ITransform<TTransform, T, T2, TSquare>
-        where TUtils : unmanaged, IUtils<T, T2, TFloat, TSquare>
+        where TBig : unmanaged, IComparable<TBig>
+        where TTransform : unmanaged, ITransform<TTransform, T, T2, TBig>
+        where TUtils : unmanaged, IUtils<T, T2, TFloat, TBig>
     {
         private NativeArray<T2> inputPositions;
         [NativeDisableContainerSafetyRestriction]
@@ -408,7 +408,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public void Execute()
         {
-            new UnsafeTriangulator<T, T2, TFloat, TSquare, TTransform, TUtils>().Triangulate(
+            new UnsafeTriangulator<T, T2, TFloat, TBig, TTransform, TUtils>().Triangulate(
                 input: new()
                 {
                     Positions = inputPositions,
@@ -426,13 +426,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
     }
 
-    internal readonly struct UnsafeTriangulator<T, T2, TFloat, TSquare, TTransform, TUtils>
+    internal readonly struct UnsafeTriangulator<T, T2, TFloat, TBig, TTransform, TUtils>
         where T : unmanaged, IComparable<T>
         where T2 : unmanaged
         where TFloat : unmanaged, IComparable<TFloat>
-        where TSquare : unmanaged, IComparable<TSquare>
-        where TTransform : unmanaged, ITransform<TTransform, T, T2, TSquare>
-        where TUtils : unmanaged, IUtils<T, T2, TFloat, TSquare>
+        where TBig : unmanaged, IComparable<TBig>
+        where TTransform : unmanaged, ITransform<TTransform, T, T2, TBig>
+        where TUtils : unmanaged, IUtils<T, T2, TFloat, TBig>
     {
         private static readonly TUtils utils = default;
 
@@ -473,7 +473,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             new PlantingSeedStep(input, output, args).Execute(allocator, true);
         }
 
-        public void RefineMesh(OutputData<T2> output, Allocator allocator, TSquare area2Threshold, TFloat angleThreshold, TFloat shells, bool constrainBoundary = false)
+        public void RefineMesh(OutputData<T2> output, Allocator allocator, TBig area2Threshold, TFloat angleThreshold, TFloat shells, bool constrainBoundary = false)
         {
             new RefineMeshStep(output, area2Threshold, angleThreshold, shells).Execute(allocator, refineMesh: true, constrainBoundary);
         }
@@ -711,8 +711,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             private struct DistComparer : IComparer<int>
             {
-                private NativeArray<TSquare> dist;
-                public DistComparer(NativeArray<TSquare> dist) => this.dist = dist;
+                private NativeArray<TBig> dist;
+                public DistComparer(NativeArray<TBig> dist) => this.dist = dist;
                 public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
             }
 
@@ -772,7 +772,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 using var _EDGE_STACK = EDGE_STACK = new(512, allocator);
 
                 var ids = new NativeArray<int>(n, allocator);
-                var dists = new NativeArray<TSquare>(n, allocator);
+                var dists = new NativeArray<TBig>(n, allocator);
 
                 var min = utils.MaxValue2();
                 var max = utils.MinValue2();
@@ -1307,7 +1307,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 var (a0, a1) = (positions[e1.x], positions[e1.y]);
                 var (b0, b1) = (positions[e2.x], positions[e2.y]);
-                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && UnsafeTriangulator<T, T2, TFloat, TSquare, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
+                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && UnsafeTriangulator<T, T2, TFloat, TBig, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
             }
 
             private void CollectIntersections(int2 edge)
@@ -1756,10 +1756,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private readonly struct Circle
             {
                 public readonly T2 Center;
-                public readonly TSquare RadiusSq;
+                public readonly TBig RadiusSq;
                 private readonly T offset;
-                public Circle(T2 center, TSquare radiusSq) => (Center, RadiusSq, offset) = (center, radiusSq, default);
-                public Circle((T2 center, TSquare radiusSq) circle) => (Center, RadiusSq, offset) = (circle.center, circle.radiusSq, default);
+                public Circle(T2 center, TBig radiusSq) => (Center, RadiusSq, offset) = (center, radiusSq, default);
+                public Circle((T2 center, TBig radiusSq) circle) => (Center, RadiusSq, offset) = (circle.center, circle.radiusSq, default);
             }
 
             private NativeReference<Status> status;
@@ -1775,7 +1775,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<int> pathHalfedges;
             private NativeList<bool> visitedTriangles;
 
-            private readonly TSquare maximumArea2;
+            private readonly TBig maximumArea2;
             private readonly TFloat shells;
             private readonly TFloat angleThreshold;
             private readonly int initialPointsCount;
@@ -1786,7 +1786,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 shells: utils.ConstFloat(args.ConcentricShellsParameter))
             { }
 
-            public RefineMeshStep(OutputData<T2> output, TSquare area2Threshold, TFloat angleThreshold, TFloat shells)
+            public RefineMeshStep(OutputData<T2> output, TBig area2Threshold, TFloat angleThreshold, TFloat shells)
             {
                 status = output.Status;
                 initialPointsCount = output.Positions.Length;
@@ -2444,11 +2444,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
 
         internal static TFloat Angle(T2 a, T2 b) => utils.atan2(Cross(a, b), utils.dot(a, b));
-        internal static TSquare Area2(T2 a, T2 b, T2 c) => utils.abs(Cross(utils.diff(b, a), utils.diff(c, a)));
-        private static TSquare Cross(T2 a, T2 b) => utils.diff(utils.mul(utils.X(a), utils.Y(b)), utils.mul(utils.Y(a), utils.X(b)));
+        internal static TBig Area2(T2 a, T2 b, T2 c) => utils.abs(Cross(utils.diff(b, a), utils.diff(c, a)));
+        private static TBig Cross(T2 a, T2 b) => utils.diff(utils.mul(utils.X(a), utils.Y(b)), utils.mul(utils.Y(a), utils.X(b)));
         private static T2 CircumCenter(T2 a, T2 b, T2 c) => utils.circumCenter(a,b,c);
-        private static TSquare CircumRadiusSq(T2 a, T2 b, T2 c) => utils.distancesq(CircumCenter(a, b, c), a);
-        private static (T2, TSquare) CalculateCircumCircle(int i, int j, int k, NativeArray<T2> positions)
+        private static TBig CircumRadiusSq(T2 a, T2 b, T2 c) => utils.distancesq(CircumCenter(a, b, c), a);
+        private static (T2, TBig) CalculateCircumCircle(int i, int j, int k, NativeArray<T2> positions)
         {
             var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
             return (CircumCenter(pA, pB, pC), CircumRadiusSq(pA, pB, pC));
@@ -2474,7 +2474,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             && utils.greater(utils.abs(Orient2dFast(b, d, c)), utils.EPSILON_SQ())
             && EdgeEdgeIntersection(a, c, b, d)
         ;
-        private static TSquare Orient2dFast(T2 a, T2 b, T2 c) => utils.diff(
+        private static TBig Orient2dFast(T2 a, T2 b, T2 c) => utils.diff(
             utils.mul(utils.diff(utils.Y(a), utils.Y(c)), utils.diff(utils.X(b), utils.X(c))),
             utils.mul(utils.diff(utils.X(a), utils.X(c)), utils.diff(utils.Y(b), utils.Y(c)))
         );
@@ -2728,8 +2728,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     /// <typeparam name="T">The raw coordinate type for a single axis. For example float or int.</typeparam>
     /// <typeparam name="T2">The 2D coordinate composed of Ts. For example float2.</typeparam>
     /// <typeparam name="TFloat">A floating point value. Used for angles and fractional values. For example float.</typeparam>
-    /// <typeparam name="TSquare">A squared coordinate. Used for squared distances and other products. For example float or long.</typeparam>
-    internal interface IUtils<T, T2, TFloat, TSquare> where T : unmanaged where T2 : unmanaged where TFloat : unmanaged where TSquare : unmanaged
+    /// <typeparam name="TBig">A squared coordinate. Used for squared distances and other products. For example float or long.</typeparam>
+    internal interface IUtils<T, T2, TFloat, TBig> where T : unmanaged where T2 : unmanaged where TFloat : unmanaged where TBig : unmanaged
     {
         /// <summary>
         /// Converts a value to type T.
@@ -2738,11 +2738,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </summary>
         T Const(int v);
         /// <summary>
-        /// Converts a value to type TSquare.
+        /// Converts a value to type TBig.
         ///
         /// Warning: This may cause loss of precision, and is only safe for (not huge) integer constants.
         /// </summary>
-        TSquare ConstDistanceSq(float v);
+        TBig ConstDistanceSq(float v);
         /// <summary>
         /// Converts a value to type TFloat.
         ///
@@ -2750,53 +2750,53 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </summary>
         TFloat ConstFloat(float v);
         T EPSILON();
-        TSquare EPSILON_SQ();
+        TBig EPSILON_SQ();
         T MaxValue();
         T2 MaxValue2();
-        TSquare MaxDistSq();
+        TBig MaxDistSq();
         T2 MinValue2();
         T2 NewT2(T x, T y);
         T X(T2 v);
         T Y(T2 v);
         T Zero();
-        TSquare ZeroSq();
+        TBig ZeroSq();
         bool SupportsMeshRefinement { get; }
 #pragma warning disable IDE1006
         T abs(T v);
-        TSquare abs(TSquare v);
+        TBig abs(TBig v);
         T add(T a, T b);
-        TSquare add(TSquare a, TSquare b);
-        TFloat alpha(TFloat D, TSquare dSquare, bool initial);
+        TBig add(TBig a, TBig b);
+        TFloat alpha(TFloat D, TBig dSquare, bool initial);
         bool anyabslessthan(TFloat a, TFloat b, TFloat c, TFloat v);
-        // Note: Takes TSquare arguments, even if that's not technically correct for an atan2 function.
+        // Note: Takes TBig arguments, even if that's not technically correct for an atan2 function.
         // It is used like atan2(a*C, b*C) where C is a length of type T.
-        TFloat atan2(TSquare v, TSquare w);
+        TFloat atan2(TBig v, TBig w);
         T2 avg(T2 a, T2 b);
         T diff(T a, T b);
-        TSquare diff(TSquare a, TSquare b);
+        TBig diff(TBig a, TBig b);
         T2 diff(T2 a, T2 b);
-        TSquare distancesq(T2 a, T2 b);
+        TBig distancesq(T2 a, T2 b);
         T div(T a, T b);
-        TSquare dot(T2 a, T2 b);
+        TBig dot(T2 a, T2 b);
         bool eq(T v, T w);
         bool2 eq(T2 v, T2 w);
         bool ge(T a, T b);
         bool2 ge(T2 a, T2 b);
         bool greater(T a, T b);
-        bool greater(TSquare a, TSquare b);
+        bool greater(TBig a, TBig b);
         int hashkey(T2 p, T2 c, int hashSize);
         bool2 isfinite(T2 v);
         bool le(T a, T b);
         bool2 le(T2 a, T2 b);
-        bool le(TSquare a, TSquare b);
+        bool le(TBig a, TBig b);
         T2 lerp(T2 a, T2 b, TFloat v);
         bool less(T a, T b);
-        bool less(TSquare a, TSquare b);
+        bool less(TBig a, TBig b);
         T max(T v, T w);
         T2 max(T2 v, T2 w);
         T2 min(T2 v, T2 w);
-        TSquare mul(T a, T b);
-        TSquare mul(TSquare a, TSquare b);
+        TBig mul(T a, T b);
+        TBig mul(TBig a, TBig b);
         T neg(T v);
         T2 neg(T2 v);
         bool pointInsideTriangle(T2 p, T2 a, T2 b, T2 c);
