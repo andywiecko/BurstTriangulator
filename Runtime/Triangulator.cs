@@ -2706,12 +2706,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     internal interface IUtils<T, T2, TBig> where T : unmanaged where T2 : unmanaged where TBig : unmanaged
     {
         /// <summary>
-        /// Converts a value to type T.
-        ///
-        /// Warning: This may cause loss of precision for very large integers.
-        /// </summary>
-        T Const(int v);
-        /// <summary>
         /// Converts a value to type TBig.
         ///
         /// Warning: This may cause loss of precision, and is only safe for (not huge) integer constants.
@@ -2723,10 +2717,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T2 MaxValue2();
         TBig MaxDistSq();
         T2 MinValue2();
-        T2 NewT2(T x, T y);
         T X(T2 v);
         T Y(T2 v);
-        T Zero();
         TBig ZeroSq();
         bool SupportsMeshRefinement { get; }
 
@@ -2787,7 +2779,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
     internal readonly struct FloatUtils : IUtils<float, float2, float>
     {
-        public readonly float Const(int v) => v;
         public readonly float ConstDistanceSq(float v) => v;
         public readonly float EPSILON() => math.EPSILON;
         public readonly float EPSILON_TBIG() => EPSILON();
@@ -2795,10 +2786,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float2 MaxValue2() => float.MaxValue;
         public readonly float MaxDistSq() => float.MaxValue;
         public readonly float2 MinValue2() => float.MinValue;
-        public readonly float2 NewT2(float x, float y) => math.float2(x, y);
         public readonly float X(float2 a) => a.x;
         public readonly float Y(float2 a) => a.y;
-        public readonly float Zero() => 0;
         public readonly float ZeroSq() => 0;
         public readonly bool SupportsMeshRefinement => true;
 
@@ -2907,7 +2896,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
     internal readonly struct DoubleUtils : IUtils<double, double2, double>
     {
-        public readonly double Const(int v) => v;
         public readonly double ConstDistanceSq(float v) => v;
         public readonly double EPSILON() => math.EPSILON_DBL;
         public readonly double EPSILON_TBIG() => EPSILON();
@@ -2915,10 +2903,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double2 MaxValue2() => double.MaxValue;
         public readonly double MaxDistSq() => double.MaxValue;
         public readonly double2 MinValue2() => double.MinValue;
-        public readonly double2 NewT2(double x, double y) => math.double2(x, y);
         public readonly double X(double2 a) => a.x;
         public readonly double Y(double2 a) => a.y;
-        public readonly double Zero() => 0;
         public readonly double ZeroSq() => 0;
         public readonly bool SupportsMeshRefinement => true;
 
@@ -3027,7 +3013,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
     internal readonly struct IntUtils : IUtils<int, int2, long>
     {
-        public readonly int Const(int v) => v;
         public readonly long ConstDistanceSq(float v) => (long)v;
         public readonly int EPSILON() => 0;
         public readonly long EPSILON_TBIG() => 0;
@@ -3035,10 +3020,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly int2 MaxValue2() => int.MaxValue;
         public readonly long MaxDistSq() => long.MaxValue;
         public readonly int2 MinValue2() => int.MinValue;
-        public readonly int2 NewT2(int x, int y) => math.int2(x, y);
         public readonly int X(int2 a) => a.x;
         public readonly int Y(int2 a) => a.y;
-        public readonly int Zero() => 0;
         public readonly long ZeroSq() => 0;
         public readonly bool SupportsMeshRefinement => false;
 
