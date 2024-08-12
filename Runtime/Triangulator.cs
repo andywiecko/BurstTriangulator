@@ -2812,7 +2812,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         static float cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
 
         public readonly bool PointInsideTriangle(float2 p, float2 a, float2 b, float2 c) {
-            float3 Barycentric(float2 a, float2 b, float2 c, float2 p) {
+            float3 bar(float2 a, float2 b, float2 c, float2 p) {
                 var (v0, v1, v2) = (b - a, c - a, p - a);
                 var denInv = 1 / cross(v0, v1);
                 var v = denInv * cross(v2, v1);
@@ -2821,7 +2821,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return new float3(u, v, w);
             }
 
-            return math.cmax(-Barycentric(a, b, c, p)) <= 0;;
+            return math.cmax(-bar(a, b, c, p)) <= 0;;
         }
 
         public readonly float2 CircumCenter(float2 a, float2 b, float2 c) {
