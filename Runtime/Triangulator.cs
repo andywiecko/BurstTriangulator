@@ -478,7 +478,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         private void PreProcessInputStep(InputData<T2> input, OutputData<T2> output, Args args, out NativeArray<T2> localHoles, out TTransform lt, Allocator allocator)
         {
-            // TODO: Create markers statically, to reduce overhead
             using var _ = new ProfilerMarker($"{nameof(PreProcessInputStep)}").Auto();
 
             var localPositions = output.Positions;
