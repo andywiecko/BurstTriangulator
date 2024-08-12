@@ -2711,7 +2711,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// Warning: This may cause loss of precision, and is only safe for (not huge) integer constants.
         /// </summary>
         TBig ConstTBig(float v);
-        T EPSILON();
         TBig EPSILON_TBIG();
         T MaxValue();
         T2 MaxValue2();
@@ -2756,32 +2755,26 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         TBig dot(T2 a, T2 b);
         bool eq(T v, T w);
         bool2 eq(T2 v, T2 w);
-        bool ge(T a, T b);
         bool2 ge(T2 a, T2 b);
         bool greater(T a, T b);
         bool greater(TBig a, TBig b);
         int hashkey(T2 p, T2 c, int hashSize);
         bool2 isfinite(T2 v);
-        bool le(T a, T b);
         bool2 le(T2 a, T2 b);
         bool le(TBig a, TBig b);
         bool less(T a, T b);
         bool less(TBig a, TBig b);
-        T max(T v, T w);
         T2 max(T2 v, T2 w);
         T2 min(T2 v, T2 w);
         TBig mul(T a, T b);
         TBig mul(TBig a, TBig b);
-        T neg(T v);
-        T2 neg(T2 v);
 #pragma warning restore IDE1006
     }
 
     internal readonly struct FloatUtils : IUtils<float, float2, float>
     {
         public readonly float ConstTBig(float v) => v;
-        public readonly float EPSILON() => math.EPSILON;
-        public readonly float EPSILON_TBIG() => EPSILON();
+        public readonly float EPSILON_TBIG() => math.EPSILON;
         public readonly float MaxValue() => float.MaxValue;
         public readonly float2 MaxValue2() => float.MaxValue;
         public readonly float MaxDistSq() => float.MaxValue;
@@ -2869,7 +2862,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float dot(float2 a, float2 b) => math.dot(a, b);
         public readonly bool eq(float v, float w) => v == w;
         public readonly bool2 eq(float2 v, float2 w) => v == w;
-        public readonly bool ge(float a, float b) => a >= b;
         public readonly bool2 ge(float2 a, float2 b) => a >= b;
         public readonly bool greater(float a, float b) => a > b;
         public readonly int hashkey(float2 p, float2 c, int hashSize)
@@ -2886,19 +2878,15 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly bool le(float a, float b) => a <= b;
         public readonly bool2 le(float2 a, float2 b) => a <= b;
         public readonly bool less(float a, float b) => a < b;
-        public readonly float max(float v, float w) => math.max(v, w);
         public readonly float2 max(float2 v, float2 w) => math.max(v, w);
         public readonly float2 min(float2 v, float2 w) => math.min(v, w);
         public readonly float mul(float a, float b) => a * b;
-        public readonly float neg(float v) => -v;
-        public readonly float2 neg(float2 v) => -v;
     }
 
     internal readonly struct DoubleUtils : IUtils<double, double2, double>
     {
         public readonly double ConstTBig(float v) => v;
-        public readonly double EPSILON() => math.EPSILON_DBL;
-        public readonly double EPSILON_TBIG() => EPSILON();
+        public readonly double EPSILON_TBIG() => math.EPSILON_DBL;
         public readonly double MaxValue() => double.MaxValue;
         public readonly double2 MaxValue2() => double.MaxValue;
         public readonly double MaxDistSq() => double.MaxValue;
@@ -2986,7 +2974,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double dot(double2 a, double2 b) => math.dot(a, b);
         public readonly bool eq(double v, double w) => v == w;
         public readonly bool2 eq(double2 v, double2 w) => v == w;
-        public readonly bool ge(double a, double b) => a >= b;
         public readonly bool2 ge(double2 a, double2 b) => a >= b;
         public readonly bool greater(double a, double b) => a > b;
         public readonly int hashkey(double2 p, double2 c, int hashSize)
@@ -3003,18 +2990,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly bool le(double a, double b) => a <= b;
         public readonly bool2 le(double2 a, double2 b) => a <= b;
         public readonly bool less(double a, double b) => a < b;
-        public readonly double max(double v, double w) => math.max(v, w);
         public readonly double2 max(double2 v, double2 w) => math.max(v, w);
         public readonly double2 min(double2 v, double2 w) => math.min(v, w);
         public readonly double mul(double a, double b) => a * b;
-        public readonly double neg(double v) => -v;
-        public readonly double2 neg(double2 v) => -v;
     }
 
     internal readonly struct IntUtils : IUtils<int, int2, long>
     {
         public readonly long ConstTBig(float v) => (long)v;
-        public readonly int EPSILON() => 0;
         public readonly long EPSILON_TBIG() => 0;
         public readonly int MaxValue() => int.MaxValue;
         public readonly int2 MaxValue2() => int.MaxValue;
@@ -3107,7 +3090,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly long dot(int2 a, int2 b) => (long)a.x * b.x + (long)a.y * b.y;
         public readonly bool eq(int v, int w) => v == w;
         public readonly bool2 eq(int2 v, int2 w) => v == w;
-        public readonly bool ge(int a, int b) => a >= b;
         public readonly bool2 ge(int2 a, int2 b) => a >= b;
         public readonly bool greater(int a, int b) => a > b;
         public readonly bool greater(long a, long b) => a > b;
@@ -3128,17 +3110,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         // since some algorithms may fail with very large coordinates.
         // TODO: Validate really large coordinates with tests
         public readonly bool2 isfinite(int2 v) => math.all(math.abs(v) < (1 << 20));
-        public readonly bool le(int a, int b) => a <= b;
         public readonly bool2 le(int2 a, int2 b) => a <= b;
         public readonly bool le(long a, long b) => a <= b;
         public readonly bool less(int a, int b) => a < b;
         public readonly bool less(long a, long b) => a < b;
-        public readonly int max(int v, int w) => math.max(v, w);
         public readonly int2 max(int2 v, int2 w) => math.max(v, w);
         public readonly int2 min(int2 v, int2 w) => math.min(v, w);
         public readonly long mul(int a, int b) => (long)a * b;
         public readonly long mul(long a, long b) => a * b;
-        public readonly int neg(int v) => -v;
-        public readonly int2 neg(int2 v) => -v;
     }
 }
