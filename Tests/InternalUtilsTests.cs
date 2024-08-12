@@ -31,8 +31,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.IsTrue(new FloatUtils().SmallestInnerAngleIsBelowThreshold((float2)a,(float2)b,(float2)c, (float)upper));
             Assert.IsFalse(new FloatUtils().SmallestInnerAngleIsBelowThreshold((float2)a,(float2)b,(float2)c, (float)lower));
 
-            Assert.IsTrue(new IntUtils().SmallestInnerAngleIsBelowThreshold((int2)a,(int2)b,(int2)c, (float)upper));
-            Assert.IsFalse(new IntUtils().SmallestInnerAngleIsBelowThreshold((int2)a,(int2)b,(int2)c, (float)lower));
+            // Integers do not support this right now. Commit ad22afe has an implementation.
+            // Assert.IsTrue(new IntUtils().SmallestInnerAngleIsBelowThreshold((int2)a,(int2)b,(int2)c, (float)upper));
+            // Assert.IsFalse(new IntUtils().SmallestInnerAngleIsBelowThreshold((int2)a,(int2)b,(int2)c, (float)lower));
         }
 
         private static readonly TestCaseData[] area2testData = new TestCaseData[]
