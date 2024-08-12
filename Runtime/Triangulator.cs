@@ -2725,7 +2725,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     /// <typeparam name="T">The raw coordinate type for a single axis. For example float or int.</typeparam>
     /// <typeparam name="T2">The 2D coordinate composed of Ts. For example float2.</typeparam>
     /// <typeparam name="TFloat">A floating point value. Used for angles and fractional values. For example float.</typeparam>
-    /// <typeparam name="TBig">A squared coordinate. Used for squared distances and other products. For example float or long.</typeparam>
+    /// <typeparam name="TBig">A value that may have higher precision compared to T. Used for squared distances and other products.</typeparam>
     internal interface IUtils<T, T2, TFloat, TBig> where T : unmanaged where T2 : unmanaged where TFloat : unmanaged where TBig : unmanaged
     {
         /// <summary>
