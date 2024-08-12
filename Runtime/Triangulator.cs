@@ -244,19 +244,19 @@ namespace andywiecko.BurstTriangulator
         }
 
         public static void Run(this Triangulator<float2> @this) =>
-            new TriangulationJob<float, float2, float, float, AffineTransform32, FloatUtils>(@this).Run();
+            new TriangulationJob<float, float2, float, AffineTransform32, FloatUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<float2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<float, float2, float, float, AffineTransform32, FloatUtils>(@this).Schedule(dependencies);
+            new TriangulationJob<float, float2, float, AffineTransform32, FloatUtils>(@this).Schedule(dependencies);
 
         public static void Run(this Triangulator<double2> @this) =>
-            new TriangulationJob<double, double2, double, double, AffineTransform64, DoubleUtils>(@this).Run();
+            new TriangulationJob<double, double2, double, AffineTransform64, DoubleUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<double2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<double, double2, double, double, AffineTransform64, DoubleUtils>(@this).Schedule(dependencies);
+            new TriangulationJob<double, double2, double, AffineTransform64, DoubleUtils>(@this).Schedule(dependencies);
 
         public static void Run(this Triangulator<int2> @this) =>
-            new TriangulationJob<int, int2, float, long, TranslationInt32, IntUtils>(@this).Run();
+            new TriangulationJob<int, int2, long, TranslationInt32, IntUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<int2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<int, int2, float, long, TranslationInt32, IntUtils>(@this).Schedule(dependencies);
+            new TriangulationJob<int, int2, long, TranslationInt32, IntUtils>(@this).Schedule(dependencies);
     }
 }
 
@@ -347,33 +347,32 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
     public static class Extensions
     {
-        public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
         public static void RefineMesh(this UnsafeTriangulator @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>
-            new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, (float)concentricShells, constrainBoundary);
+            new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, (float)angleThreshold, (float)concentricShells, constrainBoundary);
 
-        public static void Triangulate(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, float, AffineTransform32, FloatUtils>().Triangulate(input, output, args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, float, AffineTransform32, FloatUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void Triangulate(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().PlantHoleSeeds(input, output, args, allocator);
         public static void RefineMesh(this UnsafeTriangulator<float2> @this, OutputData<float2> output, Allocator allocator, float areaThreshold = 1, float angleThreshold = 0.0872664626f, float concentricShells = 0.001f, bool constrainBoundary = false) =>
-            new UnsafeTriangulator<float, float2, float, float, AffineTransform32, FloatUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+            new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
 
-        public static void Triangulate(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void Triangulate(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
         public static void RefineMesh(this UnsafeTriangulator<double2> @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>
-            new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, (float)concentricShells, constrainBoundary);
+            new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, (float)angleThreshold, (float)concentricShells, constrainBoundary);
 
-        public static void Triangulate(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, float, long, TranslationInt32, IntUtils>().Triangulate(input, output, args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, float, long, TranslationInt32, IntUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void Triangulate(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TranslationInt32, IntUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TranslationInt32, IntUtils>().PlantHoleSeeds(input, output, args, allocator);
     }
 
     [BurstCompile]
-    internal struct TriangulationJob<T, T2, TFloat, TBig, TTransform, TUtils> : IJob
+    internal struct TriangulationJob<T, T2, TBig, TTransform, TUtils> : IJob
         where T : unmanaged, IComparable<T>
         where T2 : unmanaged
-        where TFloat : unmanaged, IComparable<TFloat>
         where TBig : unmanaged, IComparable<TBig>
         where TTransform : unmanaged, ITransform<TTransform, T, T2, TBig>
-        where TUtils : unmanaged, IUtils<T, T2, TFloat, TBig>
+        where TUtils : unmanaged, IUtils<T, T2, TBig>
     {
         private NativeArray<T2> inputPositions;
         [NativeDisableContainerSafetyRestriction]
@@ -406,7 +405,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public void Execute()
         {
-            new UnsafeTriangulator<T, T2, TFloat, TBig, TTransform, TUtils>().Triangulate(
+            new UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>().Triangulate(
                 input: new()
                 {
                     Positions = inputPositions,
@@ -424,13 +423,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
     }
 
-    internal readonly struct UnsafeTriangulator<T, T2, TFloat, TBig, TTransform, TUtils>
+    internal readonly struct UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>
         where T : unmanaged, IComparable<T>
         where T2 : unmanaged
-        where TFloat : unmanaged, IComparable<TFloat>
         where TBig : unmanaged, IComparable<TBig>
         where TTransform : unmanaged, ITransform<TTransform, T, T2, TBig>
-        where TUtils : unmanaged, IUtils<T, T2, TFloat, TBig>
+        where TUtils : unmanaged, IUtils<T, T2, TBig>
     {
         private static readonly TUtils utils = default;
 
@@ -471,7 +469,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             new PlantingSeedStep(input, output, args).Execute(allocator, true);
         }
 
-        public void RefineMesh(OutputData<T2> output, Allocator allocator, TBig area2Threshold, TFloat angleThreshold, float shells, bool constrainBoundary = false)
+        public void RefineMesh(OutputData<T2> output, Allocator allocator, TBig area2Threshold, float angleThreshold, float shells, bool constrainBoundary = false)
         {
             new RefineMeshStep(output, area2Threshold, angleThreshold, shells).Execute(allocator, refineMesh: true, constrainBoundary);
         }
@@ -1304,7 +1302,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 var (a0, a1) = (positions[e1.x], positions[e1.y]);
                 var (b0, b1) = (positions[e2.x], positions[e2.y]);
-                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && UnsafeTriangulator<T, T2, TFloat, TBig, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
+                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
             }
 
             private void CollectIntersections(int2 edge)
@@ -1774,21 +1772,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             private readonly TBig maximumArea2;
             private readonly float shells;
-            private readonly TFloat angleThreshold;
+            private readonly float cosAngleThreshold;
             private readonly int initialPointsCount;
 
             public RefineMeshStep(OutputData<T2> output, Args args, TTransform lt) : this(output,
                 area2Threshold: utils.mul(utils.ConstDistanceSq(2), lt.TransformArea(utils.ConstDistanceSq(args.RefinementThresholdArea))),
-                angleThreshold: utils.ConstFloat(args.RefinementThresholdAngle),
+                angleThreshold: args.RefinementThresholdAngle,
                 shells: args.ConcentricShellsParameter)
             { }
 
-            public RefineMeshStep(OutputData<T2> output, TBig area2Threshold, TFloat angleThreshold, float shells)
+            public RefineMeshStep(OutputData<T2> output, TBig area2Threshold, float angleThreshold, float shells)
             {
                 status = output.Status;
                 initialPointsCount = output.Positions.Length;
                 maximumArea2 = area2Threshold;
-                this.angleThreshold = angleThreshold;
+                cosAngleThreshold = math.cos(angleThreshold);
                 this.shells = shells;
                 triangles = output.Triangles;
                 outputPositions = output.Positions;
@@ -2003,7 +2001,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 var (a, b, c) = (outputPositions[i], outputPositions[j], outputPositions[k]);
                 var area2 = Area2(a, b, c);
-                return utils.greater(area2, maximumArea2) || AngleIsTooSmall(tId, angleThreshold);
+                return utils.greater(area2, maximumArea2) || AngleIsTooSmall(tId, cosAngleThreshold);
             }
 
             private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue, Allocator allocator)
@@ -2056,22 +2054,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool AngleIsTooSmall(int tId, TFloat minimumAngle)
+            private bool AngleIsTooSmall(int tId, float cosMinimumAngle)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 var (pA, pB, pC) = (outputPositions[i], outputPositions[j], outputPositions[k]);
-
-                var pAB = utils.diff(pB, pA);
-                var pBC = utils.diff(pC, pB);
-                var pCA = utils.diff(pA, pC);
-
-                // TODO: Can be done faster using dot products
-                return utils.anyabslessthan(
-                    a: Angle(pAB, utils.neg(pCA)),
-                    b: Angle(pBC, utils.neg(pAB)),
-                    c: Angle(pCA, utils.neg(pBC)),
-                    v: minimumAngle
-                );
+                return utils.SmallestInnerAngleIsBelowThreshold(pA, pB, pC, cosMinimumAngle);
             }
 
             private int UnsafeInsertPointCommon(T2 p, int initTriangle)
@@ -2439,7 +2426,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
         }
 
-        internal static TFloat Angle(T2 a, T2 b) => utils.atan2(Cross(a, b), utils.dot(a, b));
         internal static TBig Area2(T2 a, T2 b, T2 c) => utils.abs(Cross(utils.diff(b, a), utils.diff(c, a)));
         private static TBig Cross(T2 a, T2 b) => utils.diff(utils.mul(utils.X(a), utils.Y(b)), utils.mul(utils.Y(a), utils.X(b)));
         private static T2 CircumCenter(T2 a, T2 b, T2 c) => utils.CircumCenter(a,b,c);
@@ -2723,9 +2709,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     /// </summary>
     /// <typeparam name="T">The raw coordinate type for a single axis. For example float or int.</typeparam>
     /// <typeparam name="T2">The 2D coordinate composed of Ts. For example float2.</typeparam>
-    /// <typeparam name="TFloat">A floating point value. Used for angles and fractional values. For example float.</typeparam>
     /// <typeparam name="TBig">A value that may have higher precision compared to T. Used for squared distances and other products.</typeparam>
-    internal interface IUtils<T, T2, TFloat, TBig> where T : unmanaged where T2 : unmanaged where TFloat : unmanaged where TBig : unmanaged
+    internal interface IUtils<T, T2, TBig> where T : unmanaged where T2 : unmanaged where TBig : unmanaged
     {
         /// <summary>
         /// Converts a value to type T.
@@ -2739,12 +2724,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// Warning: This may cause loss of precision, and is only safe for (not huge) integer constants.
         /// </summary>
         TBig ConstDistanceSq(float v);
-        /// <summary>
-        /// Converts a value to type TFloat.
-        ///
-        /// Warning: This may cause loss of precision, but it always supports fractional values.
-        /// </summary>
-        TFloat ConstFloat(float v);
         T EPSILON();
         TBig EPSILON_TBIG();
         T MaxValue();
@@ -2775,10 +2754,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// of it is not important for the algorithm, and this avoids us having to introduce yet another generic type parameter.
         /// </summary>
         T2 PickPointOnConcentricShell(float D, T2 e1, T2 e2, bool initial);
-        bool anyabslessthan(TFloat a, TFloat b, TFloat c, TFloat v);
-        // Note: Takes TBig arguments, even if that's not technically correct for an atan2 function.
-        // It is used like atan2(a*C, b*C) where C is a length of type T.
-        TFloat atan2(TBig v, TBig w);
+
+        /// <summary>
+        /// Returns true if the smallest inner angle of the triangle (a, b, c) is below the given threshold.
+        /// Degenerate (zero area) triangles are considered to have a smallest inner angle of 0.
+        /// </summary>
+        /// <param name="cosAngle">Cosine of the threshold angle. This is a float for all coordinate types (even when using doubles),
+        /// because the precision of it is not important for the algorithm.</param>
+        bool SmallestInnerAngleIsBelowThreshold(T2 a, T2 b, T2 c, float cosAngle);
         T2 avg(T2 a, T2 b);
         T diff(T a, T b);
         TBig diff(TBig a, TBig b);
@@ -2809,11 +2792,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 #pragma warning restore IDE1006
     }
 
-    internal readonly struct FloatUtils : IUtils<float, float2, float, float>
+    internal readonly struct FloatUtils : IUtils<float, float2, float>
     {
         public readonly float Const(int v) => v;
         public readonly float ConstDistanceSq(float v) => v;
-        public readonly float ConstFloat(float v) => v;
         public readonly float EPSILON() => math.EPSILON;
         public readonly float EPSILON_TBIG() => EPSILON();
         public readonly float MaxValue() => float.MaxValue;
@@ -2880,11 +2862,24 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             return math.lerp(e1, e2, alpha);
         }
 
+        public readonly bool SmallestInnerAngleIsBelowThreshold(float2 a, float2 b, float2 c, float cosAngle) {
+            var ab = math.normalizesafe(b - a);
+            var bc = math.normalizesafe(c - b);
+            var ca = math.normalizesafe(a - c);
+            var lab = math.length(ab);
+            var lbc = math.length(bc);
+            var lca = math.length(ca);
+            // Necessary to handle degenerate triangles, for which the smallest inner angle should be zero.
+            if (math.any(new double3(lab, lbc, lca) < math.FLT_MIN_NORMAL)) return cosAngle < 1;
+            ab /= lab;
+            bc /= lbc;
+            ca /= lca;
+            return math.any(new float3(math.dot(ab, -ca), math.dot(bc, -ab), math.dot(ca, -bc)) > cosAngle);
+        }
+
         public readonly float abs(float v) => math.abs(v);
         public readonly float add(float a, float b) => a + b;
 
-        public readonly bool anyabslessthan(float a, float b, float c, float v) => math.any(math.abs(math.float3(a, b, c)) < v);
-        public readonly float atan2(float a, float b) => math.atan2(a, b);
         public readonly float2 avg(float2 a, float2 b) => 0.5f * (a + b);
         public readonly float diff(float a, float b) => a - b;
         public readonly float2 diff(float2 a, float2 b) => a - b;
@@ -2918,11 +2913,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float2 neg(float2 v) => -v;
     }
 
-    internal readonly struct DoubleUtils : IUtils<double, double2, double, double>
+    internal readonly struct DoubleUtils : IUtils<double, double2, double>
     {
         public readonly double Const(int v) => v;
         public readonly double ConstDistanceSq(float v) => v;
-        public readonly double ConstFloat(float v) => v;
         public readonly double EPSILON() => math.EPSILON_DBL;
         public readonly double EPSILON_TBIG() => EPSILON();
         public readonly double MaxValue() => double.MaxValue;
@@ -2989,10 +2983,24 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             return math.lerp(e1, e2, alpha);
         }
 
+        public readonly bool SmallestInnerAngleIsBelowThreshold(double2 a, double2 b, double2 c, float cosAngle) {
+            var ab = b - a;
+            var bc = c - b;
+            var ca = a - c;
+            var lab = math.length(ab);
+            var lbc = math.length(bc);
+            var lca = math.length(ca);
+            // Necessary to handle degenerate triangles, for which the smallest inner angle should be zero.
+            // TODO: Will this method ever have to handle degenerate triangles?
+            if (math.any(new double3(lab, lbc, lca) < math.FLT_MIN_NORMAL)) return cosAngle < 1;
+            ab /= lab;
+            bc /= lbc;
+            ca /= lca;
+            return math.any(new double3(math.dot(ab, -ca), math.dot(bc, -ab), math.dot(ca, -bc)) > cosAngle);
+        }
+
         public readonly double abs(double v) => math.abs(v);
         public readonly double add(double a, double b) => a + b;
-        public readonly bool anyabslessthan(double a, double b, double c, double v) => math.any(math.abs(math.double3(a, b, c)) < v);
-        public readonly double atan2(double a, double b) => math.atan2(a, b);
         public readonly double2 avg(double2 a, double2 b) => 0.5f * (a + b);
         public readonly double diff(double a, double b) => a - b;
         public readonly double2 diff(double2 a, double2 b) => a - b;
@@ -3026,11 +3034,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double2 neg(double2 v) => -v;
     }
 
-    internal readonly struct IntUtils : IUtils<int, int2, float, long>
+    internal readonly struct IntUtils : IUtils<int, int2, long>
     {
         public readonly int Const(int v) => v;
         public readonly long ConstDistanceSq(float v) => (long)v;
-        public readonly float ConstFloat(float v) => v;
         public readonly int EPSILON() => 0;
         public readonly long EPSILON_TBIG() => 0;
         public readonly int MaxValue() => int.MaxValue;
@@ -3108,12 +3115,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             return e1 + (int2)math.round((double2)(e2 - e1) * alpha);
         }
 
+        public readonly bool SmallestInnerAngleIsBelowThreshold(int2 a, int2 b, int2 c, float cosAngle) {
+            var ab = b - a;
+            var bc = c - b;
+            var ca = a - c;
+            var lab = dot(ab, ab);
+            var lbc = dot(bc, bc);
+            var lca = dot(ca, ca);
+            // Necessary to handle degenerate triangles, for which the smallest inner angle should be zero.
+            if (lab == 0 || lbc == 0 || lca == 0) return cosAngle < 1;
+            if ((double)dot(ab, -ca) > cosAngle * math.sqrt((double)lab * (double)lca)) return true;
+            if ((double)dot(bc, -ab) > cosAngle * math.sqrt((double)lbc * (double)lab)) return true;
+            if ((double)dot(ca, -bc) > cosAngle * math.sqrt((double)lca * (double)lbc)) return true;
+            return false;
+        }
+
         public readonly int abs(int v) => math.abs(v);
         public readonly long abs(long v) => math.abs(v);
         public readonly int add(int a, int b) => a + b;
         public readonly long add(long a, long b) => a + b;
-        public readonly bool anyabslessthan(float a, float b, float c, float v) => math.any(math.abs(math.double3(a, b, c)) < v);
-        public readonly float atan2(long a, long b) => throw new NotImplementedException();
         public readonly int2 avg(int2 a, int2 b) => (a + b)/2;
         public readonly int diff(int a, int b) => a - b;
         public readonly long diff(long a, long b) => a - b;

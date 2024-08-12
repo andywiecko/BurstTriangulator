@@ -9,19 +9,30 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     {
         private static readonly TestCaseData[] angleTestData = new TestCaseData[]
         {
-            new(math.double2(1, 0), math.double2(0, 1), math.PI_DBL / 2) { TestName = "Test case 1 - canonical vectors" },
-            new(math.double2(0, 1), math.double2(1, 0), -math.PI_DBL / 2){ TestName = "Test case 2 - canonical vectors (swapped)" },
-            new(math.double2(2, 1), math.double2(-1, 2), math.PI_DBL / 2){ TestName = "Test case 3" },
-            new(math.double2(1, 0), math.double2(1, 0), 0){ TestName = "Test case 4 - zero test" },
-            new(math.double2(1, 0), math.double2(-1, 0), math.PI_DBL){ TestName = "Test case 5 - opposite dir" },
-            new(math.double2(1, 0), math.double2(math.cos(0.5698235), math.sin(0.5698235)), 0.5698235){ TestName = "Test case 6 - arbitrary angle" },
+            new(math.double2(1, 0), math.double2(0, 1), math.double2(0,0), math.PI_DBL / 4) { TestName = "Test case 1 - canonical vectors" },
+            new(math.double2(0, 1), math.double2(1, 0), math.double2(0,0), math.PI_DBL / 4){ TestName = "Test case 2 - canonical vectors (swapped)" },
+            new(math.double2(2, 2), math.double2(3, 2), math.double2(2, 4), math.atan(1.0/2.0)){ TestName = "Test case 3 - no vertex at origin" },
+            new(math.double2(1, 0), math.double2(1, 0), math.double2(1, 0), 0){ TestName = "Test case 4 - 3 identical vertices" },
+            new(math.double2(1, 0), math.double2(1, 0), math.double2(10, 0), 0){ TestName = "Test case 5 - 2 identical vertices" },
+            new(math.double2(1, 0), math.double2(0, 0), math.double2(-1, 0), 0){ TestName = "Test case 6 - colinear vertices" },
+            new(math.double2(0, 0), math.double2(10, 0), math.double2(5, 73), 2*math.atan(5.0/73.0)){ TestName = "Test case 7 - arbitrary angle" },
         };
 
         [Test, TestCaseSource(nameof(angleTestData))]
-        public void AngleTest(double2 a, double2 b, double expected)
+        public void AngleTest(double2 a, double2 b, double2 c, double expectedSmallestInnerAngle)
         {
-            var result = UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>.Angle(a, b);
-            Assert.That(result, Is.EqualTo(expected).Within(1e-9));
+            var upper = math.cos(expectedSmallestInnerAngle + 0.001);
+            var lower = math.cos(expectedSmallestInnerAngle - 0.001);
+            if (expectedSmallestInnerAngle == 0) lower = 2;
+
+            Assert.IsTrue(new DoubleUtils().SmallestInnerAngleIsBelowThreshold(a,b,c, (float)upper));
+            Assert.IsFalse(new DoubleUtils().SmallestInnerAngleIsBelowThreshold(a,b,c, (float)lower));
+
+            Assert.IsTrue(new FloatUtils().SmallestInnerAngleIsBelowThreshold((float2)a,(float2)b,(float2)c, (float)upper));
+            Assert.IsFalse(new FloatUtils().SmallestInnerAngleIsBelowThreshold((float2)a,(float2)b,(float2)c, (float)lower));
+
+            Assert.IsTrue(new IntUtils().SmallestInnerAngleIsBelowThreshold((int2)a,(int2)b,(int2)c, (float)upper));
+            Assert.IsFalse(new IntUtils().SmallestInnerAngleIsBelowThreshold((int2)a,(int2)b,(int2)c, (float)lower));
         }
 
         private static readonly TestCaseData[] area2testData = new TestCaseData[]
@@ -47,7 +58,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test, TestCaseSource(nameof(area2testData))]
         public void Area2Test(double2 a, double2 b, double2 c, double expected)
         {
-            var result = UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>.Area2(a, b, c);
+            var result = UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>.Area2(a, b, c);
             Assert.That(result, Is.EqualTo(expected).Within(1e-9));
         }
 
@@ -98,7 +109,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         ).ToArray();
 
         [Test, TestCaseSource(nameof(edegeVsEdgeTestData))]
-        public bool EdgeEdgeIntersectionTest(double2 a0, double2 a1, double2 b0, double2 b1) => UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
+        public bool EdgeEdgeIntersectionTest(double2 a0, double2 a1, double2 b0, double2 b1) => UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
 
         private static readonly TestCaseData[] isConvexQuadrilateralTestData = new TestCaseData[]
         {
@@ -130,7 +141,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }).ToArray();
 
         [Test, TestCaseSource(nameof(isConvexQuadrilateralTestData))]
-        public bool IsConvexQuadrilateralTest(double2 a, double2 b, double2 c, double2 d) => UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>.IsConvexQuadrilateral(a, b, c, d);
+        public bool IsConvexQuadrilateralTest(double2 a, double2 b, double2 c, double2 d) => UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>.IsConvexQuadrilateral(a, b, c, d);
 
         private static readonly TestCaseData[] pointLineSegmentIntersectionTestData = new TestCaseData[]
         {
@@ -154,7 +165,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }).ToArray();
 
         [Test, TestCaseSource(nameof(pointLineSegmentIntersectionTestData))]
-        public bool PointLineSegmentIntersectionTest(double2 a, double2 b0, double2 b1) => UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>.PointLineSegmentIntersection(a, b0, b1);
+        public bool PointLineSegmentIntersectionTest(double2 a, double2 b0, double2 b1) => UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>.PointLineSegmentIntersection(a, b0, b1);
 
         private static readonly TestCaseData[] pointInsideTriangleTestData = new TestCaseData[]
         {
@@ -176,6 +187,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }).ToArray();
 
         [Test, TestCaseSource(nameof(pointInsideTriangleTestData))]
-        public bool PointInsideTriangleTest(double2 p, double2 a, double2 b, double2 c) => UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>.PointInsideTriangle(p, a, b, c);
+        public bool PointInsideTriangleTest(double2 p, double2 a, double2 b, double2 c) => UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>.PointInsideTriangle(p, a, b, c);
     }
 }
