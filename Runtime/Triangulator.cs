@@ -3081,10 +3081,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
 
         public readonly int2 PickPointOnConcentricShell(float D, int2 e1, int2 e2, bool initial) {
+            // Implementation has been removed because it's not used at the moment.
+            // This commit has the implemenation, if it's needed in the future: ad22afe
             throw new NotImplementedException("PickPointOnConcentricShell is not implemented for integer coordinates.");
         }
 
         public readonly bool SmallestInnerAngleIsBelowThreshold(int2 a, int2 b, int2 c, float cosAngle) {
+            // Implementation has been removed because it's not used at the moment.
+            // This commit has the implemenation, if it's needed in the future: ad22afe
             throw new NotImplementedException("SmallestInnerAngleIsBelowThreshold is not implemented for integer coordinates.");
         }
 
