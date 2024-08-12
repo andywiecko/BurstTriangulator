@@ -2940,7 +2940,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var pAB = b - a;
             var pBC = c - b;
             var pCA = a - c;
-            Debug.Log(math.degrees(Angle(pAB, -pCA)) + " " + math.degrees(Angle(pBC, -pAB)) + " " + math.degrees(Angle(pCA, -pBC)));
             return math.abs(Angle(pAB, -pCA)) < angle || math.abs(Angle(pBC, -pAB)) < angle || math.abs(Angle(pCA, -pBC)) < angle;
         }
 
