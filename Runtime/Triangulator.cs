@@ -1,6 +1,7 @@
 using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using Unity.Burst;
 using Unity.Collections;
@@ -1765,7 +1766,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             private readonly TBig maximumArea2;
             private readonly float shells;
-            private readonly float cosAngleThreshold;
+            private readonly float angleThreshold;
             private readonly int initialPointsCount;
 
             public RefineMeshStep(OutputData<T2> output, Args args, TTransform lt) : this(output,
@@ -1779,7 +1780,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 status = output.Status;
                 initialPointsCount = output.Positions.Length;
                 maximumArea2 = area2Threshold;
-                cosAngleThreshold = math.cos(angleThreshold);
+                this.angleThreshold = angleThreshold;
                 this.shells = shells;
                 triangles = output.Triangles;
                 outputPositions = output.Positions;
@@ -1994,7 +1995,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 var (a, b, c) = (outputPositions[i], outputPositions[j], outputPositions[k]);
                 var area2 = Area2(a, b, c);
-                return utils.greater(area2, maximumArea2) || AngleIsTooSmall(tId, cosAngleThreshold);
+                return utils.greater(area2, maximumArea2) || AngleIsTooSmall(tId, angleThreshold);
             }
 
             private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue, Allocator allocator)
@@ -2047,11 +2048,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool AngleIsTooSmall(int tId, float cosMinimumAngle)
+            private bool AngleIsTooSmall(int tId, float minimumAngle)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 var (pA, pB, pC) = (outputPositions[i], outputPositions[j], outputPositions[k]);
-                return utils.SmallestInnerAngleIsBelowThreshold(pA, pB, pC, cosMinimumAngle);
+                return utils.SmallestInnerAngleIsBelowThreshold(pA, pB, pC, minimumAngle);
             }
 
             private int UnsafeInsertPointCommon(T2 p, int initTriangle)
@@ -2734,13 +2735,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="initial"/>If true, then e1 and e2 are swapped</param>
         T2 PickPointOnConcentricShell(float D, T2 e1, T2 e2, bool initial);
 
-        /// <summary>
-        /// Returns true if the smallest inner angle of the triangle (a, b, c) is below the given threshold.
-        /// Degenerate (zero area) triangles are considered to have a smallest inner angle of 0.
-        /// </summary>
-        /// <param name="cosAngle">Cosine of the threshold angle. This is a float for all coordinate types (even when using doubles),
-        /// because the precision of it is not important for the algorithm.</param>
-        bool SmallestInnerAngleIsBelowThreshold(T2 a, T2 b, T2 c, float cosAngle);
+        bool SmallestInnerAngleIsBelowThreshold(T2 a, T2 b, T2 c, float angle);
         T2 avg(T2 a, T2 b);
         T diff(T a, T b);
         TBig diff(TBig a, TBig b);
@@ -2831,19 +2826,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             return math.lerp(e1, e2, alpha);
         }
 
-        public readonly bool SmallestInnerAngleIsBelowThreshold(float2 a, float2 b, float2 c, float cosAngle) {
-            var ab = math.normalizesafe(b - a);
-            var bc = math.normalizesafe(c - b);
-            var ca = math.normalizesafe(a - c);
-            var lab = math.length(ab);
-            var lbc = math.length(bc);
-            var lca = math.length(ca);
-            // Necessary to handle degenerate triangles, for which the smallest inner angle should be zero.
-            if (math.any(new double3(lab, lbc, lca) < math.FLT_MIN_NORMAL)) return cosAngle < 1;
-            ab /= lab;
-            bc /= lbc;
-            ca /= lca;
-            return math.any(new float3(math.dot(ab, -ca), math.dot(bc, -ab), math.dot(ca, -bc)) > cosAngle);
+        public readonly bool SmallestInnerAngleIsBelowThreshold(float2 a, float2 b, float2 c, float angle) {
+            float Cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
+            float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
+
+            var pAB = b - a;
+            var pBC = c - b;
+            var pCA = a - c;
+            return math.abs(Angle(pAB, -pCA)) < angle || math.abs(Angle(pBC, -pAB)) < angle || math.abs(Angle(pCA, -pBC)) < angle;
         }
 
         public readonly float abs(float v) => math.abs(v);
@@ -2943,20 +2933,15 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             return math.lerp(e1, e2, alpha);
         }
 
-        public readonly bool SmallestInnerAngleIsBelowThreshold(double2 a, double2 b, double2 c, float cosAngle) {
-            var ab = b - a;
-            var bc = c - b;
-            var ca = a - c;
-            var lab = math.length(ab);
-            var lbc = math.length(bc);
-            var lca = math.length(ca);
-            // Necessary to handle degenerate triangles, for which the smallest inner angle should be zero.
-            // TODO: Will this method ever have to handle degenerate triangles?
-            if (math.any(new double3(lab, lbc, lca) < math.FLT_MIN_NORMAL)) return cosAngle < 1;
-            ab /= lab;
-            bc /= lbc;
-            ca /= lca;
-            return math.any(new double3(math.dot(ab, -ca), math.dot(bc, -ab), math.dot(ca, -bc)) > cosAngle);
+        public readonly bool SmallestInnerAngleIsBelowThreshold(double2 a, double2 b, double2 c, float angle) {
+            double Cross(double2 a, double2 b) => a.x * b.y - a.y * b.x;
+            double Angle(double2 a, double2 b) => math.atan2(Cross(a, b), math.dot(a, b));
+
+            var pAB = b - a;
+            var pBC = c - b;
+            var pCA = a - c;
+            Debug.Log(math.degrees(Angle(pAB, -pCA)) + " " + math.degrees(Angle(pBC, -pAB)) + " " + math.degrees(Angle(pCA, -pBC)));
+            return math.abs(Angle(pAB, -pCA)) < angle || math.abs(Angle(pBC, -pAB)) < angle || math.abs(Angle(pCA, -pBC)) < angle;
         }
 
         public readonly double abs(double v) => math.abs(v);
@@ -3063,7 +3048,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             throw new NotImplementedException("PickPointOnConcentricShell is not implemented for integer coordinates.");
         }
 
-        public readonly bool SmallestInnerAngleIsBelowThreshold(int2 a, int2 b, int2 c, float cosAngle) {
+        public readonly bool SmallestInnerAngleIsBelowThreshold(int2 a, int2 b, int2 c, float angle) {
             // Implementation has been removed because it's not used at the moment.
             // This commit has the implemenation, if it's needed in the future: ad22afe
             throw new NotImplementedException("SmallestInnerAngleIsBelowThreshold is not implemented for integer coordinates.");
