@@ -840,7 +840,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 // Swap the order of the vertices if the triangle is not oriented in the right direction
-                if (utils.less(Orient2dFast(p0, p1, p2), utils.ZeroSq()))
+                if (utils.less(Orient2dFast(p0, p1, p2), utils.ZeroTBig()))
                 {
                     (i1, i2) = (i2, i1);
                     (p1, p2) = (p2, p1);
@@ -892,7 +892,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var e = start;
                     var q = hullNext[e];
 
-                    while (!utils.less(Orient2dFast(p, positions[e], positions[q]), utils.ZeroSq()))
+                    while (!utils.less(Orient2dFast(p, positions[e], positions[q]), utils.ZeroTBig()))
                     {
                         e = q;
                         if (e == start)
@@ -918,7 +918,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     q = hullNext[next];
 
                     // Walk forward through the hull, adding more triangles and flipping recursively
-                    while (utils.less(Orient2dFast(p, positions[next], positions[q]), utils.ZeroSq()))
+                    while (utils.less(Orient2dFast(p, positions[next], positions[q]), utils.ZeroTBig()))
                     {
                         t = AddTriangle(next, i, q, hullTri[i], -1, hullTri[next]);
                         hullTri[i] = Legalize(t + 2);
@@ -933,7 +933,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     {
                         q = hullPrev[e];
 
-                        while (utils.less(Orient2dFast(p, positions[q], positions[e]), utils.ZeroSq()))
+                        while (utils.less(Orient2dFast(p, positions[q], positions[e]), utils.ZeroTBig()))
                         {
                             t = AddTriangle(q, i, e, -1, hullTri[e], hullTri[q]);
                             Legalize(t + 2);
@@ -1769,7 +1769,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private readonly int initialPointsCount;
 
             public RefineMeshStep(OutputData<T2> output, Args args, TTransform lt) : this(output,
-                area2Threshold: utils.mul(utils.ConstDistanceSq(2), lt.TransformArea(utils.ConstDistanceSq(args.RefinementThresholdArea))),
+                area2Threshold: utils.mul(utils.ConstTBig(2), lt.TransformArea(utils.ConstTBig(args.RefinementThresholdArea))),
                 angleThreshold: args.RefinementThresholdAngle,
                 shells: args.ConcentricShellsParameter)
             { }
@@ -1887,7 +1887,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var p1 = outputPositions[triangles[he1]];
                 var p2 = outputPositions[triangles[he2]];
 
-                return utils.le(utils.dot(utils.diff(p0, p2), utils.diff(p1, p2)), utils.ZeroSq());
+                return utils.le(utils.dot(utils.diff(p0, p2), utils.diff(p1, p2)), utils.ZeroTBig());
             }
 
             private void SplitEdge(int he, NativeList<int> heQueue, NativeList<int> tQueue)
@@ -2013,7 +2013,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     if (halfedges[he] == -1 || i < j)
                     {
                         var (p0, p1) = (outputPositions[i], outputPositions[j]);
-                        if (utils.le(utils.dot(utils.diff(p0, c.Center), utils.diff(p1, c.Center)), utils.ZeroSq()))
+                        if (utils.le(utils.dot(utils.diff(p0, c.Center), utils.diff(p1, c.Center)), utils.ZeroTBig()))
                         {
                             edges.Add(he);
                         }
@@ -2710,7 +2710,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         ///
         /// Warning: This may cause loss of precision, and is only safe for (not huge) integer constants.
         /// </summary>
-        TBig ConstDistanceSq(float v);
+        TBig ConstTBig(float v);
         T EPSILON();
         TBig EPSILON_TBIG();
         T MaxValue();
@@ -2719,7 +2719,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T2 MinValue2();
         T X(T2 v);
         T Y(T2 v);
-        TBig ZeroSq();
+        TBig ZeroTBig();
         bool SupportsMeshRefinement { get; }
 
         bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c);
@@ -2779,7 +2779,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
     internal readonly struct FloatUtils : IUtils<float, float2, float>
     {
-        public readonly float ConstDistanceSq(float v) => v;
+        public readonly float ConstTBig(float v) => v;
         public readonly float EPSILON() => math.EPSILON;
         public readonly float EPSILON_TBIG() => EPSILON();
         public readonly float MaxValue() => float.MaxValue;
@@ -2788,7 +2788,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float2 MinValue2() => float.MinValue;
         public readonly float X(float2 a) => a.x;
         public readonly float Y(float2 a) => a.y;
-        public readonly float ZeroSq() => 0;
+        public readonly float ZeroTBig() => 0;
         public readonly bool SupportsMeshRefinement => true;
 
         static float cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
@@ -2896,7 +2896,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
     internal readonly struct DoubleUtils : IUtils<double, double2, double>
     {
-        public readonly double ConstDistanceSq(float v) => v;
+        public readonly double ConstTBig(float v) => v;
         public readonly double EPSILON() => math.EPSILON_DBL;
         public readonly double EPSILON_TBIG() => EPSILON();
         public readonly double MaxValue() => double.MaxValue;
@@ -2905,7 +2905,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double2 MinValue2() => double.MinValue;
         public readonly double X(double2 a) => a.x;
         public readonly double Y(double2 a) => a.y;
-        public readonly double ZeroSq() => 0;
+        public readonly double ZeroTBig() => 0;
         public readonly bool SupportsMeshRefinement => true;
 
         static double cross(double2 a, double2 b) => a.x * b.y - a.y * b.x;
@@ -3013,7 +3013,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
     internal readonly struct IntUtils : IUtils<int, int2, long>
     {
-        public readonly long ConstDistanceSq(float v) => (long)v;
+        public readonly long ConstTBig(float v) => (long)v;
         public readonly int EPSILON() => 0;
         public readonly long EPSILON_TBIG() => 0;
         public readonly int MaxValue() => int.MaxValue;
@@ -3022,7 +3022,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly int2 MinValue2() => int.MinValue;
         public readonly int X(int2 a) => a.x;
         public readonly int Y(int2 a) => a.y;
-        public readonly long ZeroSq() => 0;
+        public readonly long ZeroTBig() => 0;
         public readonly bool SupportsMeshRefinement => false;
 
         public long cross(int2 a, int2 b) => (long)a.x * (long)b.y - (long)a.y * (long)b.x;
