@@ -3081,27 +3081,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
 
         public readonly int2 PickPointOnConcentricShell(float D, int2 e1, int2 e2, bool initial) {
-            var d = math.sqrt((double)this.distancesq(e1, e2));
-            var k = (int)math.round(math.log2(0.5 * d / D));
-            var alpha = D / d * (1 << k);
-            alpha = initial ? alpha : 1 - alpha;
-            // Lerp
-            return e1 + (int2)math.round((double2)(e2 - e1) * alpha);
+            throw new NotImplementedException("PickPointOnConcentricShell is not implemented for integer coordinates.");
         }
 
         public readonly bool SmallestInnerAngleIsBelowThreshold(int2 a, int2 b, int2 c, float cosAngle) {
-            var ab = b - a;
-            var bc = c - b;
-            var ca = a - c;
-            var lab = dot(ab, ab);
-            var lbc = dot(bc, bc);
-            var lca = dot(ca, ca);
-            // Necessary to handle degenerate triangles, for which the smallest inner angle should be zero.
-            if (lab == 0 || lbc == 0 || lca == 0) return cosAngle < 1;
-            if ((double)dot(ab, -ca) > cosAngle * math.sqrt((double)lab * (double)lca)) return true;
-            if ((double)dot(bc, -ab) > cosAngle * math.sqrt((double)lbc * (double)lab)) return true;
-            if ((double)dot(ca, -bc) > cosAngle * math.sqrt((double)lca * (double)lbc)) return true;
-            return false;
+            throw new NotImplementedException("SmallestInnerAngleIsBelowThreshold is not implemented for integer coordinates.");
         }
 
         public readonly int abs(int v) => math.abs(v);
