@@ -350,7 +350,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
         public static void RefineMesh(this UnsafeTriangulator @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>
-            new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+            new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, (float)concentricShells, constrainBoundary);
 
         public static void Triangulate(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, float, AffineTransform32, FloatUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, float, AffineTransform32, FloatUtils>().PlantHoleSeeds(input, output, args, allocator);
@@ -360,7 +360,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public static void Triangulate(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
         public static void RefineMesh(this UnsafeTriangulator<double2> @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>
-            new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+            new UnsafeTriangulator<double, double2, double, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, (float)concentricShells, constrainBoundary);
 
         public static void Triangulate(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, float, long, TranslationInt32, IntUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, float, long, TranslationInt32, IntUtils>().PlantHoleSeeds(input, output, args, allocator);
@@ -471,7 +471,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             new PlantingSeedStep(input, output, args).Execute(allocator, true);
         }
 
-        public void RefineMesh(OutputData<T2> output, Allocator allocator, TBig area2Threshold, TFloat angleThreshold, TFloat shells, bool constrainBoundary = false)
+        public void RefineMesh(OutputData<T2> output, Allocator allocator, TBig area2Threshold, TFloat angleThreshold, float shells, bool constrainBoundary = false)
         {
             new RefineMeshStep(output, area2Threshold, angleThreshold, shells).Execute(allocator, refineMesh: true, constrainBoundary);
         }
@@ -1773,17 +1773,17 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<bool> visitedTriangles;
 
             private readonly TBig maximumArea2;
-            private readonly TFloat shells;
+            private readonly float shells;
             private readonly TFloat angleThreshold;
             private readonly int initialPointsCount;
 
             public RefineMeshStep(OutputData<T2> output, Args args, TTransform lt) : this(output,
                 area2Threshold: utils.mul(utils.ConstDistanceSq(2), lt.TransformArea(utils.ConstDistanceSq(args.RefinementThresholdArea))),
                 angleThreshold: utils.ConstFloat(args.RefinementThresholdAngle),
-                shells: utils.ConstFloat(args.ConcentricShellsParameter))
+                shells: args.ConcentricShellsParameter)
             { }
 
-            public RefineMeshStep(OutputData<T2> output, TBig area2Threshold, TFloat angleThreshold, TFloat shells)
+            public RefineMeshStep(OutputData<T2> output, TBig area2Threshold, TFloat angleThreshold, float shells)
             {
                 status = output.Status;
                 initialPointsCount = output.Positions.Length;
@@ -1916,8 +1916,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 else
                 {
-                    var alpha = utils.alpha(D: shells, dSquare: utils.distancesq(e0, e1), i < initialPointsCount);
-                    p = utils.lerp(e0, e1, alpha);
+                    p = utils.PickPointOnConcentricShell(D: shells, e0, e1, i < initialPointsCount);
                 }
 
                 constrainedHalfedges[he] = false;
@@ -2768,7 +2767,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         TBig abs(TBig v);
         T add(T a, T b);
         TBig add(TBig a, TBig b);
-        TFloat alpha(TFloat D, TBig dSquare, bool initial);
+
+        /// <summary>
+        /// Picks the closest point to e2 on a set of concentric rings around e1 with radii D*2^k for all integers k.
+        ///
+        /// D is a float for all coordinate types (even when using doubles), because the precision
+        /// of it is not important for the algorithm, and this avoids us having to introduce yet another generic type parameter.
+        /// </summary>
+        T2 PickPointOnConcentricShell(float D, T2 e1, T2 e2, bool initial);
         bool anyabslessthan(TFloat a, TFloat b, TFloat c, TFloat v);
         // Note: Takes TBig arguments, even if that's not technically correct for an atan2 function.
         // It is used like atan2(a*C, b*C) where C is a length of type T.
@@ -2791,7 +2797,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         bool le(T a, T b);
         bool2 le(T2 a, T2 b);
         bool le(TBig a, TBig b);
-        T2 lerp(T2 a, T2 b, TFloat v);
         bool less(T a, T b);
         bool less(TBig a, TBig b);
         T max(T v, T w);
@@ -2867,15 +2872,17 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 ap * (ex * fy - ey * fx) < 0;
         }
 
-        public readonly float abs(float v) => math.abs(v);
-        public readonly float add(float a, float b) => a + b;
-        public readonly float alpha(float D, float dSquare, bool initial)
-        {
-            var d = math.sqrt(dSquare);
+        public readonly float2 PickPointOnConcentricShell(float D, float2 e1, float2 e2, bool initial) {
+            var d = math.distance(e1, e2);
             var k = (int)math.round(math.log2(0.5f * d / D));
             var alpha = D / d * (1 << k);
-            return initial ? alpha : 1 - alpha;
+            alpha = initial ? alpha : 1 - alpha;
+            return math.lerp(e1, e2, alpha);
         }
+
+        public readonly float abs(float v) => math.abs(v);
+        public readonly float add(float a, float b) => a + b;
+
         public readonly bool anyabslessthan(float a, float b, float c, float v) => math.any(math.abs(math.float3(a, b, c)) < v);
         public readonly float atan2(float a, float b) => math.atan2(a, b);
         public readonly float2 avg(float2 a, float2 b) => 0.5f * (a + b);
@@ -2902,7 +2909,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly bool2 isfinite(float2 v) => math.isfinite(v);
         public readonly bool le(float a, float b) => a <= b;
         public readonly bool2 le(float2 a, float2 b) => a <= b;
-        public readonly float2 lerp(float2 a, float2 b, float v) => math.lerp(a, b, v);
         public readonly bool less(float a, float b) => a < b;
         public readonly float max(float v, float w) => math.max(v, w);
         public readonly float2 max(float2 v, float2 w) => math.max(v, w);
@@ -2975,15 +2981,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 ap * (ex * fy - ey * fx) < 0;
         }
 
+        public readonly double2 PickPointOnConcentricShell(float D, double2 e1, double2 e2, bool initial) {
+            var d = math.distance(e1, e2);
+            var k = (int)math.round(math.log2(0.5 * d / D));
+            var alpha = D / d * (1 << k);
+            alpha = initial ? alpha : 1 - alpha;
+            return math.lerp(e1, e2, alpha);
+        }
+
         public readonly double abs(double v) => math.abs(v);
         public readonly double add(double a, double b) => a + b;
-        public readonly double alpha(double D, double dSquare, bool initial)
-        {
-            var d = math.sqrt(dSquare);
-            var k = (int)math.round(math.log2(0.5f * d / D));
-            var alpha = D / d * (1 << k);
-            return initial ? alpha : 1 - alpha;
-        }
         public readonly bool anyabslessthan(double a, double b, double c, double v) => math.any(math.abs(math.double3(a, b, c)) < v);
         public readonly double atan2(double a, double b) => math.atan2(a, b);
         public readonly double2 avg(double2 a, double2 b) => 0.5f * (a + b);
@@ -3010,7 +3017,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly bool2 isfinite(double2 v) => math.isfinite(v);
         public readonly bool le(double a, double b) => a <= b;
         public readonly bool2 le(double2 a, double2 b) => a <= b;
-        public readonly double2 lerp(double2 a, double2 b, double v) => math.lerp(a, b, v);
         public readonly bool less(double a, double b) => a < b;
         public readonly double max(double v, double w) => math.max(v, w);
         public readonly double2 max(double2 v, double2 w) => math.max(v, w);
@@ -3093,16 +3099,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 ap * (ex * fy - ey * fx) < 0;
         }
 
+        public readonly int2 PickPointOnConcentricShell(float D, int2 e1, int2 e2, bool initial) {
+            var d = math.sqrt((double)this.distancesq(e1, e2));
+            var k = (int)math.round(math.log2(0.5 * d / D));
+            var alpha = D / d * (1 << k);
+            alpha = initial ? alpha : 1 - alpha;
+            // Lerp
+            return e1 + (int2)math.round((double2)(e2 - e1) * alpha);
+        }
+
         public readonly int abs(int v) => math.abs(v);
         public readonly long abs(long v) => math.abs(v);
         public readonly int add(int a, int b) => a + b;
         public readonly long add(long a, long b) => a + b;
-        public readonly float alpha(float D, long dSquare, bool initial) {
-            var d = math.sqrt((double)dSquare);
-            var k = (int)math.round(math.log2(0.5 * d / D));
-            var alpha = D / d * (1 << k);
-            return (float)(initial ? alpha : 1 - alpha);
-        }
         public readonly bool anyabslessthan(float a, float b, float c, float v) => math.any(math.abs(math.double3(a, b, c)) < v);
         public readonly float atan2(long a, long b) => throw new NotImplementedException();
         public readonly int2 avg(int2 a, int2 b) => (a + b)/2;
@@ -3141,7 +3150,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly bool le(int a, int b) => a <= b;
         public readonly bool2 le(int2 a, int2 b) => a <= b;
         public readonly bool le(long a, long b) => a <= b;
-        public readonly int2 lerp(int2 a, int2 b, float v) => a + (int2)math.round(new double2(b - a) * v);
         public readonly bool less(int a, int b) => a < b;
         public readonly bool less(long a, long b) => a < b;
         public readonly int max(int v, int w) => math.max(v, w);
