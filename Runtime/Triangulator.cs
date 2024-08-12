@@ -2746,6 +2746,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// D is a float for all coordinate types (even when using doubles), because the precision
         /// of it is not important for the algorithm, and this avoids us having to introduce yet another generic type parameter.
         /// </summary>
+        /// <param name="initial"/>If true, then e1 and e2 are swapped</param>
         T2 PickPointOnConcentricShell(float D, T2 e1, T2 e2, bool initial);
 
         /// <summary>
