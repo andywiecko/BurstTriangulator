@@ -2465,10 +2465,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         private static bool InCircle(T2 a, T2 b, T2 c, T2 p) => utils.InCircle(a, b, c, p);
         internal static bool IsConvexQuadrilateral(T2 a, T2 b, T2 c, T2 d) => true
-            && utils.greater(utils.abs(Orient2dFast(a, c, b)), utils.EPSILON_SQ())
-            && utils.greater(utils.abs(Orient2dFast(a, c, d)), utils.EPSILON_SQ())
-            && utils.greater(utils.abs(Orient2dFast(b, d, a)), utils.EPSILON_SQ())
-            && utils.greater(utils.abs(Orient2dFast(b, d, c)), utils.EPSILON_SQ())
+            && utils.greater(utils.abs(Orient2dFast(a, c, b)), utils.EPSILON_TBIG())
+            && utils.greater(utils.abs(Orient2dFast(a, c, d)), utils.EPSILON_TBIG())
+            && utils.greater(utils.abs(Orient2dFast(b, d, a)), utils.EPSILON_TBIG())
+            && utils.greater(utils.abs(Orient2dFast(b, d, c)), utils.EPSILON_TBIG())
             && EdgeEdgeIntersection(a, c, b, d)
         ;
         private static TBig Orient2dFast(T2 a, T2 b, T2 c) => utils.diff(
@@ -2476,7 +2476,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             utils.mul(utils.diff(utils.X(a), utils.X(c)), utils.diff(utils.Y(b), utils.Y(c)))
         );
         internal static bool PointLineSegmentIntersection(T2 a, T2 b0, T2 b1) => true
-            && utils.le(utils.abs(Orient2dFast(a, b0, b1)), utils.EPSILON_SQ())
+            && utils.le(utils.abs(Orient2dFast(a, b0, b1)), utils.EPSILON_TBIG())
             && math.all(utils.ge(a, utils.min(b0, b1)) & utils.le(a, utils.max(b0, b1)));
         internal static bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c) => utils.PointInsideTriangle(p, a, b, c);
     }
@@ -2747,7 +2747,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </summary>
         TFloat ConstFloat(float v);
         T EPSILON();
-        TBig EPSILON_SQ();
+        TBig EPSILON_TBIG();
         T MaxValue();
         T2 MaxValue2();
         TBig MaxDistSq();
@@ -2810,7 +2810,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float ConstDistanceSq(float v) => v;
         public readonly float ConstFloat(float v) => v;
         public readonly float EPSILON() => math.EPSILON;
-        public readonly float EPSILON_SQ() => EPSILON();
+        public readonly float EPSILON_TBIG() => EPSILON();
         public readonly float MaxValue() => float.MaxValue;
         public readonly float2 MaxValue2() => float.MaxValue;
         public readonly float MaxDistSq() => float.MaxValue;
@@ -2918,7 +2918,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double ConstDistanceSq(float v) => v;
         public readonly double ConstFloat(float v) => v;
         public readonly double EPSILON() => math.EPSILON_DBL;
-        public readonly double EPSILON_SQ() => EPSILON();
+        public readonly double EPSILON_TBIG() => EPSILON();
         public readonly double MaxValue() => double.MaxValue;
         public readonly double2 MaxValue2() => double.MaxValue;
         public readonly double MaxDistSq() => double.MaxValue;
@@ -3026,7 +3026,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly long ConstDistanceSq(float v) => (long)v;
         public readonly float ConstFloat(float v) => v;
         public readonly int EPSILON() => 0;
-        public readonly long EPSILON_SQ() => 0;
+        public readonly long EPSILON_TBIG() => 0;
         public readonly int MaxValue() => int.MaxValue;
         public readonly int2 MaxValue2() => int.MaxValue;
         public readonly long MaxDistSq() => long.MaxValue;
