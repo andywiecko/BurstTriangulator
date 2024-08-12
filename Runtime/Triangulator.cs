@@ -1307,13 +1307,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             private void CollectIntersections(int2 edge)
             {
-                // Collect all intersections between existing edges, and the given constrained edge.
-                // We will later get rid of all of these intersections, so that the constrained edge
-                // can be inserted.
-                //
-                // We start at one side of the edge (ci=edge.x), then we go through all existing
-                // halfedges that connect to that vertex. We check if the triangle formed
-                //
                 // 1. Check if h1 is cj
                 // 2. Check if h1-h2 intersects with ci-cj
                 // 3. After each iteration: h0 <- h0'
