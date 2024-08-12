@@ -2443,7 +2443,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         internal static TFloat Angle(T2 a, T2 b) => utils.atan2(Cross(a, b), utils.dot(a, b));
         internal static TBig Area2(T2 a, T2 b, T2 c) => utils.abs(Cross(utils.diff(b, a), utils.diff(c, a)));
         private static TBig Cross(T2 a, T2 b) => utils.diff(utils.mul(utils.X(a), utils.Y(b)), utils.mul(utils.Y(a), utils.X(b)));
-        private static T2 CircumCenter(T2 a, T2 b, T2 c) => utils.circumCenter(a,b,c);
+        private static T2 CircumCenter(T2 a, T2 b, T2 c) => utils.CircumCenter(a,b,c);
         private static TBig CircumRadiusSq(T2 a, T2 b, T2 c) => utils.distancesq(CircumCenter(a, b, c), a);
         private static (T2, TBig) CalculateCircumCircle(int i, int j, int k, NativeArray<T2> positions)
         {
@@ -2463,7 +2463,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </summary>
         internal static bool EdgeEdgeIntersection(T2 a0, T2 a1, T2 b0, T2 b1) => ccw(a0, a1, b0) != ccw(a0, a1, b1) && ccw(b0, b1, a0) != ccw(b0, b1, a1);
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
-        private static bool InCircle(T2 a, T2 b, T2 c, T2 p) => utils.inCircle(a, b, c, p);
+        private static bool InCircle(T2 a, T2 b, T2 c, T2 p) => utils.InCircle(a, b, c, p);
         internal static bool IsConvexQuadrilateral(T2 a, T2 b, T2 c, T2 d) => true
             && utils.greater(utils.abs(Orient2dFast(a, c, b)), utils.EPSILON_SQ())
             && utils.greater(utils.abs(Orient2dFast(a, c, d)), utils.EPSILON_SQ())
@@ -2478,7 +2478,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         internal static bool PointLineSegmentIntersection(T2 a, T2 b0, T2 b1) => true
             && utils.le(utils.abs(Orient2dFast(a, b0, b1)), utils.EPSILON_SQ())
             && math.all(utils.ge(a, utils.min(b0, b1)) & utils.le(a, utils.max(b0, b1)));
-        internal static bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c) => utils.pointInsideTriangle(p, a, b, c);
+        internal static bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c) => utils.PointInsideTriangle(p, a, b, c);
     }
 
     internal interface ITransform<TSelf, T, T2, TArea> where T : unmanaged where T2 : unmanaged where TArea : unmanaged
@@ -2758,6 +2758,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T Zero();
         TBig ZeroSq();
         bool SupportsMeshRefinement { get; }
+
+        bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c);
+        bool InCircle(T2 a, T2 b, T2 c, T2 p);
+        T2 CircumCenter(T2 a, T2 b, T2 c);
+
 #pragma warning disable IDE1006
         T abs(T v);
         TBig abs(TBig v);
@@ -2796,9 +2801,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         TBig mul(TBig a, TBig b);
         T neg(T v);
         T2 neg(T2 v);
-        bool pointInsideTriangle(T2 p, T2 a, T2 b, T2 c);
-        bool inCircle(T2 a, T2 b, T2 c, T2 p);
-        T2 circumCenter(T2 a, T2 b, T2 c);
 #pragma warning restore IDE1006
     }
 
@@ -2819,6 +2821,52 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float Zero() => 0;
         public readonly float ZeroSq() => 0;
         public readonly bool SupportsMeshRefinement => true;
+
+        static float cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
+
+        public readonly bool PointInsideTriangle(float2 p, float2 a, float2 b, float2 c) {
+            float3 Barycentric(float2 a, float2 b, float2 c, float2 p) {
+                var (v0, v1, v2) = (b - a, c - a, p - a);
+                var denInv = 1 / cross(v0, v1);
+                var v = denInv * cross(v2, v1);
+                var w = denInv * cross(v0, v2);
+                var u = 1.0f - v - w;
+                return new float3(u, v, w);
+            }
+
+            return math.cmax(-Barycentric(a, b, c, p)) <= 0;;
+        }
+
+        public readonly float2 CircumCenter(float2 a, float2 b, float2 c) {
+            var d = b - a;
+            var e = c - a;
+
+            var bl = math.lengthsq(d);
+            var cl = math.lengthsq(e);
+
+            var d2 = 0.5f / (d.x * e.y - d.y * e.x);
+
+            return a + d2 * (bl * new float2(e.y, -e.x) + cl * new float2(-d.y, d.x));
+        }
+
+        public readonly bool InCircle(float2 a, float2 b, float2 c, float2 p)
+        {
+            var dx = a.x - p.x;
+            var dy = a.y - p.y;
+            var ex = b.x - p.x;
+            var ey = b.y - p.y;
+            var fx = c.x - p.x;
+            var fy = c.y - p.y;
+
+            var ap = dx * dx + dy * dy;
+            var bp = ex * ex + ey * ey;
+            var cp = fx * fx + fy * fy;
+
+            return dx * (ey * cp - bp * fy) -
+                dy * (ex * cp - bp * fx) +
+                ap * (ex * fy - ey * fx) < 0;
+        }
+
         public readonly float abs(float v) => math.abs(v);
         public readonly float add(float a, float b) => a + b;
         public readonly float alpha(float D, float dSquare, bool initial)
@@ -2862,51 +2910,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float mul(float a, float b) => a * b;
         public readonly float neg(float v) => -v;
         public readonly float2 neg(float2 v) => -v;
-
-        static float cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
-
-        public readonly bool pointInsideTriangle(float2 p, float2 a, float2 b, float2 c) {
-            float3 Barycentric(float2 a, float2 b, float2 c, float2 p) {
-                var (v0, v1, v2) = (b - a, c - a, p - a);
-                var denInv = 1 / cross(v0, v1);
-                var v = denInv * cross(v2, v1);
-                var w = denInv * cross(v0, v2);
-                var u = 1.0f - v - w;
-                return new float3(u, v, w);
-            }
-
-            return math.cmax(-Barycentric(a, b, c, p)) <= 0;;
-        }
-
-        public readonly float2 circumCenter(float2 a, float2 b, float2 c) {
-            var d = b - a;
-            var e = c - a;
-
-            var bl = math.lengthsq(d);
-            var cl = math.lengthsq(e);
-
-            var d2 = 0.5f / (d.x * e.y - d.y * e.x);
-
-            return a + d2 * (bl * new float2(e.y, -e.x) + cl * new float2(-d.y, d.x));
-        }
-
-        public readonly bool inCircle(float2 a, float2 b, float2 c, float2 p)
-        {
-            var dx = a.x - p.x;
-            var dy = a.y - p.y;
-            var ex = b.x - p.x;
-            var ey = b.y - p.y;
-            var fx = c.x - p.x;
-            var fy = c.y - p.y;
-
-            var ap = dx * dx + dy * dy;
-            var bp = ex * ex + ey * ey;
-            var cp = fx * fx + fy * fy;
-
-            return dx * (ey * cp - bp * fy) -
-                dy * (ex * cp - bp * fx) +
-                ap * (ex * fy - ey * fx) < 0;
-        }
     }
 
     internal readonly struct DoubleUtils : IUtils<double, double2, double, double>
@@ -2926,6 +2929,52 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double Zero() => 0;
         public readonly double ZeroSq() => 0;
         public readonly bool SupportsMeshRefinement => true;
+
+        static double cross(double2 a, double2 b) => a.x * b.y - a.y * b.x;
+
+        public readonly bool PointInsideTriangle(double2 p, double2 a, double2 b, double2 c) {
+            double3 Barycentric(double2 a, double2 b, double2 c, double2 p) {
+                var (v0, v1, v2) = (b - a, c - a, p - a);
+                var denInv = 1 / cross(v0, v1);
+                var v = denInv * cross(v2, v1);
+                var w = denInv * cross(v0, v2);
+                var u = 1.0f - v - w;
+                return new double3(u, v, w);
+            }
+
+            return math.cmax(-Barycentric(a, b, c, p)) <= 0;;
+        }
+
+        public readonly double2 CircumCenter(double2 a, double2 b, double2 c) {
+            var d = b - a;
+            var e = c - a;
+
+            var bl = math.lengthsq(d);
+            var cl = math.lengthsq(e);
+
+            var d2 = 0.5 / (d.x * e.y - d.y * e.x);
+
+            return a + d2 * (bl * new double2(e.y, -e.x) + cl * new double2(-d.y, d.x));
+        }
+
+        public readonly bool InCircle(double2 a, double2 b, double2 c, double2 p)
+        {
+            var dx = a.x - p.x;
+            var dy = a.y - p.y;
+            var ex = b.x - p.x;
+            var ey = b.y - p.y;
+            var fx = c.x - p.x;
+            var fy = c.y - p.y;
+
+            var ap = dx * dx + dy * dy;
+            var bp = ex * ex + ey * ey;
+            var cp = fx * fx + fy * fy;
+
+            return dx * (ey * cp - bp * fy) -
+                dy * (ex * cp - bp * fx) +
+                ap * (ex * fy - ey * fx) < 0;
+        }
+
         public readonly double abs(double v) => math.abs(v);
         public readonly double add(double a, double b) => a + b;
         public readonly double alpha(double D, double dSquare, bool initial)
@@ -2969,51 +3018,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double mul(double a, double b) => a * b;
         public readonly double neg(double v) => -v;
         public readonly double2 neg(double2 v) => -v;
-
-        static double cross(double2 a, double2 b) => a.x * b.y - a.y * b.x;
-
-        public readonly bool pointInsideTriangle(double2 p, double2 a, double2 b, double2 c) {
-            double3 Barycentric(double2 a, double2 b, double2 c, double2 p) {
-                var (v0, v1, v2) = (b - a, c - a, p - a);
-                var denInv = 1 / cross(v0, v1);
-                var v = denInv * cross(v2, v1);
-                var w = denInv * cross(v0, v2);
-                var u = 1.0f - v - w;
-                return new double3(u, v, w);
-            }
-
-            return math.cmax(-Barycentric(a, b, c, p)) <= 0;;
-        }
-
-        public readonly double2 circumCenter(double2 a, double2 b, double2 c) {
-            var d = b - a;
-            var e = c - a;
-
-            var bl = math.lengthsq(d);
-            var cl = math.lengthsq(e);
-
-            var d2 = 0.5 / (d.x * e.y - d.y * e.x);
-
-            return a + d2 * (bl * new double2(e.y, -e.x) + cl * new double2(-d.y, d.x));
-        }
-
-        public readonly bool inCircle(double2 a, double2 b, double2 c, double2 p)
-        {
-            var dx = a.x - p.x;
-            var dy = a.y - p.y;
-            var ex = b.x - p.x;
-            var ey = b.y - p.y;
-            var fx = c.x - p.x;
-            var fy = c.y - p.y;
-
-            var ap = dx * dx + dy * dy;
-            var bp = ex * ex + ey * ey;
-            var cp = fx * fx + fy * fy;
-
-            return dx * (ey * cp - bp * fy) -
-                dy * (ex * cp - bp * fx) +
-                ap * (ex * fy - ey * fx) < 0;
-        }
     }
 
     internal readonly struct IntUtils : IUtils<int, int2, float, long>
@@ -3033,6 +3037,62 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly int Zero() => 0;
         public readonly long ZeroSq() => 0;
         public readonly bool SupportsMeshRefinement => false;
+
+        public long cross(int2 a, int2 b) => (long)a.x * (long)b.y - (long)a.y * (long)b.x;
+
+        public readonly bool PointInsideTriangle(int2 p, int2 a, int2 b, int2 c) {
+            var check1 = cross(p - a, b - a);
+            var check2 = cross(p - b, c - b);
+            var check3 = cross(p - c, a - c);
+
+            // Allow for both clockwise and counter-clockwise triangle layouts.
+            // TODO: Is this required, or are all triangles guaranteed to be in one orientation only?
+            return (check1 >= 0 & check2 >= 0 & check3 >= 0) | (check1 <= 0 & check2 <= 0 & check3 <= 0);
+        }
+
+        public readonly int2 CircumCenter(int2 a, int2 b, int2 c) {
+            var d = b - a;
+            var e = c - a;
+
+            var bl = (long)d.x*d.x + (long)d.y*d.y;
+            var cl = (long)e.x*e.x + (long)e.y*e.y;
+
+            long div = d.x * e.y - d.y * e.x;
+
+            // If the triangle is degenerate (just a line), then we should return a point at infinity,
+            // because the circumcenter is not well-defined for this case.
+            // Integers do not have infinites, but we can use the maximum value as a substitute.
+            if (div == 0) return new int2(int.MaxValue, int.MaxValue);
+
+            double d2 = 0.5 / (double)div;
+
+            // Note: Doubles can represent all integers up to 2^53 exactly,
+            // so they can represent all int32 coordinates, and thus it is safe to cast here.
+            var p = (double2)a + d2 * (bl * new double2(e.y, -e.x) + cl * new double2(-d.y, d.x));
+
+            return (int2)math.round(p);
+        }
+
+        public readonly bool InCircle(int2 a, int2 b, int2 c, int2 p)
+        {
+            var dx = (long)(a.x - p.x);
+            var dy = (long)(a.y - p.y);
+            var ex = (long)(b.x - p.x);
+            var ey = (long)(b.y - p.y);
+            var fx = (long)(c.x - p.x);
+            var fy = (long)(c.y - p.y);
+
+            var ap = dx * dx + dy * dy;
+            var bp = ex * ex + ey * ey;
+            var cp = fx * fx + fy * fy;
+
+            // TODO: This may fail with coordinates that differ by more than approximately 2^20.
+            // When verifying coordinates, we should thus ensure that the bounding box is smaller than 2^20.
+            return dx * (ey * cp - bp * fy) -
+                dy * (ex * cp - bp * fx) +
+                ap * (ex * fy - ey * fx) < 0;
+        }
+
         public readonly int abs(int v) => math.abs(v);
         public readonly long abs(long v) => math.abs(v);
         public readonly int add(int a, int b) => a + b;
@@ -3091,60 +3151,5 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly long mul(long a, long b) => a * b;
         public readonly int neg(int v) => -v;
         public readonly int2 neg(int2 v) => -v;
-
-        public long cross(int2 a, int2 b) => (long)a.x * (long)b.y - (long)a.y * (long)b.x;
-
-        public readonly bool pointInsideTriangle(int2 p, int2 a, int2 b, int2 c) {
-            var check1 = cross(p - a, b - a);
-            var check2 = cross(p - b, c - b);
-            var check3 = cross(p - c, a - c);
-
-            // Allow for both clockwise and counter-clockwise triangle layouts.
-            // TODO: Is this required, or are all triangles guaranteed to be in one orientation only?
-            return (check1 >= 0 & check2 >= 0 & check3 >= 0) | (check1 <= 0 & check2 <= 0 & check3 <= 0);
-        }
-
-        public readonly int2 circumCenter(int2 a, int2 b, int2 c) {
-            var d = b - a;
-            var e = c - a;
-
-            var bl = (long)d.x*d.x + (long)d.y*d.y;
-            var cl = (long)e.x*e.x + (long)e.y*e.y;
-
-            long div = d.x * e.y - d.y * e.x;
-
-            // If the triangle is degenerate (just a line), then we should return a point at infinity,
-            // because the circumcenter is not well-defined for this case.
-            // Integers do not have infinites, but we can use the maximum value as a substitute.
-            if (div == 0) return new int2(int.MaxValue, int.MaxValue);
-
-            double d2 = 0.5 / (double)div;
-
-            // Note: Doubles can represent all integers up to 2^53 exactly,
-            // so they can represent all int32 coordinates, and thus it is safe to cast here.
-            var p = (double2)a + d2 * (bl * new double2(e.y, -e.x) + cl * new double2(-d.y, d.x));
-
-            return (int2)math.round(p);
-        }
-
-        public readonly bool inCircle(int2 a, int2 b, int2 c, int2 p)
-        {
-            var dx = (long)(a.x - p.x);
-            var dy = (long)(a.y - p.y);
-            var ex = (long)(b.x - p.x);
-            var ey = (long)(b.y - p.y);
-            var fx = (long)(c.x - p.x);
-            var fy = (long)(c.y - p.y);
-
-            var ap = dx * dx + dy * dy;
-            var bp = ex * ex + ey * ey;
-            var cp = fx * fx + fy * fy;
-
-            // TODO: This may fail with coordinates that differ by more than approximately 2^20.
-            // When verifying coordinates, we should thus ensure that the bounding box is smaller than 2^20.
-            return dx * (ey * cp - bp * fy) -
-                dy * (ex * cp - bp * fx) +
-                ap * (ex * fy - ey * fx) < 0;
-        }
     }
 }
