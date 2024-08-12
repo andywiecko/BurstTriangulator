@@ -1,7 +1,6 @@
 using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using Unity.Burst;
 using Unity.Collections;
@@ -255,9 +254,9 @@ namespace andywiecko.BurstTriangulator
             new TriangulationJob<double, double2, double, AffineTransform64, DoubleUtils>(@this).Schedule(dependencies);
 
         public static void Run(this Triangulator<int2> @this) =>
-            new TriangulationJob<int, int2, long, TranslationInt32, IntUtils>(@this).Run();
+            new TriangulationJob<int, int2, long, TranslationInt, IntUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<int2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<int, int2, long, TranslationInt32, IntUtils>(@this).Schedule(dependencies);
+            new TriangulationJob<int, int2, long, TranslationInt, IntUtils>(@this).Schedule(dependencies);
     }
 }
 
@@ -351,7 +350,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
         public static void RefineMesh(this UnsafeTriangulator @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>
-            new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, (float)angleThreshold, (float)concentricShells, constrainBoundary);
+            new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
 
         public static void Triangulate(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().PlantHoleSeeds(input, output, args, allocator);
@@ -361,10 +360,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public static void Triangulate(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
         public static void RefineMesh(this UnsafeTriangulator<double2> @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>
-            new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, (float)angleThreshold, (float)concentricShells, constrainBoundary);
+            new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
 
-        public static void Triangulate(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TranslationInt32, IntUtils>().Triangulate(input, output, args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TranslationInt32, IntUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void Triangulate(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TranslationInt, IntUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TranslationInt, IntUtils>().PlantHoleSeeds(input, output, args, allocator);
     }
 
     [BurstCompile]
@@ -372,7 +371,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         where T : unmanaged, IComparable<T>
         where T2 : unmanaged
         where TBig : unmanaged, IComparable<TBig>
-        where TTransform : unmanaged, ITransform<TTransform, T, T2, TBig>
+        where TTransform : unmanaged, ITransform<TTransform, T, T2>
         where TUtils : unmanaged, IUtils<T, T2, TBig>
     {
         private NativeArray<T2> inputPositions;
@@ -428,7 +427,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         where T : unmanaged, IComparable<T>
         where T2 : unmanaged
         where TBig : unmanaged, IComparable<TBig>
-        where TTransform : unmanaged, ITransform<TTransform, T, T2, TBig>
+        where TTransform : unmanaged, ITransform<TTransform, T, T2>
         where TUtils : unmanaged, IUtils<T, T2, TBig>
     {
         private static readonly TUtils utils = default;
@@ -470,7 +469,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             new PlantingSeedStep(input, output, args).Execute(allocator, true);
         }
 
-        public void RefineMesh(OutputData<T2> output, Allocator allocator, TBig area2Threshold, float angleThreshold, float shells, bool constrainBoundary = false)
+        public void RefineMesh(OutputData<T2> output, Allocator allocator, T area2Threshold, T angleThreshold, T shells, bool constrainBoundary = false)
         {
             new RefineMeshStep(output, area2Threshold, angleThreshold, shells).Execute(allocator, refineMesh: true, constrainBoundary);
         }
@@ -736,7 +735,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 hullStart = int.MaxValue;
                 c = utils.MaxValue2();
                 verbose = args.Verbose;
-                // TODO: Use a power of two and bitwise AND to improve performance
                 hashSize = (int)math.ceil(math.sqrt(positions.Length));
                 trianglesLen = default;
 
@@ -783,7 +781,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var center = utils.avg(min, max);
 
                 int i0 = int.MaxValue, i1 = int.MaxValue, i2 = int.MaxValue;
-                var minDistSq = utils.MaxDistSq();
+                var minDistSq = utils.MaxValue();
                 for (int i = 0; i < positions.Length; i++)
                 {
                     var distSq = utils.distancesq(center, positions[i]);
@@ -797,7 +795,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 // Centermost vertex
                 var p0 = positions[i0];
 
-                minDistSq = utils.MaxDistSq();
+                minDistSq = utils.MaxValue();
                 for (int i = 0; i < positions.Length; i++)
                 {
                     if (i == i0) continue;
@@ -812,16 +810,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 // Second closest to the center
                 var p1 = positions[i1];
 
-                var minRadiusSq = utils.MaxDistSq();
+                var minRadius = utils.MaxValue();
                 for (int i = 0; i < positions.Length; i++)
                 {
                     if (i == i0 || i == i1) continue;
                     var p = positions[i];
                     var r = CircumRadiusSq(p0, p1, p);
-                    if (utils.less(r, minRadiusSq))
+                    if (utils.less(r, minRadius))
                     {
                         i2 = i;
-                        minRadiusSq = r;
+                        minRadius = r;
                     }
                 }
 
@@ -830,7 +828,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 // are no other vertices inside this triangle.
                 var p2 = positions[i2];
 
-                if (minRadiusSq.CompareTo(utils.MaxDistSq()) == 0)
+                if (minRadius.CompareTo(utils.MaxValue()) == 0)
                 {
                     if (verbose)
                     {
@@ -848,7 +846,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 // Sort all other vertices by their distance to the circumcenter of the initial triangle
-                c = CircumCenter(p0, p1, p2);
+                c = utils.CircumCenter(p0, p1, p2);
                 for (int i = 0; i < positions.Length; i++)
                 {
                     dists[i] = utils.distancesq(c, positions[i]);
@@ -882,9 +880,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                     // Find a visible edge on the convex hull using edge hash
                     var start = 0;
-                    var key = utils.hashkey(p, c, hashSize);
                     for (var j = 0; j < hashSize; j++)
                     {
+                        var key = utils.hashkey(p, c, hashSize);
                         start = hullHash[(key + j) % hashSize];
                         if (start != -1 && start != hullNext[start]) break;
                     }
@@ -1009,7 +1007,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var pl = triangles[al];
                     var p1 = triangles[bl];
 
-                    var illegal = InCircle(positions[p0], positions[pr], positions[pl], positions[p1]);
+                    var illegal = utils.InCircle(positions[p0], positions[pr], positions[pl], positions[p1]);
 
                     if (illegal)
                     {
@@ -1606,7 +1604,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 {
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     var (a, b, c) = (positions[i], positions[j], positions[k]);
-                    if (PointInsideTriangle(p, a, b, c))
+                    if (utils.PointInsideTriangle(p, a, b, c))
                     {
                         return tId;
                     }
@@ -1745,10 +1743,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private readonly struct Circle
             {
                 public readonly T2 Center;
-                public readonly TBig RadiusSq;
+                public readonly T RadiusSq;
                 private readonly T offset;
-                public Circle(T2 center, TBig radiusSq) => (Center, RadiusSq, offset) = (center, radiusSq, default);
-                public Circle((T2 center, TBig radiusSq) circle) => (Center, RadiusSq, offset) = (circle.center, circle.radiusSq, default);
+                public Circle(T2 center, T radiusSq) => (Center, RadiusSq, offset) = (center, radiusSq, default);
+                public Circle((T2 center, T radiusSq) circle) => (Center, RadiusSq, offset) = (circle.center, circle.radiusSq, default);
             }
 
             private NativeReference<Status> status;
@@ -1764,18 +1762,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<int> pathHalfedges;
             private NativeList<bool> visitedTriangles;
 
-            private readonly TBig maximumArea2;
-            private readonly float shells;
-            private readonly float angleThreshold;
+            private readonly T maximumArea2, angleThreshold, shells;
             private readonly int initialPointsCount;
 
             public RefineMeshStep(OutputData<T2> output, Args args, TTransform lt) : this(output,
-                area2Threshold: utils.mul(utils.ConstTBig(2), lt.TransformArea(utils.ConstTBig(args.RefinementThresholdArea))),
-                angleThreshold: args.RefinementThresholdAngle,
-                shells: args.ConcentricShellsParameter)
+                area2Threshold: utils.Cast(utils.mul(utils.Cast(utils.mul(utils.Const(2), utils.Const(args.RefinementThresholdArea))), lt.AreaScalingFactor)),
+                angleThreshold: utils.Const(args.RefinementThresholdAngle),
+                shells: utils.Const(args.ConcentricShellsParameter))
             { }
 
-            public RefineMeshStep(OutputData<T2> output, TBig area2Threshold, float angleThreshold, float shells)
+            public RefineMeshStep(OutputData<T2> output, T area2Threshold, T angleThreshold, T shells)
             {
                 status = output.Status;
                 initialPointsCount = output.Positions.Length;
@@ -1804,7 +1800,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     return;
                 }
 
-                if (!utils.SupportsMeshRefinement) {
+                if (!utils.SupportRefinement())
+                {
                     Debug.LogError("Mesh refinement is not supported for this coordinate type.");
                     status.Value |= Status.ERR;
                     return;
@@ -1888,7 +1885,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var p1 = outputPositions[triangles[he1]];
                 var p2 = outputPositions[triangles[he2]];
 
-                return utils.le(utils.dot(utils.diff(p0, p2), utils.diff(p1, p2)), utils.ZeroTBig());
+                return utils.le(utils.dot(utils.diff(p0, p2), utils.diff(p1, p2)), utils.Zero());
             }
 
             private void SplitEdge(int he, NativeList<int> heQueue, NativeList<int> tQueue)
@@ -1908,7 +1905,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 else
                 {
-                    p = utils.PickPointOnConcentricShell(D: shells, e0, e1, i < initialPointsCount);
+                    var alpha = utils.alpha(D: shells, dSquare: utils.Cast(utils.distancesq(e0, e1)), i < initialPointsCount);
+                    p = utils.lerp(e0, e1, alpha);
                 }
 
                 constrainedHalfedges[he] = false;
@@ -2014,7 +2012,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     if (halfedges[he] == -1 || i < j)
                     {
                         var (p0, p1) = (outputPositions[i], outputPositions[j]);
-                        if (utils.le(utils.dot(utils.diff(p0, c.Center), utils.diff(p1, c.Center)), utils.ZeroTBig()))
+                        if (utils.le(utils.dot(utils.diff(p0, c.Center), utils.diff(p1, c.Center)), utils.Zero()))
                         {
                             edges.Add(he);
                         }
@@ -2048,11 +2046,22 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private bool AngleIsTooSmall(int tId, float minimumAngle)
+            private bool AngleIsTooSmall(int tId, T minimumAngle)
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 var (pA, pB, pC) = (outputPositions[i], outputPositions[j], outputPositions[k]);
-                return utils.SmallestInnerAngleIsBelowThreshold(pA, pB, pC, minimumAngle);
+
+                var pAB = utils.diff(pB, pA);
+                var pBC = utils.diff(pC, pB);
+                var pCA = utils.diff(pA, pC);
+
+                // TODO: Can be done faster using dot products
+                return utils.anyabslessthan(
+                    a: Angle(pAB, utils.neg(pCA)),
+                    b: Angle(pBC, utils.neg(pAB)),
+                    c: Angle(pCA, utils.neg(pBC)),
+                    v: minimumAngle
+                );
             }
 
             private int UnsafeInsertPointCommon(T2 p, int initTriangle)
@@ -2117,7 +2126,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 var circle = circles[otherId];
-                if (utils.le(utils.distancesq(circle.Center, p), circle.RadiusSq))
+                if (utils.le(utils.Cast(utils.distancesq(circle.Center, p)), circle.RadiusSq))
                 {
                     badTriangles.Add(otherId);
                     trianglesQueue.Enqueue(otherId);
@@ -2420,34 +2429,26 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
         }
 
-        internal static TBig Area2(T2 a, T2 b, T2 c) => utils.abs(Cross(utils.diff(b, a), utils.diff(c, a)));
-        private static TBig Cross(T2 a, T2 b) => utils.diff(utils.mul(utils.X(a), utils.Y(b)), utils.mul(utils.Y(a), utils.X(b)));
-        private static T2 CircumCenter(T2 a, T2 b, T2 c) => utils.CircumCenter(a,b,c);
-        private static TBig CircumRadiusSq(T2 a, T2 b, T2 c) => utils.distancesq(CircumCenter(a, b, c), a);
-        private static (T2, TBig) CalculateCircumCircle(int i, int j, int k, NativeArray<T2> positions)
+        internal static T Angle(T2 a, T2 b) => utils.atan2(Cross(a, b), utils.dot(a, b));
+        internal static T Area2(T2 a, T2 b, T2 c) => utils.abs(Cross(utils.diff(b, a), utils.diff(c, a)));
+        private static T Cross(T2 a, T2 b) => utils.Cast(utils.diff(utils.mul(utils.X(a), utils.Y(b)), utils.mul(utils.Y(a), utils.X(b))));
+        private static TBig CircumRadiusSq(T2 a, T2 b, T2 c) => utils.distancesq(utils.CircumCenter(a, b, c), a);
+        private static (T2, T) CalculateCircumCircle(int i, int j, int k, NativeArray<T2> positions)
         {
             var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
-            return (CircumCenter(pA, pB, pC), CircumRadiusSq(pA, pB, pC));
+            return (utils.CircumCenter(pA, pB, pC), utils.Cast(CircumRadiusSq(pA, pB, pC)));
         }
         private static bool ccw(T2 a, T2 b, T2 c) => utils.greater(
             utils.mul(utils.diff(utils.Y(c), utils.Y(a)), utils.diff(utils.X(b), utils.X(a))),
             utils.mul(utils.diff(utils.Y(b), utils.Y(a)), utils.diff(utils.X(c), utils.X(a)))
         );
-
-        /// <summary>
-        /// True if the edge (a0, a1) intersects the edge (b0, b1).
-        ///
-        /// Colinear edges will not be considered as intersecting.
-        /// Intersections only at the endpoints will not be considered as intersecting.
-        /// </summary>
         internal static bool EdgeEdgeIntersection(T2 a0, T2 a1, T2 b0, T2 b1) => ccw(a0, a1, b0) != ccw(a0, a1, b1) && ccw(b0, b1, a0) != ccw(b0, b1, a1);
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
-        private static bool InCircle(T2 a, T2 b, T2 c, T2 p) => utils.InCircle(a, b, c, p);
         internal static bool IsConvexQuadrilateral(T2 a, T2 b, T2 c, T2 d) => true
-            && utils.greater(utils.abs(Orient2dFast(a, c, b)), utils.EPSILON_TBIG())
-            && utils.greater(utils.abs(Orient2dFast(a, c, d)), utils.EPSILON_TBIG())
-            && utils.greater(utils.abs(Orient2dFast(b, d, a)), utils.EPSILON_TBIG())
-            && utils.greater(utils.abs(Orient2dFast(b, d, c)), utils.EPSILON_TBIG())
+            && utils.greater(utils.abs(Orient2dFast(a, c, b)), utils.EPSILON())
+            && utils.greater(utils.abs(Orient2dFast(a, c, d)), utils.EPSILON())
+            && utils.greater(utils.abs(Orient2dFast(b, d, a)), utils.EPSILON())
+            && utils.greater(utils.abs(Orient2dFast(b, d, c)), utils.EPSILON())
             && EdgeEdgeIntersection(a, c, b, d)
         ;
         private static TBig Orient2dFast(T2 a, T2 b, T2 c) => utils.diff(
@@ -2455,22 +2456,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             utils.mul(utils.diff(utils.X(a), utils.X(c)), utils.diff(utils.Y(b), utils.Y(c)))
         );
         internal static bool PointLineSegmentIntersection(T2 a, T2 b0, T2 b1) => true
-            && utils.le(utils.abs(Orient2dFast(a, b0, b1)), utils.EPSILON_TBIG())
+            && utils.le(utils.abs(Orient2dFast(a, b0, b1)), utils.EPSILON())
             && math.all(utils.ge(a, utils.min(b0, b1)) & utils.le(a, utils.max(b0, b1)));
-        internal static bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c) => utils.PointInsideTriangle(p, a, b, c);
     }
 
-    internal interface ITransform<TSelf, T, T2, TArea> where T : unmanaged where T2 : unmanaged where TArea : unmanaged
+    internal interface ITransform<TSelf, T, T2> where T : unmanaged where T2 : unmanaged
     {
+        T AreaScalingFactor { get; }
         TSelf Identity { get; }
         TSelf Inverse();
-        TArea TransformArea(TArea area);
         T2 Transform(T2 point);
         TSelf CalculatePCATransformation(NativeArray<T2> positions);
         TSelf CalculateLocalTransformation(NativeArray<T2> positions);
     }
 
-    internal readonly struct AffineTransform32 : ITransform<AffineTransform32, float, float2, float>
+    internal readonly struct AffineTransform32 : ITransform<AffineTransform32, float, float2>
     {
         public readonly AffineTransform32 Identity => new(float2x2.identity, float2.zero);
         public readonly float AreaScalingFactor => math.abs(math.determinant(rotScale));
@@ -2489,7 +2489,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public AffineTransform32 Inverse() => new(math.inverse(rotScale), math.mul(rotScale, -translation));
         public float2 Transform(float2 point) => math.mul(rotScale, point + translation);
-        public float TransformArea(float area) => area * AreaScalingFactor;
 
         public readonly AffineTransform32 CalculatePCATransformation(NativeArray<float2> positions)
         {
@@ -2565,7 +2564,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         private static float2x2 Kron(float2 a, float2 b) => math.float2x2(a * b[0], a * b[1]);
     }
 
-    internal readonly struct AffineTransform64 : ITransform<AffineTransform64, double, double2, double>
+    internal readonly struct AffineTransform64 : ITransform<AffineTransform64, double, double2>
     {
         public readonly AffineTransform64 Identity => new(double2x2.identity, double2.zero);
         public readonly double AreaScalingFactor => math.abs(math.determinant(rotScale));
@@ -2584,7 +2583,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public AffineTransform64 Inverse() => new(math.inverse(rotScale), math.mul(rotScale, -translation));
         public double2 Transform(double2 point) => math.mul(rotScale, point + translation);
-        public double TransformArea(double area) => area * AreaScalingFactor;
 
         public readonly AffineTransform64 CalculatePCATransformation(NativeArray<double2> positions)
         {
@@ -2660,29 +2658,17 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         private static double2x2 Kron(double2 a, double2 b) => math.double2x2(a * b[0], a * b[1]);
     }
 
-    internal readonly struct TranslationInt32 : ITransform<TranslationInt32, int, int2, long>
+    internal readonly struct TranslationInt : ITransform<TranslationInt, int, int2>
     {
-        public readonly TranslationInt32 Identity => new(int2.zero);
-        public readonly long AreaScalingFactor => 1;
-
+        public readonly TranslationInt Identity => new(int2.zero);
+        public readonly int AreaScalingFactor => 1;
         private readonly int2 translation;
-
-        public TranslationInt32(int2 translation) => this.translation = translation;
-        private static TranslationInt32 Translate(int2 offset) => new(offset);
-        public static TranslationInt32 operator *(TranslationInt32 lhs, TranslationInt32 rhs) => new(
-            lhs.translation + rhs.translation
-        );
-
-        public TranslationInt32 Inverse() => new(-translation);
+        public TranslationInt(int2 translation) => this.translation = translation;
+        public TranslationInt Inverse() => new(-translation);
         public int2 Transform(int2 point) => point + translation;
-        public long TransformArea(long area) => area * AreaScalingFactor;
+        public readonly TranslationInt CalculatePCATransformation(NativeArray<int2> positions) => throw new NotImplementedException();
 
-        public readonly TranslationInt32 CalculatePCATransformation(NativeArray<int2> positions)
-        {
-            throw new NotImplementedException("PCA is not implemented for integer coordinates.");
-        }
-
-        public readonly TranslationInt32 CalculateLocalTransformation(NativeArray<int2> positions)
+        public readonly TranslationInt CalculateLocalTransformation(NativeArray<int2> positions)
         {
             int2 min = int.MaxValue, max = int.MinValue, com = 0;
             foreach (var p in positions)
@@ -2692,103 +2678,61 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 com += p;
             }
 
-            com /= positions.Length;
-            // Note: For integer coordinates we only translate points to the origin, but do not scale them.
-            return Translate(-com);
+            return new(-com / positions.Length);
         }
     }
 
     internal interface IUtils<T, T2, TBig> where T : unmanaged where T2 : unmanaged where TBig : unmanaged
     {
-        /// <summary>
-        /// Converts a value to type TBig.
-        ///
-        /// Warning: This may cause loss of precision, and is only safe for (not huge) integer constants.
-        /// </summary>
-        TBig ConstTBig(float v);
-        TBig EPSILON_TBIG();
-        T MaxValue();
+        T Cast(TBig v);
+        T2 CircumCenter(T2 a, T2 b, T2 c);
+        T Const(float v);
+        TBig EPSILON();
+        bool InCircle(T2 a, T2 b, T2 c, T2 p);
+        TBig MaxValue();
         T2 MaxValue2();
-        TBig MaxDistSq();
         T2 MinValue2();
+        bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c);
+        bool SupportRefinement();
         T X(T2 v);
         T Y(T2 v);
+        T Zero();
         TBig ZeroTBig();
-        bool SupportsMeshRefinement { get; }
-
-        bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c);
-        bool InCircle(T2 a, T2 b, T2 c, T2 p);
-        T2 CircumCenter(T2 a, T2 b, T2 c);
-
 #pragma warning disable IDE1006
         T abs(T v);
         TBig abs(TBig v);
-        T add(T a, T b);
-        TBig add(TBig a, TBig b);
-
-        /// <summary>
-        /// Picks the closest point to e2 on a set of concentric rings around e1 with radii D*2^k for all integers k.
-        ///
-        /// D is a float for all coordinate types (even when using doubles), because the precision
-        /// of it is not important for the algorithm, and this avoids us having to introduce yet another generic type parameter.
-        /// </summary>
-        /// <param name="initial"/>If true, then e1 and e2 are swapped</param>
-        T2 PickPointOnConcentricShell(float D, T2 e1, T2 e2, bool initial);
-
-        bool SmallestInnerAngleIsBelowThreshold(T2 a, T2 b, T2 c, float angle);
+        T alpha(T D, T dSquare, bool initial);
+        bool anyabslessthan(T a, T b, T c, T v);
+        T atan2(T v, T w);
         T2 avg(T2 a, T2 b);
         T diff(T a, T b);
         TBig diff(TBig a, TBig b);
         T2 diff(T2 a, T2 b);
         TBig distancesq(T2 a, T2 b);
-        TBig dot(T2 a, T2 b);
-        bool eq(T v, T w);
+        T dot(T2 a, T2 b);
         bool2 eq(T2 v, T2 w);
         bool2 ge(T2 a, T2 b);
         bool greater(T a, T b);
         bool greater(TBig a, TBig b);
         int hashkey(T2 p, T2 c, int hashSize);
         bool2 isfinite(T2 v);
-        bool2 le(T2 a, T2 b);
+        bool le(T a, T b);
         bool le(TBig a, TBig b);
-        bool less(T a, T b);
+        bool2 le(T2 a, T2 b);
+        T2 lerp(T2 a, T2 b, T v);
         bool less(TBig a, TBig b);
         T2 max(T2 v, T2 w);
         T2 min(T2 v, T2 w);
         TBig mul(T a, T b);
-        TBig mul(TBig a, TBig b);
+        T2 neg(T2 v);
 #pragma warning restore IDE1006
     }
 
     internal readonly struct FloatUtils : IUtils<float, float2, float>
     {
-        public readonly float ConstTBig(float v) => v;
-        public readonly float EPSILON_TBIG() => math.EPSILON;
-        public readonly float MaxValue() => float.MaxValue;
-        public readonly float2 MaxValue2() => float.MaxValue;
-        public readonly float MaxDistSq() => float.MaxValue;
-        public readonly float2 MinValue2() => float.MinValue;
-        public readonly float X(float2 a) => a.x;
-        public readonly float Y(float2 a) => a.y;
-        public readonly float ZeroTBig() => 0;
-        public readonly bool SupportsMeshRefinement => true;
-
-        static float cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
-
-        public readonly bool PointInsideTriangle(float2 p, float2 a, float2 b, float2 c) {
-            float3 bar(float2 a, float2 b, float2 c, float2 p) {
-                var (v0, v1, v2) = (b - a, c - a, p - a);
-                var denInv = 1 / cross(v0, v1);
-                var v = denInv * cross(v2, v1);
-                var w = denInv * cross(v0, v2);
-                var u = 1.0f - v - w;
-                return new float3(u, v, w);
-            }
-
-            return math.cmax(-bar(a, b, c, p)) <= 0;;
-        }
-
-        public readonly float2 CircumCenter(float2 a, float2 b, float2 c) {
+        public readonly float Cast(float v) => v;
+        public readonly float2 CircumCenter(float2 a, float2 b, float2 c)
+        {
             var d = b - a;
             var e = c - a;
 
@@ -2797,9 +2741,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             var d2 = 0.5f / (d.x * e.y - d.y * e.x);
 
-            return a + d2 * (bl * new float2(e.y, -e.x) + cl * new float2(-d.y, d.x));
+            return a + d2 * (bl * math.float2(e.y, -e.x) + cl * math.float2(-d.y, d.x));
         }
-
+        public readonly float Const(float v) => v;
+        public readonly float EPSILON() => math.EPSILON;
         public readonly bool InCircle(float2 a, float2 b, float2 c, float2 p)
         {
             var dx = a.x - p.x;
@@ -2813,38 +2758,46 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var bp = ex * ex + ey * ey;
             var cp = fx * fx + fy * fy;
 
-            return dx * (ey * cp - bp * fy) -
-                dy * (ex * cp - bp * fx) +
-                ap * (ex * fy - ey * fx) < 0;
+            return dx * (ey * cp - bp * fy) - dy * (ex * cp - bp * fx) + ap * (ex * fy - ey * fx) < 0;
         }
+        public readonly float MaxValue() => float.MaxValue;
+        public readonly float2 MaxValue2() => float.MaxValue;
+        public readonly float2 MinValue2() => float.MinValue;
+        public readonly bool PointInsideTriangle(float2 p, float2 a, float2 b, float2 c)
+        {
+            static float cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
+            static float3 bar(float2 a, float2 b, float2 c, float2 p)
+            {
+                var (v0, v1, v2) = (b - a, c - a, p - a);
+                var denInv = 1 / cross(v0, v1);
+                var v = denInv * cross(v2, v1);
+                var w = denInv * cross(v0, v2);
+                var u = 1.0f - v - w;
+                return new(u, v, w);
+            }
 
-        public readonly float2 PickPointOnConcentricShell(float D, float2 e1, float2 e2, bool initial) {
-            var d = math.distance(e1, e2);
+            return math.cmax(-bar(a, b, c, p)) <= 0;
+        }
+        public readonly bool SupportRefinement() => true;
+        public readonly float X(float2 a) => a.x;
+        public readonly float Y(float2 a) => a.y;
+        public readonly float Zero() => 0;
+        public readonly float ZeroTBig() => 0;
+        public readonly float abs(float v) => math.abs(v);
+        public readonly float alpha(float D, float dSquare, bool initial)
+        {
+            var d = math.sqrt(dSquare);
             var k = (int)math.round(math.log2(0.5f * d / D));
             var alpha = D / d * (1 << k);
-            alpha = initial ? alpha : 1 - alpha;
-            return math.lerp(e1, e2, alpha);
+            return initial ? alpha : 1 - alpha;
         }
-
-        public readonly bool SmallestInnerAngleIsBelowThreshold(float2 a, float2 b, float2 c, float angle) {
-            float Cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
-            float Angle(float2 a, float2 b) => math.atan2(Cross(a, b), math.dot(a, b));
-
-            var pAB = b - a;
-            var pBC = c - b;
-            var pCA = a - c;
-            return math.abs(Angle(pAB, -pCA)) < angle || math.abs(Angle(pBC, -pAB)) < angle || math.abs(Angle(pCA, -pBC)) < angle;
-        }
-
-        public readonly float abs(float v) => math.abs(v);
-        public readonly float add(float a, float b) => a + b;
-
+        public readonly bool anyabslessthan(float a, float b, float c, float v) => math.any(math.abs(math.float3(a, b, c)) < v);
+        public readonly float atan2(float a, float b) => math.atan2(a, b);
         public readonly float2 avg(float2 a, float2 b) => 0.5f * (a + b);
         public readonly float diff(float a, float b) => a - b;
         public readonly float2 diff(float2 a, float2 b) => a - b;
         public readonly float distancesq(float2 a, float2 b) => math.distancesq(a, b);
         public readonly float dot(float2 a, float2 b) => math.dot(a, b);
-        public readonly bool eq(float v, float w) => v == w;
         public readonly bool2 eq(float2 v, float2 w) => v == w;
         public readonly bool2 ge(float2 a, float2 b) => a >= b;
         public readonly bool greater(float a, float b) => a > b;
@@ -2861,41 +2814,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly bool2 isfinite(float2 v) => math.isfinite(v);
         public readonly bool le(float a, float b) => a <= b;
         public readonly bool2 le(float2 a, float2 b) => a <= b;
+        public readonly float2 lerp(float2 a, float2 b, float v) => math.lerp(a, b, v);
         public readonly bool less(float a, float b) => a < b;
         public readonly float2 max(float2 v, float2 w) => math.max(v, w);
         public readonly float2 min(float2 v, float2 w) => math.min(v, w);
         public readonly float mul(float a, float b) => a * b;
+        public readonly float2 neg(float2 v) => -v;
     }
 
     internal readonly struct DoubleUtils : IUtils<double, double2, double>
     {
-        public readonly double ConstTBig(float v) => v;
-        public readonly double EPSILON_TBIG() => math.EPSILON_DBL;
-        public readonly double MaxValue() => double.MaxValue;
-        public readonly double2 MaxValue2() => double.MaxValue;
-        public readonly double MaxDistSq() => double.MaxValue;
-        public readonly double2 MinValue2() => double.MinValue;
-        public readonly double X(double2 a) => a.x;
-        public readonly double Y(double2 a) => a.y;
-        public readonly double ZeroTBig() => 0;
-        public readonly bool SupportsMeshRefinement => true;
-
-        static double cross(double2 a, double2 b) => a.x * b.y - a.y * b.x;
-
-        public readonly bool PointInsideTriangle(double2 p, double2 a, double2 b, double2 c) {
-            double3 Barycentric(double2 a, double2 b, double2 c, double2 p) {
-                var (v0, v1, v2) = (b - a, c - a, p - a);
-                var denInv = 1 / cross(v0, v1);
-                var v = denInv * cross(v2, v1);
-                var w = denInv * cross(v0, v2);
-                var u = 1.0f - v - w;
-                return new double3(u, v, w);
-            }
-
-            return math.cmax(-Barycentric(a, b, c, p)) <= 0;;
-        }
-
-        public readonly double2 CircumCenter(double2 a, double2 b, double2 c) {
+        public readonly double Cast(double v) => v;
+        public readonly double2 CircumCenter(double2 a, double2 b, double2 c)
+        {
             var d = b - a;
             var e = c - a;
 
@@ -2904,9 +2835,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             var d2 = 0.5 / (d.x * e.y - d.y * e.x);
 
-            return a + d2 * (bl * new double2(e.y, -e.x) + cl * new double2(-d.y, d.x));
+            return a + d2 * (bl * math.double2(e.y, -e.x) + cl * math.double2(-d.y, d.x));
         }
-
+        public readonly double Const(float v) => v;
+        public readonly double EPSILON() => math.EPSILON_DBL;
         public readonly bool InCircle(double2 a, double2 b, double2 c, double2 p)
         {
             var dx = a.x - p.x;
@@ -2920,37 +2852,46 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var bp = ex * ex + ey * ey;
             var cp = fx * fx + fy * fy;
 
-            return dx * (ey * cp - bp * fy) -
-                dy * (ex * cp - bp * fx) +
-                ap * (ex * fy - ey * fx) < 0;
+            return dx * (ey * cp - bp * fy) - dy * (ex * cp - bp * fx) + ap * (ex * fy - ey * fx) < 0;
         }
+        public readonly double MaxValue() => double.MaxValue;
+        public readonly double2 MaxValue2() => double.MaxValue;
+        public readonly double2 MinValue2() => double.MinValue;
+        public readonly bool PointInsideTriangle(double2 p, double2 a, double2 b, double2 c)
+        {
+            static double cross(double2 a, double2 b) => a.x * b.y - a.y * b.x;
+            static double3 bar(double2 a, double2 b, double2 c, double2 p)
+            {
+                var (v0, v1, v2) = (b - a, c - a, p - a);
+                var denInv = 1 / cross(v0, v1);
+                var v = denInv * cross(v2, v1);
+                var w = denInv * cross(v0, v2);
+                var u = 1 - v - w;
+                return new(u, v, w);
+            }
 
-        public readonly double2 PickPointOnConcentricShell(float D, double2 e1, double2 e2, bool initial) {
-            var d = math.distance(e1, e2);
-            var k = (int)math.round(math.log2(0.5 * d / D));
-            var alpha = D / d * (1 << k);
-            alpha = initial ? alpha : 1 - alpha;
-            return math.lerp(e1, e2, alpha);
+            return math.cmax(-bar(a, b, c, p)) <= 0;
         }
-
-        public readonly bool SmallestInnerAngleIsBelowThreshold(double2 a, double2 b, double2 c, float angle) {
-            double Cross(double2 a, double2 b) => a.x * b.y - a.y * b.x;
-            double Angle(double2 a, double2 b) => math.atan2(Cross(a, b), math.dot(a, b));
-
-            var pAB = b - a;
-            var pBC = c - b;
-            var pCA = a - c;
-            return math.abs(Angle(pAB, -pCA)) < angle || math.abs(Angle(pBC, -pAB)) < angle || math.abs(Angle(pCA, -pBC)) < angle;
-        }
-
+        public readonly bool SupportRefinement() => true;
+        public readonly double X(double2 a) => a.x;
+        public readonly double Y(double2 a) => a.y;
+        public readonly double Zero() => 0;
+        public readonly double ZeroTBig() => 0;
         public readonly double abs(double v) => math.abs(v);
-        public readonly double add(double a, double b) => a + b;
+        public readonly double alpha(double D, double dSquare, bool initial)
+        {
+            var d = math.sqrt(dSquare);
+            var k = (int)math.round(math.log2(0.5f * d / D));
+            var alpha = D / d * (1 << k);
+            return initial ? alpha : 1 - alpha;
+        }
+        public readonly bool anyabslessthan(double a, double b, double c, double v) => math.any(math.abs(math.double3(a, b, c)) < v);
+        public readonly double atan2(double a, double b) => math.atan2(a, b);
         public readonly double2 avg(double2 a, double2 b) => 0.5f * (a + b);
         public readonly double diff(double a, double b) => a - b;
         public readonly double2 diff(double2 a, double2 b) => a - b;
         public readonly double distancesq(double2 a, double2 b) => math.distancesq(a, b);
         public readonly double dot(double2 a, double2 b) => math.dot(a, b);
-        public readonly bool eq(double v, double w) => v == w;
         public readonly bool2 eq(double2 v, double2 w) => v == w;
         public readonly bool2 ge(double2 a, double2 b) => a >= b;
         public readonly bool greater(double a, double b) => a > b;
@@ -2967,60 +2908,31 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly bool2 isfinite(double2 v) => math.isfinite(v);
         public readonly bool le(double a, double b) => a <= b;
         public readonly bool2 le(double2 a, double2 b) => a <= b;
+        public readonly double2 lerp(double2 a, double2 b, double v) => math.lerp(a, b, v);
         public readonly bool less(double a, double b) => a < b;
         public readonly double2 max(double2 v, double2 w) => math.max(v, w);
         public readonly double2 min(double2 v, double2 w) => math.min(v, w);
         public readonly double mul(double a, double b) => a * b;
+        public readonly double2 neg(double2 v) => -v;
     }
 
     internal readonly struct IntUtils : IUtils<int, int2, long>
     {
-        public readonly long ConstTBig(float v) => (long)v;
-        public readonly long EPSILON_TBIG() => 0;
-        public readonly int MaxValue() => int.MaxValue;
-        public readonly int2 MaxValue2() => int.MaxValue;
-        public readonly long MaxDistSq() => long.MaxValue;
-        public readonly int2 MinValue2() => int.MinValue;
-        public readonly int X(int2 a) => a.x;
-        public readonly int Y(int2 a) => a.y;
-        public readonly long ZeroTBig() => 0;
-        public readonly bool SupportsMeshRefinement => false;
-
-        public long cross(int2 a, int2 b) => (long)a.x * (long)b.y - (long)a.y * (long)b.x;
-
-        public readonly bool PointInsideTriangle(int2 p, int2 a, int2 b, int2 c) {
-            var check1 = cross(p - a, b - a);
-            var check2 = cross(p - b, c - b);
-            var check3 = cross(p - c, a - c);
-
-            // Allow for both clockwise and counter-clockwise triangle layouts.
-            // TODO: Is this required, or are all triangles guaranteed to be in one orientation only?
-            return (check1 >= 0 & check2 >= 0 & check3 >= 0) | (check1 <= 0 & check2 <= 0 & check3 <= 0);
-        }
-
-        public readonly int2 CircumCenter(int2 a, int2 b, int2 c) {
+        public readonly int Cast(long v) => (int)v;
+        public readonly int2 CircumCenter(int2 a, int2 b, int2 c)
+        {
             var d = b - a;
             var e = c - a;
 
-            var bl = (long)d.x*d.x + (long)d.y*d.y;
-            var cl = (long)e.x*e.x + (long)e.y*e.y;
+            var bl = (long)d.x * d.x + (long)d.y * d.y;
+            var cl = (long)e.x * e.x + (long)e.y * e.y;
 
-            long div = d.x * e.y - d.y * e.x;
+            var div = (long)d.x * e.y - (long)d.y * e.x;
 
-            // If the triangle is degenerate (just a line), then we should return a point at infinity,
-            // because the circumcenter is not well-defined for this case.
-            // Integers do not have infinites, but we can use the maximum value as a substitute.
-            if (div == 0) return new int2(int.MaxValue, int.MaxValue);
-
-            double d2 = 0.5 / (double)div;
-
-            // Note: Doubles can represent all integers up to 2^53 exactly,
-            // so they can represent all int32 coordinates, and thus it is safe to cast here.
-            var p = (double2)a + d2 * (bl * new double2(e.y, -e.x) + cl * new double2(-d.y, d.x));
-
-            return (int2)math.round(p);
+            return div == 0 ? new(int.MaxValue) : (int2)math.round(a + (0.5 / div) * (bl * math.double2(e.y, -e.x) + cl * math.double2(-d.y, d.x)));
         }
-
+        public readonly int Const(float v) => (int)v;
+        public readonly long EPSILON() => 0;
         public readonly bool InCircle(int2 a, int2 b, int2 c, int2 p)
         {
             var dx = (long)(a.x - p.x);
@@ -3034,39 +2946,32 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var bp = ex * ex + ey * ey;
             var cp = fx * fx + fy * fy;
 
-            // TODO: This may fail with coordinates that differ by more than approximately 2^20.
-            // When verifying coordinates, we should thus ensure that the bounding box is smaller than 2^20.
-            return dx * (ey * cp - bp * fy) -
-                dy * (ex * cp - bp * fx) +
-                ap * (ex * fy - ey * fx) < 0;
+            return dx * (ey * cp - bp * fy) - dy * (ex * cp - bp * fx) + ap * (ex * fy - ey * fx) < 0;
         }
-
-        public readonly int2 PickPointOnConcentricShell(float D, int2 e1, int2 e2, bool initial) {
-            // Implementation has been removed because it's not used at the moment.
-            // This commit has the implemenation, if it's needed in the future: ad22afe
-            throw new NotImplementedException("PickPointOnConcentricShell is not implemented for integer coordinates.");
+        public readonly long MaxValue() => long.MaxValue;
+        public readonly int2 MaxValue2() => int.MaxValue;
+        public readonly int2 MinValue2() => int.MinValue;
+        public readonly bool PointInsideTriangle(int2 p, int2 a, int2 b, int2 c)
+        {
+            static long cross(int2 a, int2 b) => (long)a.x * b.y - (long)a.y * b.x;
+            return cross(p - a, b - a) >= 0 && cross(p - b, c - b) >= 0 && cross(p - c, a - c) >= 0;
         }
-
-        public readonly bool SmallestInnerAngleIsBelowThreshold(int2 a, int2 b, int2 c, float angle) {
-            // Implementation has been removed because it's not used at the moment.
-            // This commit has the implemenation, if it's needed in the future: ad22afe
-            throw new NotImplementedException("SmallestInnerAngleIsBelowThreshold is not implemented for integer coordinates.");
-        }
-
+        public readonly bool SupportRefinement() => false;
+        public readonly int X(int2 a) => a.x;
+        public readonly int Y(int2 a) => a.y;
+        public readonly int Zero() => 0;
+        public readonly long ZeroTBig() => 0;
         public readonly int abs(int v) => math.abs(v);
         public readonly long abs(long v) => math.abs(v);
-        public readonly int add(int a, int b) => a + b;
-        public readonly long add(long a, long b) => a + b;
-        public readonly int2 avg(int2 a, int2 b) => (a + b)/2;
+        public readonly int alpha(int D, int dSquare, bool initial) => throw new NotImplementedException();
+        public readonly bool anyabslessthan(int a, int b, int c, int v) => throw new NotImplementedException();
+        public readonly int atan2(int a, int b) => throw new NotImplementedException();
+        public readonly int2 avg(int2 a, int2 b) => (a + b) / 2;
         public readonly int diff(int a, int b) => a - b;
         public readonly long diff(long a, long b) => a - b;
         public readonly int2 diff(int2 a, int2 b) => a - b;
-        public readonly long distancesq(int2 a, int2 b) {
-            var d = a - b;
-            return (long)d.x * (long)d.x + (long)d.y * (long)d.y;
-        }
-        public readonly long dot(int2 a, int2 b) => (long)a.x * b.x + (long)a.y * b.y;
-        public readonly bool eq(int v, int w) => v == w;
+        public readonly long distancesq(int2 a, int2 b) => (long)(a - b).x * (a - b).x + (long)(a - b).y * (a - b).y;
+        public readonly int dot(int2 a, int2 b) => throw new NotImplementedException();
         public readonly bool2 eq(int2 v, int2 w) => v == w;
         public readonly bool2 ge(int2 a, int2 b) => a >= b;
         public readonly bool greater(int a, int b) => a > b;
@@ -3077,24 +2982,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             static double pseudoAngle(int dx, int dy)
             {
-                var manhattanDist = math.abs(dx) + math.abs(dy);
-                if (manhattanDist == 0) return 0;
-                var p = (double)dx / (double)manhattanDist;
+                var dist = math.abs(dx) + math.abs(dy);
+                if (dist == 0) return 0;
+                var p = (double)dx / dist;
                 return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
             }
         }
-
-        // For purposes of coordinate validation, very large integers are treated as infinite,
-        // since some algorithms may fail with very large coordinates.
-        // TODO: Validate really large coordinates with tests
-        public readonly bool2 isfinite(int2 v) => math.all(math.abs(v) < (1 << 20));
-        public readonly bool2 le(int2 a, int2 b) => a <= b;
+        public readonly bool2 isfinite(int2 v) => true;
+        public readonly bool le(int a, int b) => a <= b;
         public readonly bool le(long a, long b) => a <= b;
-        public readonly bool less(int a, int b) => a < b;
+        public readonly bool2 le(int2 a, int2 b) => a <= b;
+        public readonly int2 lerp(int2 a, int2 b, int v) => throw new NotImplementedException();
         public readonly bool less(long a, long b) => a < b;
         public readonly int2 max(int2 v, int2 w) => math.max(v, w);
         public readonly int2 min(int2 v, int2 w) => math.min(v, w);
         public readonly long mul(int a, int b) => (long)a * b;
-        public readonly long mul(long a, long b) => a * b;
+        public readonly int2 neg(int2 v) => -v;
     }
 }

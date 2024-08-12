@@ -10,6 +10,27 @@ using UnityEngine.TestTools;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
+    public class TriangulatorGenericsEditorTests
+    {
+        [Test]
+        public void MeshRefinementIntSupportTest()
+        {
+            using var positions = new NativeArray<int2>(LakeSuperior.Points.Select(i => (int2)(i * 1000)).ToArray(), Allocator.Persistent);
+            var holes = new NativeArray<int2>(LakeSuperior.Holes.Select(i => (int2)(i * 1000)).ToArray(), Allocator.Persistent);
+            var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
+
+            using var triangulator = new Triangulator<int2>(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints, HoleSeeds = holes },
+                Settings = { AutoHolesAndBoundary = false, RefineMesh = true, RestoreBoundary = true, Preprocessor = Preprocessor.None }
+            };
+
+            triangulator.Run();
+
+            LogAssert.Expect(UnityEngine.LogType.Error, new Regex("Mesh refinement is not supported for this coordinate type.*"));
+        }
+    }
+
     [TestFixture(typeof(float2))]
     [TestFixture(typeof(double2))]
     [TestFixture(typeof(int2))]
@@ -283,7 +304,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void DelaunayTriangulationWithRefinementTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             ///  3 ------- 2
             ///  |         |
@@ -717,7 +741,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test, TestCaseSource(nameof(constraintDelaunayTriangulationWithRefinementTestData))]
         public void ConstraintDelaunayTriangulationWithRefinementTest((float2[] managedPositions, int[] constraints, float2[] insertedPoints, int[] triangles) input)
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             using var positions = new NativeArray<T>(input.managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(input.constraints, Allocator.Persistent);
@@ -810,7 +837,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void BoundaryReconstructionWithRefinementTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             // 4.             .2
             // | '.         .' |
@@ -1077,7 +1107,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void TriangulationWithHolesWithRefinementTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             //   * --------------------- *
             //   |                       |
@@ -1249,7 +1282,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void DeferredArraySupportTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             using var positions = new NativeList<T>(64, Allocator.Persistent);
             using var constraints = new NativeList<int>(64, Allocator.Persistent);
@@ -1505,7 +1541,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void PCATransformationPositionsConservationTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("PCA transformation is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("PCA transformation is not supported for int2.");
+            }
 
             using var positions = new NativeArray<T>(new[]
             {
@@ -1536,7 +1575,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void PCATransformationPositionsConservationWithRefinementTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("PCA transformation is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("PCA transformation is not supported for int2.");
+            }
 
             using var positions = new NativeArray<T>(new[]
             {
@@ -1569,7 +1611,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void PCATransformationWithHolesTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("PCA transformation is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("PCA transformation is not supported for int2.");
+            }
 
             //   3 --------------------- 2
             //   |                       |
@@ -1632,7 +1677,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void CleanupPointsWithHolesTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             using var positions = new NativeArray<T>(new float2[]
             {
@@ -1670,7 +1718,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void RefinementWithoutConstraintsTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             var n = 20;
 
@@ -1718,7 +1769,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test(Description = "Checks if triangulator passes for `very` accute angle input")]
         public void AccuteInputAngleTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             using var positions = new NativeArray<T>(new[] {
                 math.float2(0, 0),
@@ -1758,7 +1812,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void GenericCase1Test()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             using var positions = new NativeArray<T>(new[] {
                 math.float2(0, 0),
@@ -1897,7 +1954,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void HalfedgesForTriangulationWithRefinementTest()
         {
-            if (typeof(T) == typeof(int2)) Assert.Ignore("Mesh refinement is not supported for integer types.");
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
 
             using var positions = new NativeArray<T>(new float2[]
             {

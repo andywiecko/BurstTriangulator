@@ -91,6 +91,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Extensions.Schedule((dynamic)triangulator, dependencies);
         public static T[] DynamicCast<T>(this IEnumerable<float2> data) where T : unmanaged =>
             data.Select(i => (T)(dynamic)i).ToArray();
+        public static IEnumerable<float2> Scale(this IEnumerable<float2> data, float s, bool predicate) => data.Select(i => (predicate ? s : 1f) * i);
         public static T[] DynamicCast<T>(this IEnumerable<double2> data) where T : unmanaged =>
             data.Select(i => (T)(dynamic)i).ToArray();
         public static IEqualityComparer<T> Comparer<T>(float epsilon = 0.0001f) => default(T) switch

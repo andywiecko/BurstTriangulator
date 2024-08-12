@@ -9,31 +9,19 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     {
         private static readonly TestCaseData[] angleTestData = new TestCaseData[]
         {
-            new(math.double2(1, 0), math.double2(0, 1), math.double2(0,0), math.PI_DBL / 4) { TestName = "Test case 1 - canonical vectors" },
-            new(math.double2(0, 1), math.double2(1, 0), math.double2(0,0), math.PI_DBL / 4){ TestName = "Test case 2 - canonical vectors (swapped)" },
-            new(math.double2(2, 2), math.double2(3, 2), math.double2(2, 4), math.atan(1.0/2.0)){ TestName = "Test case 3 - no vertex at origin" },
-            // A completely degenerate triangle (all vertices are the same) should also return 0, but the current implementation thinks all 3 inner angles are 180 degrees. Fix in the future.
-            new(math.double2(1, 0), math.double2(1, 0), math.double2(1, 0), 0){ TestName = "Test case 4 - 3 identical vertices", RunState = NUnit.Framework.Interfaces.RunState.Ignored },
-            new(math.double2(1, 0), math.double2(1, 0), math.double2(10, 0), 0){ TestName = "Test case 5 - 2 identical vertices" },
-            new(math.double2(1, 0), math.double2(0, 0), math.double2(-1, 0), 0){ TestName = "Test case 6 - colinear vertices" },
-            new(math.double2(0, 0), math.double2(10, 0), math.double2(5, 73), 2*math.atan(5.0/73.0)){ TestName = "Test case 7 - arbitrary angle" },
+            new(math.double2(1, 0), math.double2(0, 1), math.PI_DBL / 2) { TestName = "Test case 1 - canonical vectors" },
+            new(math.double2(0, 1), math.double2(1, 0), -math.PI_DBL / 2){ TestName = "Test case 2 - canonical vectors (swapped)" },
+            new(math.double2(2, 1), math.double2(-1, 2), math.PI_DBL / 2){ TestName = "Test case 3" },
+            new(math.double2(1, 0), math.double2(1, 0), 0){ TestName = "Test case 4 - zero test" },
+            new(math.double2(1, 0), math.double2(-1, 0), math.PI_DBL){ TestName = "Test case 5 - opposite dir" },
+            new(math.double2(1, 0), math.double2(math.cos(0.5698235), math.sin(0.5698235)), 0.5698235){ TestName = "Test case 6 - arbitrary angle" },
         };
 
         [Test, TestCaseSource(nameof(angleTestData))]
-        public void AngleTest(double2 a, double2 b, double2 c, double expectedSmallestInnerAngle)
+        public void AngleTest(double2 a, double2 b, double expected)
         {
-            var upper = expectedSmallestInnerAngle + 0.001;
-            var lower = expectedSmallestInnerAngle - 0.001;
-
-            Assert.IsTrue(new DoubleUtils().SmallestInnerAngleIsBelowThreshold(a,b,c, (float)upper));
-            Assert.IsFalse(new DoubleUtils().SmallestInnerAngleIsBelowThreshold(a,b,c, (float)lower));
-
-            Assert.IsTrue(new FloatUtils().SmallestInnerAngleIsBelowThreshold((float2)a,(float2)b,(float2)c, (float)upper));
-            Assert.IsFalse(new FloatUtils().SmallestInnerAngleIsBelowThreshold((float2)a,(float2)b,(float2)c, (float)lower));
-
-            // Integers do not support this right now. Commit ad22afe has an implementation.
-            // Assert.IsTrue(new IntUtils().SmallestInnerAngleIsBelowThreshold((int2)a,(int2)b,(int2)c, (float)upper));
-            // Assert.IsFalse(new IntUtils().SmallestInnerAngleIsBelowThreshold((int2)a,(int2)b,(int2)c, (float)lower));
+            var result = UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>.Angle(a, b);
+            Assert.That(result, Is.EqualTo(expected).Within(1e-9));
         }
 
         private static readonly TestCaseData[] area2testData = new TestCaseData[]
@@ -188,6 +176,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }).ToArray();
 
         [Test, TestCaseSource(nameof(pointInsideTriangleTestData))]
-        public bool PointInsideTriangleTest(double2 p, double2 a, double2 b, double2 c) => UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>.PointInsideTriangle(p, a, b, c);
+        public bool PointInsideTriangleTest(double2 p, double2 a, double2 b, double2 c) => default(DoubleUtils).PointInsideTriangle(p, a, b, c);
     }
 }
