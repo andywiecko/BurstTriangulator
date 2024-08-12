@@ -2761,7 +2761,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         TBig diff(TBig a, TBig b);
         T2 diff(T2 a, T2 b);
         TBig distancesq(T2 a, T2 b);
-        T div(T a, T b);
         TBig dot(T2 a, T2 b);
         bool eq(T v, T w);
         bool2 eq(T2 v, T2 w);
@@ -2878,7 +2877,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float diff(float a, float b) => a - b;
         public readonly float2 diff(float2 a, float2 b) => a - b;
         public readonly float distancesq(float2 a, float2 b) => math.distancesq(a, b);
-        public readonly float div(float a, float b) => a / b;
         public readonly float dot(float2 a, float2 b) => math.dot(a, b);
         public readonly bool eq(float v, float w) => v == w;
         public readonly bool2 eq(float2 v, float2 w) => v == w;
@@ -2999,7 +2997,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double diff(double a, double b) => a - b;
         public readonly double2 diff(double2 a, double2 b) => a - b;
         public readonly double distancesq(double2 a, double2 b) => math.distancesq(a, b);
-        public readonly double div(double a, double b) => a / b;
         public readonly double dot(double2 a, double2 b) => math.dot(a, b);
         public readonly bool eq(double v, double w) => v == w;
         public readonly bool2 eq(double2 v, double2 w) => v == w;
@@ -3136,7 +3133,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var d = a - b;
             return (long)d.x * (long)d.x + (long)d.y * (long)d.y;
         }
-        public readonly int div(int a, int b) => a / b;
         public readonly long dot(int2 a, int2 b) => (long)a.x * b.x + (long)a.y * b.y;
         public readonly bool eq(int v, int w) => v == w;
         public readonly bool2 eq(int2 v, int2 w) => v == w;
