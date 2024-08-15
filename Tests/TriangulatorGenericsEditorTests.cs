@@ -10,8 +10,30 @@ using UnityEngine.TestTools;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
+    public class TriangulatorGenericsEditorTests
+    {
+        [Test]
+        public void MeshRefinementIntSupportTest()
+        {
+            using var positions = new NativeArray<int2>(LakeSuperior.Points.Select(i => (int2)(i * 1000)).ToArray(), Allocator.Persistent);
+            var holes = new NativeArray<int2>(LakeSuperior.Holes.Select(i => (int2)(i * 1000)).ToArray(), Allocator.Persistent);
+            var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
+
+            using var triangulator = new Triangulator<int2>(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints, HoleSeeds = holes },
+                Settings = { AutoHolesAndBoundary = false, RefineMesh = true, RestoreBoundary = true, Preprocessor = Preprocessor.None }
+            };
+
+            triangulator.Run();
+
+            LogAssert.Expect(UnityEngine.LogType.Error, new Regex("Mesh refinement is not supported for this coordinate type.*"));
+        }
+    }
+
     [TestFixture(typeof(float2))]
     [TestFixture(typeof(double2))]
+    [TestFixture(typeof(int2))]
     public class TriangulatorGenericsEditorTests<T> where T : unmanaged
     {
         [Test]
@@ -91,6 +113,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test, TestCaseSource(nameof(validateInputPositionsTestData))]
         public void ValidateInputPositionsTest(float2[] managedPositions)
         {
+            if (typeof(T) == typeof(int2) && managedPositions.Any(p => !math.all(math.isfinite(p))))
+            {
+                Assert.Ignore("Integer coordinates cannot be infinite or NaN.");
+            }
+
             using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
             {
@@ -110,6 +137,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test, TestCaseSource(nameof(validateInputPositionsNoVerboseTestData))]
         public void ValidateInputPositionsNoVerboseTest(float2[] managedPositions)
         {
+            if (typeof(T) == typeof(int2) && managedPositions.Any(p => !math.all(math.isfinite(p))))
+            {
+                Assert.Ignore("Integer coordinates cannot be infinite or NaN.");
+            }
+
             using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
             {
@@ -158,10 +190,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 new[]
                 {
                     math.float2(0, 0),
-                    math.float2(0.5f, 0),
                     math.float2(1, 0),
-                    math.float2(1, 1),
-                    math.float2(0, 1),
+                    math.float2(2, 0),
+                    math.float2(2, 2),
+                    math.float2(0, 2),
                 },
                 new[]{ 0, 2 }
             ) { TestName = "Test Case 4 (edge collinear with other point)" },
@@ -272,6 +304,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void DelaunayTriangulationWithRefinementTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             ///  3 ------- 2
             ///  |         |
             ///  |         |
@@ -434,6 +471,39 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     11, 10, 2,
                 }
                 ){ TestName = "Test case 3" },
+            //   4   5   6   7
+            //   *   *   *   *
+            //
+            //
+            //
+            //
+            // *   *   *   *
+            // 0   1   2   3
+            new(new[]
+            {
+                math.float2(0, 0),
+                math.float2(2, 0),
+                math.float2(4, 0),
+                math.float2(6, 0),
+                math.float2(1, 3),
+                math.float2(3, 3),
+                math.float2(5, 3),
+                math.float2(7, 3),
+            },
+            new int[] {},
+            new[]
+                {
+                    0, 4, 1,
+                    1, 4, 5,
+                    1, 5, 2,
+                    2, 5, 6,
+                    2, 6, 3,
+                    3, 6, 7,
+                }
+            )
+            {
+                TestName = "Test case 4 (no constraints)",
+            },
             // 4   5   6   7
             // *   *   *  ,*
             //         ..;
@@ -671,6 +741,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test, TestCaseSource(nameof(constraintDelaunayTriangulationWithRefinementTestData))]
         public void ConstraintDelaunayTriangulationWithRefinementTest((float2[] managedPositions, int[] constraints, float2[] insertedPoints, int[] triangles) input)
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             using var positions = new NativeArray<T>(input.managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(input.constraints, Allocator.Persistent);
             using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
@@ -698,22 +773,22 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void BoundaryReconstructionWithoutRefinementTest()
         {
-            // 7 ----- 6       3 ----- 2
-            // |       |       |       |
-            // |       |       |       |
-            // |       5 ----- 4       |
-            // |                       |
-            // |                       |
-            // 0 --------------------- 1
+            // 7 -------------- 6       3 ----- 2
+            // |                |       |       |
+            // |                |       |       |
+            // |                5 ----- 4       |
+            // |                                |
+            // |                                |
+            // 0 ------------------------------ 1
             var managedPositions = new[]
             {
                 math.float2(0, 0),
-                math.float2(3, 0),
+                math.float2(4, 0),
+                math.float2(4, 2),
                 math.float2(3, 2),
-                math.float2(2, 2),
+                math.float2(3, 1),
                 math.float2(2, 1),
-                math.float2(1, 1),
-                math.float2(1, 2),
+                math.float2(2, 2),
                 math.float2(0, 2),
             };
 
@@ -762,6 +837,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void BoundaryReconstructionWithRefinementTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             // 4.             .2
             // | '.         .' |
             // |   '.     .'   |
@@ -822,28 +902,28 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
         private static readonly TestCaseData[] triangulationWithHolesWithoutRefinementTestData =
         {
-            //   * --------------------- *
+            //   3 --------------------- 2
             //   |                       |
             //   |                       |
-            //   |       * ----- *       |
+            //   |       7 ----- 6       |
             //   |       |   X   |       |
             //   |       |       |       |
-            //   |       * ----- *       |
+            //   |       4 ----- 5       |
             //   |                       |
             //   |                       |
-            //   * --------------------- *
+            //   0 --------------------- 1
             new(
                 new[]
                 {
                     math.float2(0, 0),
-                    math.float2(3, 0),
-                    math.float2(3, 3),
-                    math.float2(0, 3),
+                    math.float2(6, 0),
+                    math.float2(6, 6),
+                    math.float2(0, 6),
 
-                    math.float2(1, 1),
-                    math.float2(2, 1),
                     math.float2(2, 2),
-                    math.float2(1, 2),
+                    math.float2(4, 2),
+                    math.float2(4, 4),
+                    math.float2(2, 4),
                 },
                 new[]
                 {
@@ -857,7 +937,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     6, 7,
                     7, 4
                 },
-                new[] { (float2)1.5f },
+                new[] { (float2)3f },
                 new[]
                 {
                     0, 3, 7,
@@ -874,14 +954,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 new[]
                 {
                     math.float2(0, 0),
-                    math.float2(3, 0),
-                    math.float2(3, 3),
-                    math.float2(0, 3),
+                    math.float2(6, 0),
+                    math.float2(6, 6),
+                    math.float2(0, 6),
 
-                    math.float2(1, 1),
-                    math.float2(2, 1),
                     math.float2(2, 2),
-                    math.float2(1, 2),
+                    math.float2(4, 2),
+                    math.float2(4, 4),
+                    math.float2(2, 4),
                 },
                 new[]
                 {
@@ -895,7 +975,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     6, 7,
                     7, 4
                 },
-                new[] { (float2)1.5f, (float2)1.5f },
+                new[] { (float2)3f, (float2)3f },
                 new[]
                 {
                     0, 3, 7,
@@ -949,17 +1029,27 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 }
             ){ TestName = "Test Case 3 (hole out of range)" },
             new(
+                //   3 --------------------- 2
+                //   |                       |
+                //   |                       |
+                //   |                       |
+                //   |    7 ----- 6          |
+                //   |    |     X |          |
+                //   |    | X     |          |
+                //   |    4 ----- 5          |
+                //   |                       |
+                //   0 --------------------- 1
                 new[]
                 {
                     math.float2(0, 0),
-                    math.float2(3, 0),
-                    math.float2(3, 3),
-                    math.float2(0, 3),
+                    math.float2(9, 0),
+                    math.float2(9, 9),
+                    math.float2(0, 9),
 
-                    math.float2(1, 1),
-                    math.float2(2, 1),
                     math.float2(2, 2),
-                    math.float2(1, 2),
+                    math.float2(5, 2),
+                    math.float2(5, 5),
+                    math.float2(2, 5),
                 },
                 new[]
                 {
@@ -973,17 +1063,17 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     6, 7,
                     7, 4
                 },
-                new[] { math.float2(1.5f + 0.25f, 1.5f), math.float2(1.5f - 0.25f, 1.5f) },
+                new[] { math.float2(3, 3), math.float2(4, 4) },
                 new[]
                 {
                     0, 3, 7,
-                    4, 0, 7,
-                    5, 0, 4,
-                    5, 1, 0,
-                    6, 1, 5,
-                    6, 2, 1,
-                    7, 2, 6,
-                    7, 3, 2,
+                    0, 4, 5,
+                    0, 5, 1,
+                    0, 7, 4,
+                    1, 5, 6,
+                    1, 6, 2,
+                    2, 6, 3,
+                    3, 6, 7,
                 }
             ){ TestName = "Test Case 4 (hole seeds in the same area)" },
         };
@@ -1017,6 +1107,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void TriangulationWithHolesWithRefinementTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             //   * --------------------- *
             //   |                       |
             //   |                       |
@@ -1187,6 +1282,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void DeferredArraySupportTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             using var positions = new NativeList<T>(64, Allocator.Persistent);
             using var constraints = new NativeList<int>(64, Allocator.Persistent);
             using var holes = new NativeList<T>(64, Allocator.Persistent);
@@ -1347,6 +1447,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void LocalTransformationWithHolesTest()
         {
+            var scaleFactor = typeof(T) == typeof(int2) ? 1000 : 0.1f;
+
             var n = 12;
             var innerCircle = Enumerable
                 .Range(0, n)
@@ -1363,7 +1465,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 .ToArray();
 
             var managedPositions = new float2[] { 0 }.Concat(outerCircle).Concat(innerCircle).ToArray();
-            managedPositions = managedPositions.Select(x => 0.1f * x + 5f).ToArray();
+            managedPositions = managedPositions.Select(x => scaleFactor * x + 5f).ToArray();
 
             var constraints = Enumerable
                 .Range(1, n - 1)
@@ -1439,6 +1541,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void PCATransformationPositionsConservationTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("PCA transformation is not supported for int2.");
+            }
+
             using var positions = new NativeArray<T>(new[]
             {
                 math.float2(1, 1),
@@ -1468,6 +1575,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void PCATransformationPositionsConservationWithRefinementTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("PCA transformation is not supported for int2.");
+            }
+
             using var positions = new NativeArray<T>(new[]
             {
                 math.float2(1, 1),
@@ -1499,19 +1611,24 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void PCATransformationWithHolesTest()
         {
-            //   * --------------------- *
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("PCA transformation is not supported for int2.");
+            }
+
+            //   3 --------------------- 2
             //   |                       |
             //   |                       |
-            //   |       * ----- *       |
-            //   |       |   X   |       |
-            //   |       |       |       |
-            //   |       * ----- *       |
             //   |                       |
+            //   |     7 ----- 6         |
+            //   |     |   X   |         |
+            //   |     |       |         |
+            //   |     4 ----- 5         |
             //   |                       |
-            //   * --------------------- *
+            //   0 --------------------- 1
             using var positions = new NativeArray<T>(new[]
             {
-                math.float2(0, 0), math.float2(3, 0), math.float2(3, 3), math.float2(0, 3),
+                math.float2(0, 0), math.float2(6, 0), math.float2(6, 6), math.float2(0, 6),
                 math.float2(1, 1), math.float2(2, 1), math.float2(2, 2), math.float2(1, 2),
             }.DynamicCast<T>(), Allocator.Persistent);
 
@@ -1546,13 +1663,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var expected = new[]
             {
                 0, 3, 7,
-                4, 0, 7,
-                5, 0, 4,
-                5, 1, 0,
-                6, 1, 5,
-                6, 2, 1,
-                7, 2, 6,
-                7, 3, 2,
+                0, 4, 5,
+                0, 5, 1,
+                0, 7, 4,
+                1, 5, 6,
+                1, 6, 2,
+                2, 6, 3,
+                3, 6, 7,
             };
             Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(expected).Using(TrianglesComparer.Instance));
         }
@@ -1560,6 +1677,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void CleanupPointsWithHolesTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             using var positions = new NativeArray<T>(new float2[]
             {
                 new(0, 0),
@@ -1596,6 +1718,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void RefinementWithoutConstraintsTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             var n = 20;
 
             using var positions = new NativeArray<T>(Enumerable
@@ -1642,10 +1769,15 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test(Description = "Checks if triangulator passes for `very` accute angle input")]
         public void AccuteInputAngleTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             using var positions = new NativeArray<T>(new[] {
                 math.float2(0, 0),
-                math.float2(1, 0),
-                math.float2(1, .1f),
+                math.float2(10, 0),
+                math.float2(10, 1f),
             }.DynamicCast<T>(), Allocator.Persistent);
             using var constraints = new NativeArray<int>(new[] {
                 0, 1,
@@ -1661,7 +1793,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     RestoreBoundary = true,
                     RefinementThresholds =
                     {
-                        Area = 1f,
+                        Area = 100f,
                         Angle = math.radians(20f),
                     }
                 },
@@ -1680,6 +1812,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void GenericCase1Test()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             using var positions = new NativeArray<T>(new[] {
                 math.float2(0, 0),
                 math.float2(3, 0),
@@ -1783,18 +1920,18 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var positions = new NativeArray<T>(new float2[]
             {
                 math.float2(0, 0),
-                math.float2(4, 0),
-                math.float2(2, 4),
-                math.float2(2, 2),
-                math.float2(1.5f, 1),
-                math.float2(2.5f, 1),
+                math.float2(8, 0),
+                math.float2(4, 8),
+                math.float2(4, 4),
+                math.float2(3, 2),
+                math.float2(5, 2),
             }.DynamicCast<T>(), Allocator.Persistent);
             using var constraints = new NativeArray<int>(new[]
             {
                 0, 1, 1, 2, 2, 0,
                 3, 4, 4, 5, 5, 3,
             }, Allocator.Persistent);
-            using var holes = new NativeArray<T>(new[] { math.float2(2, 1.5f) }.DynamicCast<T>(), Allocator.Persistent);
+            using var holes = new NativeArray<T>(new[] { math.float2(4, 3) }.DynamicCast<T>(), Allocator.Persistent);
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
                 Input = { Positions = positions, ConstraintEdges = constraints, HoleSeeds = holes }
@@ -1817,6 +1954,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void HalfedgesForTriangulationWithRefinementTest()
         {
+            if (typeof(T) == typeof(int2))
+            {
+                Assert.Ignore("Mesh refinement is not supported for int2.");
+            }
+
             using var positions = new NativeArray<T>(new float2[]
             {
                 math.float2(0, 0),
@@ -1850,9 +1992,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void AutoHolesTest()
         {
-            using var positions = new NativeArray<T>(LakeSuperior.Points.DynamicCast<T>(), Allocator.Persistent);
+            var scaleFactor = typeof(T) == typeof(int2) ? 1000.0f : 1f;
+            var scaledPoints = LakeSuperior.Points.Select(p => p * scaleFactor).ToArray();
+            var scaledHoles = LakeSuperior.Holes.Select(h => h * scaleFactor).ToArray();
+            using var positions = new NativeArray<T>(scaledPoints.DynamicCast<T>(), Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holes = new NativeArray<T>(LakeSuperior.Holes.DynamicCast<T>(), Allocator.Persistent);
+            using var holes = new NativeArray<T>(scaledHoles.DynamicCast<T>(), Allocator.Persistent);
 
             using var triangulator = new Triangulator<T>(1024 * 1024, Allocator.Persistent)
             {
