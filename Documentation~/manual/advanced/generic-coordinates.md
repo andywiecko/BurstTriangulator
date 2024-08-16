@@ -21,12 +21,19 @@ The only difference is that the input/output types are the same as `T2`.
 
 See benchmark for the generic coordinates [**here**][benchmark].
 
-| type                 | implemented? | delaunay | constraints | refinement | preprocessors |
-| :------------------: | :----------: | :------: | :---------: | :--------: | :-----------: |
-| [`float2`][float2]   | ✔️          | ✔️       | ✔️         | ✔️         |✔️            |
-| [`double2`][double2] | ✔️          | ✔️       | ✔️         | ✔️         |✔️            |
-| [`int2`][int2]       | ❌          |          |            |             |               |
+<br>
 
+| type                 | delaunay | constraints | holes      | refinement | preprocessors     | notes                       |
+| :------------------: | :------: | :---------: | :--------: | :--------: | :---------------: | :-------------------------: |
+| [`float2`][float2]   | ✔️       | ✔️         | ✔️         | ✔️         |✔️                |                             |
+| [`double2`][double2] | ✔️       | ✔️         | ✔️         | ✔️         |✔️                |                             |
+| [`int2`][int2]       | ✔️       | ✔️         | 🟡[^holes] | ❌         |🟡[^preprocessors] | Support up to $\sim 2^{20}$ |
+
+[^holes]: In the current implementation, holes are fully supported with [`Settings.AutoHolesAndBoundary`][auto]. However, manual holes with [`int2`][int2] coordinates may not guarantee that the given hole can be created. An additional extension is planned in the future to support holes with manual floating-point precision for [`int2`][int2].
+[^preprocessors]: Support for [`Preprocessor.COM`][com] with translation only is available.
+
+[auto]: xref:andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary
+[com]: xref:andywiecko.BurstTriangulator.Preprocessor.COM
 [triangulator]: xref:andywiecko.BurstTriangulator.Triangulator
 [triangulatorT2]: xref:andywiecko.BurstTriangulator.Triangulator`1
 [extensions]: xref:andywiecko.BurstTriangulator.Extensions
