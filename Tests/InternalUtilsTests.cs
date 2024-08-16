@@ -9,20 +9,22 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     {
         private static readonly TestCaseData[] angleTestData = new TestCaseData[]
         {
-            new(math.double2(1, 0), math.double2(0, 1), math.PI_DBL / 2) { TestName = "Test case 1 - canonical vectors" },
-            new(math.double2(0, 1), math.double2(1, 0), -math.PI_DBL / 2){ TestName = "Test case 2 - canonical vectors (swapped)" },
-            new(math.double2(2, 1), math.double2(-1, 2), math.PI_DBL / 2){ TestName = "Test case 3" },
-            new(math.double2(1, 0), math.double2(1, 0), 0){ TestName = "Test case 4 - zero test" },
-            new(math.double2(1, 0), math.double2(-1, 0), math.PI_DBL){ TestName = "Test case 5 - opposite dir" },
-            new(math.double2(1, 0), math.double2(math.cos(0.5698235), math.sin(0.5698235)), 0.5698235){ TestName = "Test case 6 - arbitrary angle" },
+            new(math.double2(0, 0), math.double2(1, 0), math.double2(0, 1), math.PI_DBL / 4 + 1e-9) { ExpectedResult = true, TestName = "Test case 1a - canonical vectors" },
+            new(math.double2(0, 0), math.double2(1, 0), math.double2(0, 1), math.PI_DBL / 4 - 1e-9) { ExpectedResult = false, TestName = "Test case 1b - canonical vectors" },
+            new(math.double2(0, 0), math.double2(0, 1), math.double2(1, 0), math.PI_DBL / 4 + 1e-9) { ExpectedResult = true, TestName = "Test case 2a - canonical vectors (swapped)" },
+            new(math.double2(0, 0), math.double2(0, 1), math.double2(1, 0), math.PI_DBL / 4 - 1e-9) { ExpectedResult = false, TestName = "Test case 2b - canonical vectors (swapped)" },
+            new(math.double2(0, 0), math.double2(2, 1), math.double2(-1, 2), math.PI_DBL / 4 + 1e-9) { ExpectedResult = true, TestName = "Test case 3a" },
+            new(math.double2(0, 0), math.double2(2, 1), math.double2(-1, 2), math.PI_DBL / 4 - 1e-9) { ExpectedResult = false, TestName = "Test case 3b" },
+            new(math.double2(0, 0), math.double2(2, 0), math.double2(-1, 2), 0.51914611424652 + 1e-9) { ExpectedResult = true, TestName = "Test case 4a - triangle with angle larger than pi/2" },
+            new(math.double2(0, 0), math.double2(2, 0), math.double2(-1, 2), 0.51914611424652 - 1e-9) { ExpectedResult = false, TestName = "Test case 4b - triangle with angle larger than pi/2" },
+            new(math.double2(0, 0), math.double2(1, 0), math.double2(-1, 0), 0 + 1e-4){ ExpectedResult = true, TestName = "Test case 5 - opposite dir" },
+            new(math.double2(0, 0), math.double2(1, 0), math.double2(1, 0), 0 + 1e-4){ ExpectedResult = true, TestName = "Test case 6 - duplicated vertex" },
+            new(math.double2(0, 0), math.double2(1, 0), math.double2(math.cos(0.5698235), math.sin(0.5698235)), 0.5698235 + 1e-9){ ExpectedResult = true, TestName = "Test case 7a - arbitrary angle" },
+            new(math.double2(0, 0), math.double2(1, 0), math.double2(math.cos(0.5698235), math.sin(0.5698235)), 0.5698235 - 1e-9){ ExpectedResult = false, TestName = "Test case 7b - arbitrary angle" },
         };
 
         [Test, TestCaseSource(nameof(angleTestData))]
-        public void AngleTest(double2 a, double2 b, double expected)
-        {
-            var result = UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>.Angle(a, b);
-            Assert.That(result, Is.EqualTo(expected).Within(1e-9));
-        }
+        public bool AngleTest(double2 a, double2 b, double2 c, double minAngle) => UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>.AngleIsTooSmall(a, b, c, minAngle);
 
         private static readonly TestCaseData[] area2testData = new TestCaseData[]
         {
