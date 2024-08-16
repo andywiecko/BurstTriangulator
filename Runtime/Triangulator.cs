@@ -2050,18 +2050,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                 var (pA, pB, pC) = (outputPositions[i], outputPositions[j], outputPositions[k]);
-
-                var pAB = utils.diff(pB, pA);
-                var pBC = utils.diff(pC, pB);
-                var pCA = utils.diff(pA, pC);
-
-                // TODO: Can be done faster using dot products
-                return utils.anyabslessthan(
-                    a: Angle(pAB, utils.neg(pCA)),
-                    b: Angle(pBC, utils.neg(pAB)),
-                    c: Angle(pCA, utils.neg(pBC)),
-                    v: minimumAngle
-                );
+                return UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>.AngleIsTooSmall(pA, pB, pC, minimumAngle);
             }
 
             private int UnsafeInsertPointCommon(T2 p, int initTriangle)
@@ -2429,7 +2418,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
         }
 
-        internal static T Angle(T2 a, T2 b) => utils.atan2(Cross(a, b), utils.dot(a, b));
+        internal static bool AngleIsTooSmall(T2 pA, T2 pB, T2 pC, T minimumAngle)
+        {
+            var threshold = utils.cos(minimumAngle);
+
+            var pAB = utils.normalizesafe(utils.diff(pB, pA));
+            var pBC = utils.normalizesafe(utils.diff(pC, pB));
+            var pCA = utils.normalizesafe(utils.diff(pA, pC));
+
+            return utils.anygreaterthan(
+                utils.dot(pAB, utils.neg(pCA)),
+                utils.dot(pBC, utils.neg(pAB)),
+                utils.dot(pCA, utils.neg(pBC)),
+                threshold
+            );
+        }
         internal static T Area2(T2 a, T2 b, T2 c) => utils.abs(Cross(utils.diff(b, a), utils.diff(c, a)));
         private static T Cross(T2 a, T2 b) => utils.Cast(utils.diff(utils.mul(utils.X(a), utils.Y(b)), utils.mul(utils.Y(a), utils.X(b))));
         private static TBig CircumRadiusSq(T2 a, T2 b, T2 c) => utils.distancesq(utils.CircumCenter(a, b, c), a);
@@ -2702,9 +2705,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T abs(T v);
         TBig abs(TBig v);
         T alpha(T D, T dSquare, bool initial);
-        bool anyabslessthan(T a, T b, T c, T v);
-        T atan2(T v, T w);
+        bool anygreaterthan(T a, T b, T c, T v);
         T2 avg(T2 a, T2 b);
+        T cos(T v);
         T diff(T a, T b);
         TBig diff(TBig a, TBig b);
         T2 diff(T2 a, T2 b);
@@ -2725,6 +2728,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T2 min(T2 v, T2 w);
         TBig mul(T a, T b);
         T2 neg(T2 v);
+        T2 normalizesafe(T2 v);
 #pragma warning restore IDE1006
     }
 
@@ -2791,9 +2795,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var alpha = D / d * (1 << k);
             return initial ? alpha : 1 - alpha;
         }
-        public readonly bool anyabslessthan(float a, float b, float c, float v) => math.any(math.abs(math.float3(a, b, c)) < v);
-        public readonly float atan2(float a, float b) => math.atan2(a, b);
+        public readonly bool anygreaterthan(float a, float b, float c, float v) => math.any(math.float3(a, b, c) > v);
         public readonly float2 avg(float2 a, float2 b) => 0.5f * (a + b);
+        public readonly float cos(float v) => math.cos(v);
         public readonly float diff(float a, float b) => a - b;
         public readonly float2 diff(float2 a, float2 b) => a - b;
         public readonly float distancesq(float2 a, float2 b) => math.distancesq(a, b);
@@ -2820,6 +2824,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float2 min(float2 v, float2 w) => math.min(v, w);
         public readonly float mul(float a, float b) => a * b;
         public readonly float2 neg(float2 v) => -v;
+        public readonly float2 normalizesafe(float2 v) => math.normalizesafe(v);
     }
 
     internal readonly struct DoubleUtils : IUtils<double, double2, double>
@@ -2885,9 +2890,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var alpha = D / d * (1 << k);
             return initial ? alpha : 1 - alpha;
         }
-        public readonly bool anyabslessthan(double a, double b, double c, double v) => math.any(math.abs(math.double3(a, b, c)) < v);
-        public readonly double atan2(double a, double b) => math.atan2(a, b);
+        public readonly bool anygreaterthan(double a, double b, double c, double v) => math.any(math.double3(a, b, c) > v);
         public readonly double2 avg(double2 a, double2 b) => 0.5f * (a + b);
+        public readonly double cos(double v) => math.cos(v);
         public readonly double diff(double a, double b) => a - b;
         public readonly double2 diff(double2 a, double2 b) => a - b;
         public readonly double distancesq(double2 a, double2 b) => math.distancesq(a, b);
@@ -2914,6 +2919,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double2 min(double2 v, double2 w) => math.min(v, w);
         public readonly double mul(double a, double b) => a * b;
         public readonly double2 neg(double2 v) => -v;
+        public readonly double2 normalizesafe(double2 v) => math.normalizesafe(v);
     }
 
     internal readonly struct IntUtils : IUtils<int, int2, long>
@@ -2964,9 +2970,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly int abs(int v) => math.abs(v);
         public readonly long abs(long v) => math.abs(v);
         public readonly int alpha(int D, int dSquare, bool initial) => throw new NotImplementedException();
-        public readonly bool anyabslessthan(int a, int b, int c, int v) => throw new NotImplementedException();
-        public readonly int atan2(int a, int b) => throw new NotImplementedException();
+        public readonly bool anygreaterthan(int a, int b, int c, int v) => throw new NotImplementedException();
         public readonly int2 avg(int2 a, int2 b) => (a + b) / 2;
+        public readonly int cos(int v) => throw new NotImplementedException();
         public readonly int diff(int a, int b) => a - b;
         public readonly long diff(long a, long b) => a - b;
         public readonly int2 diff(int2 a, int2 b) => a - b;
@@ -2998,5 +3004,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly int2 min(int2 v, int2 w) => math.min(v, w);
         public readonly long mul(int a, int b) => (long)a * b;
         public readonly int2 neg(int2 v) => -v;
+        public readonly int2 normalizesafe(int2 v) => throw new NotImplementedException();
     }
 }
