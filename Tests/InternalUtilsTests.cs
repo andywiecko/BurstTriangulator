@@ -7,6 +7,20 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 {
     public class InternalUtilsTests
     {
+        private static readonly TestCaseData[] alphaTestData =
+        {
+            new(1d, 2d) { ExpectedResult = 0.50, TestName = "Test case 1 (D = 1, d = 2)"},
+            new(1d, 4d) { ExpectedResult = 0.50, TestName = "Test case 2 (D = 1, d = 4)"},
+            new(1d, 8d) { ExpectedResult = 0.50, TestName = "Test case 3 (D = 1, d = 8)"},
+            new(1d, 1.5d) { ExpectedResult = 2.0 / 3, TestName = "Test case 4 (D = 1, d = 1.5)"},
+            new(2d, 1d) { ExpectedResult = 0.5, TestName = "Test case 5 (D = 2, d = 1)"},
+            new(1.5, 1d) { ExpectedResult = 0.375, TestName = "Test case 6 (D = 1.5, d = 1)"},
+            new(1d, 0d) { ExpectedResult = float.NaN, TestName = "Test case 7 (D = 1, d = 0)"},
+        };
+
+        [Test, TestCaseSource(nameof(alphaTestData))]
+        public double AlphaTest(double D, double d) => default(DoubleUtils).alpha(D, d * d);
+
         private static readonly TestCaseData[] angleTestData = new TestCaseData[]
         {
             new(math.double2(0, 0), math.double2(1, 0), math.double2(0, 1), math.PI_DBL / 4 + 1e-9) { ExpectedResult = true, TestName = "Test case 1a - canonical vectors" },
@@ -29,8 +43,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         private static readonly TestCaseData[] area2testData = new TestCaseData[]
         {
             new(math.double2(0, 0), math.double2(1, 0), math.double2(0, 1), 1) { TestName = "Test case 1" },
-            new(math.double2(0, 0), math.double2(2, 0), math.double2(0, 1), 2) { TestName = "Test case 1" },
-            new(math.double2(0, 0), math.double2(6, 0), math.double2(0, 7), 42) { TestName = "Test case 1" },
+            new(math.double2(0, 0), math.double2(2, 0), math.double2(0, 1), 2) { TestName = "Test case 2" },
+            new(math.double2(0, 0), math.double2(6, 0), math.double2(0, 7), 42) { TestName = "Test case 3" },
         }.SelectMany(i =>
         {
             var args = i.Arguments;

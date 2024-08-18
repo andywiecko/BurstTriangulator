@@ -2862,8 +2862,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             var d = math.sqrt(dSquare);
             var k = (int)math.round(math.log2(0.5f * d / D));
-            var alpha = D / d * (1 << k);
-            return alpha;
+            return D / d * (k < 0 ? math.pow(2, k) : 1 << k);
         }
         public readonly bool anygreaterthan(float a, float b, float c, float v) => math.any(math.float3(a, b, c) > v);
         public readonly float2 avg(float2 a, float2 b) => 0.5f * (a + b);
@@ -2956,9 +2955,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double alpha(double D, double dSquare)
         {
             var d = math.sqrt(dSquare);
-            var k = (int)math.round(math.log2(0.5f * d / D));
-            var alpha = D / d * (1 << k);
-            return alpha;
+            var k = (int)math.round(math.log2(0.5 * d / D));
+            return D / d * (k < 0 ? math.pow(2, k) : 1 << k);
         }
         public readonly bool anygreaterthan(double a, double b, double c, double v) => math.any(math.double3(a, b, c) > v);
         public readonly double2 avg(double2 a, double2 b) => 0.5f * (a + b);
