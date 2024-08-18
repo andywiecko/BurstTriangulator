@@ -1,4 +1,4 @@
-using andywiecko.BurstTriangulator.LowLevel.Unsafe;
+﻿using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -702,6 +702,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
         }
 
+        /// <summary>
+        /// This step is based on the following projects:
+        /// <list type="bullet">
+        /// <item><see href="https://github.com/mapbox/delaunator">delaunator</see></item>
+        /// <item><see href="https://github.com/nol1fe/delaunator-sharp/">delaunator-sharp</see></item>
+        /// </list>
+        /// </summary>
         private struct DelaunayTriangulationStep
         {
             private struct DistComparer : IComparer<int>
@@ -1076,6 +1083,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
         }
 
+        /// <summary>
+        /// This step implements <i>Sloan algorithm</i>.
+        /// Read more in the paper:
+        /// <see href="https://doi.org/10.1016/0045-7949(93)90239-A">
+        /// S. W. Sloan. "A fast algorithm for generating constrained Delaunay triangulations." <i>Comput. Struct.</i> <b>47</b>.3:441-450 (1993).
+        /// </see>
+        /// </summary>
         private struct ConstrainEdgesStep
         {
             private NativeReference<Status> status;
@@ -1905,8 +1919,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 else
                 {
-                    var alpha = utils.alpha(D: shells, dSquare: utils.Cast(utils.distancesq(e0, e1)), i < initialPointsCount);
-                    p = utils.lerp(e0, e1, alpha);
+                    var alpha = utils.alpha(D: shells, dSquare: utils.Cast(utils.distancesq(e0, e1)));
+                    // Swap points to provide symmetry in splitting
+                    p = i < initialPointsCount ? utils.lerp(e0, e1, alpha) : utils.lerp(e1, e0, alpha);
                 }
 
                 constrainedHalfedges[he] = false;
@@ -2420,6 +2435,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         internal static bool AngleIsTooSmall(T2 pA, T2 pB, T2 pC, T minimumAngle)
         {
+            // Implementation is based in dot product property:
+            //    a·b = |a| |b| cos α
             var threshold = utils.cos(minimumAngle);
 
             var pAB = utils.normalizesafe(utils.diff(pB, pA));
@@ -2445,6 +2462,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             utils.mul(utils.diff(utils.Y(c), utils.Y(a)), utils.diff(utils.X(b), utils.X(a))),
             utils.mul(utils.diff(utils.Y(b), utils.Y(a)), utils.diff(utils.X(c), utils.X(a)))
         );
+        /// <summary>
+        /// Returns <see langword="true"/> if edge (<paramref name="a0"/>, <paramref name="a1"/>) intersects 
+        /// (<paramref name="b0"/>, <paramref name="b1"/>), <see langword="false"/> otherwise.
+        /// </summary>
+        /// <remarks>
+        /// This method will not catch intersecting collinear edges. See unit tests for more details.
+        /// </remarks>
         internal static bool EdgeEdgeIntersection(T2 a0, T2 a1, T2 b0, T2 b1) => ccw(a0, a1, b0) != ccw(a0, a1, b1) && ccw(b0, b1, a0) != ccw(b0, b1, a1);
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         internal static bool IsConvexQuadrilateral(T2 a, T2 b, T2 c, T2 d) => true
@@ -2469,7 +2493,15 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         TSelf Identity { get; }
         TSelf Inverse();
         T2 Transform(T2 point);
+        /// <summary>
+        /// Returns PCA transformation of given <paramref name="positions"/>.
+        /// Read more in the project manual.
+        /// </summary>
         TSelf CalculatePCATransformation(NativeArray<T2> positions);
+        /// <summary>
+        /// Returns COM transformation of given <paramref name="positions"/>.
+        /// Read more in the project manual about method restrictions for given type.
+        /// </summary>
         TSelf CalculateLocalTransformation(NativeArray<T2> positions);
     }
 
@@ -2543,6 +2575,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             return Scale(scale) * Translate(-com);
         }
 
+        /// <summary>
+        /// Solves <see href="https://en.wikipedia.org/wiki/Eigenvalues_and_eigenvectors">eigen problem</see> of the given <paramref name="matrix"/>.
+        /// </summary>
+        /// <param name="eigval">Eigen values.</param>
+        /// <param name="eigvec">Eigen vectors.</param>
         private static void Eigen(float2x2 matrix, out float2 eigval, out float2x2 eigvec)
         {
             var a00 = matrix[0][0];
@@ -2564,6 +2601,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 m10: math.sin(phi), m11: math.cos(phi)
             );
         }
+
+        /// <summary>
+        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecer product</see> of <paramref name="a"/> and <paramref name="b"/>.
+        /// </summary>
         private static float2x2 Kron(float2 a, float2 b) => math.float2x2(a * b[0], a * b[1]);
     }
 
@@ -2637,6 +2678,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             return Scale(scale) * Translate(-com);
         }
 
+        /// <summary>
+        /// Solves <see href="https://en.wikipedia.org/wiki/Eigenvalues_and_eigenvectors">eigen problem</see> of the given <paramref name="matrix"/>.
+        /// </summary>
+        /// <param name="eigval">Eigen values.</param>
+        /// <param name="eigvec">Eigen vectors.</param>
         private static void Eigen(double2x2 matrix, out double2 eigval, out double2x2 eigvec)
         {
             var a00 = matrix[0][0];
@@ -2658,6 +2704,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 m10: math.sin(phi), m11: math.cos(phi)
             );
         }
+
+        /// <summary>
+        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecer product</see> of <paramref name="a"/> and <paramref name="b"/>.
+        /// </summary>
         private static double2x2 Kron(double2 a, double2 b) => math.double2x2(a * b[0], a * b[1]);
     }
 
@@ -2669,7 +2719,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public TranslationInt(int2 translation) => this.translation = translation;
         public TranslationInt Inverse() => new(-translation);
         public int2 Transform(int2 point) => point + translation;
-        public readonly TranslationInt CalculatePCATransformation(NativeArray<int2> positions) => throw new NotImplementedException();
+        public readonly TranslationInt CalculatePCATransformation(NativeArray<int2> positions) => throw new NotImplementedException(
+            "PCA is not implemented for int2 coordinates!"
+        );
 
         public readonly TranslationInt CalculateLocalTransformation(NativeArray<int2> positions)
         {
@@ -2685,8 +2737,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
     }
 
+    /// <typeparam name="T">The raw coordinate type for a single axis. For example <see cref="float"/> or <see cref="int"/>.</typeparam>
+    /// <typeparam name="T2">The 2D coordinate composed of Ts. For example <see cref="float2"/>.</typeparam>
+    /// <typeparam name="TBig">A value that may have higher precision compared to <typeparamref name="T"/>. Used for squared distances and other products.</typeparam>
     internal interface IUtils<T, T2, TBig> where T : unmanaged where T2 : unmanaged where TBig : unmanaged
     {
+        /// <summary>
+        /// <b>Warning!</b> This operation may cause precission loss, use with caution.
+        /// </summary>
         T Cast(TBig v);
         T2 CircumCenter(T2 a, T2 b, T2 c);
         T Const(float v);
@@ -2704,7 +2762,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 #pragma warning disable IDE1006
         T abs(T v);
         TBig abs(TBig v);
-        T alpha(T D, T dSquare, bool initial);
+        /// <summary>
+        /// Returns concentric shells segment splitting factor.
+        /// </summary>
+        /// <param name="D">Concentric shells parameter constant.</param>
+        /// <param name="dSquare">Segment length squared.</param>
+        /// <returns><i>alpha</i> in [0, 1] range.</returns>
+        /// <remarks>
+        /// Learn more in the paper:
+        /// <see href="https://doi.org/10.1006/jagm.1995.1021">
+        /// J. Ruppert. "A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation". <i>J. Algorithms</i> <b>18</b>(3):548-585 (1995)
+        /// </see>.
+        /// </remarks>
+        T alpha(T D, T dSquare);
         bool anygreaterthan(T a, T b, T c, T v);
         T2 avg(T2 a, T2 b);
         T cos(T v);
@@ -2779,7 +2849,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var u = 1.0f - v - w;
                 return new(u, v, w);
             }
-
+            // NOTE: use barycentric property.
             return math.cmax(-bar(a, b, c, p)) <= 0;
         }
         public readonly bool SupportRefinement() => true;
@@ -2788,12 +2858,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float Zero() => 0;
         public readonly float ZeroTBig() => 0;
         public readonly float abs(float v) => math.abs(v);
-        public readonly float alpha(float D, float dSquare, bool initial)
+        public readonly float alpha(float D, float dSquare)
         {
             var d = math.sqrt(dSquare);
             var k = (int)math.round(math.log2(0.5f * d / D));
             var alpha = D / d * (1 << k);
-            return initial ? alpha : 1 - alpha;
+            return alpha;
         }
         public readonly bool anygreaterthan(float a, float b, float c, float v) => math.any(math.float3(a, b, c) > v);
         public readonly float2 avg(float2 a, float2 b) => 0.5f * (a + b);
@@ -2874,7 +2944,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var u = 1 - v - w;
                 return new(u, v, w);
             }
-
+            // NOTE: use barycentric property.
             return math.cmax(-bar(a, b, c, p)) <= 0;
         }
         public readonly bool SupportRefinement() => true;
@@ -2883,12 +2953,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double Zero() => 0;
         public readonly double ZeroTBig() => 0;
         public readonly double abs(double v) => math.abs(v);
-        public readonly double alpha(double D, double dSquare, bool initial)
+        public readonly double alpha(double D, double dSquare)
         {
             var d = math.sqrt(dSquare);
             var k = (int)math.round(math.log2(0.5f * d / D));
             var alpha = D / d * (1 << k);
-            return initial ? alpha : 1 - alpha;
+            return alpha;
         }
         public readonly bool anygreaterthan(double a, double b, double c, double v) => math.any(math.double3(a, b, c) > v);
         public readonly double2 avg(double2 a, double2 b) => 0.5f * (a + b);
@@ -2934,7 +3004,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var cl = (long)e.x * e.x + (long)e.y * e.y;
 
             var div = (long)d.x * e.y - (long)d.y * e.x;
-
+            // NOTE: In a case when div = 0 (i.e. circumcenter is not well defined) we use int.MaxValue to mimic the infinity.
             return div == 0 ? new(int.MaxValue) : (int2)math.round(a + (0.5 / div) * (bl * math.double2(e.y, -e.x) + cl * math.double2(-d.y, d.x)));
         }
         public readonly int Const(float v) => (int)v;
@@ -2952,6 +3022,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var bp = ex * ex + ey * ey;
             var cp = fx * fx + fy * fy;
 
+            // NOTE: This may fail with coordinates that differ by more than approximately 2^20.
+            // When verifying coordinates, we should thus ensure that the bounding box is smaller than 2^20.
             return dx * (ey * cp - bp * fy) - dy * (ex * cp - bp * fx) + ap * (ex * fy - ey * fx) < 0;
         }
         public readonly long MaxValue() => long.MaxValue;
@@ -2960,6 +3032,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly bool PointInsideTriangle(int2 p, int2 a, int2 b, int2 c)
         {
             static long cross(int2 a, int2 b) => (long)a.x * b.y - (long)a.y * b.x;
+            // NOTE: triangle orientation is guaranteed.
             return cross(p - a, b - a) >= 0 && cross(p - b, c - b) >= 0 && cross(p - c, a - c) >= 0;
         }
         public readonly bool SupportRefinement() => false;
@@ -2969,7 +3042,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly long ZeroTBig() => 0;
         public readonly int abs(int v) => math.abs(v);
         public readonly long abs(long v) => math.abs(v);
-        public readonly int alpha(int D, int dSquare, bool initial) => throw new NotImplementedException();
+        public readonly int alpha(int D, int dSquare) => throw new NotImplementedException();
         public readonly bool anygreaterthan(int a, int b, int c, int v) => throw new NotImplementedException();
         public readonly int2 avg(int2 a, int2 b) => (a + b) / 2;
         public readonly int cos(int v) => throw new NotImplementedException();
@@ -2994,6 +3067,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
             }
         }
+        // TODO: Validate really large coordinates with tests. Probably this should include check for v < 2^20.
         public readonly bool2 isfinite(int2 v) => true;
         public readonly bool le(int a, int b) => a <= b;
         public readonly bool le(long a, long b) => a <= b;
