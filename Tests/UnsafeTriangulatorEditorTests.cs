@@ -236,8 +236,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().UnsafeAsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
             };
             var args = Args.Default(validateInput: false);
 
@@ -260,8 +260,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().UnsafeAsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
             };
             var args = Args.Default(validateInput: false);
 
@@ -284,9 +284,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var inputWithHoles = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
-                HoleSeeds = LakeSuperior.Holes.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().AsNativeArray(),
+                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().UnsafeAsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
+                HoleSeeds = LakeSuperior.Holes.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().UnsafeAsNativeArray(),
             };
             var inputWithoutHoles = inputWithHoles;
             inputWithoutHoles.HoleSeeds = default;
@@ -317,7 +317,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
+                Positions = LakeSuperior.Points.DynamicCast<T>().UnsafeAsNativeArray(),
             };
 
             using var triangles1 = new NativeList<int>(Allocator.Persistent);
@@ -352,8 +352,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
+                Positions = LakeSuperior.Points.DynamicCast<T>().UnsafeAsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
             };
             var args = Args.Default(validateInput: false, refineMesh: true, restoreBoundary: true);
 
@@ -389,9 +389,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var inputWithHoles = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(),
-                HoleSeeds = LakeSuperior.Holes.DynamicCast<T>().AsNativeArray(),
+                Positions = LakeSuperior.Points.DynamicCast<T>().UnsafeAsNativeArray(),
+                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
+                HoleSeeds = LakeSuperior.Holes.DynamicCast<T>().UnsafeAsNativeArray(),
             };
             var inputWithoutHoles = inputWithHoles;
             inputWithoutHoles.HoleSeeds = default;
