@@ -1,3 +1,4 @@
+using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using NUnit.Framework;
 using System.Linq;
 using Unity.Burst;
@@ -68,44 +69,19 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }
 
         [Test]
-        public void ManagedInputTest([Values] bool constrain, [Values] bool holes)
-        {
-            using var positions = new NativeArray<float2>(LakeSuperior.Points, Allocator.Persistent);
-            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holeSeeds = new NativeArray<float2>(LakeSuperior.Holes, Allocator.Persistent);
-            using var t0 = new Triangulator<float2>(Allocator.Persistent)
-            {
-                Input = {
-                    Positions = positions,
-                    ConstraintEdges = constrain ? constraints : default,
-                    HoleSeeds = holes ? holeSeeds : default
-                },
-                Settings = { RestoreBoundary = true },
-            };
-            using var t1 = new Triangulator<float2>(Allocator.Persistent)
-            {
-                Input = new ManagedInput<float2>
-                {
-                    Positions = LakeSuperior.Points,
-                    ConstraintEdges = constrain ? LakeSuperior.Constraints : null,
-                    HoleSeeds = holes ? LakeSuperior.Holes : null
-                },
-                Settings = { RestoreBoundary = true },
-            };
-
-            t0.Run();
-            t1.Run();
-
-            Assert.That(t0.Output.Triangles.AsArray().ToArray(), Is.EqualTo(t1.Output.Triangles.AsArray().ToArray()));
-            Assert.That(t0.Output.Halfedges.AsArray().ToArray(), Is.EqualTo(t1.Output.Halfedges.AsArray().ToArray()));
-            Assert.That(t0.Output.Positions.AsArray().ToArray(), Is.EqualTo(t1.Output.Positions.AsArray().ToArray()));
-        }
-
-        [Test]
         public void AsNativeArrayTest()
         {
             int[] a = { 1, 2, 3, 4, 5, 6, };
-            var view = a.AsNativeArray();
+            var view = a.AsNativeArray(out var handle);
+            Assert.That(view, Is.EqualTo(a));
+            handle.Free();
+        }
+
+        [Test]
+        public void UnsafeAsNativeArrayTest()
+        {
+            int[] a = { 1, 2, 3, 4, 5, 6, };
+            var view = a.UnsafeAsNativeArray();
             Assert.That(view, Is.EqualTo(a));
         }
 
@@ -126,7 +102,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public void AsNativeArrayInJobTest()
         {
             int[] a = { 1, 2, 3, 4, 5, 6, };
-            new AsNativeArrayJob { a = a.AsNativeArray() }.Run();
+            new AsNativeArrayJob { a = a.AsNativeArray(out var handle) }.Run();
+            Assert.That(a, Is.EqualTo(new[] { 2, 3, 4, 5, 6, 7 }));
+            handle.Free();
+        }
+
+        [Test]
+        public void UnsafeAsNativeArrayInJobTest()
+        {
+            int[] a = { 1, 2, 3, 4, 5, 6, };
+            new AsNativeArrayJob { a = a.UnsafeAsNativeArray() }.Run();
             Assert.That(a, Is.EqualTo(new[] { 2, 3, 4, 5, 6, 7 }));
         }
     }
