@@ -4,6 +4,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -104,6 +105,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     }
 
     [TestFixture(typeof(float2))]
+    [TestFixture(typeof(Vector2))]
     [TestFixture(typeof(double2))]
     [TestFixture(typeof(int2))]
     public class UnsafeTriangulatorEditorTests<T> where T : unmanaged

@@ -26,6 +26,7 @@ See benchmark for the generic coordinates [**here**][benchmark].
 | type                 | delaunay | constraints | holes      | refinement | preprocessors     | notes                       |
 | :------------------: | :------: | :---------: | :--------: | :--------: | :---------------: | :-------------------------: |
 | [`float2`][float2]   | ✔️       | ✔️         | ✔️         | ✔️         |✔️                |                             |
+| [`Vector2`][Vector2] | ✔️       | ✔️         | ✔️         | ✔️         |✔️                | Via [float2] reinterpret    |
 | [`double2`][double2] | ✔️       | ✔️         | ✔️         | ✔️         |✔️                |                             |
 | [`int2`][int2]       | ✔️       | ✔️         | 🟡[^holes] | ❌         |🟡[^preprocessors] | Support up to $\sim 2^{20}$ |
 
@@ -38,6 +39,7 @@ See benchmark for the generic coordinates [**here**][benchmark].
 [triangulatorT2]: xref:andywiecko.BurstTriangulator.Triangulator`1
 [extensions]: xref:andywiecko.BurstTriangulator.Extensions
 [float2]: xref:Unity.Mathematics.float2
+[Vector2]: xref:UnityEngine.Vector2
 [double2]: xref:Unity.Mathematics.double2
 [int2]: xref:Unity.Mathematics.int2
 [benchmark]: xref:benchmark-md#generic-coordinates
