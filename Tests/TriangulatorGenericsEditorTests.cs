@@ -6,6 +6,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
@@ -27,11 +28,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            LogAssert.Expect(UnityEngine.LogType.Error, new Regex("Mesh refinement is not supported for this coordinate type.*"));
+            LogAssert.Expect(LogType.Error, new Regex("Mesh refinement is not supported for this coordinate type.*"));
         }
     }
 
     [TestFixture(typeof(float2))]
+    [TestFixture(typeof(Vector2))]
     [TestFixture(typeof(double2))]
     [TestFixture(typeof(int2))]
     public class TriangulatorGenericsEditorTests<T> where T : unmanaged
@@ -125,7 +127,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Input = { Positions = positions },
             };
 
-            LogAssert.Expect(UnityEngine.LogType.Error, new Regex(".*"));
+            LogAssert.Expect(LogType.Error, new Regex(".*"));
             triangulator.Run();
 
             Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR));
@@ -268,7 +270,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 }
             };
 
-            LogAssert.Expect(UnityEngine.LogType.Error, new Regex(".*"));
+            LogAssert.Expect(LogType.Error, new Regex(".*"));
             triangulator.Run();
 
             Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR));
@@ -1209,6 +1211,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         private static readonly Type[] _ = { // Forced compilation
             typeof(TriangulatorGenericsEditorTests<float2>.DeferredArraySupportInputJobFloat2),
             typeof(TriangulatorGenericsEditorTests<double2>.DeferredArraySupportInputJobDouble2),
+            typeof(TriangulatorGenericsEditorTests<Vector2>.DeferredArraySupportInputJobVector2),
         };
 
         [BurstCompile]
@@ -1279,6 +1282,40 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             }
         }
 
+        [BurstCompile]
+        private struct DeferredArraySupportInputJobVector2 : IJob
+        {
+            public NativeList<Vector2> positions;
+            public NativeList<int> constraints;
+            public NativeList<Vector2> holes;
+
+            public void Execute()
+            {
+                positions.Clear();
+                positions.Add(math.float2(0, 0));
+                positions.Add(math.float2(3, 0));
+                positions.Add(math.float2(3, 3));
+                positions.Add(math.float2(0, 3));
+                positions.Add(math.float2(1, 1));
+                positions.Add(math.float2(2, 1));
+                positions.Add(math.float2(2, 2));
+                positions.Add(math.float2(1, 2));
+
+                constraints.Clear();
+                constraints.Add(0); constraints.Add(1);
+                constraints.Add(1); constraints.Add(2);
+                constraints.Add(2); constraints.Add(3);
+                constraints.Add(3); constraints.Add(0);
+                constraints.Add(4); constraints.Add(5);
+                constraints.Add(5); constraints.Add(6);
+                constraints.Add(6); constraints.Add(7);
+                constraints.Add(7); constraints.Add(4);
+
+                holes.Clear();
+                holes.Add(new Vector2(1.5f, 1.5f));
+            }
+        }
+
         [Test]
         public void DeferredArraySupportTest()
         {
@@ -1318,6 +1355,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     holes = (dynamic)holes
                 }.Schedule(dependencies),
                 double2 _ => new DeferredArraySupportInputJobDouble2
+                {
+                    positions = (dynamic)positions,
+                    constraints = constraints,
+                    holes = (dynamic)holes
+                }.Schedule(dependencies),
+                Vector2 _ => new DeferredArraySupportInputJobVector2
                 {
                     positions = (dynamic)positions,
                     constraints = constraints,
@@ -1530,7 +1573,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             if (verbose)
             {
-                LogAssert.Expect(UnityEngine.LogType.Error, new Regex("Sloan max iterations exceeded.*"));
+                LogAssert.Expect(LogType.Error, new Regex("Sloan max iterations exceeded.*"));
             }
 
             triangulator.Run();
@@ -2012,7 +2055,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             var autoResult = triangulator.Output.Triangles.AsArray().ToArray();
 
-            triangulator.Draw(color: UnityEngine.Color.green);
+            triangulator.Draw(color: Color.green);
 
             triangulator.Input.HoleSeeds = holes;
             triangulator.Settings.AutoHolesAndBoundary = false;

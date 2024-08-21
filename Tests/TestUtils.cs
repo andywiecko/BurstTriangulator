@@ -92,12 +92,17 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public static T[] DynamicCast<T>(this IEnumerable<float2> data) where T : unmanaged =>
             data.Select(i => (T)(dynamic)i).ToArray();
         public static IEnumerable<float2> Scale(this IEnumerable<float2> data, float s, bool predicate) => data.Select(i => (predicate ? s : 1f) * i);
-        public static T[] DynamicCast<T>(this IEnumerable<double2> data) where T : unmanaged =>
-            data.Select(i => (T)(dynamic)i).ToArray();
+        public static T[] DynamicCast<T>(this IEnumerable<double2> data) where T : unmanaged => default(T) switch
+        {
+            // TODO: this extension can be removed entirely.
+            Vector2 _ => data.Select(i => (T)(dynamic)(float2)i).ToArray(),
+            _ => data.Select(i => (T)(dynamic)i).ToArray()
+        };
         public static IEqualityComparer<T> Comparer<T>(float epsilon = 0.0001f) => default(T) switch
         {
             float2 _ => Float2Comparer.With(epsilon) as IEqualityComparer<T>,
             double2 _ => Double2Comparer.With(epsilon) as IEqualityComparer<T>,
+            Vector2 _ => new Vector2EqualityComparer(epsilon) as IEqualityComparer<T>,
             _ => throw new NotImplementedException()
         };
         public static void Draw(this Triangulator triangulator, Color? color = null, float duration = 5f) => TestUtils.Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)i).ToArray(), triangulator.Output.Triangles.AsArray().AsReadOnlySpan(), color ?? Color.red, duration);
