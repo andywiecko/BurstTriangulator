@@ -7,6 +7,13 @@ using Unity.Mathematics;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
+    [BurstCompile]
+    public static class BurstCompileStaticMethodsTests
+    {
+        [BurstCompile]
+        public static void ArgsBlitableTest(ref Args args) { }
+    }
+
     public class UnsafeTriangulatorEditorTests
     {
         [Test]
