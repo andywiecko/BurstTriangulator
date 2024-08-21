@@ -1,7 +1,11 @@
 # Unsafe Triangulator
 
 > [!CAUTION]  
-> Use the unsafe context with caution! Ensure you understand what you are doing. It is recommended to first learn the usage of the managed [`Triangulator`][triangulator]. Using the unsafe triangulator can lead to unexpected behavior if not used correctly.
+> Use the unsafe context with caution! Ensure that you fully understand what you are doing. It is recommended to first familiarize yourself with the managed [`Triangulator`][triangulator]. Using the unsafe triangulator can lead to unexpected behavior if not used correctly.
+> *Unsafe* in this context indicates that this API may be challenging for beginner users.
+> The user is responsible for managing data allocation (both input and output).
+> Note that some permutations of method calls may not be supported.
+> The term *unsafe* does **not** refer to memory safety.
 
 The package also provides a low-level API through [`UnsafeTriangulator<T2>`][unsafe-triangulator].
 This can be used for customization of the triangulation and for use in a native context.

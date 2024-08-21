@@ -392,7 +392,30 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         );
     }
 
+    /// <summary>
+    /// A wrapper for <see cref="UnsafeTriangulator{T2}"/> where T2 is <see cref="double2"/>.
+    /// </summary>
     public readonly struct UnsafeTriangulator { }
+
+    /// <summary>
+    /// A readonly struct that corresponds to <see cref="Triangulator{T2}"/>.
+    /// This struct can be used directly in a native context within the jobs pipeline.
+    /// The API is accessible through <see cref="Extensions"/>.
+    /// </summary>
+    /// <remarks>
+    /// <i>Unsafe</i> in this context indicates that using the method may be challenging for beginner users.
+    /// The user is responsible for managing data allocation (both input and output).
+    /// Some permutations of the method calls may not be supported.
+    /// Refer to the documentation for more details. The term <i>unsafe</i> does <b>not</b> refer to memory safety.
+    /// </remarks>
+    /// <typeparam name="T2">The coordinate type. Supported types include:
+    /// <see cref="float2"/>,
+    /// <see cref="double2"/>,
+    /// and
+    /// <see cref="int2"/>.
+    /// For more information on type restrictions, refer to the documentation.
+    /// </typeparam>
+    /// <seealso cref="Extensions"/>
     public readonly struct UnsafeTriangulator<T2> where T2 : unmanaged { }
 
     public static class Extensions
