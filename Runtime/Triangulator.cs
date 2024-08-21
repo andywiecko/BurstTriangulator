@@ -332,6 +332,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     {
         public readonly Preprocessor Preprocessor;
         public readonly int SloanMaxIters;
+        // NOTE: Only blittable types are supported for Burst compiled static methods.
+        //       Unfortunately bool type is non-blittable and required marshaling for compilation.
+        //       Learn more about blittable here: https://learn.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types
+        [MarshalAs(UnmanagedType.U1)]
         public readonly bool AutoHolesAndBoundary, RefineMesh, RestoreBoundary, ValidateInput, Verbose;
         public readonly float ConcentricShellsParameter, RefinementThresholdAngle, RefinementThresholdArea;
 
