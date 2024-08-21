@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -134,10 +133,7 @@ namespace andywiecko.BurstTriangulator
     /// Allocation free input class with implicit cast to <see cref="InputData{T2}"/>.
     /// </summary>
     /// <exclude />
-    [Obsolete(
-        "Use AsNativeArray(out GCHandle) or UnsafeAsNativeArray() instead! " +
-        "You can learn more in the project manual."
-    )]
+    [Obsolete("Use AsNativeArray(out Handle) instead! You can learn more in the project manual.")]
     public class ManagedInput<T2> where T2 : unmanaged
     {
         public T2[] Positions { get; set; }
@@ -161,6 +157,29 @@ namespace andywiecko.BurstTriangulator
         public NativeList<bool> ConstrainedHalfedges => owner.constrainedHalfedges;
         private readonly Triangulator<T2> owner;
         public OutputData(Triangulator<T2> owner) => this.owner = owner;
+    }
+
+    /// <summary>
+    /// A handle that prevents an object from being deallocated by the garbage collector (GC).
+    /// Call <see cref="Free"/> to release the object.
+    /// </summary>
+    /// <seealso cref="Extensions.AsNativeArray{T}(T[], out Handle)"/>
+    public readonly struct Handle
+    {
+        private readonly ulong gcHandle;
+        /// <summary>
+        /// Creates a <see cref="Handle"/>.
+        /// </summary>
+        /// <param name="gcHandle">The handle value, which can be obtained e.g. from 
+        /// <see cref="UnsafeUtility.PinGCArrayAndGetDataAddress(Array, out ulong)"/> or 
+        /// <see cref="UnsafeUtility.PinGCObjectAndGetAddress(object, out ulong)"/>.
+        /// </param>
+        /// <seealso cref="Extensions.AsNativeArray{T}(T[], out Handle)"/>
+        public Handle(ulong gcHandle) => this.gcHandle = gcHandle;
+        /// <summary>
+        /// Releases the handle, allowing the object to be collected by the garbage collector.
+        /// </summary>
+        public readonly void Free() => UnsafeUtility.ReleaseGCObject(gcHandle);
     }
 
     public class Triangulator : IDisposable
@@ -235,10 +254,7 @@ namespace andywiecko.BurstTriangulator
         /// <param name="array">Array to </param>
         /// <returns>View on managed <paramref name="array"/> with <see cref="NativeArray{T}"/>.</returns>
         /// <exclude />
-        [Obsolete(
-            "Use AsNativeArray(out GCHandle) or UnsafeAsNativeArray() instead! " +
-            "You can learn more in the project manual."
-        )]
+        [Obsolete("Use AsNativeArray(out Handle) instead! You can learn more in the project manual.")]
         unsafe public static NativeArray<T> AsNativeArray<T>(this T[] array) where T : unmanaged
         {
             var ret = default(NativeArray<T>);
@@ -256,20 +272,25 @@ namespace andywiecko.BurstTriangulator
 
         /// <summary>
         /// Returns <see cref="NativeArray{T}"/> view on managed <paramref name="array"/>
-        /// with <paramref name="gcHandle"/> to prevents from deallocation.
+        /// with <paramref name="handle"/> to prevents from deallocation.
         /// <para/>
-        /// <b>Warning!</b> User has to call <see cref="GCHandle.Free"/> 
+        /// <b>Warning!</b> User has to call <see cref="Handle.Free"/> 
         /// manually to release the data for GC! Read more in the project manual.
         /// </summary>
         /// <typeparam name="T">The type of the elements.</typeparam>
         /// <param name="array">Array to view.</param>
-        /// <param name="gcHandle">A handle that prevents the <paramref name="array"/> from being deallocated by the GC.</param>
-        /// <returns>View on managed <paramref name="array"/> with <see cref="NativeArray{T}"/>.</returns>
-        /// <seealso cref="LowLevel.Unsafe.Extensions.UnsafeAsNativeArray{T}(T[])"/>
-        public static NativeArray<T> AsNativeArray<T>(this T[] array, out GCHandle gcHandle) where T : unmanaged
+        /// <param name="handle">A handle that prevents the <paramref name="array"/> from being deallocated by the GC.</param>
+        /// <returns><see cref="NativeArray{T}"/> view on managed <paramref name="array"/> with <see cref="NativeArray{T}"/>.</returns>
+        public static unsafe NativeArray<T> AsNativeArray<T>(this T[] array, out Handle handle) where T : unmanaged
         {
-            gcHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
-            return array.UnsafeAsNativeArray();
+            var ptr = UnsafeUtility.PinGCArrayAndGetDataAddress(array, out var gcHandle);
+            var ret = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(ptr, array.Length, Allocator.None);
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            var m_SafetyHandle = AtomicSafetyHandle.Create();
+            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref ret, m_SafetyHandle);
+#endif
+            handle = new(gcHandle);
+            return ret;
         }
 
         public static void Run(this Triangulator<float2> @this) =>
@@ -376,30 +397,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
     public static class Extensions
     {
-        /// <summary>
-        /// Returns <see cref="NativeArray{T}"/> view on managed <paramref name="array"/>.
-        /// <para/>
-        /// <b>Warning!</b> Make sure that GC will not deallocate <paramref name="array"/> or pin it manually.
-        /// </summary>
-        /// <typeparam name="T">The type of the elements.</typeparam>
-        /// <param name="array">Array to view.</param>
-        /// <returns>View on managed <paramref name="array"/> with <see cref="NativeArray{T}"/>.</returns>
-        /// <seealso cref="BurstTriangulator.Extensions.AsNativeArray{T}(T[], out GCHandle)"/>
-        unsafe public static NativeArray<T> UnsafeAsNativeArray<T>(this T[] array) where T : unmanaged
-        {
-            var ret = default(NativeArray<T>);
-            // In Unity 2023.2+ pointers are not required, one can use Span<T> instead.
-            fixed (void* ptr = array)
-            {
-                ret = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(ptr, array.Length, Allocator.None);
-            }
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            var m_SafetyHandle = AtomicSafetyHandle.Create();
-            NativeArrayUnsafeUtility.SetAtomicSafetyHandle(ref ret, m_SafetyHandle);
-#endif
-            return ret;
-        }
-
         public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
         public static void RefineMesh(this UnsafeTriangulator @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) =>

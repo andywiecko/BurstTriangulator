@@ -236,8 +236,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().UnsafeAsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
+                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().AsNativeArray(out var h1),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(out var h2),
             };
             var args = Args.Default(validateInput: false);
 
@@ -251,6 +251,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             t.Triangulate(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(autoHolesAndBoundary: false), Allocator.Persistent);
             t.PlantHoleSeeds(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(autoHolesAndBoundary: true), Allocator.Persistent);
 
+            h1.Free();
+            h2.Free();
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
 
@@ -260,8 +262,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().UnsafeAsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
+                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().AsNativeArray(out var h1),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(out var h2),
             };
             var args = Args.Default(validateInput: false);
 
@@ -275,6 +277,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             t.Triangulate(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(restoreBoundary: false), Allocator.Persistent);
             t.PlantHoleSeeds(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(restoreBoundary: true), Allocator.Persistent);
 
+            h1.Free();
+            h2.Free();
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
 
@@ -284,9 +288,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var inputWithHoles = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().UnsafeAsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
-                HoleSeeds = LakeSuperior.Holes.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().UnsafeAsNativeArray(),
+                Positions = LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().AsNativeArray(out var h1),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(out var h2),
+                HoleSeeds = LakeSuperior.Holes.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>().AsNativeArray(out var h3),
             };
             var inputWithoutHoles = inputWithHoles;
             inputWithoutHoles.HoleSeeds = default;
@@ -303,6 +307,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             t.Triangulate(inputWithoutHoles, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions }, args, Allocator.Persistent);
             t.PlantHoleSeeds(inputWithHoles, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions }, args, Allocator.Persistent);
 
+            h1.Free();
+            h2.Free();
+            h3.Free();
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
 
@@ -317,7 +324,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().UnsafeAsNativeArray(),
+                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(out var h1),
             };
 
             using var triangles1 = new NativeList<int>(Allocator.Persistent);
@@ -338,6 +345,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             t.Triangulate(input, new() { Triangles = triangles2, Positions = outputPositions, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges }, Args.Default(validateInput: false, refineMesh: false), Allocator.Persistent);
             LowLevel.Unsafe.Extensions.RefineMesh((dynamic)t, (dynamic)output, Allocator.Persistent, constrainBoundary: true);
 
+            h1.Free();
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
 
@@ -352,8 +360,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().UnsafeAsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
+                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(out var h1),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(out var h2),
             };
             var args = Args.Default(validateInput: false, refineMesh: true, restoreBoundary: true);
 
@@ -375,6 +383,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             t.Triangulate(input, new() { Triangles = triangles2, Positions = outputPositions, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges }, args.With(refineMesh: false), Allocator.Persistent);
             LowLevel.Unsafe.Extensions.RefineMesh((dynamic)t, (dynamic)output, Allocator.Persistent, constrainBoundary: false);
 
+            h1.Free();
+            h2.Free();
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
 
@@ -389,9 +399,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var t = new UnsafeTriangulator<T>();
             var inputWithHoles = new LowLevel.Unsafe.InputData<T>()
             {
-                Positions = LakeSuperior.Points.DynamicCast<T>().UnsafeAsNativeArray(),
-                ConstraintEdges = LakeSuperior.Constraints.UnsafeAsNativeArray(),
-                HoleSeeds = LakeSuperior.Holes.DynamicCast<T>().UnsafeAsNativeArray(),
+                Positions = LakeSuperior.Points.DynamicCast<T>().AsNativeArray(out var h1),
+                ConstraintEdges = LakeSuperior.Constraints.AsNativeArray(out var h2),
+                HoleSeeds = LakeSuperior.Holes.DynamicCast<T>().AsNativeArray(out var h3),
             };
             var inputWithoutHoles = inputWithHoles;
             inputWithoutHoles.HoleSeeds = default;
@@ -409,6 +419,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             t.PlantHoleSeeds(inputWithHoles, output, args, Allocator.Persistent);
             LowLevel.Unsafe.Extensions.RefineMesh((dynamic)t, (dynamic)output, Allocator.Persistent);
 
+            h1.Free();
+            h2.Free();
+            h3.Free();
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
     }
