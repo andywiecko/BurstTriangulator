@@ -1,4 +1,3 @@
-using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using NUnit.Framework;
 using System.Linq;
 using Unity.Burst;
@@ -77,14 +76,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             handle.Free();
         }
 
-        [Test]
-        public void UnsafeAsNativeArrayTest()
-        {
-            int[] a = { 1, 2, 3, 4, 5, 6, };
-            var view = a.UnsafeAsNativeArray();
-            Assert.That(view, Is.EqualTo(a));
-        }
-
         [BurstCompile]
         private struct AsNativeArrayJob : IJob
         {
@@ -105,14 +96,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             new AsNativeArrayJob { a = a.AsNativeArray(out var handle) }.Run();
             Assert.That(a, Is.EqualTo(new[] { 2, 3, 4, 5, 6, 7 }));
             handle.Free();
-        }
-
-        [Test]
-        public void UnsafeAsNativeArrayInJobTest()
-        {
-            int[] a = { 1, 2, 3, 4, 5, 6, };
-            new AsNativeArrayJob { a = a.UnsafeAsNativeArray() }.Run();
-            Assert.That(a, Is.EqualTo(new[] { 2, 3, 4, 5, 6, 7 }));
         }
     }
 }
