@@ -111,35 +111,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     public class UnsafeTriangulatorEditorTests<T> where T : unmanaged
     {
         [Test]
-        public void UnsafeTriangulatorOutputTrianglesTest([Values] bool constrain, [Values] bool refine, [Values] bool holes)
-        {
-            if (refine && typeof(T) == typeof(int2))
-            {
-                Assert.Ignore("Mesh refinement is not supported for int2.");
-            }
-
-            using var positions = new NativeArray<T>(LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>(), Allocator.Persistent);
-            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holesSeeds = new NativeArray<T>(LakeSuperior.Holes.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>(), Allocator.Persistent);
-            using var triangles = new NativeList<int>(64, Allocator.Persistent);
-            using var triangulator = new Triangulator<T>(Allocator.Persistent)
-            {
-                Input = { Positions = positions, ConstraintEdges = constrain ? constraints : default, HoleSeeds = holes ? holesSeeds : default },
-                Settings = { RefineMesh = refine, RestoreBoundary = holes },
-            };
-
-            new UnsafeTriangulator<T>().Triangulate(
-                input: new() { Positions = positions, ConstraintEdges = constrain ? constraints : default, HoleSeeds = holes ? holesSeeds : default },
-                output: new() { Triangles = triangles },
-                args: Args.Default(refineMesh: refine, restoreBoundary: holes),
-                allocator: Allocator.Persistent
-            );
-            triangulator.Run();
-
-            Assert.That(triangles.AsArray().ToArray(), Is.EqualTo(triangulator.Output.Triangles.AsArray().ToArray()));
-        }
-
-        [Test]
         public void UnsafeTriangulatorOutputPositionsTest()
         {
             using var positions = new NativeArray<T>(LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>(), Allocator.Persistent);
@@ -321,15 +292,40 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             h3.Free();
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
+    }
+
+    [TestFixture(typeof(float2))]
+    [TestFixture(typeof(Vector2))]
+    [TestFixture(typeof(double2))]
+    public class UnsafeTriangulatorEditorTestsWithRefinement<T> where T : unmanaged
+    {
+        [Test]
+        public void UnsafeTriangulatorOutputTrianglesTest([Values] bool constrain, [Values] bool refine, [Values] bool holes)
+        {
+            using var positions = new NativeArray<T>(LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>(), Allocator.Persistent);
+            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
+            using var holesSeeds = new NativeArray<T>(LakeSuperior.Holes.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>(), Allocator.Persistent);
+            using var triangles = new NativeList<int>(64, Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constrain ? constraints : default, HoleSeeds = holes ? holesSeeds : default },
+                Settings = { RefineMesh = refine, RestoreBoundary = holes },
+            };
+
+            new UnsafeTriangulator<T>().Triangulate(
+                input: new() { Positions = positions, ConstraintEdges = constrain ? constraints : default, HoleSeeds = holes ? holesSeeds : default },
+                output: new() { Triangles = triangles },
+                args: Args.Default(refineMesh: refine, restoreBoundary: holes),
+                allocator: Allocator.Persistent
+            );
+            triangulator.Run();
+
+            Assert.That(triangles.AsArray().ToArray(), Is.EqualTo(triangulator.Output.Triangles.AsArray().ToArray()));
+        }
 
         [Test]
         public void UnsafeTriangulatorRefineMeshTest()
         {
-            if (typeof(T) == typeof(int2))
-            {
-                Assert.Ignore("Mesh refinement is not supported for int2.");
-            }
-
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
@@ -361,11 +357,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorRefineMeshConstrainedTest()
         {
-            if (typeof(T) == typeof(int2))
-            {
-                Assert.Ignore("Mesh refinement is not supported for int2.");
-            }
-
             var t = new UnsafeTriangulator<T>();
             var input = new LowLevel.Unsafe.InputData<T>()
             {
@@ -400,11 +391,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorPlantHoleSeedsRefineMeshTest()
         {
-            if (typeof(T) == typeof(int2))
-            {
-                Assert.Ignore("Mesh refinement is not supported for int2.");
-            }
-
             var t = new UnsafeTriangulator<T>();
             var inputWithHoles = new LowLevel.Unsafe.InputData<T>()
             {
