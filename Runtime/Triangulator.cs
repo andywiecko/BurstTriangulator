@@ -1698,6 +1698,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 trianglesQueue.Enqueue(tId);
                 badTriangles.Add(tId);
 
+                // Search outwards from the seed triangle and mark all triangles
+                // until we get to a constrained edge, or a previously visited triangle.
                 while (trianglesQueue.TryDequeue(out tId))
                 {
                     for (int i = 0; i < 3; i++)
@@ -2575,7 +2577,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// (<paramref name="b0"/>, <paramref name="b1"/>), <see langword="false"/> otherwise.
         /// </summary>
         /// <remarks>
-        /// This method will not catch intersecting collinear edges. See unit tests for more details.
+        /// This method will not catch intersecting collinear segments. See unit tests for more details.
+        /// Segments intersecting only at their endpoints may or may not return <see langword="true"/>, depending on their orientation.
         /// </remarks>
         internal static bool EdgeEdgeIntersection(T2 a0, T2 a1, T2 b0, T2 b1) => ccw(a0, a1, b0) != ccw(a0, a1, b1) && ccw(b0, b1, a0) != ccw(b0, b1, a1);
         private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
@@ -2851,7 +2854,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     internal interface IUtils<T, T2, TBig> where T : unmanaged where T2 : unmanaged where TBig : unmanaged
     {
         /// <summary>
-        /// <b>Warning!</b> This operation may cause precission loss, use with caution.
+        /// Cast a float to <typeparamref name="T"/>. Note that for integer coordinates, this will be floored.
+        /// <b>Warning!</b> This operation may cause precision loss, use with caution.
         /// </summary>
         T Cast(TBig v);
         T2 CircumCenter(T2 a, T2 b, T2 c);
@@ -3111,6 +3115,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             var div = (long)d.x * e.y - (long)d.y * e.x;
             // NOTE: In a case when div = 0 (i.e. circumcenter is not well defined) we use int.MaxValue to mimic the infinity.
+            //       Doubles can represent all integers up to 2^53 exactly, so they can represent all int32 coordinates, and thus it is safe to cast here.
             return div == 0 ? new(int.MaxValue) : (int2)math.round(a + (0.5 / div) * (bl * math.double2(e.y, -e.x) + cl * math.double2(-d.y, d.x)));
         }
         public readonly int Const(float v) => (int)v;
