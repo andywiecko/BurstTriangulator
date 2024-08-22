@@ -559,7 +559,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             PreProcessInputStep(input, output, args, out var localHoles, out var lt, allocator);
             new ValidateInputStep(input, output, args).Execute();
-            new DelaunayTriangulationStep(input, output, args).Execute(allocator);
+            new DelaunayTriangulationStep(output, args).Execute(allocator);
             new ConstrainEdgesStep(input, output, args).Execute(allocator);
             new PlantingSeedStep(input, output, args, localHoles).Execute(allocator, input.ConstraintEdges.IsCreated);
             new RefineMeshStep(output, args, lt).Execute(allocator, refineMesh: args.RefineMesh, constrainBoundary: !input.ConstraintEdges.IsCreated || !args.RestoreBoundary);
@@ -838,9 +838,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private readonly bool verbose;
             private int hullStart;
             private int trianglesLen;
-            private T2 c;
 
-            public DelaunayTriangulationStep(InputData<T2> input, OutputData<T2> output, Args args)
+            public DelaunayTriangulationStep(OutputData<T2> output, Args args)
             {
                 status = output.Status;
                 positions = output.Positions.AsReadOnly();
@@ -848,7 +847,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 halfedges = output.Halfedges;
                 constrainedHalfedges = output.ConstrainedHalfedges;
                 hullStart = int.MaxValue;
-                c = utils.MaxValue2();
                 verbose = args.Verbose;
                 hashSize = (int)math.ceil(math.sqrt(positions.Length));
                 trianglesLen = default;
@@ -961,7 +959,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 // Sort all other vertices by their distance to the circumcenter of the initial triangle
-                c = utils.CircumCenter(p0, p1, p2);
+                var c = utils.CircumCenter(p0, p1, p2);
                 for (int i = 0; i < positions.Length; i++)
                 {
                     dists[i] = utils.distancesq(c, positions[i]);
@@ -1079,7 +1077,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             private int Legalize(int a)
             {
-                var i = 0;
+                var stackSize = 0;
                 int ar;
 
                 // recursion eliminated with a fixed-size stack
@@ -1108,8 +1106,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     // Check if we are on a convex hull edge
                     if (b == -1)
                     {
-                        if (i == 0) break;
-                        a = EDGE_STACK[--i];
+                        if (stackSize == 0) break;
+                        a = EDGE_STACK[--stackSize];
                         continue;
                     }
 
@@ -1152,15 +1150,15 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         var br = b0 + (b + 1) % 3;
 
                         // Don't worry about hitting the cap: it can only happen on extremely degenerate input
-                        if (i < EDGE_STACK.Length)
+                        if (stackSize < EDGE_STACK.Length)
                         {
-                            EDGE_STACK[i++] = br;
+                            EDGE_STACK[stackSize++] = br;
                         }
                     }
                     else
                     {
-                        if (i == 0) break;
-                        a = EDGE_STACK[--i];
+                        if (stackSize == 0) break;
+                        a = EDGE_STACK[--stackSize];
                     }
                 }
 
