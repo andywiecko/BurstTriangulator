@@ -10,7 +10,6 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Profiling;
 using UnityEngine;
-using UnityEditor;
 
 [assembly: InternalsVisibleTo("andywiecko.BurstTriangulator.Tests")]
 
@@ -122,7 +121,6 @@ namespace andywiecko.BurstTriangulator
         /// </summary>
         [field: SerializeField]
         public Preprocessor Preprocessor { get; set; } = Preprocessor.None;
-        UnityEditor.DrawGizmo _;
     }
 
     public class InputData<T2> where T2 : unmanaged
