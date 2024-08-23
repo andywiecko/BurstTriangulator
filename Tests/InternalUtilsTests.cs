@@ -7,8 +7,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 {
     public class InternalUtilsTests
     {
-        [Test] public void FailCITest() => Assert.Fail();
-
         private static readonly TestCaseData[] alphaTestData =
         {
             new(1d, 2d) { ExpectedResult = 0.50, TestName = "Test case 1 (D = 1, d = 2)"},
