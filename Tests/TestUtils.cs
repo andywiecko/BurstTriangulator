@@ -1,3 +1,4 @@
+﻿using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,37 +17,103 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     {
         public static readonly TrianglesComparer Instance = new();
 
+        public int MaxErrorLogElements = 8;
+
         private readonly struct Int3Comparer : IComparer<int3>
         {
             public readonly int Compare(int3 a, int3 b) => a.x != b.x ? a.x.CompareTo(b.x) : a.y != b.y ? a.y.CompareTo(b.y) : a.z.CompareTo(b.z);
         }
 
-        public bool Equals(IEnumerable<int> x, IEnumerable<int> y)
+        private readonly struct Int3print
         {
-            using var _x = new NativeArray<int>(x.ToArray(), Allocator.Persistent);
-            using var _y = new NativeArray<int>(y.ToArray(), Allocator.Persistent);
+            private readonly int3 t;
+            public Int3print(int3 t) => this.t = t;
+            public override string ToString() => $"({t.x}, {t.y}, {t.z})";
+        }
 
-            if (_x.Length != _y.Length) return false;
-
-            static NativeArray<int> sort(NativeArray<int> t)
+        public bool Equals(IEnumerable<int> expected, IEnumerable<int> actual)
+        {
+            if (actual.Count() % 3 != 0)
             {
-                for (int i = 0; i < t.Length / 3; i++)
+                throw new AssertionException("Actual's length is not modulo 3!");
+            }
+
+            if (expected.Count() % 3 != 0)
+            {
+                throw new AssertionException("Expected's length is not modulo 3!");
+            }
+
+            using var expectedNative = new NativeArray<int>(expected.ToArray(), Allocator.Persistent).Reinterpret<int3>(4);
+            using var actualNative = new NativeArray<int>(actual.ToArray(), Allocator.Persistent).Reinterpret<int3>(4);
+
+            static NativeArray<int3> sort(NativeArray<int3> t)
+            {
+                for (int i = 0; i < t.Length; i++)
                 {
-                    var (t0, t1, t2) = (t[3 * i + 0], t[3 * i + 1], t[3 * i + 2]);
-                    var (id, min) = (0, t0);
-                    (id, min) = t1 < min ? (1, t1) : (id, min);
-                    (id, min) = t2 < min ? (2, t2) : (id, min);
-                    (t[3 * i + 0], t[3 * i + 1], t[3 * i + 2]) = (t[3 * i + id], t[3 * i + (id + 1) % 3], t[3 * i + (id + 2) % 3]);
+                    var min = math.cmin(t[i]);
+                    t[i] = min switch
+                    {
+                        _ when min == t[i].x => t[i].xyz,
+                        _ when min == t[i].y => t[i].yzx,
+                        _ when min == t[i].z => t[i].zxy,
+                        _ => throw new Exception(),
+                    };
                 }
 
-                t.Reinterpret<int3>(4).Sort(default(Int3Comparer));
+                t.Sort(default(Int3Comparer));
                 return t;
             }
 
-            return Enumerable.SequenceEqual(sort(_x), sort(_y));
+            if (Enumerable.SequenceEqual(sort(expectedNative), sort(actualNative)))
+            {
+                return true;
+            }
+
+            string print(ReadOnlySpan<Int3print> triangles)
+            {
+                static string join<T>(string sep, ReadOnlySpan<T> span)
+                {
+                    var b = new StringBuilder();
+                    b.Append(span[0]);
+                    foreach (var s in span[1..])
+                    {
+                        b.Append($"{sep}{s}");
+                    }
+                    return b.ToString();
+                }
+
+                var trimmed = triangles.Length > MaxErrorLogElements;
+                var trim = trimmed ? MaxErrorLogElements : triangles.Length;
+                var dots = trimmed ? ", ..." : "";
+                return $"<▲[{triangles.Length}]: {join(", ", triangles[..trim])}{dots}>";
+            }
+
+            var missing = expectedNative.Except(actualNative).Select(i => new Int3print(i)).ToArray();
+            var extra = actualNative.Except(expectedNative).Select(i => new Int3print(i)).ToArray();
+            var details = string.Join("",
+                extra.Length > 0 ? $"\n  Extra: {print(extra)}" : "",
+                missing.Length > 0 ? $"\n  Missing: {print(missing)}" : ""
+            );
+
+            throw new AssertionException($"Expected is {print(expectedNative.Reinterpret<Int3print>())}, actual is {print(actualNative.Reinterpret<Int3print>())}.{details}");
         }
 
         public int GetHashCode(IEnumerable<int> obj) => default;
+    }
+
+    public class TrianglesComparerTests
+    {
+        private static void AssertThrowsAndLog(TestDelegate test) => Debug.Log(Assert.Throws<AssertionException>(test).Message);
+        [Test] public void LogExpectedLengthNotMod3Test() => AssertThrowsAndLog(() => Assert.That(new[] { 0, 1, 2 }, Is.EqualTo(new[] { 0 }).Using(TrianglesComparer.Instance)));
+        [Test] public void LogActualLengthNotMod3Test() => AssertThrowsAndLog(() => Assert.That(new[] { 0, 1, }, Is.EqualTo(new[] { 0 }).Using(TrianglesComparer.Instance)));
+        [Test] public void LogDifferentTrianglesSameLengthTest() => AssertThrowsAndLog(() => Assert.That(new[] { 0, 1, 2 }, Is.EqualTo(new[] { 3, 4, 5 }).Using(TrianglesComparer.Instance)));
+        [Test] public void LogDifferentTrianglesSameLengthWithDotsTest() => AssertThrowsAndLog(() => Assert.That(new[] { 0, 1, 2, 3, 4, 5 }, Is.EqualTo(new[] { 6, 7, 8, 9, 10, 11 }).Using(new TrianglesComparer() { MaxErrorLogElements = 1 })));
+        [Test] public void LogDifferentTrianglesSameLengthWithDotsDefaultsTest() => AssertThrowsAndLog(() => Assert.That(Enumerable.Range(0, 32 * 3), Is.EqualTo(Enumerable.Range(32, 32 * 3)).Using(TrianglesComparer.Instance)));
+        [Test] public void LogDifferentTrianglesMissingTrianglesTest() => AssertThrowsAndLog(() => Assert.That(new[] { 0, 1, 2 }, Is.EqualTo(new[] { 3, 4, 5, 6, 7, 8 }).Using(TrianglesComparer.Instance)));
+        [Test] public void LogDifferentTrianglesExtraTrianglesTest() => AssertThrowsAndLog(() => Assert.That(new[] { 3, 4, 5, 6, 7, 8 }, Is.EqualTo(new[] { 0, 1, 2 }).Using(TrianglesComparer.Instance)));
+        [Test] public void TrianglesInnerIndicesShuffledTest() => Assert.That(new[] { 0, 1, 2, 3, 4, 5 }, Is.EqualTo(new[] { 1, 2, 0, 5, 3, 4 }).Using(TrianglesComparer.Instance));
+        [Test] public void TrianglesOuterIndicesShuffledTest() => Assert.That(new[] { 0, 1, 2, 3, 4, 5 }, Is.EqualTo(new[] { 3, 4, 5, 0, 1, 2 }).Using(TrianglesComparer.Instance));
+        [Test] public void TrianglesInnerAndOuterIndicesShuffledTest() => Assert.That(new[] { 0, 1, 2, 3, 4, 5 }, Is.EqualTo(new[] { 5, 3, 4, 2, 0, 1 }).Using(TrianglesComparer.Instance));
     }
 
     public class Float2Comparer : IEqualityComparer<float2>
