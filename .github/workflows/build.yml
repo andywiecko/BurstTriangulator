@@ -26,9 +26,10 @@ jobs:
         targetPlatform:
           - StandaloneWindows
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           lfs: true
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
       - uses: actions/cache@v2
         with:
           path: ${{ matrix.projectPath }}/Library
