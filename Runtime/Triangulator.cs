@@ -730,7 +730,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
                 if (a0Id == a1Id)
                 {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] is length zero!");
+                    Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is length zero!");
                     return false;
                 }
                 return true;
@@ -751,7 +751,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var p = positions[j];
                     if (PointLineSegmentIntersection(p, a0, a1))
                     {
-                        Log($"[Triangulator]: ConstraintEdges[{i}] and Positions[{j}] are collinear!");
+                        Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and Positions[{j}] = <({utils.X(p)}, {utils.Y(p)})> are collinear!");
                         return false;
                     }
                 }
@@ -781,7 +781,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 if (a0Id == b0Id && a1Id == b1Id ||
                     a0Id == b1Id && a1Id == b0Id)
                 {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] and [{j}] are equivalent!");
+                    Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) are equivalent!");
                     return false;
                 }
 
@@ -794,7 +794,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
                 if (EdgeEdgeIntersection(a0, a1, b0, b1))
                 {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] and [{j}] intersect!");
+                    Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) = <({utils.X(b0)}, {utils.Y(b0)}), ({utils.X(b1)}, {utils.Y(b1)})> intersect!");
                     return false;
                 }
 
