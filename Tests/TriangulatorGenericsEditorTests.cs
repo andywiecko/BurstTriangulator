@@ -65,16 +65,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(new[] { 0, 2, 1, 0, 3, 2 }).Using(TrianglesComparer.Instance));
         }
 
-        private static readonly TestCaseData[] validateInputPositionsTestData = new[]
+        private static readonly TestCaseData[] validateInputPositionsTestData = new TestCaseData[]
         {
-            new TestCaseData(
+            new(
                 new[]
                 {
                     math.float2(0, 0),
                     math.float2(0, 1)
                 }
             ) { TestName = "Test Case 1 (points count less than 3)" },
-            new TestCaseData(
+            new(
                 new[]
                 {
                     math.float2(0, 0),
@@ -83,7 +83,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(0, 1)
                 }
             ) { TestName = "Test Case 2 (duplicated position)" },
-            new TestCaseData(
+            new(
                 new[]
                 {
                     math.float2(0, 0),
@@ -92,7 +92,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(0, 1)
                 }
             ) { TestName = "Test Case 3 (point with NaN)" },
-            new TestCaseData(
+            new(
                 new[]
                 {
                     math.float2(0, 0),
@@ -101,7 +101,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(0, 1)
                 }
             ) { TestName = "Test Case 4 (point with +inf)" },
-            new TestCaseData(
+            new(
                 new[]
                 {
                     math.float2(0, 0),
@@ -110,6 +110,15 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(0, 1)
                 }
             ) { TestName = "Test Case 4 (point with -inf)" },
+            new(
+                new[]
+                {
+                    math.float2(0),
+                    math.float2(1),
+                    math.float2(2),
+                    math.float2(3),
+                }
+            ) { TestName = "Test Case 5 (all collinear)" }
         };
 
         [Test, TestCaseSource(nameof(validateInputPositionsTestData))]
@@ -134,7 +143,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }
 
         private static readonly TestCaseData[] validateInputPositionsNoVerboseTestData = validateInputPositionsTestData
-            .Select(i => new TestCaseData(i.Arguments) { TestName = i.TestName[..^1] + ", no verbose" }).ToArray();
+            .Select(i => new TestCaseData(i.Arguments) { TestName = i.TestName[..^1] + ", no verbose)" }).ToArray();
 
         [Test, TestCaseSource(nameof(validateInputPositionsNoVerboseTestData))]
         public void ValidateInputPositionsNoVerboseTest(float2[] managedPositions)

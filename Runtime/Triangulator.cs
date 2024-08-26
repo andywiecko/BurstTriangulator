@@ -936,20 +936,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     }
                 }
 
-                // Vertex closest to p1 and p2, as measured by the circumscribed circle radius of p1, p2, p3
-                // Thus (p1,p2,p3) form a triangle close to the center of the point set, and it's guaranteed that there
-                // are no other vertices inside this triangle.
-                var p2 = positions[i2];
-
-                if (minRadius.CompareTo(utils.MaxValue()) == 0)
+                // NOTE: Since `int` does not support NaN or infinity, a circumcenter check is required for int2 validation.
+                if (i2 == int.MaxValue || math.any(utils.eq(utils.CircumCenter(p0, p1, positions[i2]), utils.MaxValue2())))
                 {
                     if (verbose)
                     {
-                        Debug.LogError("[Triangulator]: Provided input is not supported!");
+                        Debug.LogError("[Triangulator]: The provided input is not valid. There are either duplicate points or all are collinear.");
                     }
                     status.Value |= Status.ERR;
                     return;
                 }
+
+                // Vertex closest to p1 and p2, as measured by the circumscribed circle radius of p1, p2, p3
+                // Thus (p1,p2,p3) form a triangle close to the center of the point set, and it's guaranteed that there
+                // are no other vertices inside this triangle.
+                var p2 = positions[i2];
 
                 // Swap the order of the vertices if the triangle is not oriented in the right direction
                 if (utils.less(Orient2dFast(p0, p1, p2), utils.ZeroTBig()))
@@ -960,6 +961,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 // Sort all other vertices by their distance to the circumcenter of the initial triangle
                 var c = utils.CircumCenter(p0, p1, p2);
+
                 for (int i = 0; i < positions.Length; i++)
                 {
                     dists[i] = utils.distancesq(c, positions[i]);
