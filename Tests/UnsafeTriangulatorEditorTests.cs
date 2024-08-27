@@ -5,6 +5,9 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+#if UNITY_MATHEMATICS_FIXEDPOINT
+using Unity.Mathematics.FixedPoint;
+#endif
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -108,6 +111,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     [TestFixture(typeof(Vector2))]
     [TestFixture(typeof(double2))]
     [TestFixture(typeof(int2))]
+#if UNITY_MATHEMATICS_FIXEDPOINT
+    [TestFixture(typeof(fp2))]
+#endif
     public class UnsafeTriangulatorEditorTests<T> where T : unmanaged
     {
         [Test]
@@ -297,6 +303,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     [TestFixture(typeof(float2))]
     [TestFixture(typeof(Vector2))]
     [TestFixture(typeof(double2))]
+#if UNITY_MATHEMATICS_FIXEDPOINT
+    [TestFixture(typeof(fp2))]
+#endif
     public class UnsafeTriangulatorEditorTestsWithRefinement<T> where T : unmanaged
     {
         [Test]

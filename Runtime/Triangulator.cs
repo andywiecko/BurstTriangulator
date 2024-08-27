@@ -10,6 +10,9 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Profiling;
 using UnityEngine;
+#if UNITY_MATHEMATICS_FIXEDPOINT
+using Unity.Mathematics.FixedPoint;
+#endif
 
 [assembly: InternalsVisibleTo("andywiecko.BurstTriangulator.Tests")]
 
@@ -321,6 +324,13 @@ namespace andywiecko.BurstTriangulator
             new TriangulationJob<int, int2, long, TransformInt, IntUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<int2> @this, JobHandle dependencies = default) =>
             new TriangulationJob<int, int2, long, TransformInt, IntUtils>(@this).Schedule(dependencies);
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        public static void Run(this Triangulator<fp2> @this) =>
+            new TriangulationJob<fp, fp2, fp, TransformFp, FpUtils>(@this).Run();
+        public static JobHandle Schedule(this Triangulator<fp2> @this, JobHandle dependencies = default) =>
+            new TriangulationJob<fp, fp2, fp, TransformFp, FpUtils>(@this).Schedule(dependencies);
+#endif
     }
 }
 
@@ -430,6 +440,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     /// <see cref="float2"/>,
     /// <see cref="Vector2"/>,
     /// <see cref="double2"/>,
+    /// <see cref="fp2"/>,
     /// and
     /// <see cref="int2"/>.
     /// For more information on type restrictions, refer to the documentation.
@@ -457,6 +468,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public static void Triangulate(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, IntUtils>().Triangulate(input, output, args, allocator);
         public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, IntUtils>().PlantHoleSeeds(input, output, args, allocator);
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        public static void Triangulate(this UnsafeTriangulator<fp2> @this, InputData<fp2> input, OutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, FpUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, InputData<fp2> input, OutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, FpUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void RefineMesh(this UnsafeTriangulator<fp2> @this, OutputData<fp2> output, Allocator allocator, fp? areaThreshold = null, fp? angleThreshold = null, fp? concentricShells = null, bool constrainBoundary = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, FpUtils>().RefineMesh(output, allocator, 2 * (areaThreshold ?? 1), angleThreshold ?? (fp)0.0872664626, concentricShells ?? (fp)0.001, constrainBoundary);
+#endif
     }
 
     [BurstCompile]
@@ -2863,6 +2880,114 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
     }
 
+#if UNITY_MATHEMATICS_FIXEDPOINT
+    internal readonly struct TransformFp : ITransform<TransformFp, fp, fp2>
+    {
+        // NOTE: fpmath misses determinant and inverse functions.
+        private static fp det(fp2x2 m) => m[0][0] * m[1][1] - m[0][1] * m[1][0];
+        private static fp2x2 inv(fp2x2 m) => fpmath.fp2x2(m[1][1], -m[1][0], -m[0][1], m[0][0]) / det(m);
+        public readonly TransformFp Identity => new(fp2x2.identity, fp2.zero);
+        public readonly fp AreaScalingFactor => fpmath.abs(det(rotScale));
+
+        private readonly fp2x2 rotScale;
+        private readonly fp2 translation;
+
+        public TransformFp(fp2x2 rotScale, fp2 translation) => (this.rotScale, this.translation) = (rotScale, translation);
+        private static TransformFp Translate(fp2 offset) => new(fp2x2.identity, offset);
+        private static TransformFp Scale(fp2 scale) => new(new fp2x2(scale.x, 0, 0, scale.y), fp2.zero);
+        private static TransformFp Rotate(fp2x2 rotation) => new(rotation, fp2.zero);
+        public static TransformFp operator *(TransformFp lhs, TransformFp rhs) => new(
+            fpmath.mul(lhs.rotScale, rhs.rotScale),
+            fpmath.mul(inv(rhs.rotScale), lhs.translation) + rhs.translation
+        );
+
+        public TransformFp Inverse() => new(inv(rotScale), fpmath.mul(rotScale, -translation));
+        public fp2 Transform(fp2 point) => fpmath.mul(rotScale, point + translation);
+
+        public readonly TransformFp CalculatePCATransformation(NativeArray<fp2> positions)
+        {
+            var com = (fp2)0;
+            foreach (var p in positions)
+            {
+                com += p;
+            }
+            com /= positions.Length;
+
+            var cov = fp2x2.zero;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var q = positions[i] - com;
+                cov += Kron(q, q);
+            }
+            cov /= positions.Length;
+
+            Eigen(cov, out _, out var rotationMatrix);
+
+            var partialTransform = Rotate(fpmath.transpose(rotationMatrix)) * Translate(-com);
+            fp2 min = fp.max_value;
+            fp2 max = fp.min_value;
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var p = partialTransform.Transform(positions[i]);
+                min = fpmath.min(p, min);
+                max = fpmath.max(p, max);
+            }
+
+            var c = (min + max) / 2;
+            var s = (fp)2 / (max - min);
+
+            return Scale(s) * Translate(-c) * partialTransform;
+        }
+
+        public readonly TransformFp CalculateLocalTransformation(NativeArray<fp2> positions)
+        {
+            fp2 min = fp.max_value, max = fp.min_value, com = fp2.zero;
+            foreach (var p in positions)
+            {
+                min = fpmath.min(p, min);
+                max = fpmath.max(p, max);
+                com += p;
+            }
+
+            com /= positions.Length;
+            var scale = 1 / fpmath.cmax(fpmath.max(fpmath.abs(max - com), fpmath.abs(min - com)));
+            return Scale(scale) * Translate(-com);
+        }
+
+        /// <summary>
+        /// Solves <see href="https://en.wikipedia.org/wiki/Eigenvalues_and_eigenvectors">eigen problem</see> of the given <paramref name="matrix"/>.
+        /// </summary>
+        /// <param name="eigval">Eigen values.</param>
+        /// <param name="eigvec">Eigen vectors.</param>
+        private static void Eigen(fp2x2 matrix, out fp2 eigval, out fp2x2 eigvec)
+        {
+            var a00 = matrix[0][0];
+            var a11 = matrix[1][1];
+            var a01 = matrix[0][1];
+
+            var a00a11 = a00 - a11;
+            var p1 = a00 + a11;
+            var p2 = (a00a11 >= 0 ? 1 : -1) * fpmath.sqrt(a00a11 * a00a11 + 4 * a01 * a01);
+            var lambda1 = p1 + p2;
+            var lambda2 = p1 - p2;
+            eigval = fpmath.fp2(lambda1, lambda2) / 2;
+
+            var phi = fpmath.atan2(2 * a01, a00a11) / 2;
+
+            eigvec = fpmath.fp2x2
+            (
+                m00: fpmath.cos(phi), m01: -fpmath.sin(phi),
+                m10: fpmath.sin(phi), m11: fpmath.cos(phi)
+            );
+        }
+
+        /// <summary>
+        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecer product</see> of <paramref name="a"/> and <paramref name="b"/>.
+        /// </summary>
+        private static fp2x2 Kron(fp2 a, fp2 b) => fpmath.fp2x2(a * b[0], a * b[1]);
+    }
+#endif
+
     /// <typeparam name="T">The raw coordinate type for a single axis. For example <see cref="float"/> or <see cref="int"/>.</typeparam>
     /// <typeparam name="T2">The 2D coordinate composed of Ts. For example <see cref="float2"/>.</typeparam>
     /// <typeparam name="TBig">A value that may have higher precision compared to <typeparamref name="T"/>. Used for squared distances and other products.</typeparam>
@@ -3206,4 +3331,100 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly int2 neg(int2 v) => -v;
         public readonly int2 normalizesafe(int2 v) => throw new NotImplementedException();
     }
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+    internal readonly struct FpUtils : IUtils<fp, fp2, fp>
+    {
+        public readonly fp Cast(fp v) => v;
+        public readonly fp2 CircumCenter(fp2 a, fp2 b, fp2 c)
+        {
+            var d = b - a;
+            var e = c - a;
+
+            var bl = fpmath.lengthsq(d);
+            var cl = fpmath.lengthsq(e);
+
+            // NOTE: In a case when div = 0 (i.e. circumcenter is not well defined) we use fp.max_value to mimic the infinity.
+            var div = d.x * e.y - d.y * e.x;
+            return div == 0 ? fp.max_value : a + (fp)0.5 / div * (bl * fpmath.fp2(e.y, -e.x) + cl * fpmath.fp2(-d.y, d.x));
+        }
+        public readonly fp Const(float v) => (fp)v;
+        public readonly fp EPSILON() => fp.FromRaw(1L);
+        public readonly bool InCircle(fp2 a, fp2 b, fp2 c, fp2 p)
+        {
+            var dx = a.x - p.x;
+            var dy = a.y - p.y;
+            var ex = b.x - p.x;
+            var ey = b.y - p.y;
+            var fx = c.x - p.x;
+            var fy = c.y - p.y;
+
+            var ap = dx * dx + dy * dy;
+            var bp = ex * ex + ey * ey;
+            var cp = fx * fx + fy * fy;
+
+            return dx * (ey * cp - bp * fy) - dy * (ex * cp - bp * fx) + ap * (ex * fy - ey * fx) < 0;
+        }
+        public readonly fp MaxValue() => fp.max_value;
+        public readonly fp2 MaxValue2() => fp.max_value;
+        public readonly fp2 MinValue2() => fp.min_value;
+        public readonly bool PointInsideTriangle(fp2 p, fp2 a, fp2 b, fp2 c)
+        {
+            static fp cross(fp2 a, fp2 b) => a.x * b.y - a.y * b.x;
+            static fp3 bar(fp2 a, fp2 b, fp2 c, fp2 p)
+            {
+                var (v0, v1, v2) = (b - a, c - a, p - a);
+                var denInv = 1 / cross(v0, v1);
+                var v = denInv * cross(v2, v1);
+                var w = denInv * cross(v0, v2);
+                var u = (fp)1.0f - v - w;
+                return new(u, v, w);
+            }
+            // NOTE: use barycentric property.
+            return fpmath.cmax(-bar(a, b, c, p)) <= 0;
+        }
+        public readonly bool SupportRefinement() => true;
+        public readonly fp X(fp2 a) => a.x;
+        public readonly fp Y(fp2 a) => a.y;
+        public readonly fp Zero() => 0;
+        public readonly fp ZeroTBig() => 0;
+        public readonly fp abs(fp v) => fpmath.abs(v);
+        public readonly fp alpha(fp D, fp dSquare)
+        {
+            var d = fpmath.sqrt(dSquare);
+            var k = (int)fpmath.round(fpmath.log2((fp)0.5f * d / D));
+            return D / d * (k < 0 ? fpmath.pow(2, k) : 1 << k);
+        }
+        public readonly bool anygreaterthan(fp a, fp b, fp c, fp v) => math.any(fpmath.fp3(a, b, c) > v);
+        public readonly fp2 avg(fp2 a, fp2 b) => (a + b) / 2;
+        public readonly fp cos(fp v) => fpmath.cos(v);
+        public readonly fp diff(fp a, fp b) => a - b;
+        public readonly fp2 diff(fp2 a, fp2 b) => a - b;
+        public readonly fp distancesq(fp2 a, fp2 b) => fpmath.distancesq(a, b);
+        public readonly fp dot(fp2 a, fp2 b) => fpmath.dot(a, b);
+        public readonly bool2 eq(fp2 v, fp2 w) => v == w;
+        public readonly bool2 ge(fp2 a, fp2 b) => a >= b;
+        public readonly bool greater(fp a, fp b) => a > b;
+        public readonly int hashkey(fp2 p, fp2 c, int hashSize)
+        {
+            return (int)fpmath.floor(pseudoAngle(p.x - c.x, p.y - c.y) * hashSize) % hashSize;
+
+            static fp pseudoAngle(fp dx, fp dy)
+            {
+                var p = dx / (fpmath.abs(dx) + fpmath.abs(dy));
+                return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
+            }
+        }
+        public readonly bool2 isfinite(fp2 v) => fpmath.isfinite(v);
+        public readonly bool le(fp a, fp b) => a <= b;
+        public readonly bool2 le(fp2 a, fp2 b) => a <= b;
+        public readonly fp2 lerp(fp2 a, fp2 b, fp v) => fpmath.lerp(a, b, v);
+        public readonly bool less(fp a, fp b) => a < b;
+        public readonly fp2 max(fp2 v, fp2 w) => fpmath.max(v, w);
+        public readonly fp2 min(fp2 v, fp2 w) => fpmath.min(v, w);
+        public readonly fp mul(fp a, fp b) => a * b;
+        public readonly fp2 neg(fp2 v) => -v;
+        public readonly fp2 normalizesafe(fp2 v) => fpmath.normalizesafe(v);
+    }
+#endif
 }

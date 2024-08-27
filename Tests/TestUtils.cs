@@ -10,6 +10,9 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.TestTools.Utils;
+#if UNITY_MATHEMATICS_FIXEDPOINT 
+using Unity.Mathematics.FixedPoint;
+#endif
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -146,8 +149,25 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }
     }
 
+#if UNITY_MATHEMATICS_FIXEDPOINT
+    public class Fp2Comparer : IEqualityComparer<fp2>
+    {
+        private readonly fp epsilon;
+        public static readonly Fp2Comparer Instance = new((fp)0.0001f);
+        public Fp2Comparer(fp epsilon) => this.epsilon = epsilon;
+        public static Fp2Comparer With(float epsilon) => new((fp)epsilon);
+        public bool Equals(fp2 expected, fp2 actual) => Equals(expected.x, actual.x) && Equals(expected.y, actual.y);
+        public int GetHashCode(fp2 _) => 0;
+        private bool Equals(fp expected, fp actual) => fpmath.abs(actual - expected) <= epsilon * fpmath.max(fpmath.max(fpmath.abs(actual), fpmath.abs(expected)), (fp)1.0f);
+    }
+#endif
+
     public static class TestExtensions
     {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        // TODO: add cast in the fork repo.
+        public static fp2 ToFp2(this float2 v) => new((fp)v.x, (fp)v.y);
+#endif
         public static void Triangulate<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.InputData<T> input, LowLevel.Unsafe.OutputData<T> output, LowLevel.Unsafe.Args args, Allocator allocator) where T : unmanaged =>
             LowLevel.Unsafe.Extensions.Triangulate((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
         public static void PlantHoleSeeds<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.InputData<T> input, LowLevel.Unsafe.OutputData<T> output, LowLevel.Unsafe.Args args, Allocator allocator) where T : unmanaged =>
@@ -156,25 +176,46 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Extensions.Run((dynamic)triangulator);
         public static JobHandle Schedule<T>(this Triangulator<T> triangulator, JobHandle dependencies = default) where T : unmanaged =>
             Extensions.Schedule((dynamic)triangulator, dependencies);
-        public static T[] DynamicCast<T>(this IEnumerable<float2> data) where T : unmanaged =>
-            data.Select(i => (T)(dynamic)i).ToArray();
+        public static T[] DynamicCast<T>(this IEnumerable<float2> data) where T : unmanaged => default(T) switch
+        {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            fp2 _ => data.Select(i => (T)(dynamic)i.ToFp2()).ToArray(),
+#endif
+            _ => data.Select(i => (T)(dynamic)i).ToArray()
+        };
         public static IEnumerable<float2> Scale(this IEnumerable<float2> data, float s, bool predicate) => data.Select(i => (predicate ? s : 1f) * i);
         public static T[] DynamicCast<T>(this IEnumerable<double2> data) where T : unmanaged => default(T) switch
         {
             // TODO: this extension can be removed entirely.
             Vector2 _ => data.Select(i => (T)(dynamic)(float2)i).ToArray(),
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            fp2 _ => data.Select(i => (T)(dynamic)((float2)i).ToFp2()).ToArray(),
+#endif
             _ => data.Select(i => (T)(dynamic)i).ToArray()
         };
         public static IEqualityComparer<T> Comparer<T>(float epsilon = 0.0001f) => default(T) switch
         {
             float2 _ => Float2Comparer.With(epsilon) as IEqualityComparer<T>,
             double2 _ => Double2Comparer.With(epsilon) as IEqualityComparer<T>,
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            fp2 _ => Fp2Comparer.With(epsilon) as IEqualityComparer<T>,
+#endif
             Vector2 _ => new Vector2EqualityComparer(epsilon) as IEqualityComparer<T>,
             _ => throw new NotImplementedException()
         };
         public static void Draw(this Triangulator triangulator, Color? color = null, float duration = 5f) => TestUtils.Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)i).ToArray(), triangulator.Output.Triangles.AsArray().AsReadOnlySpan(), color ?? Color.red, duration);
-        public static void Draw<T>(this Triangulator<T> triangulator, Color? color = null, float duration = 5f) where T : unmanaged =>
-            TestUtils.Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)(dynamic)i).ToArray(), triangulator.Output.Triangles.AsArray().AsReadOnlySpan(), color ?? Color.red, duration);
+        public static void Draw<T>(this Triangulator<T> triangulator, Color? color = null, float duration = 5f) where T : unmanaged => TestUtils.Draw(
+                triangulator.Output.Positions.AsArray().Select(i => default(T) switch
+                {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+                    fp2 v => math.float2((float)v.x, (float)v.y),
+#endif
+                    _ => (float2)(dynamic)i
+                }
+                )
+                .ToArray(),
+                triangulator.Output.Triangles.AsArray().AsReadOnlySpan(), color ?? Color.red, duration
+        );
     }
 
     public static class TestUtils
