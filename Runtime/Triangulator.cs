@@ -295,32 +295,32 @@ namespace andywiecko.BurstTriangulator
         }
 
         public static void Run(this Triangulator<float2> @this) =>
-            new TriangulationJob<float, float2, float, AffineTransform32, FloatUtils>(@this).Run();
+            new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<float2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<float, float2, float, AffineTransform32, FloatUtils>(@this).Schedule(dependencies);
+            new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(@this).Schedule(dependencies);
 
         public static void Run(this Triangulator<Vector2> @this) =>
-            new TriangulationJob<float, float2, float, AffineTransform32, FloatUtils>(
+            new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(
                 input: new() { Positions = @this.Input.Positions.Reinterpret<float2>(), ConstraintEdges = @this.Input.ConstraintEdges, HoleSeeds = @this.Input.HoleSeeds.Reinterpret<float2>() },
                 output: new() { Triangles = @this.triangles, Halfedges = @this.halfedges, Positions = UnsafeUtility.As<NativeList<Vector2>, NativeList<float2>>(ref @this.outputPositions), Status = @this.status, ConstrainedHalfedges = @this.constrainedHalfedges },
                 args: @this.Settings
         ).Run();
         public static JobHandle Schedule(this Triangulator<Vector2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<float, float2, float, AffineTransform32, FloatUtils>(
+            new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(
                 input: new() { Positions = @this.Input.Positions.Reinterpret<float2>(), ConstraintEdges = @this.Input.ConstraintEdges, HoleSeeds = @this.Input.HoleSeeds.Reinterpret<float2>() },
                 output: new() { Triangles = @this.triangles, Halfedges = @this.halfedges, Positions = UnsafeUtility.As<NativeList<Vector2>, NativeList<float2>>(ref @this.outputPositions), Status = @this.status, ConstrainedHalfedges = @this.constrainedHalfedges },
                 args: @this.Settings
         ).Schedule(dependencies);
 
         public static void Run(this Triangulator<double2> @this) =>
-            new TriangulationJob<double, double2, double, AffineTransform64, DoubleUtils>(@this).Run();
+            new TriangulationJob<double, double2, double, TransformDouble, DoubleUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<double2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<double, double2, double, AffineTransform64, DoubleUtils>(@this).Schedule(dependencies);
+            new TriangulationJob<double, double2, double, TransformDouble, DoubleUtils>(@this).Schedule(dependencies);
 
         public static void Run(this Triangulator<int2> @this) =>
-            new TriangulationJob<int, int2, long, TranslationInt, IntUtils>(@this).Run();
+            new TriangulationJob<int, int2, long, TransformInt, IntUtils>(@this).Run();
         public static JobHandle Schedule(this Triangulator<int2> @this, JobHandle dependencies = default) =>
-            new TriangulationJob<int, int2, long, TranslationInt, IntUtils>(@this).Schedule(dependencies);
+            new TriangulationJob<int, int2, long, TransformInt, IntUtils>(@this).Schedule(dependencies);
     }
 }
 
@@ -439,24 +439,24 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
     public static class Extensions
     {
-        public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
-        public static void RefineMesh(this UnsafeTriangulator @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+        public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void RefineMesh(this UnsafeTriangulator @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
 
-        public static void Triangulate(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().Triangulate(input, output, args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().PlantHoleSeeds(input, output, args, allocator);
-        public static void RefineMesh(this UnsafeTriangulator<float2> @this, OutputData<float2> output, Allocator allocator, float areaThreshold = 1, float angleThreshold = 0.0872664626f, float concentricShells = 0.001f, bool constrainBoundary = false) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+        public static void Triangulate(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, InputData<float2> input, OutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void RefineMesh(this UnsafeTriangulator<float2> @this, OutputData<float2> output, Allocator allocator, float areaThreshold = 1, float angleThreshold = 0.0872664626f, float concentricShells = 0.001f, bool constrainBoundary = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
 
-        public static void Triangulate(this UnsafeTriangulator<Vector2> @this, InputData<Vector2> input, OutputData<Vector2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().Triangulate(UnsafeUtility.As<InputData<Vector2>, InputData<float2>>(ref input), UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator<Vector2> @this, InputData<Vector2> input, OutputData<Vector2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().PlantHoleSeeds(UnsafeUtility.As<InputData<Vector2>, InputData<float2>>(ref input), UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), args, allocator);
-        public static void RefineMesh(this UnsafeTriangulator<Vector2> @this, OutputData<Vector2> output, Allocator allocator, float areaThreshold = 1, float angleThreshold = 0.0872664626f, float concentricShells = 0.001f, bool constrainBoundary = false) => new UnsafeTriangulator<float, float2, float, AffineTransform32, FloatUtils>().RefineMesh(UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+        public static void Triangulate(this UnsafeTriangulator<Vector2> @this, InputData<Vector2> input, OutputData<Vector2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().Triangulate(UnsafeUtility.As<InputData<Vector2>, InputData<float2>>(ref input), UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<Vector2> @this, InputData<Vector2> input, OutputData<Vector2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().PlantHoleSeeds(UnsafeUtility.As<InputData<Vector2>, InputData<float2>>(ref input), UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), args, allocator);
+        public static void RefineMesh(this UnsafeTriangulator<Vector2> @this, OutputData<Vector2> output, Allocator allocator, float areaThreshold = 1, float angleThreshold = 0.0872664626f, float concentricShells = 0.001f, bool constrainBoundary = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().RefineMesh(UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
 
-        public static void Triangulate(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().Triangulate(input, output, args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
-        public static void RefineMesh(this UnsafeTriangulator<double2> @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) => new UnsafeTriangulator<double, double2, double, AffineTransform64, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+        public static void Triangulate(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void RefineMesh(this UnsafeTriangulator<double2> @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
 
-        public static void Triangulate(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TranslationInt, IntUtils>().Triangulate(input, output, args, allocator);
-        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TranslationInt, IntUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void Triangulate(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, IntUtils>().Triangulate(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, InputData<int2> input, OutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, IntUtils>().PlantHoleSeeds(input, output, args, allocator);
     }
 
     [BurstCompile]
@@ -2628,27 +2628,27 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         TSelf CalculateLocalTransformation(NativeArray<T2> positions);
     }
 
-    internal readonly struct AffineTransform32 : ITransform<AffineTransform32, float, float2>
+    internal readonly struct TransformFloat : ITransform<TransformFloat, float, float2>
     {
-        public readonly AffineTransform32 Identity => new(float2x2.identity, float2.zero);
+        public readonly TransformFloat Identity => new(float2x2.identity, float2.zero);
         public readonly float AreaScalingFactor => math.abs(math.determinant(rotScale));
 
         private readonly float2x2 rotScale;
         private readonly float2 translation;
 
-        public AffineTransform32(float2x2 rotScale, float2 translation) => (this.rotScale, this.translation) = (rotScale, translation);
-        private static AffineTransform32 Translate(float2 offset) => new(float2x2.identity, offset);
-        private static AffineTransform32 Scale(float2 scale) => new(new float2x2(scale.x, 0, 0, scale.y), float2.zero);
-        private static AffineTransform32 Rotate(float2x2 rotation) => new(rotation, float2.zero);
-        public static AffineTransform32 operator *(AffineTransform32 lhs, AffineTransform32 rhs) => new(
+        public TransformFloat(float2x2 rotScale, float2 translation) => (this.rotScale, this.translation) = (rotScale, translation);
+        private static TransformFloat Translate(float2 offset) => new(float2x2.identity, offset);
+        private static TransformFloat Scale(float2 scale) => new(new float2x2(scale.x, 0, 0, scale.y), float2.zero);
+        private static TransformFloat Rotate(float2x2 rotation) => new(rotation, float2.zero);
+        public static TransformFloat operator *(TransformFloat lhs, TransformFloat rhs) => new(
             math.mul(lhs.rotScale, rhs.rotScale),
             math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
         );
 
-        public AffineTransform32 Inverse() => new(math.inverse(rotScale), math.mul(rotScale, -translation));
+        public TransformFloat Inverse() => new(math.inverse(rotScale), math.mul(rotScale, -translation));
         public float2 Transform(float2 point) => math.mul(rotScale, point + translation);
 
-        public readonly AffineTransform32 CalculatePCATransformation(NativeArray<float2> positions)
+        public readonly TransformFloat CalculatePCATransformation(NativeArray<float2> positions)
         {
             var com = (float2)0;
             foreach (var p in positions)
@@ -2683,7 +2683,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             return Scale(s) * Translate(-c) * partialTransform;
         }
 
-        public readonly AffineTransform32 CalculateLocalTransformation(NativeArray<float2> positions)
+        public readonly TransformFloat CalculateLocalTransformation(NativeArray<float2> positions)
         {
             float2 min = float.MaxValue, max = float.MinValue, com = 0;
             foreach (var p in positions)
@@ -2731,27 +2731,27 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         private static float2x2 Kron(float2 a, float2 b) => math.float2x2(a * b[0], a * b[1]);
     }
 
-    internal readonly struct AffineTransform64 : ITransform<AffineTransform64, double, double2>
+    internal readonly struct TransformDouble : ITransform<TransformDouble, double, double2>
     {
-        public readonly AffineTransform64 Identity => new(double2x2.identity, double2.zero);
+        public readonly TransformDouble Identity => new(double2x2.identity, double2.zero);
         public readonly double AreaScalingFactor => math.abs(math.determinant(rotScale));
 
         private readonly double2x2 rotScale;
         private readonly double2 translation;
 
-        public AffineTransform64(double2x2 rotScale, double2 translation) => (this.rotScale, this.translation) = (rotScale, translation);
-        private static AffineTransform64 Translate(double2 offset) => new(double2x2.identity, offset);
-        private static AffineTransform64 Scale(double2 scale) => new(new double2x2(scale.x, 0, 0, scale.y), double2.zero);
-        private static AffineTransform64 Rotate(double2x2 rotation) => new(rotation, double2.zero);
-        public static AffineTransform64 operator *(AffineTransform64 lhs, AffineTransform64 rhs) => new(
+        public TransformDouble(double2x2 rotScale, double2 translation) => (this.rotScale, this.translation) = (rotScale, translation);
+        private static TransformDouble Translate(double2 offset) => new(double2x2.identity, offset);
+        private static TransformDouble Scale(double2 scale) => new(new double2x2(scale.x, 0, 0, scale.y), double2.zero);
+        private static TransformDouble Rotate(double2x2 rotation) => new(rotation, double2.zero);
+        public static TransformDouble operator *(TransformDouble lhs, TransformDouble rhs) => new(
             math.mul(lhs.rotScale, rhs.rotScale),
             math.mul(math.inverse(rhs.rotScale), lhs.translation) + rhs.translation
         );
 
-        public AffineTransform64 Inverse() => new(math.inverse(rotScale), math.mul(rotScale, -translation));
+        public TransformDouble Inverse() => new(math.inverse(rotScale), math.mul(rotScale, -translation));
         public double2 Transform(double2 point) => math.mul(rotScale, point + translation);
 
-        public readonly AffineTransform64 CalculatePCATransformation(NativeArray<double2> positions)
+        public readonly TransformDouble CalculatePCATransformation(NativeArray<double2> positions)
         {
             var com = (double2)0;
             foreach (var p in positions)
@@ -2786,7 +2786,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             return Scale(s) * Translate(-c) * partialTransform;
         }
 
-        public readonly AffineTransform64 CalculateLocalTransformation(NativeArray<double2> positions)
+        public readonly TransformDouble CalculateLocalTransformation(NativeArray<double2> positions)
         {
             double2 min = double.MaxValue, max = double.MinValue, com = 0;
             foreach (var p in positions)
@@ -2834,19 +2834,22 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         private static double2x2 Kron(double2 a, double2 b) => math.double2x2(a * b[0], a * b[1]);
     }
 
-    internal readonly struct TranslationInt : ITransform<TranslationInt, int, int2>
+    /// <summary>
+    /// <b>Note:</b> translation transformation is only supported for type <see cref="int2"/>.
+    /// </summary>
+    internal readonly struct TransformInt : ITransform<TransformInt, int, int2>
     {
-        public readonly TranslationInt Identity => new(int2.zero);
+        public readonly TransformInt Identity => new(int2.zero);
         public readonly int AreaScalingFactor => 1;
         private readonly int2 translation;
-        public TranslationInt(int2 translation) => this.translation = translation;
-        public TranslationInt Inverse() => new(-translation);
+        public TransformInt(int2 translation) => this.translation = translation;
+        public TransformInt Inverse() => new(-translation);
         public int2 Transform(int2 point) => point + translation;
-        public readonly TranslationInt CalculatePCATransformation(NativeArray<int2> positions) => throw new NotImplementedException(
+        public readonly TransformInt CalculatePCATransformation(NativeArray<int2> positions) => throw new NotImplementedException(
             "PCA is not implemented for int2 coordinates!"
         );
 
-        public readonly TranslationInt CalculateLocalTransformation(NativeArray<int2> positions)
+        public readonly TransformInt CalculateLocalTransformation(NativeArray<int2> positions)
         {
             int2 min = int.MaxValue, max = int.MinValue, com = 0;
             foreach (var p in positions)
