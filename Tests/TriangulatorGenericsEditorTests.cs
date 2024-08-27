@@ -8,6 +8,9 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.TestTools;
+#if UNITY_MATHEMATICS_FIXEDPOINT
+using Unity.Mathematics.FixedPoint;
+#endif
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -36,6 +39,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     [TestFixture(typeof(Vector2))]
     [TestFixture(typeof(double2))]
     [TestFixture(typeof(int2))]
+#if UNITY_MATHEMATICS_FIXEDPOINT
+    [TestFixture(typeof(fp2))]
+#endif
     public class TriangulatorGenericsEditorTests<T> where T : unmanaged
     {
         [Test]
@@ -129,6 +135,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Assert.Ignore("Integer coordinates cannot be infinite or NaN.");
             }
 
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            if (typeof(T) == typeof(fp2) && managedPositions.Any(p => !math.all(math.isfinite(p))))
+            {
+                Assert.Ignore("Fixed-point coordinates cannot be infinite or NaN.");
+            }
+#endif
+
             using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
             {
@@ -152,6 +165,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 Assert.Ignore("Integer coordinates cannot be infinite or NaN.");
             }
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            if (typeof(T) == typeof(fp2) && managedPositions.Any(p => !math.all(math.isfinite(p))))
+            {
+                Assert.Ignore("Fixed-point coordinates cannot be infinite or NaN.");
+            }
+#endif
 
             using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
@@ -841,6 +861,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             typeof(TriangulatorGenericsEditorTests<double2>.DeferredArraySupportInputJobDouble2),
             typeof(TriangulatorGenericsEditorTests<Vector2>.DeferredArraySupportInputJobVector2),
             typeof(TriangulatorGenericsEditorTests<int2>.DeferredArraySupportInputJobInt2),
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            typeof(TriangulatorGenericsEditorTests<fp2>.DeferredArraySupportInputJobFp2),
+#endif
         };
 
         [BurstCompile]
@@ -995,6 +1018,46 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             }
         }
 
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        [BurstCompile]
+        private struct DeferredArraySupportInputJobFp2 : IJob
+        {
+            private NativeList<fp2> positions;
+            private NativeList<int> constraints;
+            private NativeList<fp2> holes;
+
+            public DeferredArraySupportInputJobFp2(NativeList<T> positions, NativeList<int> constraints, NativeList<T> holes)
+            {
+                this.positions = (dynamic)positions;
+                this.constraints = constraints;
+                this.holes = (dynamic)holes;
+            }
+
+            public void Execute()
+            {
+                positions.Add(new(0, 0));
+                positions.Add(new(4, 0));
+                positions.Add(new(4, 4));
+                positions.Add(new(0, 4));
+                positions.Add(new(1, 1));
+                positions.Add(new(3, 1));
+                positions.Add(new(3, 3));
+                positions.Add(new(1, 3));
+
+                constraints.Add(0); constraints.Add(1);
+                constraints.Add(1); constraints.Add(2);
+                constraints.Add(2); constraints.Add(3);
+                constraints.Add(3); constraints.Add(0);
+                constraints.Add(4); constraints.Add(5);
+                constraints.Add(5); constraints.Add(6);
+                constraints.Add(6); constraints.Add(7);
+                constraints.Add(7); constraints.Add(4);
+
+                holes.Add(new(2, 2));
+            }
+        }
+#endif
+
         [Test]
         public void DeferredArraySupportTest()
         {
@@ -1024,6 +1087,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 double2 _ => new DeferredArraySupportInputJobDouble2(positions, constraints, holes).Schedule(dependencies),
                 Vector2 _ => new DeferredArraySupportInputJobVector2(positions, constraints, holes).Schedule(dependencies),
                 int2 _ => new DeferredArraySupportInputJobInt2(positions, constraints, holes).Schedule(dependencies),
+#if UNITY_MATHEMATICS_FIXEDPOINT
+                fp2 _ => new DeferredArraySupportInputJobFp2(positions, constraints, holes).Schedule(dependencies),
+#endif
                 _ => throw new NotImplementedException(),
             };
 
@@ -1365,6 +1431,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     [TestFixture(typeof(float2))]
     [TestFixture(typeof(Vector2))]
     [TestFixture(typeof(double2))]
+#if UNITY_MATHEMATICS_FIXEDPOINT
+    [TestFixture(typeof(fp2))]
+#endif
     public class TriangulatorGenericsEditorTestsWithPCA<T> where T : unmanaged
     {
         [Test]
@@ -1492,6 +1561,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     [TestFixture(typeof(float2))]
     [TestFixture(typeof(Vector2))]
     [TestFixture(typeof(double2))]
+#if UNITY_MATHEMATICS_FIXEDPOINT
+    [TestFixture(typeof(fp2))]
+#endif
     public class TriangulatorGenericsEditorTestsWithRefinement<T> where T : unmanaged
     {
         [Test]
