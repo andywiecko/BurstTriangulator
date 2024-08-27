@@ -49,7 +49,7 @@ jobs:
           mkdir ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
           echo "Selecting the manifest:"
           cp ${{ matrix.projectPath }}/Packages/${{ matrix.manifest }} ${{ matrix.projectPath }}/Packages/manifest.json
-          cat manifest.json
+          cat ${{ matrix.projectPath }}/Packages/manifest.json
           echo "Copying package data"
           cp -r `ls -I Samples~` ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
           ls -alF ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
