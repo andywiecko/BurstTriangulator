@@ -4,8 +4,8 @@
     "references": [
         "Unity.Burst",
         "Unity.Mathematics",
-        "Unity.Jobs",
-        "Unity.Collections"
+        "Unity.Collections",
+        "Unity.Mathematics.FixedPoint"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -14,6 +14,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.danielmansson.mathematics.fixedpoint",
+            "expression": "0.1.0",
+            "define": "UNITY_MATHEMATICS_FIXEDPOINT"
+        }
+    ],
     "noEngineReferences": false
 }

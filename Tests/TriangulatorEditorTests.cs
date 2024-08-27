@@ -4,11 +4,18 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+#if UNITY_MATHEMATICS_FIXEDPOINT
+using Unity.Mathematics.FixedPoint;
+#endif
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
     public class TriangulatorEditorTests
     {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        [Test] public void FixedMathImportTest() => Assert.That((float)fpmath.PI, Is.EqualTo(math.PI).Within(1e-6f));
+#endif
+
         private static string name((bool autoHoles, bool constrainMesh, bool refineMesh, bool useHoles, bool restoreBoundary, Preprocessor preprocessor) input) =>
             "(" +
                 $"{nameof(input.autoHoles)}: {input.autoHoles}, " +
