@@ -26,7 +26,7 @@ If triangulation fails for some reason, you can catch the information using [`St
 
 ```csharp
 status = triangulator.Output.Status.Value;
-if (status == Triangulator.Status.ERR) // ERROR!
+if (status != Status.OK) // ERROR!
 {
   return;
 }
