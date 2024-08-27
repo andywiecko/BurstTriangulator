@@ -20,7 +20,7 @@ If the triangulation algorithm fails, checking the status and handling it in the
 [BurstCompile]
 private struct Job : IJob
 {
-  NativeReference<Triangulator.Status>.ReadOnly status;
+  NativeReference<Status>.ReadOnly status;
 
   public Job(Triangulator triangulator)
   {
@@ -29,7 +29,7 @@ private struct Job : IJob
 
   public void Execute()
   {
-    if(status != Triangulator.Status.OK)
+    if (status != Status.OK)
     {
       return;
     }
