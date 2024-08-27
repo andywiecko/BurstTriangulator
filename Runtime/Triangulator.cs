@@ -1882,7 +1882,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 public readonly T2 Center;
                 public readonly T RadiusSq;
-                public Circle(T2 center, T radiusSq) => (Center, RadiusSq) = (center, radiusSq);
                 public Circle((T2 center, T radiusSq) circle) => (Center, RadiusSq) = (circle.center, circle.radiusSq);
             }
 
