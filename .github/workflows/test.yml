@@ -12,7 +12,7 @@ env:
 
 jobs:
   testAllModes:
-    name: Test in ${{ matrix.testMode }} on version ${{ matrix.unityVersion }}
+    name: Test in ${{ matrix.testMode }} on version ${{ matrix.unityVersion }} (${{ matrix.manifest }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -25,6 +25,9 @@ jobs:
           - 2022.2.15f1
         testMode:
           - editmode
+        manifest:
+          - default
+          - fixed-math
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,6 +46,9 @@ jobs:
           echo "############################"
           echo "Creating dir ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}"
           mkdir ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
+          echo "Selecting the manifest:"
+          cp ${{ matrix.projectPath }}/Packages/${{ matrix.manifest }} ${{ matrix.projectPath }}/Packages/manifest.json
+          cat manifest.json
           echo "Copying package data"
           cp -r `ls -I Samples~` ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}
           ls -alF ${{ matrix.projectPath }}/Packages/${{ matrix.packageName }}

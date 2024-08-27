@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "com.unity.test-framework": "1.1.33",
+    "com.danielmansson.mathematics.fixedpoint": "https://github.com/andywiecko/Unity.Mathematics.FixedPoint.git#d44836cab621f299d6d1bfa275daa437aafc739b"
+  },
+  "testables": [
+    "com.andywiecko.burst.triangulator"
+  ]
+}
