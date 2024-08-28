@@ -5,7 +5,8 @@
       "dest": "api",
       "allowCompilationErrors": true,
       "memberLayout": "separatePages",
-      "references": "dlls/*"
+      "references": "dlls/*",
+      "properties": { "DefineConstants": "UNITY_MATHEMATICS_FIXEDPOINT" }
     }
   ],
   "build": {

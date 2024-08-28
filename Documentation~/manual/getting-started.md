@@ -1,3 +1,7 @@
+---
+uid: getting-started-md
+---
+
 # Getting started
 
 Install the package using one of the following methods. Using OpenUPM is **recommended**.
@@ -71,6 +75,21 @@ Just remember to install the proper package dependencies.
 - [`Unity.Burst@1.8.7`][burst]
 - [`Unity.Collections@2.2.0`][collections]
 
+## Optional dependencies
+
+If you need fixed-point arithmetic, there is an optional dependency:
+
+- [`com.danielmansson.mathematics.fixedpoint@0.1.0`][fp-package].
+
+Currently, the package is not available on OpenUPM, so it is recommended to manually install it via `manifest.json` using the following Git URL:
+
+```json
+"dependencies": {
+   "com.danielmansson.mathematics.fixedpoint": "https://github.com/andywiecko/Unity.Mathematics.FixedPoint.git#d44836cab621f299d6d1bfa275daa437aafc739b",
+...
+```
+
 [burst]: https://docs.unity3d.com/Packages/com.unity.burst@1.8
 [collections]: https://docs.unity3d.com/Packages/com.unity.collections@2.2
 [runtime]: https://github.com/andywiecko/BurstTriangulator/blob/main/Runtime/Triangulator.cs
+[fp-package]: https://github.com/danielmansson/Unity.Mathematics.FixedPoint
