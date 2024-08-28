@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.2.0] – 2024-08-28
+
+### Added
+
+- Support for additional types: `Vector2`, `int2`, and `fp2` (fixed-point in Q31.32 format). Note: `fp2` requires an optional dependency. Refer to the manual for more details.
+- (Internal) Introduced `TrianglesComparer` to simplify triangle assertions in tests.
+- `Args` is now blittable and can be used in Burst-compiled static methods.
+- Enhanced validation logs to include position information.
+
+### Changed
+
+- (Internal) Various simplifications, minor performance improvements, refactoring, and additional code comments.
+
+### Deprecated
+
+- `AsNativeArray()` and `ManagedInput` have been deprecated for safety reasons. Use `AsNativeArray(out Handle handle)` instead. Refer to the manual for more information.
+
+### Fixed
+
+- Corrected the refinement of concentric shells segment splitting factor alpha.
+- Fixed safety issues with `AsNativeArray`.
+- Fully collinear input is now handled correctly.
+
 ## [3.1.0] – 2024-08-01
 
 ### Added
@@ -210,6 +233,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.2.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.2.0
 [3.1.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.1.0
 [3.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.0.0
 [2.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v2.5.0
