@@ -10,16 +10,16 @@ A single-file package which provides Delaunay triangulation of the given set of 
 
 ## ✨ Supported Features
 
-- **Delaunay triangulation** [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/examples/triangulation.html)
-- **Constrained triangulation** [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/examples/constrained-triangulation.html)
-- **Mesh refinement** (angle and area parameters) [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/examples/mesh-refinement.html)
-- **Holes and restoring boundary** (manual and auto) [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/examples/holes-and-boundaries.html)
-- **Support for `Unity.Jobs` pipeline** [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-jobs.html)
-- **Input preprocessors** [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/advanced/preprocessor.html)
-- **Input validation** [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-validation.html)
-- **Generic coordinates** (`float2`, `double2`) [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/advanced/generic-coordinates.html)
-- **Native support** (low level API) [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/advanced/unsafe-triangulator.html)
-- **Managed input support** [ᵈᵒᶜˢ↗](https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-managed.html)
+- **Delaunay triangulation** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/examples/triangulation.html)
+- **Constrained triangulation** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/examples/constrained-triangulation.html)
+- **Mesh refinement** (angle and area parameters) [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/examples/mesh-refinement.html)
+- **Holes and restoring boundary** (manual and auto) [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/examples/holes-and-boundaries.html)
+- **Support for `Unity.Jobs` pipeline** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-jobs.html)
+- **Input preprocessors** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/preprocessor.html)
+- **Input validation** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-validation.html)
+- **Generic coordinates** (`float2`, `double2`, `Vector2`, `int2`, and fixed-point `Q31.32`) [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/generic-coordinates.html)
+- **Native support** (low level API) [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/unsafe-triangulator.html)
+- **Managed input support** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-managed.html)
 
 To view the documentation for the manual and scripting API access it online [**here**][manual] or navigate to `Documentation~/` and build this using `docfx.json`.
 
@@ -56,8 +56,8 @@ and to triangulate unit box $[(0, 0), (1, 0), (1, 1), (0, 1)]$:
 
 ```csharp
 using var positions = new NativeArray<double2>(new[]
-{ 
-    new(0, 0), new(1, 0), new(1, 1), new(0, 1) 
+{
+    new(0, 0), new(1, 0), new(1, 1), new(0, 1)
 }, Allocator.Persistent);
 using var triangulator = new Triangulator(Allocator.Persistent)
 {
