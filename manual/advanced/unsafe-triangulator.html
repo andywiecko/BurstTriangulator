@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.1.0</b></div>
+                "><b>v3.2.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -94,7 +94,11 @@
 
 <div class="CAUTION">
 <h5>Caution</h5>
-<p>Use the unsafe context with caution! Ensure you understand what you are doing. It is recommended to first learn the usage of the managed <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator-1.html"><code>Triangulator</code></a>. Using the unsafe triangulator can lead to unexpected behavior if not used correctly.</p>
+<p>Use the unsafe context with caution! Ensure that you fully understand what you are doing. It is recommended to first familiarize yourself with the managed <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator-1.html"><code>Triangulator</code></a>. Using the unsafe triangulator can lead to unexpected behavior if not used correctly.
+<em>Unsafe</em> in this context indicates that this API may be challenging for beginner users.
+The user is responsible for managing data allocation (both input and output).
+Note that some permutations of method calls may not be supported.
+The term <em>unsafe</em> does <strong>not</strong> refer to memory safety.</p>
 </div>
 <p>The package also provides a low-level API through <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html"><code>UnsafeTriangulator&lt;T2&gt;</code></a>.
 This can be used for customization of the triangulation and for use in a native context.

@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.1.0</b></div>
+                "><b>v3.2.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -92,25 +92,21 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="managed-input-support">Managed input support</h1>
 
-<p>One can use managed arrays as triangulator input (i.e., standard C# arrays <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.array"><code>T2[]</code></a>). Simply use <a class="xref" href="../../api/andywiecko.BurstTriangulator.ManagedInput-1.html"><code>new ManagedInput {}</code></a> as the input object.</p>
+<p>This package provides an extension for easily adapting managed arrays (i.e., standard C# arrays <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.array"><code>T2[]</code></a>) for use as input in triangulation. To achieve this, you can use the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Extensions.AsNativeArray.html"><code>AsNativeArray</code></a>extension. However, the user must manually release the data from the garbage collector by calling <a class="xref" href="../../api/andywiecko.BurstTriangulator.Handle.Free.html"><code>Handle.Free()</code></a>.
+This step ensures that the garbage collector does not prematurely release memory, preventing accidental memory issues.</p>
 <pre><code class="lang-csharp">using var triangulator = new Triangulator&lt;float2&gt;(Allocator.Persistent)
 {
     Input = new ManagedInput&lt;float2&gt;
     {
-        Positions = new float2[] { new(0, 0), new(1, 0), new(1, 1), new(0, 1) }
+        Positions = new float2[] { new(0, 0), new(1, 0), new(1, 1), new(0, 1) }.AsNativeArray(out var handle)
     },
 };
-</code></pre>
-<p>Alternatively, one can use the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Extensions.AsNativeArray.html"><code>AsNativeArray</code></a> extension to use a <a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html"><code>NativeArray&lt;T&gt;</code></a> view for the managed array in place.</p>
-<pre><code class="lang-csharp">float2[] positions = { new(0, 0), new(1, 0), new(1, 1), new(0, 1) };
-using var triangulator = new Triangulator&lt;float2&gt;(Allocator.Persistent)
-{
-    Input = { Positions = positions.AsNativeArray() },
-};
+...
+handle.Free();
 </code></pre>
 <div class="NOTE">
 <h5>Note</h5>
-<p><a class="xref" href="../../api/andywiecko.BurstTriangulator.ManagedInput-1.html"><code>ManagedInput&lt;T2&gt;</code></a> and <a class="xref" href="../../api/andywiecko.BurstTriangulator.Extensions.AsNativeArray.html"><code>AsNativeArray</code></a> are allocation-free. Both of them will provide native array views for triangulation <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.html"><code>InputData&lt;T2&gt;</code></a>.</p>
+<p><a class="xref" href="../../api/andywiecko.BurstTriangulator.Extensions.AsNativeArray.html"><code>AsNativeArray</code></a> is allocation-free. It provides native array views for triangulation without additional memory allocation.</p>
 </div>
 
 </article>

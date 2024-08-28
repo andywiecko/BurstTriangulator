@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.1.0</b></div>
+                "><b>v3.2.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -89,7 +89,7 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="">
+            <article class="content wrap" id="_content" data-uid="getting-started-md">
 <h1 id="getting-started">Getting started</h1>
 
 <p>Install the package using one of the following methods. Using OpenUPM is <strong>recommended</strong>.</p>
@@ -124,7 +124,7 @@
 </code></pre>
 <p>Then, in the dependencies section, provide the desired version of the package:</p>
 <pre><code class="lang-json">&quot;dependencies&quot;: {
-    &quot;com.andywiecko.burst.triangulator&quot;: &quot;3.1.0&quot;,
+    &quot;com.andywiecko.burst.triangulator&quot;: &quot;3.2.0&quot;,
     ...
 </code></pre>
 <p>Refer to the <a href="https://docs.unity3d.com/2021.1/Documentation/Manual/upm-scoped.html">Unity docs</a> for more details.</p>
@@ -165,6 +165,16 @@ Just remember to install the proper package dependencies.</p>
 <li><a href="https://docs.unity3d.com/Packages/com.unity.burst@1.8"><code>Unity.Burst@1.8.7</code></a></li>
 <li><a href="https://docs.unity3d.com/Packages/com.unity.collections@2.2"><code>Unity.Collections@2.2.0</code></a></li>
 </ul>
+<h2 id="optional-dependencies">Optional dependencies</h2>
+<p>If you need fixed-point arithmetic, there is an optional dependency:</p>
+<ul>
+<li><a href="https://github.com/danielmansson/Unity.Mathematics.FixedPoint"><code>com.danielmansson.mathematics.fixedpoint@0.1.0</code></a>.</li>
+</ul>
+<p>Currently, the package is not available on OpenUPM, so it is recommended to manually install it via <code>manifest.json</code> using the following Git URL:</p>
+<pre><code class="lang-json">&quot;dependencies&quot;: {
+   &quot;com.danielmansson.mathematics.fixedpoint&quot;: &quot;https://github.com/andywiecko/Unity.Mathematics.FixedPoint.git#d44836cab621f299d6d1bfa275daa437aafc739b&quot;,
+...
+</code></pre>
 
 </article>
           </div>

@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.1.0</b></div>
+                "><b>v3.2.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -98,13 +98,16 @@
 <div class="markdown level0 conceptual"></div>
 
 <a id="andywiecko_BurstTriangulator_Extensions_AsNativeArray_" data-uid="andywiecko.BurstTriangulator.Extensions.AsNativeArray*"></a>
-<h4 id="andywiecko_BurstTriangulator_Extensions_AsNativeArray__1___0___" data-uid="andywiecko.BurstTriangulator.Extensions.AsNativeArray``1(``0[])">AsNativeArray&lt;T&gt;(T[])</h4>
-<div class="markdown level1 summary"><p>Returns <a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html">NativeArray&lt;T&gt;</a> view on managed <code class="paramref">array</code>.</p>
+<h4 id="andywiecko_BurstTriangulator_Extensions_AsNativeArray__1___0___andywiecko_BurstTriangulator_Handle__" data-uid="andywiecko.BurstTriangulator.Extensions.AsNativeArray``1(``0[],andywiecko.BurstTriangulator.Handle@)">AsNativeArray&lt;T&gt;(T[], out Handle)</h4>
+<div class="markdown level1 summary"><p>Returns <a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html">NativeArray&lt;T&gt;</a> view on managed <code class="paramref">array</code>
+with <code class="paramref">handle</code> to prevents from deallocation.</p>
+<p></p><b>Warning!</b> User has to call <a class="xref" href="andywiecko.BurstTriangulator.Handle.Free.html#andywiecko_BurstTriangulator_Handle_Free">Free()</a> 
+manually to release the data for GC! Read more in the project manual.
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static NativeArray&lt;T&gt; AsNativeArray&lt;T&gt;(this T[] array) where T : unmanaged</code></pre>
+  <pre><code class="lang-csharp hljs">public static NativeArray&lt;T&gt; AsNativeArray&lt;T&gt;(this T[] array, out Handle handle) where T : unmanaged</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-condensed">
@@ -119,7 +122,13 @@
     <tr>
       <td>T[]</td>
       <td><span class="parametername">array</span></td>
-      <td><p>Array to</p>
+      <td><p>Array to view.</p>
+</td>
+    </tr>
+    <tr>
+      <td><a class="xref" href="andywiecko.BurstTriangulator.Handle.html">Handle</a></td>
+      <td><span class="parametername">handle</span></td>
+      <td><p>A handle that prevents the <code class="paramref">array</code> from being deallocated by the GC.</p>
 </td>
     </tr>
   </tbody>
@@ -135,7 +144,7 @@
   <tbody>
     <tr>
       <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html">NativeArray</a>&lt;T&gt;</td>
-      <td><p>View on managed <code class="paramref">array</code> with <a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html">NativeArray&lt;T&gt;</a>.</p>
+      <td><p><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html">NativeArray&lt;T&gt;</a> view on managed <code class="paramref">array</code> with <a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html">NativeArray&lt;T&gt;</a>.</p>
 </td>
     </tr>
   </tbody>

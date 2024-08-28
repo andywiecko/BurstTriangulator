@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.1.0</b></div>
+                "><b>v3.2.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -142,11 +142,20 @@
     </thead>
     <tbody>
       <tr>
-        <td id="andywiecko_BurstTriangulator_Extensions_AsNativeArray__1___0___" data-uid="andywiecko.BurstTriangulator.Extensions.AsNativeArray``1(``0[])">
-          <a class="xref" href="andywiecko.BurstTriangulator.Extensions.AsNativeArray.html#andywiecko_BurstTriangulator_Extensions_AsNativeArray__1___0___">AsNativeArray&lt;T&gt;(T[])</a>
+        <td id="andywiecko_BurstTriangulator_Extensions_AsNativeArray__1___0___andywiecko_BurstTriangulator_Handle__" data-uid="andywiecko.BurstTriangulator.Extensions.AsNativeArray``1(``0[],andywiecko.BurstTriangulator.Handle@)">
+          <a class="xref" href="andywiecko.BurstTriangulator.Extensions.AsNativeArray.html#andywiecko_BurstTriangulator_Extensions_AsNativeArray__1___0___andywiecko_BurstTriangulator_Handle__">AsNativeArray&lt;T&gt;(T[], out Handle)</a>
         </td>
-        <td class="markdown level1 summary"><p>Returns <a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html">NativeArray&lt;T&gt;</a> view on managed <code class="paramref">array</code>.</p>
+        <td class="markdown level1 summary"><p>Returns <a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html">NativeArray&lt;T&gt;</a> view on managed <code class="paramref">array</code>
+with <code class="paramref">handle</code> to prevents from deallocation.</p>
+<p></p><b>Warning!</b> User has to call <a class="xref" href="andywiecko.BurstTriangulator.Handle.Free.html#andywiecko_BurstTriangulator_Handle_Free">Free()</a> 
+manually to release the data for GC! Read more in the project manual.
 </td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_FixedPoint_fp2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.FixedPoint.fp2})">
+          <a class="xref" href="andywiecko.BurstTriangulator.Extensions.Run.html#andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_FixedPoint_fp2__">Run(Triangulator&lt;fp2&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"></td>
       </tr>
       <tr>
         <td id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_double2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.double2})">
@@ -161,6 +170,24 @@
         <td class="markdown level1 summary"></td>
       </tr>
       <tr>
+        <td id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_int2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.int2})">
+          <a class="xref" href="andywiecko.BurstTriangulator.Extensions.Run.html#andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_int2__">Run(Triangulator&lt;int2&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_UnityEngine_Vector2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{UnityEngine.Vector2})">
+          <a class="xref" href="andywiecko.BurstTriangulator.Extensions.Run.html#andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_UnityEngine_Vector2__">Run(Triangulator&lt;Vector2&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_FixedPoint_fp2__Unity_Jobs_JobHandle_" data-uid="andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.FixedPoint.fp2},Unity.Jobs.JobHandle)">
+          <a class="xref" href="andywiecko.BurstTriangulator.Extensions.Schedule.html#andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_FixedPoint_fp2__Unity_Jobs_JobHandle_">Schedule(Triangulator&lt;fp2&gt;, JobHandle)</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
         <td id="andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_double2__Unity_Jobs_JobHandle_" data-uid="andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.double2},Unity.Jobs.JobHandle)">
           <a class="xref" href="andywiecko.BurstTriangulator.Extensions.Schedule.html#andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_double2__Unity_Jobs_JobHandle_">Schedule(Triangulator&lt;double2&gt;, JobHandle)</a>
         </td>
@@ -169,6 +196,18 @@
       <tr>
         <td id="andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_float2__Unity_Jobs_JobHandle_" data-uid="andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.float2},Unity.Jobs.JobHandle)">
           <a class="xref" href="andywiecko.BurstTriangulator.Extensions.Schedule.html#andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_float2__Unity_Jobs_JobHandle_">Schedule(Triangulator&lt;float2&gt;, JobHandle)</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_int2__Unity_Jobs_JobHandle_" data-uid="andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.int2},Unity.Jobs.JobHandle)">
+          <a class="xref" href="andywiecko.BurstTriangulator.Extensions.Schedule.html#andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_int2__Unity_Jobs_JobHandle_">Schedule(Triangulator&lt;int2&gt;, JobHandle)</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_UnityEngine_Vector2__Unity_Jobs_JobHandle_" data-uid="andywiecko.BurstTriangulator.Extensions.Schedule(andywiecko.BurstTriangulator.Triangulator{UnityEngine.Vector2},Unity.Jobs.JobHandle)">
+          <a class="xref" href="andywiecko.BurstTriangulator.Extensions.Schedule.html#andywiecko_BurstTriangulator_Extensions_Schedule_andywiecko_BurstTriangulator_Triangulator_UnityEngine_Vector2__Unity_Jobs_JobHandle_">Schedule(Triangulator&lt;Vector2&gt;, JobHandle)</a>
         </td>
         <td class="markdown level1 summary"></td>
       </tr>
