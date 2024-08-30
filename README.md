@@ -71,8 +71,14 @@ var triangles = triangulator.Output.Triangles;
 
 ## 📦 Dependencies
 
+**Required:**
+
 - [`Unity.Burst@1.8.7`][burst]
 - [`Unity.Collections@2.2.0`][collections]
+
+**Optional:**
+
+- [`com.danielmansson.mathematics.fixedpoint@0.1.0`][fixedpoint]
 
 ## 🤝 Contributions
 
@@ -87,3 +93,4 @@ Found a bug? Please open an issue. You can find a list of known issues [**here**
 [cgaldotnet]: https://github.com/Scrawk/CGALDotNet
 [triangle-net]: https://github.com/wo80/Triangle.NET
 [collections]: https://docs.unity3d.com/Packages/com.unity.collections@2.2
+[fixedpoint]: https://github.com/danielmansson/Unity.Mathematics.FixedPoint
