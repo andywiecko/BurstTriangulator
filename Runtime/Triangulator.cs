@@ -187,6 +187,10 @@ namespace andywiecko.BurstTriangulator
         public readonly void Free() => UnsafeUtility.ReleaseGCObject(gcHandle);
     }
 
+    /// <summary>
+    /// A wrapper for <see cref="Triangulator{T2}"/> where T2 is <see cref="double2"/>.
+    /// </summary>
+    /// <seealso cref="Triangulator{T2}"/>
     public class Triangulator : IDisposable
     {
         public TriangulationSettings Settings => impl.Settings;
@@ -196,6 +200,9 @@ namespace andywiecko.BurstTriangulator
         public Triangulator(int capacity, Allocator allocator) => impl = new(capacity, allocator);
         public Triangulator(Allocator allocator) => impl = new(allocator);
 
+        /// <summary>
+        /// Releases all resources (memory and safety handles).
+        /// </summary>
         public void Dispose() => impl.Dispose();
 
         /// <summary>
@@ -242,6 +249,9 @@ namespace andywiecko.BurstTriangulator
 
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
 
+        /// <summary>
+        /// Releases all resources (memory and safety handles).
+        /// </summary>
         public void Dispose()
         {
             outputPositions.Dispose();
@@ -300,17 +310,43 @@ namespace andywiecko.BurstTriangulator
             return ret;
         }
 
+        /// <summary>
+        /// Perform the job's Execute method immediately on the same thread.
+        /// </summary>
         public static void Run(this Triangulator<float2> @this) =>
             new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(@this).Run();
+        /// <summary>
+        /// Schedule the job for execution on a worker thread.
+        /// </summary>
+        /// <param name="dependencies">
+        /// Dependencies are used to ensure that a job executes on worker threads after the dependency has completed execution.
+        /// Making sure that two jobs reading or writing to same data do not run in parallel.
+        /// </param>
+        /// <returns>
+        /// The handle identifying the scheduled job. Can be used as a dependency for a later job or ensure completion on the main thread.
+        /// </returns>
         public static JobHandle Schedule(this Triangulator<float2> @this, JobHandle dependencies = default) =>
             new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(@this).Schedule(dependencies);
 
+        /// <summary>
+        /// Perform the job's Execute method immediately on the same thread.
+        /// </summary>
         public static void Run(this Triangulator<Vector2> @this) =>
             new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(
                 input: new() { Positions = @this.Input.Positions.Reinterpret<float2>(), ConstraintEdges = @this.Input.ConstraintEdges, HoleSeeds = @this.Input.HoleSeeds.Reinterpret<float2>() },
                 output: new() { Triangles = @this.triangles, Halfedges = @this.halfedges, Positions = UnsafeUtility.As<NativeList<Vector2>, NativeList<float2>>(ref @this.outputPositions), Status = @this.status, ConstrainedHalfedges = @this.constrainedHalfedges },
                 args: @this.Settings
         ).Run();
+        /// <summary>
+        /// Schedule the job for execution on a worker thread.
+        /// </summary>
+        /// <param name="dependencies">
+        /// Dependencies are used to ensure that a job executes on worker threads after the dependency has completed execution.
+        /// Making sure that two jobs reading or writing to same data do not run in parallel.
+        /// </param>
+        /// <returns>
+        /// The handle identifying the scheduled job. Can be used as a dependency for a later job or ensure completion on the main thread.
+        /// </returns>
         public static JobHandle Schedule(this Triangulator<Vector2> @this, JobHandle dependencies = default) =>
             new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(
                 input: new() { Positions = @this.Input.Positions.Reinterpret<float2>(), ConstraintEdges = @this.Input.ConstraintEdges, HoleSeeds = @this.Input.HoleSeeds.Reinterpret<float2>() },
@@ -318,19 +354,58 @@ namespace andywiecko.BurstTriangulator
                 args: @this.Settings
         ).Schedule(dependencies);
 
+        /// <summary>
+        /// Perform the job's Execute method immediately on the same thread.
+        /// </summary>
         public static void Run(this Triangulator<double2> @this) =>
             new TriangulationJob<double, double2, double, TransformDouble, DoubleUtils>(@this).Run();
+        /// <summary>
+        /// Schedule the job for execution on a worker thread.
+        /// </summary>
+        /// <param name="dependencies">
+        /// Dependencies are used to ensure that a job executes on worker threads after the dependency has completed execution.
+        /// Making sure that two jobs reading or writing to same data do not run in parallel.
+        /// </param>
+        /// <returns>
+        /// The handle identifying the scheduled job. Can be used as a dependency for a later job or ensure completion on the main thread.
+        /// </returns>
         public static JobHandle Schedule(this Triangulator<double2> @this, JobHandle dependencies = default) =>
             new TriangulationJob<double, double2, double, TransformDouble, DoubleUtils>(@this).Schedule(dependencies);
 
+        /// <summary>
+        /// Perform the job's Execute method immediately on the same thread.
+        /// </summary>
         public static void Run(this Triangulator<int2> @this) =>
             new TriangulationJob<int, int2, long, TransformInt, IntUtils>(@this).Run();
+        /// <summary>
+        /// Schedule the job for execution on a worker thread.
+        /// </summary>
+        /// <param name="dependencies">
+        /// Dependencies are used to ensure that a job executes on worker threads after the dependency has completed execution.
+        /// Making sure that two jobs reading or writing to same data do not run in parallel.
+        /// </param>
+        /// <returns>
+        /// The handle identifying the scheduled job. Can be used as a dependency for a later job or ensure completion on the main thread.
+        /// </returns>
         public static JobHandle Schedule(this Triangulator<int2> @this, JobHandle dependencies = default) =>
             new TriangulationJob<int, int2, long, TransformInt, IntUtils>(@this).Schedule(dependencies);
 
 #if UNITY_MATHEMATICS_FIXEDPOINT
+        /// <summary>
+        /// Perform the job's Execute method immediately on the same thread.
+        /// </summary>
         public static void Run(this Triangulator<fp2> @this) =>
             new TriangulationJob<fp, fp2, fp, TransformFp, FpUtils>(@this).Run();
+        /// <summary>
+        /// Schedule the job for execution on a worker thread.
+        /// </summary>
+        /// <param name="dependencies">
+        /// Dependencies are used to ensure that a job executes on worker threads after the dependency has completed execution.
+        /// Making sure that two jobs reading or writing to same data do not run in parallel.
+        /// </param>
+        /// <returns>
+        /// The handle identifying the scheduled job. Can be used as a dependency for a later job or ensure completion on the main thread.
+        /// </returns>
         public static JobHandle Schedule(this Triangulator<fp2> @this, JobHandle dependencies = default) =>
             new TriangulationJob<fp, fp2, fp, TransformFp, FpUtils>(@this).Schedule(dependencies);
 #endif
@@ -426,6 +501,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     /// <summary>
     /// A wrapper for <see cref="UnsafeTriangulator{T2}"/> where T2 is <see cref="double2"/>.
     /// </summary>
+    /// <seealso cref="UnsafeTriangulator{T2}"/>
+    /// <seealso cref="Extensions"/>
     public readonly struct UnsafeTriangulator { }
 
     /// <summary>
