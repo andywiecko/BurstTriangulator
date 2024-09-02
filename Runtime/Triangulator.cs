@@ -160,6 +160,7 @@ namespace andywiecko.BurstTriangulator
         public NativeList<int> Halfedges => owner.halfedges;
         public NativeList<bool> ConstrainedHalfedges => owner.constrainedHalfedges;
         private readonly Triangulator<T2> owner;
+        [Obsolete("This will be converted into internal ctor.")]
         public OutputData(Triangulator<T2> owner) => this.owner = owner;
     }
 
@@ -234,7 +235,9 @@ namespace andywiecko.BurstTriangulator
             status = new(Status.OK, allocator);
             halfedges = new(6 * capacity, allocator);
             constrainedHalfedges = new(6 * capacity, allocator);
+#pragma warning disable CS0618
             Output = new(this);
+#pragma warning restore CS0618
         }
 
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
