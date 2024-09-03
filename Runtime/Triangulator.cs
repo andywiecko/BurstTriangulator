@@ -1282,14 +1282,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 triangles.Length = 3 * maxTriangles;
                 halfedges.Length = 3 * maxTriangles;
 
-                using var _hullPrev = hullPrev = new(n, allocator);
-                using var _hullNext = hullNext = new(n, allocator);
-                using var _hullTri = hullTri = new(n, allocator);
-                using var _hullHash = hullHash = new(hashSize, allocator);
-                using var _EDGE_STACK = EDGE_STACK = new(512, allocator);
-
                 var ids = new NativeArray<int>(n, allocator);
-                var dists = new NativeArray<TBig>(n, allocator);
 
                 var min = utils.MaxValue2();
                 var max = utils.MinValue2();
@@ -1347,6 +1340,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 // NOTE: Since `int` does not support NaN or infinity, a circumcenter check is required for int2 validation.
+                // Be aware that the CircumRadiusSq calculation might overflow, leading to invalid or garbage results.
                 if (i2 == int.MaxValue || math.any(utils.eq(utils.CircumCenter(p0, p1, positions[i2]), utils.MaxValue2())))
                 {
                     if (verbose)
@@ -1354,8 +1348,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         Debug.LogError("[Triangulator]: The provided input is not valid. There are either duplicate points or all are collinear.");
                     }
                     status.Value |= Status.ERR;
+                    ids.Dispose();
                     return;
                 }
+
+                using var _hullPrev = hullPrev = new(n, allocator);
+                using var _hullNext = hullNext = new(n, allocator);
+                using var _hullTri = hullTri = new(n, allocator);
+                using var _hullHash = hullHash = new(hashSize, allocator);
+                using var _EDGE_STACK = EDGE_STACK = new(math.min(3 * maxTriangles, 512), allocator);
+                var dists = new NativeArray<TBig>(n, allocator);
 
                 // Vertex closest to p1 and p2, as measured by the circumscribed circle radius of p1, p2, p3
                 // Thus (p1,p2,p3) form a triangle close to the center of the point set, and it's guaranteed that there
@@ -1405,9 +1407,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                     // Find a visible edge on the convex hull using edge hash
                     var start = 0;
+                    var key = utils.hashkey(p, c, hashSize);
                     for (var j = 0; j < hashSize; j++)
                     {
-                        var key = utils.hashkey(p, c, hashSize);
                         start = hullHash[(key + j) % hashSize];
                         if (start != -1 && start != hullNext[start]) break;
                     }
