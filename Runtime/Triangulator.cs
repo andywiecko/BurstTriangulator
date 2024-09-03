@@ -969,7 +969,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             new ValidateInputStep(input, output, args).Execute();
             new DelaunayTriangulationStep(output, args).Execute(allocator);
             new ConstrainEdgesStep(input, output, args).Execute(allocator);
-            new PlantingSeedStep(input, output, args, localHoles).Execute(allocator, input.ConstraintEdges.IsCreated);
+            new PlantingSeedStep(output, args, localHoles).Execute(allocator, input.ConstraintEdges.IsCreated);
             new RefineMeshStep(output, args, lt).Execute(allocator, refineMesh: args.RefineMesh, constrainBoundary: !input.ConstraintEdges.IsCreated || !args.RestoreBoundary);
             PostProcessInputStep(output, args, lt);
 
@@ -2003,9 +2003,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             private readonly Args args;
 
-            public PlantingSeedStep(InputData<T2> input, OutputData<T2> output, Args args) : this(input, output, args, input.HoleSeeds) { }
+            public PlantingSeedStep(InputData<T2> input, OutputData<T2> output, Args args) : this(output, args, input.HoleSeeds) { }
 
-            public PlantingSeedStep(InputData<T2> input, OutputData<T2> output, Args args, NativeArray<T2> localHoles)
+            public PlantingSeedStep(OutputData<T2> output, Args args, NativeArray<T2> localHoles)
             {
                 status = output.Status;
                 triangles = output.Triangles;
