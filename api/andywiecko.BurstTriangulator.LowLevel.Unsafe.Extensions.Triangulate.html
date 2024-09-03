@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.2.0</b></div>
+                "><b>v3.2.1</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -99,7 +99,9 @@
 
 <a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*"></a>
 <h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)">Triangulate(UnsafeTriangulator, InputData&lt;double2&gt;, OutputData&lt;double2&gt;, Args, Allocator)</h4>
-<div class="markdown level1 summary"></div>
+<div class="markdown level1 summary"><p>Performs triangulation on the given <code class="paramref">input</code>, producing the result in <code class="paramref">output</code> based on the settings specified in <code class="paramref">args</code>.
+This method corresponds to the native implementation of <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Run.html#andywiecko_BurstTriangulator_Triangulator_Run">Run()</a>.</p>
+</div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
@@ -138,13 +140,20 @@
     <tr>
       <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html">Allocator</a></td>
       <td><span class="parametername">allocator</span></td>
-      <td></td>
+      <td><p>The allocator to use. If called from a job, consider using <span class="xref">Unity.Collections.Allocator.Temp</span>.</p>
+</td>
     </tr>
   </tbody>
 </table>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p><b>Note:</b>
+The <code class="paramref">input</code> and <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
+</div>
 <a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*"></a>
 <h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)">Triangulate(UnsafeTriangulator&lt;float2&gt;, InputData&lt;float2&gt;, OutputData&lt;float2&gt;, Args, Allocator)</h4>
-<div class="markdown level1 summary"></div>
+<div class="markdown level1 summary"><p>Performs triangulation on the given <code class="paramref">input</code>, producing the result in <code class="paramref">output</code> based on the settings specified in <code class="paramref">args</code>.
+This method corresponds to the native implementation of <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Run.html#andywiecko_BurstTriangulator_Triangulator_Run">Run()</a>.</p>
+</div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
@@ -183,13 +192,20 @@
     <tr>
       <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html">Allocator</a></td>
       <td><span class="parametername">allocator</span></td>
-      <td></td>
+      <td><p>The allocator to use. If called from a job, consider using <span class="xref">Unity.Collections.Allocator.Temp</span>.</p>
+</td>
     </tr>
   </tbody>
 </table>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p><b>Note:</b>
+The <code class="paramref">input</code> and <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
+</div>
 <a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*"></a>
 <h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{UnityEngine.Vector2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{UnityEngine.Vector2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{UnityEngine.Vector2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)">Triangulate(UnsafeTriangulator&lt;Vector2&gt;, InputData&lt;Vector2&gt;, OutputData&lt;Vector2&gt;, Args, Allocator)</h4>
-<div class="markdown level1 summary"></div>
+<div class="markdown level1 summary"><p>Performs triangulation on the given <code class="paramref">input</code>, producing the result in <code class="paramref">output</code> based on the settings specified in <code class="paramref">args</code>.
+This method corresponds to the native implementation of <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Run.html#andywiecko_BurstTriangulator_Triangulator_Run">Run()</a>.</p>
+</div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
@@ -228,13 +244,20 @@
     <tr>
       <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html">Allocator</a></td>
       <td><span class="parametername">allocator</span></td>
-      <td></td>
+      <td><p>The allocator to use. If called from a job, consider using <span class="xref">Unity.Collections.Allocator.Temp</span>.</p>
+</td>
     </tr>
   </tbody>
 </table>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p><b>Note:</b>
+The <code class="paramref">input</code> and <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
+</div>
 <a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*"></a>
 <h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)">Triangulate(UnsafeTriangulator&lt;double2&gt;, InputData&lt;double2&gt;, OutputData&lt;double2&gt;, Args, Allocator)</h4>
-<div class="markdown level1 summary"></div>
+<div class="markdown level1 summary"><p>Performs triangulation on the given <code class="paramref">input</code>, producing the result in <code class="paramref">output</code> based on the settings specified in <code class="paramref">args</code>.
+This method corresponds to the native implementation of <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Run.html#andywiecko_BurstTriangulator_Triangulator_Run">Run()</a>.</p>
+</div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
@@ -273,13 +296,20 @@
     <tr>
       <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html">Allocator</a></td>
       <td><span class="parametername">allocator</span></td>
-      <td></td>
+      <td><p>The allocator to use. If called from a job, consider using <span class="xref">Unity.Collections.Allocator.Temp</span>.</p>
+</td>
     </tr>
   </tbody>
 </table>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p><b>Note:</b>
+The <code class="paramref">input</code> and <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
+</div>
 <a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*"></a>
 <h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_int2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_int2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_int2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.int2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.int2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.int2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)">Triangulate(UnsafeTriangulator&lt;int2&gt;, InputData&lt;int2&gt;, OutputData&lt;int2&gt;, Args, Allocator)</h4>
-<div class="markdown level1 summary"></div>
+<div class="markdown level1 summary"><p>Performs triangulation on the given <code class="paramref">input</code>, producing the result in <code class="paramref">output</code> based on the settings specified in <code class="paramref">args</code>.
+This method corresponds to the native implementation of <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Run.html#andywiecko_BurstTriangulator_Triangulator_Run">Run()</a>.</p>
+</div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
@@ -318,13 +348,20 @@
     <tr>
       <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html">Allocator</a></td>
       <td><span class="parametername">allocator</span></td>
-      <td></td>
+      <td><p>The allocator to use. If called from a job, consider using <span class="xref">Unity.Collections.Allocator.Temp</span>.</p>
+</td>
     </tr>
   </tbody>
 </table>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_int2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_int2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_int2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p><b>Note:</b>
+The <code class="paramref">input</code> and <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
+</div>
 <a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*"></a>
 <h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.FixedPoint.fp2},andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData{Unity.Mathematics.FixedPoint.fp2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.FixedPoint.fp2},andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator)">Triangulate(UnsafeTriangulator&lt;fp2&gt;, InputData&lt;fp2&gt;, OutputData&lt;fp2&gt;, Args, Allocator)</h4>
-<div class="markdown level1 summary"></div>
+<div class="markdown level1 summary"><p>Performs triangulation on the given <code class="paramref">input</code>, producing the result in <code class="paramref">output</code> based on the settings specified in <code class="paramref">args</code>.
+This method corresponds to the native implementation of <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Run.html#andywiecko_BurstTriangulator_Triangulator_Run">Run()</a>.</p>
+</div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
@@ -363,10 +400,15 @@
     <tr>
       <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html">Allocator</a></td>
       <td><span class="parametername">allocator</span></td>
-      <td></td>
+      <td><p>The allocator to use. If called from a job, consider using <span class="xref">Unity.Collections.Allocator.Temp</span>.</p>
+</td>
     </tr>
   </tbody>
 </table>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_Triangulate_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p><b>Note:</b>
+The <code class="paramref">input</code> and <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
+</div>
 </article>
           </div>
 
@@ -388,8 +430,8 @@
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
+      Generated by <strong>DocFX</strong> | Documentation © 2024 by <a href="https://github.com/andywiecko">Andrzej Więckowski</a> is licensed under CC BY 4.0
       
-      <span>Generated by <strong>DocFX</strong></span>
           </div>
         </div>
       </footer>
