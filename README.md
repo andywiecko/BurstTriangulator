@@ -84,6 +84,11 @@ var triangles = triangulator.Output.Triangles;
 
 Found a bug? Please open an issue. You can find a list of known issues [**here**][issues]. Interested in contributing to the project? Feel free to open an issue or submit a pull request. For updates on current and future work related to this package, check out the package [project].
 
+## ⚖️ License
+
+- The code in this repository is licensed under the [MIT License](https://github.com/andywiecko/BurstTriangulator/blob/main/LICENSE.md).
+- The documentation in this repository is licensed under the [CC BY 4.0 License](https://github.com/andywiecko/BurstTriangulator/blob/main/Documentation~/LICENSE.md).
+
 [manual]: https://andywiecko.github.io/BurstTriangulator
 [issues]: https://andywiecko.github.io/BurstTriangulator/manual/known-issues.html
 [benchmark]: https://andywiecko.github.io/BurstTriangulator/manual/benchmark.html

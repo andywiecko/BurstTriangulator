@@ -1,5 +1,5 @@
 _site/
 api/.manifest
 api/*.yml
-license/LICENSE.md
+license/LICENSE*.md
 changelog/CHANGELOG.md
