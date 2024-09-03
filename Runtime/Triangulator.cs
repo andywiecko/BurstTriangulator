@@ -152,8 +152,24 @@ namespace andywiecko.BurstTriangulator
 
     public class InputData<T2> where T2 : unmanaged
     {
+        /// <summary>
+        /// Positions of points used in triangulation.
+        /// </summary>
         public NativeArray<T2> Positions { get; set; }
+        /// <summary>
+        /// Optional buffer for constraint edges. This array constrains specific edges to be included in the final 
+        /// triangulation result. It should contain indexes corresponding to the <see cref="Positions"/> of the edges 
+        /// in the format [a₀, a₁, b₀, b₁, c₀, c₁, ...], where (a₀, a₁), (b₀, b₁), (c₀, c₁), etc., represent the constraint edges.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b> If refinement is enabled, the provided constraints may be split during the refinement process.
+        /// </remarks>
         public NativeArray<int> ConstraintEdges { get; set; }
+        /// <summary>
+        /// Optional buffer containing seeds for holes. These hole seeds serve as starting points for a removal process that 
+        /// mimics the spread of a virus. During this process, <see cref="ConstraintEdges"/> act as barriers to prevent further propagation.
+        /// For more information, refer to the documentation.
+        /// </summary>
         public NativeArray<T2> HoleSeeds { get; set; }
     }
 
@@ -178,10 +194,30 @@ namespace andywiecko.BurstTriangulator
 
     public class OutputData<T2> where T2 : unmanaged
     {
+        /// <summary>
+        /// Positions of triangulation points.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b> This buffer may include additional points than <see cref="InputData{T2}.Positions"/> if refinement is enabled. 
+        /// Additionally, the positions might differ slightly (by a small ε) if a <see cref="TriangulationSettings.Preprocessor"/> is applied.
+        /// </remarks>
         public NativeList<T2> Positions => owner.outputPositions;
+        /// <summary>
+        /// Continuous buffer of resulting triangles. All triangles are guaranteed to be oriented clockwise.
+        /// </summary>
         public NativeList<int> Triangles => owner.triangles;
+        /// <summary>
+        /// Status of the triangulation. Retrieve this value to detect any errors that occurred during triangulation.
+        /// </summary>
         public NativeReference<Status> Status => owner.status;
+        /// <summary>
+        /// Continuous buffer of resulting halfedges. A value of -1 indicates that there is no corresponding opposite halfedge.
+        /// For more information, refer to the documentation on halfedges.
+        /// </summary>
         public NativeList<int> Halfedges => owner.halfedges;
+        /// <summary>
+        /// Buffer corresponding to <see cref="Halfedges"/>. <see langword="true"/> indicates that the halfedge is constrained, <see langword="false"/> otherwise.
+        /// </summary>
         public NativeList<bool> ConstrainedHalfedges => owner.constrainedHalfedges;
         private readonly Triangulator<T2> owner;
         [Obsolete("This will be converted into internal ctor.")]
@@ -438,22 +474,70 @@ namespace andywiecko.BurstTriangulator
 
 namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 {
+    /// <summary>
+    /// Native correspondence to <see cref="BurstTriangulator.InputData{T2}"/>.
+    /// </summary>
+    /// <seealso cref="BurstTriangulator.InputData{T2}"/>
     public struct InputData<T2> where T2 : unmanaged
     {
+        /// <summary>
+        /// Positions of points used in triangulation.
+        /// </summary>
         public NativeArray<T2> Positions;
+        /// <summary>
+        /// Optional buffer for constraint edges. This array constrains specific edges to be included in the final 
+        /// triangulation result. It should contain indexes corresponding to the <see cref="Positions"/> of the edges 
+        /// in the format [a₀, a₁, b₀, b₁, c₀, c₁, ...], where (a₀, a₁), (b₀, b₁), (c₀, c₁), etc., represent the constraint edges.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b> If refinement is enabled, the provided constraints may be split during the refinement process.
+        /// </remarks>
         public NativeArray<int> ConstraintEdges;
+        /// <summary>
+        /// Optional buffer containing seeds for holes. These hole seeds serve as starting points for a removal process that 
+        /// mimics the spread of a virus. During this process, <see cref="ConstraintEdges"/> act as barriers to prevent further propagation.
+        /// For more information, refer to the documentation.
+        /// </summary>
         public NativeArray<T2> HoleSeeds;
     }
 
+    /// <summary>
+    /// Native correspondence to <see cref="BurstTriangulator.OutputData{T2}"/>.
+    /// </summary>
+    /// <seealso cref="BurstTriangulator.OutputData{T2}"/>
     public struct OutputData<T2> where T2 : unmanaged
     {
+        /// <summary>
+        /// Positions of triangulation points.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b> This buffer may include additional points than <see cref="InputData{T2}.Positions"/> if refinement is enabled. 
+        /// Additionally, the positions might differ slightly (by a small ε) if a <see cref="Args.Preprocessor"/> is applied.
+        /// </remarks>
         public NativeList<T2> Positions;
+        /// <summary>
+        /// Continuous buffer of resulting triangles. All triangles are guaranteed to be oriented clockwise.
+        /// </summary>
         public NativeList<int> Triangles;
+        /// <summary>
+        /// Status of the triangulation. Retrieve this value to detect any errors that occurred during triangulation.
+        /// </summary>
         public NativeReference<Status> Status;
+        /// <summary>
+        /// Continuous buffer of resulting halfedges. A value of -1 indicates that there is no corresponding opposite halfedge.
+        /// For more information, refer to the documentation on halfedges.
+        /// </summary>
         public NativeList<int> Halfedges;
+        /// <summary>
+        /// Buffer corresponding to <see cref="Halfedges"/>. <see langword="true"/> indicates that the halfedge is constrained, <see langword="false"/> otherwise.
+        /// </summary>
         public NativeList<bool> ConstrainedHalfedges;
     }
 
+    /// <summary>
+    /// Native correspondence to <see cref="TriangulationSettings"/>.
+    /// </summary>
+    /// <seealso cref="TriangulationSettings"/>
     public readonly struct Args
     {
         public readonly Preprocessor Preprocessor;
@@ -465,6 +549,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly bool AutoHolesAndBoundary, RefineMesh, RestoreBoundary, ValidateInput, Verbose;
         public readonly float ConcentricShellsParameter, RefinementThresholdAngle, RefinementThresholdArea;
 
+        /// <summary>
+        /// Constructs a new <see cref="Args"/>.
+        /// </summary>
+        /// <remarks>
+        /// Use <see cref="Default"/> and <see cref="With"/> for easy construction.
+        /// </remarks>
         public Args(
             Preprocessor preprocessor,
             int sloanMaxIters,
@@ -484,6 +574,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             RefinementThresholdArea = refinementThresholdArea;
         }
 
+        /// <summary>
+        /// Construct <see cref="Args"/> with default values (same as <see cref="TriangulationSettings"/> defaults).
+        /// </summary>
         public static Args Default(
             Preprocessor preprocessor = Preprocessor.None,
             int sloanMaxIters = 1_000_000,
@@ -509,6 +602,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             refinementThresholdArea: settings.RefinementThresholds.Area
         );
 
+        /// <summary>
+        /// Returns a new <see cref="Args"/> but with changed selected parameter(s) values.
+        /// </summary>
         public Args With(
             Preprocessor? preprocessor = null,
             int? sloanMaxIters = null,
