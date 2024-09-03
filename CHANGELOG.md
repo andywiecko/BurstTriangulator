@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.2.1] – 2024-09-03
+
+### Changed
+
+- Significant updates to the API documentation.
+- (Internal) Miscellaneous changes.
+
+### Deprecated
+
+- The `OutputData(Triangulator<T2>)` constructor is now obsolete. It will be made internal in future versions.
+
+### Fixed
+
+- Resolved a potential issue causing an infinite loop during the `PlantingSeedStep` with `AutoHolesAndBoundary`.
+
 ## [3.2.0] – 2024-08-28
 
 ### Added
@@ -233,6 +248,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.2.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.2.1
 [3.2.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.2.0
 [3.1.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.1.0
 [3.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.0.0
