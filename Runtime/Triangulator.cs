@@ -851,7 +851,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         /// <param name="angleThreshold">Expressed in <em>radians</em>. Default: 5° = 0.0872664626 rad.</param>
         /// <param name="constrainBoundary">Used to constrain boundary halfedges. Since the refinement algorithm (whether for constrained triangulation or not) requires constrained halfedges at the boundary, not setting this option may cause unexpected behavior, especially when the restoreBoundary option is disabled.</param>
-        public static void RefineMesh(this UnsafeTriangulator<fp2> @this, OutputData<fp2> output, Allocator allocator, fp? areaThreshold = null, fp? angleThreshold = null, fp? concentricShells = null, bool constrainBoundary = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, FpUtils>().RefineMesh(output, allocator, 2 * (areaThreshold ?? 1), angleThreshold ?? (fp)0.0872664626, concentricShells ?? (fp)0.001, constrainBoundary);
+        public static void RefineMesh(this UnsafeTriangulator<fp2> @this, OutputData<fp2> output, Allocator allocator, fp? areaThreshold = null, fp? angleThreshold = null, fp? concentricShells = null, bool constrainBoundary = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, FpUtils>().RefineMesh(output, allocator, 2 * (areaThreshold ?? 1), angleThreshold ?? fp.FromRaw(374806602) /*Raw value for (fp)0.0872664626*/, concentricShells ?? fp.FromRaw(4294967) /*Raw value for (fp)1 / 1000*/, constrainBoundary);
 #endif
     }
 
@@ -3313,7 +3313,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
 
             var c = (min + max) / 2;
-            var s = (fp)2 / (max - min);
+            var s = (fp)2L / (max - min);
 
             return Scale(s) * Translate(-c) * partialTransform;
         }
@@ -3725,7 +3725,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             // NOTE: In a case when div = 0 (i.e. circumcenter is not well defined) we use fp.max_value to mimic the infinity.
             var div = d.x * e.y - d.y * e.x;
-            return div == 0 ? fp.max_value : a + (fp)0.5 / div * (bl * fpmath.fp2(e.y, -e.x) + cl * fpmath.fp2(-d.y, d.x));
+            return div == 0 ? fp.max_value : a + (fp)1L / 2L / div * (bl * fpmath.fp2(e.y, -e.x) + cl * fpmath.fp2(-d.y, d.x));
         }
         public readonly fp Const(float v) => (fp)v;
         public readonly fp EPSILON() => fp.FromRaw(1L);
@@ -3756,7 +3756,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var denInv = 1 / cross(v0, v1);
                 var v = denInv * cross(v2, v1);
                 var w = denInv * cross(v0, v2);
-                var u = (fp)1.0f - v - w;
+                var u = (fp)1L - v - w;
                 return new(u, v, w);
             }
             // NOTE: use barycentric property.
@@ -3771,7 +3771,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly fp alpha(fp D, fp dSquare)
         {
             var d = fpmath.sqrt(dSquare);
-            var k = (int)fpmath.round(fpmath.log2((fp)0.5f * d / D));
+            var k = (int)fpmath.round(fpmath.log2(d / D / 2L));
             return D / d * (k < 0 ? fpmath.pow(2, k) : 1 << k);
         }
         public readonly bool anygreaterthan(fp a, fp b, fp c, fp v) => math.any(fpmath.fp3(a, b, c) > v);
