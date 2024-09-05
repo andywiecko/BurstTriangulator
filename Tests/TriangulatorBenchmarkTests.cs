@@ -321,5 +321,112 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
         }
+
+        private static TestCaseData PlantingHolesCase(int n, int N) => new((n, N)) { TestName = $"Holes: {n * n} (N: {N})" };
+
+        private static readonly TestCaseData[] plantingAutoHolesBenchmarkTestData =
+        {
+            PlantingHolesCase(1, 10000),
+            PlantingHolesCase(2, 10000),
+            PlantingHolesCase(3,10000),
+            PlantingHolesCase(4, 5000),
+            PlantingHolesCase(5, 5000),
+            PlantingHolesCase(7, 5000),
+            PlantingHolesCase(10, 2000),
+            PlantingHolesCase(15, 1000),
+            PlantingHolesCase(20, 200),
+            PlantingHolesCase(25, 200),
+            PlantingHolesCase(30, 100),
+            PlantingHolesCase(35, 50),
+            PlantingHolesCase(40, 50),
+            PlantingHolesCase(45, 30),
+            PlantingHolesCase(50, 20),
+        };
+
+        [Test, TestCaseSource(nameof(plantingAutoHolesBenchmarkTestData))]
+        public void PlantingAutoHolesBenchmarkTest((int n, int N) input)
+        {
+            var (n, N) = input;
+            var debuggerInitialValue = Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled;
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
+
+            var points = new List<double2>();
+            var managedConstraints = new List<int>();
+
+            var dx = 11f / (n + 1);
+            for (int i = 0; i < n + 1; i++)
+            {
+                points.Add(math.double2(i * dx, 0));
+            }
+
+            for (int i = 0; i < n + 1; i++)
+            {
+                points.Add(math.double2(11, i * dx));
+            }
+
+            for (int i = 0; i < n + 1; i++)
+            {
+                points.Add(math.double2(11 - i * dx, 11));
+            }
+
+            for (int i = 0; i < n + 1; i++)
+            {
+                points.Add(math.double2(0, 11 - i * dx));
+            }
+
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                managedConstraints.Add(i);
+                managedConstraints.Add(i + 1);
+            }
+            managedConstraints.Add(points.Count - 1);
+            managedConstraints.Add(0);
+
+            dx = 11f / (2 * n + 1);
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    var c0 = points.Count;
+                    points.Add(math.double2(2 * i + 1, 2 * j + 1) * dx);
+                    points.Add(math.double2(2 * i + 2, 2 * j + 1) * dx);
+                    points.Add(math.double2(2 * i + 2, 2 * j + 2) * dx);
+                    points.Add(math.double2(2 * i + 1, 2 * j + 2) * dx);
+                    managedConstraints.Add(c0);
+                    managedConstraints.Add(c0 + 1);
+                    managedConstraints.Add(c0 + 1);
+                    managedConstraints.Add(c0 + 2);
+                    managedConstraints.Add(c0 + 2);
+                    managedConstraints.Add(c0 + 3);
+                    managedConstraints.Add(c0 + 3);
+                    managedConstraints.Add(c0 + 0);
+                }
+            }
+
+            using var positions = new NativeArray<double2>(points.ToArray(), Allocator.Persistent);
+            using var constraints = new NativeArray<int>(managedConstraints.ToArray(), Allocator.Persistent);
+            var stopwatch = Stopwatch.StartNew();
+            using var triangulator = new Triangulator<double2>(capacity: 2 * positions.Length, Allocator.Persistent)
+            {
+                Input = {
+                    Positions = positions,
+                    ConstraintEdges = constraints,
+                },
+                Settings = {
+                    AutoHolesAndBoundary = true,
+                    RefineMesh = false,
+                    RestoreBoundary = false,
+                    ValidateInput = false,
+                },
+            };
+
+            var dependencies = default(JobHandle);
+            for (int i = 0; i < N; i++) dependencies = triangulator.Schedule(dependencies);
+            dependencies.Complete();
+            stopwatch.Stop();
+            UnityEngine.Debug.Log($"{n * n} {stopwatch.Elapsed.TotalMilliseconds / N}");
+
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
+        }
     }
 }
