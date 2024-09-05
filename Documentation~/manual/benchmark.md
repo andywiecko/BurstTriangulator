@@ -43,6 +43,12 @@ The presented result is for `T2 = float2`.
 > [!NOTE]  
 > Since `v2.4`, the triangulation refinement algorithm has been updated, resulting in improved mesh quality.
 
+## Auto holes
+
+Below is a benchmark for Constrained Delaunay triangulation with the auto-holes option enabled. As a test case, we use a square containing $n\times n$ hole squares (denoted by #holes). Reference timings for the auto-holes option disabled are marked with a dashed line.
+
+![Auto Holes Benchmark](../images/benchmark-auto-holes.png)
+
 ## Generic coordinates
 
 Below, one can see the benchmark for generic coordinates for Delaunay triangulation.
