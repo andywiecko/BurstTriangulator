@@ -1999,11 +1999,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<int> halfedges;
 
             private NativeArray<bool> visitedTriangles;
-            private NativeList<int> badTriangles;
             private NativeQueue<int> trianglesQueue;
             private NativeArray<T2> holes;
 
             private readonly Args args;
+            private bool anyTriangleVisited;
 
             public PlantingSeedStep(InputData<T2> input, OutputData<T2> output, Args args) : this(output, args, input.HoleSeeds) { }
 
@@ -2018,8 +2018,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 this.args = args;
 
                 visitedTriangles = default;
-                badTriangles = default;
                 trianglesQueue = default;
+
+                anyTriangleVisited = false;
             }
 
             public void Execute(Allocator allocator, bool constraintsIsCreated)
@@ -2032,14 +2033,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 using var _ = Markers.PlantingSeedStep.Auto();
 
                 visitedTriangles = new(triangles.Length / 3, allocator);
-                badTriangles = new(triangles.Length / 3, allocator);
                 trianglesQueue = new(allocator);
 
                 if (args.AutoHolesAndBoundary) PlantAuto(allocator);
                 if (holes.IsCreated) PlantHoleSeeds(holes);
                 if (args.RestoreBoundary) PlantBoundarySeeds();
 
-                Finish();
+                RemoveVisitedTriangles(allocator);
             }
 
             private void PlantBoundarySeeds()
@@ -2067,40 +2067,58 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
             }
 
-            private void Finish()
+            private void RemoveVisitedTriangles(Allocator allocator)
             {
-                badTriangles.Sort();
-                for (int t = badTriangles.Length - 1; t >= 0; t--)
+                if (!anyTriangleVisited)
                 {
-                    var tId = badTriangles[t];
-                    triangles.RemoveAt(3 * tId + 2);
-                    triangles.RemoveAt(3 * tId + 1);
-                    triangles.RemoveAt(3 * tId + 0);
-                    RemoveHalfedge(3 * tId + 2, 0);
-                    RemoveHalfedge(3 * tId + 1, 1);
-                    RemoveHalfedge(3 * tId + 0, 2);
-                    constrainedHalfedges.RemoveAt(3 * tId + 2);
-                    constrainedHalfedges.RemoveAt(3 * tId + 1);
-                    constrainedHalfedges.RemoveAt(3 * tId + 0);
+                    return;
+                }
 
-                    for (int i = 3 * tId; i < halfedges.Length; i++)
+                // Triangles to remove are marked with -1, otherwise they are assigned with incremental id.
+                var map = new NativeArray<int>(triangles.Length / 3, allocator);
+                var count = 0;
+                for (int tId = 0; tId < visitedTriangles.Length; tId++)
+                {
+                    map[tId] = visitedTriangles[tId] ? -1 : count++;
+                }
+
+                int RemapHalfedge(int ohe)
+                {
+                    if (ohe == -1)
                     {
-                        var he = halfedges[i];
-                        if (he == -1)
-                        {
-                            continue;
-                        }
-                        halfedges[he < 3 * tId ? he : i] -= 3;
+                        return -1;
+                    }
+                    var tId = map[ohe / 3];
+                    return tId == -1 ? -1 : 3 * tId + ohe % 3;
+                }
+
+                // Reinterpret to a larger struct to make copies of whole triangles slightly more efficient
+                var constrainedHalfedges3 = constrainedHalfedges.AsArray().Reinterpret<bool3>(1);
+                var triangles3 = triangles.AsArray().Reinterpret<int3>(4);
+
+                for (int tId = 0; tId < map.Length; tId++)
+                {
+                    var tIdNew = map[tId];
+                    if (tIdNew != -1)
+                    {
+                        triangles3[tIdNew] = triangles3[tId];
+                        constrainedHalfedges3[tIdNew] = constrainedHalfedges3[tId];
+                        halfedges[3 * tIdNew + 0] = RemapHalfedge(ohe: halfedges[3 * tId + 0]);
+                        halfedges[3 * tIdNew + 1] = RemapHalfedge(ohe: halfedges[3 * tId + 1]);
+                        halfedges[3 * tIdNew + 2] = RemapHalfedge(ohe: halfedges[3 * tId + 2]);
                     }
                 }
+
+                // Trim the data to reflect removed triangles.
+                triangles.Length = 3 * count;
+                constrainedHalfedges.Length = 3 * count;
+                halfedges.Length = 3 * count;
+
+                map.Dispose();
             }
 
             private void PlantSeed(int tId)
             {
-                var visitedTriangles = this.visitedTriangles;
-                var badTriangles = this.badTriangles;
-                var trianglesQueue = this.trianglesQueue;
-
                 if (visitedTriangles[tId])
                 {
                     return;
@@ -2108,7 +2126,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 visitedTriangles[tId] = true;
                 trianglesQueue.Enqueue(tId);
-                badTriangles.Add(tId);
+                anyTriangleVisited = true;
 
                 // Search outwards from the seed triangle and mark all triangles
                 // until we get to a constrained edge, or a previously visited triangle.
@@ -2128,7 +2146,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         {
                             visitedTriangles[otherId] = true;
                             trianglesQueue.Enqueue(otherId);
-                            badTriangles.Add(otherId);
                         }
                     }
                 }
@@ -2147,17 +2164,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 return -1;
-            }
-
-            private void RemoveHalfedge(int he, int offset)
-            {
-                var ohe = halfedges[he];
-                var o = ohe > he ? ohe - offset : ohe;
-                if (o > -1)
-                {
-                    halfedges[o] = -1;
-                }
-                halfedges.RemoveAt(he);
             }
 
             private void PlantAuto(Allocator allocator)

@@ -333,14 +333,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             PlantingHolesCase(5, 5000),
             PlantingHolesCase(7, 5000),
             PlantingHolesCase(10, 2000),
-            PlantingHolesCase(15, 1000),
-            PlantingHolesCase(20, 200),
-            PlantingHolesCase(25, 200),
-            PlantingHolesCase(30, 100),
-            PlantingHolesCase(35, 50),
-            PlantingHolesCase(40, 50),
-            PlantingHolesCase(45, 30),
-            PlantingHolesCase(50, 20),
+            PlantingHolesCase(15, 2000),
+            PlantingHolesCase(20, 2000),
+            PlantingHolesCase(25, 2000),
+            PlantingHolesCase(30, 2000),
+            PlantingHolesCase(35, 2000),
+            PlantingHolesCase(40, 2000),
+            PlantingHolesCase(45, 2000),
+            PlantingHolesCase(50, 2000),
         };
 
         [Test, TestCaseSource(nameof(plantingAutoHolesBenchmarkTestData))]
