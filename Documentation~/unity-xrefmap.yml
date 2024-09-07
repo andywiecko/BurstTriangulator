@@ -2,7 +2,7 @@ references:
 - uid: Unity.Collections.NativeList`1
   name: NativeList<T>
   href: https://docs.unity3d.com/Packages/com.unity.collections@2.2/api/Unity.Collections.NativeList-1.html
-  
+
 - uid: Unity.Collections.NativeReference`1
   name: NativeReference<T>
   href: https://docs.unity3d.com/Packages/com.unity.collections@2.2/api/Unity.Collections.NativeReference-1.html
@@ -14,6 +14,10 @@ references:
 - uid: Unity.Collections.Allocator
   name: Allocator
   href: https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.html
+
+- uid: Unity.Collections.Allocator.Temp
+  name: Allocator.Temp
+  href: https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.Allocator.Temp.html
 
 - uid: Unity.Jobs.JobHandle
   name: JobHandle
