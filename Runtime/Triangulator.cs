@@ -1763,44 +1763,17 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         continue;
                     }
 
-                    // Swap edge
+                    // Swap edge (see figure above)
                     triangles[h0] = _q;
                     triangles[h3] = _p;
                     pointToHalfedge[_q] = h0;
                     pointToHalfedge[_p] = h3;
                     pointToHalfedge[_i] = h4;
                     pointToHalfedge[_j] = h1;
-
-                    var h5p = halfedges[h5];
-                    halfedges[h0] = h5p;
-                    if (h5p != -1)
-                    {
-                        halfedges[h5p] = h0;
-                    }
-
-                    var h2p = halfedges[h2];
-                    halfedges[h3] = h2p;
-                    if (h2p != -1)
-                    {
-                        halfedges[h2p] = h3;
-                    }
-
+                    ReplaceHalfedge(h5, h0);
+                    ReplaceHalfedge(h2, h3);
                     halfedges[h2] = h5;
                     halfedges[h5] = h2;
-
-                    constrainedHalfedges[h3] = constrainedHalfedges[h2];
-                    var h3p = halfedges[h3];
-                    if (h3p != -1)
-                    {
-                        constrainedHalfedges[h3p] = constrainedHalfedges[h2];
-                    }
-
-                    constrainedHalfedges[h0] = constrainedHalfedges[h5];
-                    var h0p = halfedges[h0];
-                    if (h0p != -1)
-                    {
-                        constrainedHalfedges[h0p] = constrainedHalfedges[h5];
-                    }
                     constrainedHalfedges[h2] = false;
                     constrainedHalfedges[h5] = false;
 
@@ -1829,6 +1802,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 intersections.Clear();
+            }
+
+            /// <summary>
+            /// Replaces <paramref name="h0"/> with <paramref name="h1"/>.
+            /// </summary>
+            private void ReplaceHalfedge(int h0, int h1)
+            {
+                var h0p = halfedges[h0];
+                halfedges[h1] = h0p;
+                constrainedHalfedges[h1] = constrainedHalfedges[h0];
+                if (h0p != -1)
+                {
+                    halfedges[h0p] = h1;
+                    constrainedHalfedges[h0p] = constrainedHalfedges[h0];
+                }
             }
 
             private bool EdgeEdgeIntersection(int2 e1, int2 e2)
