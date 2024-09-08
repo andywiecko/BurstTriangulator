@@ -171,6 +171,11 @@ namespace andywiecko.BurstTriangulator
         /// For more information, refer to the documentation.
         /// </summary>
         public NativeArray<T2> HoleSeeds { get; set; }
+        /// <summary>
+        /// Optional buffer used to mark constraints that should be ignored during the seed planting step.
+        /// The buffer length should be half the length of <see cref="ConstraintEdges"/>.
+        /// </summary>
+        public NativeArray<bool> IgnoreConstraintForPlantingSeeds { get; set; }
     }
 
     /// <summary>
@@ -218,7 +223,17 @@ namespace andywiecko.BurstTriangulator
         /// <summary>
         /// Buffer corresponding to <see cref="Halfedges"/>. <see langword="true"/> indicates that the halfedge is constrained, <see langword="false"/> otherwise.
         /// </summary>
+        /// <seealso cref="IgnoredHalfedgesForPlantingSeeds"/>
         public NativeList<bool> ConstrainedHalfedges => owner.constrainedHalfedges;
+        /// <summary>
+        /// Buffer corresponding to <see cref="Halfedges"/>. <see langword="true"/> indicates that the halfedge was ignored during planting seed step, <see langword="false"/> otherwise. Constraint edges to ignore can be set in input using <see cref="InputData{T2}.IgnoreConstraintForPlantingSeeds"/>.
+        /// </summary>
+        /// <remarks>
+        /// This buffer is particularly useful when using <see cref="UnsafeTriangulator"/>.
+        /// </remarks>
+        /// <seealso cref="ConstrainedHalfedges"/>
+        public NativeList<bool> IgnoredHalfedgesForPlantingSeeds => owner.ignoredHalfedgesForPlantingSeeds;
+
         private readonly Triangulator<T2> owner;
         [Obsolete("This will be converted into internal ctor.")]
         public OutputData(Triangulator<T2> owner) => this.owner = owner;
@@ -293,6 +308,7 @@ namespace andywiecko.BurstTriangulator
         internal NativeList<int> triangles;
         internal NativeList<int> halfedges;
         internal NativeList<bool> constrainedHalfedges;
+        internal NativeList<bool> ignoredHalfedgesForPlantingSeeds;
         internal NativeReference<Status> status;
 
         public Triangulator(int capacity, Allocator allocator)
@@ -302,6 +318,7 @@ namespace andywiecko.BurstTriangulator
             status = new(Status.OK, allocator);
             halfedges = new(6 * capacity, allocator);
             constrainedHalfedges = new(6 * capacity, allocator);
+            ignoredHalfedgesForPlantingSeeds = new(6 * capacity, allocator);
 #pragma warning disable CS0618
             Output = new(this);
 #pragma warning restore CS0618
@@ -393,8 +410,8 @@ namespace andywiecko.BurstTriangulator
         /// </summary>
         public static void Run(this Triangulator<Vector2> @this) =>
             new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(
-                input: new() { Positions = @this.Input.Positions.Reinterpret<float2>(), ConstraintEdges = @this.Input.ConstraintEdges, HoleSeeds = @this.Input.HoleSeeds.Reinterpret<float2>() },
-                output: new() { Triangles = @this.triangles, Halfedges = @this.halfedges, Positions = UnsafeUtility.As<NativeList<Vector2>, NativeList<float2>>(ref @this.outputPositions), Status = @this.status, ConstrainedHalfedges = @this.constrainedHalfedges },
+                input: new() { Positions = @this.Input.Positions.Reinterpret<float2>(), ConstraintEdges = @this.Input.ConstraintEdges, HoleSeeds = @this.Input.HoleSeeds.Reinterpret<float2>(), IgnoreConstraintForPlantingSeeds = @this.Input.IgnoreConstraintForPlantingSeeds },
+                output: new() { Triangles = @this.triangles, Halfedges = @this.halfedges, Positions = UnsafeUtility.As<NativeList<Vector2>, NativeList<float2>>(ref @this.outputPositions), Status = @this.status, ConstrainedHalfedges = @this.constrainedHalfedges, IgnoredHalfedgesForPlantingSeeds = @this.ignoredHalfedgesForPlantingSeeds },
                 args: @this.Settings
         ).Run();
         /// <summary>
@@ -409,8 +426,8 @@ namespace andywiecko.BurstTriangulator
         /// </returns>
         public static JobHandle Schedule(this Triangulator<Vector2> @this, JobHandle dependencies = default) =>
             new TriangulationJob<float, float2, float, TransformFloat, FloatUtils>(
-                input: new() { Positions = @this.Input.Positions.Reinterpret<float2>(), ConstraintEdges = @this.Input.ConstraintEdges, HoleSeeds = @this.Input.HoleSeeds.Reinterpret<float2>() },
-                output: new() { Triangles = @this.triangles, Halfedges = @this.halfedges, Positions = UnsafeUtility.As<NativeList<Vector2>, NativeList<float2>>(ref @this.outputPositions), Status = @this.status, ConstrainedHalfedges = @this.constrainedHalfedges },
+                input: new() { Positions = @this.Input.Positions.Reinterpret<float2>(), ConstraintEdges = @this.Input.ConstraintEdges, HoleSeeds = @this.Input.HoleSeeds.Reinterpret<float2>(), IgnoreConstraintForPlantingSeeds = @this.Input.IgnoreConstraintForPlantingSeeds },
+                output: new() { Triangles = @this.triangles, Halfedges = @this.halfedges, Positions = UnsafeUtility.As<NativeList<Vector2>, NativeList<float2>>(ref @this.outputPositions), Status = @this.status, ConstrainedHalfedges = @this.constrainedHalfedges, IgnoredHalfedgesForPlantingSeeds = @this.ignoredHalfedgesForPlantingSeeds },
                 args: @this.Settings
         ).Schedule(dependencies);
 
@@ -499,6 +516,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// For more information, refer to the documentation.
         /// </summary>
         public NativeArray<T2> HoleSeeds;
+        /// <summary>
+        /// Optional buffer used to mark constraints that should be ignored during the seed planting step.
+        /// The buffer length should be half the length of <see cref="ConstraintEdges"/>.
+        /// </summary>
+        public NativeArray<bool> IgnoreConstraintForPlantingSeeds;
     }
 
     /// <summary>
@@ -531,7 +553,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <summary>
         /// Buffer corresponding to <see cref="Halfedges"/>. <see langword="true"/> indicates that the halfedge is constrained, <see langword="false"/> otherwise.
         /// </summary>
+        /// <seealso cref="IgnoredHalfedgesForPlantingSeeds"/>
         public NativeList<bool> ConstrainedHalfedges;
+        /// <summary>
+        /// Buffer corresponding to <see cref="Halfedges"/>. <see langword="true"/> indicates that the halfedge was ignored during planting seed step, <see langword="false"/> otherwise. Constraint edges to ignore can be set in input using <see cref="InputData{T2}.IgnoreConstraintForPlantingSeeds"/>.
+        /// </summary>
+        /// <seealso cref="ConstrainedHalfedges"/>
+        public NativeList<bool> IgnoredHalfedgesForPlantingSeeds;
     }
 
     /// <summary>
@@ -868,11 +896,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         private NativeArray<int> constraints;
         [NativeDisableContainerSafetyRestriction]
         private NativeArray<T2> holeSeeds;
+        [NativeDisableContainerSafetyRestriction]
+        private NativeArray<bool> ignoreConstraintForPlantingSeeds;
 
         private NativeList<T2> outputPositions;
         private NativeList<int> triangles;
         private NativeList<int> halfedges;
         private NativeList<bool> constrainedHalfedges;
+        private NativeList<bool> ignoredHalfedgesForPlantingSeeds;
         private NativeReference<Status> status;
 
         private readonly Args args;
@@ -882,11 +913,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             inputPositions = input.Positions;
             constraints = input.ConstraintEdges;
             holeSeeds = input.HoleSeeds;
+            ignoreConstraintForPlantingSeeds = input.IgnoreConstraintForPlantingSeeds;
 
             outputPositions = output.Positions;
             triangles = output.Triangles;
             halfedges = output.Halfedges;
             constrainedHalfedges = output.ConstrainedHalfedges;
+            ignoredHalfedgesForPlantingSeeds = output.IgnoredHalfedgesForPlantingSeeds;
             status = output.Status;
 
             this.args = args;
@@ -897,11 +930,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             inputPositions = @this.Input.Positions;
             constraints = @this.Input.ConstraintEdges;
             holeSeeds = @this.Input.HoleSeeds;
+            ignoreConstraintForPlantingSeeds = @this.Input.IgnoreConstraintForPlantingSeeds;
 
             outputPositions = @this.Output.Positions;
             triangles = @this.Output.Triangles;
             halfedges = @this.Output.Halfedges;
             constrainedHalfedges = @this.Output.ConstrainedHalfedges;
+            ignoredHalfedgesForPlantingSeeds = @this.Output.IgnoredHalfedgesForPlantingSeeds;
             status = @this.Output.Status;
 
             args = @this.Settings;
@@ -915,6 +950,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     Positions = inputPositions,
                     ConstraintEdges = constraints,
                     HoleSeeds = holeSeeds,
+                    IgnoreConstraintForPlantingSeeds = ignoreConstraintForPlantingSeeds,
                 },
                 output: new()
                 {
@@ -923,6 +959,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     Halfedges = halfedges,
                     ConstrainedHalfedges = constrainedHalfedges,
                     Status = status,
+                    IgnoredHalfedgesForPlantingSeeds = ignoredHalfedgesForPlantingSeeds
                 }, args, Allocator.Temp);
         }
     }
@@ -954,16 +991,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var tmpPositions = default(NativeList<T2>);
             var tmpHalfedges = default(NativeList<int>);
             var tmpConstrainedHalfedges = default(NativeList<bool>);
+            var tmpIgnoredHalfedgesForPlantingSeeds = default(NativeList<bool>);
             output.Status = output.Status.IsCreated ? output.Status : tmpStatus = new(allocator);
             output.Positions = output.Positions.IsCreated ? output.Positions : tmpPositions = new(16 * 1024, allocator);
             output.Halfedges = output.Halfedges.IsCreated ? output.Halfedges : tmpHalfedges = new(6 * 16 * 1024, allocator);
             output.ConstrainedHalfedges = output.ConstrainedHalfedges.IsCreated ? output.ConstrainedHalfedges : tmpConstrainedHalfedges = new(6 * 16 * 1024, allocator);
+            output.IgnoredHalfedgesForPlantingSeeds = output.IgnoredHalfedgesForPlantingSeeds.IsCreated ? output.IgnoredHalfedgesForPlantingSeeds : tmpIgnoredHalfedgesForPlantingSeeds = new(6 * 16 * 1024, allocator);
 
             output.Status.Value = Status.OK;
             output.Triangles.Clear();
             output.Positions.Clear();
             output.Halfedges.Clear();
             output.ConstrainedHalfedges.Clear();
+            output.IgnoredHalfedgesForPlantingSeeds.Clear();
 
             PreProcessInputStep(input, output, args, out var localHoles, out var lt, allocator);
             new ValidateInputStep(input, output, args).Execute();
@@ -978,6 +1018,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             if (tmpPositions.IsCreated) tmpPositions.Dispose();
             if (tmpHalfedges.IsCreated) tmpHalfedges.Dispose();
             if (tmpConstrainedHalfedges.IsCreated) tmpConstrainedHalfedges.Dispose();
+            if (tmpIgnoredHalfedgesForPlantingSeeds.IsCreated) tmpIgnoredHalfedgesForPlantingSeeds.Dispose();
         }
 
         public void PlantHoleSeeds(InputData<T2> input, OutputData<T2> output, Args args, Allocator allocator)
@@ -1626,6 +1667,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             // See the `UsingTempAllocatorInJobTest` to learn more.
             private NativeList<int> halfedges;
             private NativeList<bool> constrainedHalfedges;
+            private NativeList<bool> ignoredHalfedgesForPlantingSeeds;
+            private NativeArray<bool> ignoreConstraintForPlantingSeeds;
             private readonly Args args;
 
             private NativeList<int> intersections;
@@ -1638,8 +1681,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 positions = output.Positions.AsReadOnly();
                 triangles = output.Triangles.AsArray();
                 inputConstraintEdges = input.ConstraintEdges.AsReadOnly();
+                ignoreConstraintForPlantingSeeds = input.IgnoreConstraintForPlantingSeeds;
                 halfedges = output.Halfedges;
                 constrainedHalfedges = output.ConstrainedHalfedges;
+                ignoredHalfedgesForPlantingSeeds = output.IgnoredHalfedgesForPlantingSeeds;
                 this.args = args;
 
                 intersections = default;
@@ -1659,6 +1704,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 using var _intersections = intersections = new NativeList<int>(allocator);
                 using var _unresolvedIntersections = unresolvedIntersections = new NativeList<int>(allocator);
                 using var _pointToHalfedge = pointToHalfedge = new NativeArray<int>(positions.Length, allocator);
+                ignoredHalfedgesForPlantingSeeds.Length = halfedges.Length;
 
                 // build point to halfedge
                 for (int i = 0; i < triangles.Length; i++)
@@ -1673,16 +1719,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         inputConstraintEdges[2 * index + 1]
                     );
                     c = c.x < c.y ? c.xy : c.yx; // Backward compatibility. To remove in the future.
-                    TryApplyConstraint(c);
+                    TryApplyConstraint(c, index);
                 }
             }
 
-            private void TryApplyConstraint(int2 c)
+            private void TryApplyConstraint(int2 c, int index)
             {
                 intersections.Clear();
                 unresolvedIntersections.Clear();
 
-                CollectIntersections(c);
+                CollectIntersections(c, index);
 
                 var iter = 0;
                 do
@@ -1693,11 +1739,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     }
 
                     (intersections, unresolvedIntersections) = (unresolvedIntersections, intersections);
-                    TryResolveIntersections(c, ref iter);
+                    TryResolveIntersections(c, index, ref iter);
                 } while (!unresolvedIntersections.IsEmpty);
             }
 
-            private void TryResolveIntersections(int2 c, ref int iter)
+            private void TryResolveIntersections(int2 c, int index, ref int iter)
             {
                 for (int i = 0; i < intersections.Length; i++)
                 {
@@ -1776,6 +1822,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     halfedges[h5] = h2;
                     constrainedHalfedges[h2] = false;
                     constrainedHalfedges[h5] = false;
+                    ignoredHalfedgesForPlantingSeeds[h2] = false;
+                    ignoredHalfedgesForPlantingSeeds[h5] = false;
 
                     // Fix intersections
                     for (int j = i + 1; j < intersections.Length; j++)
@@ -1794,6 +1842,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     {
                         constrainedHalfedges[h2] = true;
                         constrainedHalfedges[h5] = true;
+                        ignoredHalfedgesForPlantingSeeds[h2] = IsConstraintIgnoredForPlanting(index);
+                        ignoredHalfedgesForPlantingSeeds[h5] = IsConstraintIgnoredForPlanting(index);
                     }
                     if (EdgeEdgeIntersection(c, swapped))
                     {
@@ -1804,6 +1854,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 intersections.Clear();
             }
 
+            private bool IsConstraintIgnoredForPlanting(int index) => ignoreConstraintForPlantingSeeds.IsCreated && ignoreConstraintForPlantingSeeds[index];
+
             /// <summary>
             /// Replaces <paramref name="h0"/> with <paramref name="h1"/>.
             /// </summary>
@@ -1812,10 +1864,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var h0p = halfedges[h0];
                 halfedges[h1] = h0p;
                 constrainedHalfedges[h1] = constrainedHalfedges[h0];
+                ignoredHalfedgesForPlantingSeeds[h1] = ignoredHalfedgesForPlantingSeeds[h0];
+
                 if (h0p != -1)
                 {
                     halfedges[h0p] = h1;
                     constrainedHalfedges[h0p] = constrainedHalfedges[h0];
+                    ignoredHalfedgesForPlantingSeeds[h0p] = ignoredHalfedgesForPlantingSeeds[h0];
                 }
             }
 
@@ -1826,7 +1881,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
             }
 
-            private void CollectIntersections(int2 edge)
+            private void CollectIntersections(int2 edge, int index)
             {
                 // 1. Check if h1 is cj
                 // 2. Check if h1-h2 intersects with ci-cj
@@ -1852,10 +1907,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     if (triangles[h1] == cj)
                     {
                         constrainedHalfedges[h0] = true;
+                        ignoredHalfedgesForPlantingSeeds[h0] = IsConstraintIgnoredForPlanting(index);
                         var oh0 = halfedges[h0];
                         if (oh0 != -1)
                         {
                             constrainedHalfedges[oh0] = true;
+                            ignoredHalfedgesForPlantingSeeds[oh0] = IsConstraintIgnoredForPlanting(index);
                         }
                         break;
                     }
@@ -1875,6 +1932,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (triangles[h2] == cj)
                         {
                             constrainedHalfedges[h2] = true;
+                            ignoredHalfedgesForPlantingSeeds[h2] = IsConstraintIgnoredForPlanting(index);
                         }
 
                         // possible that triangles[h2] == cj, not need to check
@@ -1893,10 +1951,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (triangles[h1] == cj)
                         {
                             constrainedHalfedges[h0] = true;
+                            ignoredHalfedgesForPlantingSeeds[h0] = IsConstraintIgnoredForPlanting(index);
                             var oh0 = halfedges[h0];
                             if (oh0 != -1)
                             {
                                 constrainedHalfedges[oh0] = true;
+                                ignoredHalfedgesForPlantingSeeds[oh0] = IsConstraintIgnoredForPlanting(index);
                             }
                             break;
                         }
@@ -1985,7 +2045,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<T2> positions;
             private NativeList<bool> constrainedHalfedges;
             private NativeList<int> halfedges;
-
+            private NativeList<bool> ignoredHalfedges;
             private NativeArray<bool> visitedTriangles;
             private NativeQueue<int> trianglesQueue;
             private NativeArray<T2> holes;
@@ -2002,6 +2062,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 positions = output.Positions;
                 constrainedHalfedges = output.ConstrainedHalfedges;
                 halfedges = output.Halfedges;
+                ignoredHalfedges = output.IgnoredHalfedgesForPlantingSeeds;
                 holes = localHoles;
                 this.args = args;
 
@@ -2030,13 +2091,15 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 RemoveVisitedTriangles(allocator);
             }
 
+            private bool HalfedgeIsIgnored(int he) => ignoredHalfedges.IsCreated && ignoredHalfedges[he];
+
             private void PlantBoundarySeeds()
             {
                 for (int he = 0; he < halfedges.Length; he++)
                 {
                     if (halfedges[he] == -1 &&
                         !visitedTriangles[he / 3] &&
-                        !constrainedHalfedges[he])
+                        (!constrainedHalfedges[he] || HalfedgeIsIgnored(he)))
                     {
                         PlantSeed(he / 3);
                     }
@@ -2124,7 +2187,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     {
                         var he = 3 * tId + i;
                         var ohe = halfedges[he];
-                        if (constrainedHalfedges[he] || ohe == -1)
+                        if (constrainedHalfedges[he] && !HalfedgeIsIgnored(he) || ohe == -1)
                         {
                             continue;
                         }
@@ -2169,7 +2232,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     }
 
                     heVisited[he] = true;
-                    if (constrainedHalfedges[he])
+                    if (constrainedHalfedges[he] && !HalfedgeIsIgnored(he))
                     {
                         loop.Add(he);
                     }
@@ -2200,7 +2263,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 while (heQueue.TryDequeue(out var he))
                 {
                     var ohe = halfedges[he]; // valid `ohe` should always exist, -1 are eliminated in the 1st sweep!
-                    if (constrainedHalfedges[ohe])
+                    if (constrainedHalfedges[ohe] && !HalfedgeIsIgnored(ohe))
                     {
                         heVisited[ohe] = true;
                         loop.Add(ohe);
@@ -2243,7 +2306,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 while (heQueue.TryDequeue(out var he))
                 {
                     var ohe = halfedges[he];
-                    if (constrainedHalfedges[ohe])
+                    if (constrainedHalfedges[ohe] && !HalfedgeIsIgnored(ohe))
                     {
                         heVisited[ohe] = true;
                         PlantSeed(ohe / 3);

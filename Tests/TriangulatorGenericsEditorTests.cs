@@ -1426,6 +1426,67 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var manualResult = triangulator.Output.Triangles.AsArray().ToArray();
             Assert.That(autoResult, Is.EqualTo(manualResult));
         }
+
+        [Test]
+        public void AutoHolesWithIgnoredConstraintsTest()
+        {
+            // 3 ------------------------ 2
+            // |                          |
+            // |   5                      |
+            // |   |                      |
+            // |   |                      |
+            // |   |                      |
+            // |   |                      |
+            // |   |                      |
+            // |   |          9 ---- 8    |
+            // |   |          |      |    |
+            // |   |          |      |    |
+            // |   4          6 ---- 7    |
+            // |                          |
+            // 0 ------------------------ 1
+            using var positions = new NativeArray<T>(new float2[]
+            {
+                math.float2(0, 0),
+                math.float2(10, 0),
+                math.float2(10, 10),
+                math.float2(0, 10),
+
+                math.float2(1, 1),
+                math.float2(1, 9),
+
+                math.float2(8, 1),
+                math.float2(9, 1),
+                math.float2(9, 2),
+                math.float2(8, 2),
+            }.DynamicCast<T>(), Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(new int[]
+            {
+                0, 1, 1, 2, 2, 3, 3, 0,
+                4, 5,
+                6, 7, 7, 8, 8, 9, 9, 6,
+            }, Allocator.Persistent);
+            using var ignoreConstraints = new NativeArray<bool>(new bool[]
+            {
+                false, false, false, false,
+                true,
+                false, false, false, false,
+            }, Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = {
+                    Positions = positions,
+                    ConstraintEdges = constraintEdges,
+                    IgnoreConstraintForPlantingSeeds = ignoreConstraints
+                },
+                Settings = { AutoHolesAndBoundary = true, },
+            };
+
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Triangles.AsArray(), Has.Length.EqualTo(3 * 12));
+            Assert.That(triangulator.Output.ConstrainedHalfedges.AsArray().Count(i => i), Is.EqualTo(10));
+            Assert.That(triangulator.Output.IgnoredHalfedgesForPlantingSeeds.AsArray().Count(i => i), Is.EqualTo(2));
+        }
     }
 
     [TestFixture(typeof(float2))]

@@ -298,6 +298,81 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             h3.Free();
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
         }
+
+        [Test]
+        public void UnsafeTriangulatorAutoHolesWithIgnoredConstraintsTest()
+        {
+            // 3 ------------------------ 2
+            // |                          |
+            // |   5                      |
+            // |   |                      |
+            // |   |                      |
+            // |   |                      |
+            // |   |                      |
+            // |   |                      |
+            // |   |          9 ---- 8    |
+            // |   |          |      |    |
+            // |   |          |      |    |
+            // |   4          6 ---- 7    |
+            // |                          |
+            // 0 ------------------------ 1
+            using var positions = new NativeArray<T>(new float2[]
+            {
+                math.float2(0, 0),
+                math.float2(10, 0),
+                math.float2(10, 10),
+                math.float2(0, 10),
+
+                math.float2(1, 1),
+                math.float2(1, 9),
+
+                math.float2(8, 1),
+                math.float2(9, 1),
+                math.float2(9, 2),
+                math.float2(8, 2),
+            }.DynamicCast<T>(), Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(new int[]
+            {
+                0, 1, 1, 2, 2, 3, 3, 0,
+                4, 5,
+                6, 7, 7, 8, 8, 9, 9, 6,
+            }, Allocator.Persistent);
+            using var ignoreConstraints = new NativeArray<bool>(new bool[]
+            {
+                false, false, false, false,
+                true,
+                false, false, false, false,
+            }, Allocator.Persistent);
+
+
+            var t = new UnsafeTriangulator<T>();
+
+            using var triangles1 = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(
+                input: new() { Positions = positions, ConstraintEdges = constraintEdges, IgnoreConstraintForPlantingSeeds = ignoreConstraints },
+                output: new() { Triangles = triangles1 },
+                args: Args.Default().With(autoHolesAndBoundary: true), Allocator.Persistent
+            );
+
+            using var triangles2 = new NativeList<int>(Allocator.Persistent);
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var ignoredHalfedges = new NativeList<bool>(Allocator.Persistent);
+            t.Triangulate(
+                input: new() { Positions = positions, ConstraintEdges = constraintEdges, IgnoreConstraintForPlantingSeeds = ignoreConstraints },
+                output: new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions, IgnoredHalfedgesForPlantingSeeds = ignoredHalfedges },
+                args: Args.Default(), Allocator.Persistent
+            );
+            t.PlantHoleSeeds(
+                input: default,
+                output: new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions, IgnoredHalfedgesForPlantingSeeds = ignoredHalfedges },
+                args: Args.Default().With(autoHolesAndBoundary: true), Allocator.Persistent
+            );
+
+            Assert.That(triangles1.AsArray(), Has.Length.EqualTo(3 * 12));
+            Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray()).Using(TrianglesComparer.Instance));
+        }
     }
 
     [TestFixture(typeof(float2))]
