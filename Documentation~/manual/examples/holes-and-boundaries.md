@@ -80,7 +80,39 @@ var triangles = triangulator.Output.Triangles;
 > The current implementation of [`AutoHolesAndBoundary`][auto-holes-property] detects only *1-level islands*.
 > It will not detect holes in *solid* meshes inside other holes.
 
+## Ignore constraints for planting seeds
+
+As described in the introduction, the algorithm for triangle removal (and automatic hole detection) is based on a "spreading virus" mechanism, where constrained edges block the propagation. This behavior can be overridden by setting [`IgnoreConstraintForPlantingSeeds`][ignore-constraint] to `true` for a given constraint
+
+```csharp
+using var positions = new NativeArray<double2>(..., Allocator.Persistent);
+using var constraintEdges = new NativeArray<int>(..., Allocator.Persistent);
+using var ignoreConstraint = new NativeArray<bool>(..., Allocator.Persistent);
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+  Input = {
+    Positions = positions,
+    ConstraintEdges = constraintEdges,
+    IgnoreConstraintForPlantingSeeds = ignoreConstraint,
+  },
+  Settings = { AutoHolesAndBoundary = true, },
+};
+
+triangulator.Run();
+
+var triangles = triangulator.Output.Triangles;
+```
+
+This feature is especially useful when the user wants to include a constraint but does not wish to enable hole detection for that edge. Consider the following example input:
+
+<br>
+<p align="center"><img src="../../images/manual-ignore-constraint-for-planting-seeds.svg" width="500"/></p>
+<br>
+
+In this example, the red constraint is set to `true` in [`IgnoreConstraintForPlantingSeeds`][ignore-constraint]. As a result, a hole is not generated from red constraint, and the edge remains part of the final triangulation.
+
 [restore-boundary-property]: xref:andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary
 [input-constraint-edges]: xref:andywiecko.BurstTriangulator.InputData`1.ConstraintEdges
 [input-positions]: xref:andywiecko.BurstTriangulator.InputData`1.Positions
 [auto-holes-property]: xref:andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary
+[ignore-constraint]: xref:andywiecko.BurstTriangulator.InputData`1.IgnoreConstraintForPlantingSeeds
