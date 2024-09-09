@@ -332,6 +332,47 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR));
         }
 
+        private static readonly TestCaseData[] validateIgnoredConstraintTestData = new TestCaseData[]
+        {
+            new(new int[]{ 0, 1 }, new bool[]{ false, false }) { TestName = "Test case 1 (bad length)"},
+            new(default(int[]), new bool[]{ false, false }) { TestName = "Test case 2 (missing constraints)"},
+        }.SelectMany(i => new[]
+        {
+            new TestCaseData(i.Arguments[0], i.Arguments[1], true){ TestName = i.TestName + ", verbose"},
+            new TestCaseData(i.Arguments[0], i.Arguments[1], false){ TestName = i.TestName + ", no verbose" }
+        }).ToArray();
+
+        [Test, TestCaseSource(nameof(validateIgnoredConstraintTestData))]
+        public void ValidateIgnoredConstraintCase0Test(int[] constraints, bool[] ignoredConstraints, bool verbose)
+        {
+            using var positions = new NativeArray<T>(new float2[] { 0, 1, math.float2(0, 1), }.DynamicCast<T>(), Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraints ?? (new int[0]), Allocator.Persistent);
+            using var ignoredConstraint = new NativeArray<bool>(ignoredConstraints, Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    Verbose = verbose,
+                },
+                Input =
+                {
+                    Positions = positions,
+                    ConstraintEdges = constraints != null ? constraintEdges : default,
+                    IgnoreConstraintForPlantingSeeds = ignoredConstraint,
+                }
+            };
+
+            if (verbose)
+            {
+                LogAssert.Expect(LogType.Error, new Regex(".*"));
+            }
+
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR));
+        }
+
         private static readonly TestCaseData[] edgeConstraintsTestData =
         {
             new(

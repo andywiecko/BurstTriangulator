@@ -1084,6 +1084,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeReference<Status> status;
             private readonly Args args;
             private NativeArray<int>.ReadOnly constraints;
+            private NativeArray<bool>.ReadOnly ignoredConstraints;
 
             public ValidateInputStep(InputData<T2> input, OutputData<T2> output, Args args)
             {
@@ -1091,6 +1092,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 status = output.Status;
                 this.args = args;
                 constraints = input.ConstraintEdges.AsReadOnly();
+                ignoredConstraints = input.IgnoreConstraintForPlantingSeeds.AsReadOnly();
             }
 
             public void Execute()
@@ -1102,6 +1104,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 using var _ = Markers.ValidateInputStep.Auto();
 
+                ValidatePositions();
+                ValidateConstraints();
+                ValidateIgnoredConstraints();
+            }
+
+            private void ValidatePositions()
+            {
                 if (positions.Length < 3)
                 {
                     Log($"[Triangulator]: Positions.Length is less then 3!");
@@ -1120,7 +1129,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         status.Value |= Status.ERR;
                     }
                 }
+            }
 
+            private void ValidateConstraints()
+            {
                 if (!constraints.IsCreated)
                 {
                     return;
@@ -1143,6 +1155,28 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         status.Value |= Status.ERR;
                         return;
                     }
+                }
+            }
+
+            private void ValidateIgnoredConstraints()
+            {
+                if (!ignoredConstraints.IsCreated)
+                {
+                    return;
+                }
+
+                if (!constraints.IsCreated)
+                {
+                    Log($"[Triangulator]: IgnoreConstraintForPlantingSeeds buffer is provided, but ConstraintEdges is missing!");
+                    status.Value |= Status.ERR;
+                    return;
+                }
+
+                if (ignoredConstraints.Length != constraints.Length / 2)
+                {
+                    Log($"[Triangulator]: IgnoreConstraintForPlantingSeeds length must be equal to half the length of ConstraintEdges!");
+                    status.Value |= Status.ERR;
+                    return;
                 }
             }
 
