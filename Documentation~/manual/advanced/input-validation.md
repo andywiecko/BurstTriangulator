@@ -9,6 +9,8 @@ If [`ValidateInput`][validate] is set to true, the provided data will be validat
 - Constraint edges cannot be duplicated or swapped duplicated.
 - Zero-length constraint edges are forbidden.
 - Constraint edges cannot intersect with points other than the points for which they are defined.
+- [`IgnoreConstraintForPlantingSeeds`][ignore-constraint] must have a length equal to half the length of [ConstraintEdges][constraints].
+- If [`IgnoreConstraintForPlantingSeeds`][ignore-constraint] is provided, [`ConstraintEdges`][constraints] must also be provided.
 
 If any of these conditions fail, triangulation will not be calculated. You can catch this as an error by using [`Status`][status] (native, can be used in jobs).
 
@@ -31,3 +33,5 @@ var status = triangulator.Output.Status.Value;
 
 [validate]: xref:andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput
 [status]: xref:andywiecko.BurstTriangulator.Status
+[constraints]: xref:andywiecko.BurstTriangulator.InputData`1.ConstraintEdges
+[ignore-constraint]: xref:andywiecko.BurstTriangulator.InputData`1.IgnoreConstraintForPlantingSeeds
