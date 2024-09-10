@@ -125,10 +125,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(3),
                 }
             ) { TestName = "Test Case 5 (all collinear)" }
-        };
+        }.SelectMany(i => new[]
+        {
+            new TestCaseData(i.Arguments[0], true){ TestName = i.TestName + ", verbose"},
+            new TestCaseData(i.Arguments[0], false){ TestName = i.TestName + ", no verbose" }
+        }).ToArray();
 
         [Test, TestCaseSource(nameof(validateInputPositionsTestData))]
-        public void ValidateInputPositionsTest(float2[] managedPositions)
+        public void ValidateInputPositionsTest(float2[] managedPositions, bool verbose)
         {
             if (typeof(T) == typeof(int2) && managedPositions.Any(p => !math.all(math.isfinite(p))))
             {
@@ -145,41 +149,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
             {
-                Settings = { ValidateInput = true, Verbose = true },
+                Settings = { ValidateInput = true, Verbose = verbose },
                 Input = { Positions = positions },
             };
 
-            LogAssert.Expect(LogType.Error, new Regex(".*"));
-            triangulator.Run();
-
-            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR));
-        }
-
-        private static readonly TestCaseData[] validateInputPositionsNoVerboseTestData = validateInputPositionsTestData
-            .Select(i => new TestCaseData(i.Arguments) { TestName = i.TestName[..^1] + ", no verbose)" }).ToArray();
-
-        [Test, TestCaseSource(nameof(validateInputPositionsNoVerboseTestData))]
-        public void ValidateInputPositionsNoVerboseTest(float2[] managedPositions)
-        {
-            if (typeof(T) == typeof(int2) && managedPositions.Any(p => !math.all(math.isfinite(p))))
+            if (verbose)
             {
-                Assert.Ignore("Integer coordinates cannot be infinite or NaN.");
+                LogAssert.Expect(LogType.Error, new Regex(".*"));
             }
-
-#if UNITY_MATHEMATICS_FIXEDPOINT
-            if (typeof(T) == typeof(fp2) && managedPositions.Any(p => !math.all(math.isfinite(p))))
-            {
-                Assert.Ignore("Fixed-point coordinates cannot be infinite or NaN.");
-            }
-#endif
-
-            using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
-            using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
-            {
-                Settings = { ValidateInput = true, Verbose = false },
-                Input = { Positions = positions },
-            };
-
             triangulator.Run();
 
             Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR));
@@ -278,10 +255,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 },
                 new[]{ 1, 5, 1, 1 }
             ) { TestName = "Test Case 6d (constraint out of positions range)" },
-        };
+        }.SelectMany(i => new[]
+        {
+            new TestCaseData(i.Arguments[0], i.Arguments[1], true){ TestName = i.TestName + ", verbose"},
+            new TestCaseData(i.Arguments[0], i.Arguments[1], false){ TestName = i.TestName + ", no verbose" }
+        }).ToArray();
 
         [Test, TestCaseSource(nameof(validateConstraintDelaunayTriangulationTestData))]
-        public void ValidateConstraintDelaunayTriangulationTest(float2[] managedPositions, int[] constraints)
+        public void ValidateConstraintDelaunayTriangulationTest(float2[] managedPositions, int[] constraints, bool verbose)
         {
             using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
@@ -290,7 +271,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Settings =
                 {
                     ValidateInput = true,
-                    Verbose = true,
+                    Verbose = verbose,
                 },
                 Input =
                 {
@@ -299,34 +280,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 }
             };
 
-            LogAssert.Expect(LogType.Error, new Regex(".*"));
-            triangulator.Run();
-
-            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR));
-        }
-
-        private static readonly TestCaseData[] validateConstraintDelaunayTriangulationNoVerboseTestData = validateConstraintDelaunayTriangulationTestData
-            .Select(i => new TestCaseData(i.Arguments) { TestName = i.TestName[..^1] + ", no verbose" }).ToArray();
-
-        [Test, TestCaseSource(nameof(validateConstraintDelaunayTriangulationNoVerboseTestData))]
-        public void ValidateConstraintDelaunayTriangulationNoVerboseTest(float2[] managedPositions, int[] constraints)
-        {
-            using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
-            using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
-            using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
+            if (verbose)
             {
-                Settings =
-                {
-                    ValidateInput = true,
-                    Verbose = false,
-                },
-                Input =
-                {
-                    Positions = positions,
-                    ConstraintEdges = constraintEdges,
-                }
-            };
-
+                LogAssert.Expect(LogType.Error, new Regex(".*"));
+            }
             triangulator.Run();
 
             Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR));
@@ -343,7 +300,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }).ToArray();
 
         [Test, TestCaseSource(nameof(validateIgnoredConstraintTestData))]
-        public void ValidateIgnoredConstraintCase0Test(int[] constraints, bool[] ignoredConstraints, bool verbose)
+        public void ValidateIgnoredConstraintTest(int[] constraints, bool[] ignoredConstraints, bool verbose)
         {
             using var positions = new NativeArray<T>(new float2[] { 0, 1, math.float2(0, 1), }.DynamicCast<T>(), Allocator.Persistent);
             using var constraintEdges = new NativeArray<int>(constraints ?? (new int[0]), Allocator.Persistent);
