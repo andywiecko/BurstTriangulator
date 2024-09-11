@@ -62,5 +62,5 @@ jobs:
           versioning: None
       - uses: actions/upload-artifact@v4
         with:
-          name: Build
+          name: Build-${{ matrix.manifest }}
           path: build
