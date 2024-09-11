@@ -1211,16 +1211,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 if (!constraints.IsCreated)
                 {
-                    LogError($"[Triangulator]: IgnoreConstraintForPlantingSeeds buffer is provided, but ConstraintEdges is missing!");
-                    status.Value |= Status.ERR;
-                    return;
+                    LogWarning($"[Triangulator]: IgnoreConstraintForPlantingSeeds buffer is provided, but ConstraintEdges is missing. This setting has no effect.");
                 }
 
-                if (ignoredConstraints.Length != constraints.Length / 2)
+                if (constraints.IsCreated && ignoredConstraints.Length != constraints.Length / 2)
                 {
                     LogError($"[Triangulator]: IgnoreConstraintForPlantingSeeds length must be equal to half the length of ConstraintEdges!");
                     status.Value |= Status.ERR;
-                    return;
                 }
             }
 
