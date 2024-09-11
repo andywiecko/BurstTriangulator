@@ -109,21 +109,27 @@ namespace andywiecko.BurstTriangulator
         [field: SerializeField]
         public bool RefineMesh { get; set; } = false;
         /// <summary>
-        /// If set to <see langword="true"/>, the provided data will be validated before running the triangulation procedure.
-        /// Input positions, as well as input constraints, have a few restrictions.
-        /// See <seealso href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md">README.md</seealso> for more details.
-        /// If one of the conditions fails, the triangulation will not be calculated.
-        /// This can be detected as an error by inspecting <see cref="OutputData{T2}.Status"/> value (native, can be used in jobs).
-        /// Additionally, if <see cref="Verbose"/> is set to <see langword="true"/>, the corresponding error will be logged in the Console.
+        /// If set to <see langword="true"/>, the provided <see cref="InputData{T2}"/> and <see cref="TriangulationSettings"/> 
+        /// will be validated before executing the triangulation procedure. The input <see cref="InputData{T2}.Positions"/>, 
+        /// <see cref="InputData{T2}.ConstraintEdges"/>, and <see cref="TriangulationSettings"/> have certain restrictions. 
+        /// For more details, see the <see href="https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-validation.html">manual</see>.
+        /// If any of the validation conditions are not met, the triangulation will not be performed. 
+        /// This can be detected as an error by checking the <see cref="OutputData{T2}.Status"/> value (native, and usable in jobs).
+        /// Additionally, if <see cref="Verbose"/> is set to <see langword="true"/>, corresponding errors/warnings will be logged in the Console.
+        /// Note that some conditions may result in warnings only.
         /// </summary>
+        /// <remarks>
+        /// Input validation can be expensive. If you are certain of your input, consider disabling this option for additional performance.
+        /// </remarks>
         [field: SerializeField]
         public bool ValidateInput { get; set; } = true;
         /// <summary>
-        /// If set to <see langword="true"/>, caught errors with <see cref="Triangulator"/> will be logged in the Console.
+        /// If set to <see langword="true"/>, caught errors and warnings with <see cref="Triangulator"/> will be logged in the Console.
         /// </summary>
         /// <remarks>
         /// See also the <see cref="ValidateInput"/> settings.
         /// </remarks>
+        /// <seealso cref="ValidateInput"/>
         [field: SerializeField]
         public bool Verbose { get; set; } = true;
         /// <summary>
@@ -1104,16 +1110,54 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 using var _ = Markers.ValidateInputStep.Auto();
 
+                ValidateArgs();
                 ValidatePositions();
                 ValidateConstraints();
                 ValidateIgnoredConstraints();
+            }
+
+            private void ValidateArgs()
+            {
+                if (args.AutoHolesAndBoundary && !constraints.IsCreated)
+                {
+                    LogWarning($"[Triangulator]: AutoHolesAndBoundary is selected, but the ConstraintEdges buffer is not provided. This setting has no effect.");
+                }
+
+                if (args.RestoreBoundary && !constraints.IsCreated)
+                {
+                    LogWarning($"[Triangulator]: RestoreBoundary is selected, but the ConstraintEdges buffer is not provided. This setting has no effect.");
+                }
+
+                if (args.RefineMesh && !utils.SupportRefinement())
+                {
+                    LogError($"[Triangulator]: Invalid arguments! RefineMesh is selected, but the selected type T does not support mesh refinement.");
+                    status.Value |= Status.ERR;
+                }
+
+                if (constraints.IsCreated && args.SloanMaxIters < 1)
+                {
+                    LogError($"[Triangulator]: Invalid arguments! SloanMaxIters must be a positive integer.");
+                    status.Value |= Status.ERR;
+                }
+
+                if (args.RefineMesh && args.RefinementThresholdArea < 0)
+                {
+                    LogError($"[Triangulator]: Invalid arguments! RefinementThresholdArea must be a positive float.");
+                    status.Value |= Status.ERR;
+                }
+
+                if (args.RefineMesh && args.RefinementThresholdAngle < 0 || args.RefinementThresholdAngle > math.PI / 4)
+                {
+                    LogError($"[Triangulator]: Invalid arguments! RefinementThresholdAngle must be in the range [0, π / 4]. Note that in the literature, the upper boundary for convergence is approximately π / 6.");
+                    status.Value |= Status.ERR;
+                }
             }
 
             private void ValidatePositions()
             {
                 if (positions.Length < 3)
                 {
-                    Log($"[Triangulator]: Positions.Length is less then 3!");
+                    LogError($"[Triangulator]: Positions.Length is less then 3!");
                     status.Value |= Status.ERR;
                 }
 
@@ -1121,7 +1165,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 {
                     if (!PointValidation(i))
                     {
-                        Log($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
+                        LogError($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
                         status.Value |= Status.ERR;
                     }
                     if (!PointPointValidation(i))
@@ -1140,7 +1184,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 if (constraints.Length % 2 == 1)
                 {
-                    Log($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
+                    LogError($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
                     status.Value |= Status.ERR;
                     return;
                 }
@@ -1167,14 +1211,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 if (!constraints.IsCreated)
                 {
-                    Log($"[Triangulator]: IgnoreConstraintForPlantingSeeds buffer is provided, but ConstraintEdges is missing!");
+                    LogError($"[Triangulator]: IgnoreConstraintForPlantingSeeds buffer is provided, but ConstraintEdges is missing!");
                     status.Value |= Status.ERR;
                     return;
                 }
 
                 if (ignoredConstraints.Length != constraints.Length / 2)
                 {
-                    Log($"[Triangulator]: IgnoreConstraintForPlantingSeeds length must be equal to half the length of ConstraintEdges!");
+                    LogError($"[Triangulator]: IgnoreConstraintForPlantingSeeds length must be equal to half the length of ConstraintEdges!");
                     status.Value |= Status.ERR;
                     return;
                 }
@@ -1190,7 +1234,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var pj = positions[j];
                     if (math.all(utils.eq(pi, pj)))
                     {
-                        Log($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
+                        LogError($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
                         return false;
                     }
                 }
@@ -1203,7 +1247,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var count = positions.Length;
                 if (a0Id >= count || a0Id < 0 || a1Id >= count || a1Id < 0)
                 {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
+                    LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
                     return false;
                 }
 
@@ -1215,7 +1259,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
                 if (a0Id == a1Id)
                 {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is length zero!");
+                    LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is length zero!");
                     return false;
                 }
                 return true;
@@ -1236,7 +1280,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var p = positions[j];
                     if (PointLineSegmentIntersection(p, a0, a1))
                     {
-                        Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and Positions[{j}] = <({utils.X(p)}, {utils.Y(p)})> are collinear!");
+                        LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and Positions[{j}] = <({utils.X(p)}, {utils.Y(p)})> are collinear!");
                         return false;
                     }
                 }
@@ -1266,7 +1310,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 if (a0Id == b0Id && a1Id == b1Id ||
                     a0Id == b1Id && a1Id == b0Id)
                 {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) are equivalent!");
+                    LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) are equivalent!");
                     return false;
                 }
 
@@ -1279,18 +1323,26 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
                 if (EdgeEdgeIntersection(a0, a1, b0, b1))
                 {
-                    Log($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) = <({utils.X(b0)}, {utils.Y(b0)}), ({utils.X(b1)}, {utils.Y(b1)})> intersect!");
+                    LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) = <({utils.X(b0)}, {utils.Y(b0)}), ({utils.X(b1)}, {utils.Y(b1)})> intersect!");
                     return false;
                 }
 
                 return true;
             }
 
-            private readonly void Log(string message)
+            private readonly void LogError(string message)
             {
                 if (args.Verbose)
                 {
                     Debug.LogError(message);
+                }
+            }
+
+            private readonly void LogWarning(string message)
+            {
+                if (args.Verbose)
+                {
+                    Debug.LogWarning(message);
                 }
             }
         }

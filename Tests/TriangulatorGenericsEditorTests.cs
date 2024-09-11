@@ -8,6 +8,8 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.TestTools;
+using NUnit.Framework.Interfaces;
+
 #if UNITY_MATHEMATICS_FIXEDPOINT
 using Unity.Mathematics.FixedPoint;
 #endif
@@ -26,7 +28,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var triangulator = new Triangulator<int2>(Allocator.Persistent)
             {
                 Input = { Positions = positions, ConstraintEdges = constraints, HoleSeeds = holes },
-                Settings = { AutoHolesAndBoundary = false, RefineMesh = true, RestoreBoundary = true, Preprocessor = Preprocessor.None }
+                Settings = { AutoHolesAndBoundary = false, RefineMesh = true, RestoreBoundary = true, Preprocessor = Preprocessor.None, ValidateInput = false }
             };
 
             triangulator.Run();
@@ -69,6 +71,60 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Run();
 
             Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(new[] { 0, 2, 1, 0, 3, 2 }).Using(TrianglesComparer.Instance));
+        }
+
+        private static readonly TestCaseData[] validateArgsTestData = new[]
+        {
+            new TestCaseData(new TriangulationSettings{ AutoHolesAndBoundary = true }, true, false, false){ TestName = "Test case 1 (log warning for AutoHolesAndBoundary)." },
+            new TestCaseData(new TriangulationSettings{ RestoreBoundary = true }, true, false, false){ TestName = "Test case 2 (log warning for RestoreBoundary)." },
+            new TestCaseData(new TriangulationSettings{ RefineMesh = true }, false, true, false){
+                TestName = "Test case 3 (log error for RefineMesh).", RunState = typeof(T) != typeof(int2) ? RunState.Ignored : RunState.Runnable },
+            new TestCaseData(new TriangulationSettings{ SloanMaxIters = -100 }, false, true, true){ TestName = "Test case 4 (log error for SloanMaxIters)." },
+            new TestCaseData(new TriangulationSettings{ RefineMesh = true, RefinementThresholds = { Area = -1 } }, false, true, false){
+                TestName = "Test case 5 (log error for negative area threshold).", RunState = typeof(T) == typeof(int2) ? RunState.Ignored : RunState.Runnable },
+            new TestCaseData(new TriangulationSettings{ RefineMesh = true, RefinementThresholds = { Angle = -1 } }, false, true, false){
+                TestName = "Test case 6 (log error for negative angle threshold).", RunState = typeof(T) == typeof(int2) ? RunState.Ignored : RunState.Runnable },
+            new TestCaseData(new TriangulationSettings{ RefineMesh = true, RefinementThresholds = { Angle = math.PI / 4 + 1e-5f } }, false, true, false){
+                TestName = "Test case 7 (log error for too big angle threshold).", RunState = typeof(T) == typeof(int2) ? RunState.Ignored : RunState.Runnable },
+        };
+
+        [Test, TestCaseSource(nameof(validateArgsTestData))]
+        public void ValidateArgsTest(TriangulationSettings settings, bool expectWarning, bool expectError, bool constrain)
+        {
+            using var constraints = constrain ? new NativeArray<int>(new[] { 0, 1 }, Allocator.Persistent) : default(NativeArray<int>);
+            using var positions = new NativeArray<T>(new[] { math.float2(0, 0), math.float2(1, 0), math.float2(1, 1) }.DynamicCast<T>(), Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints },
+                Settings =
+                {
+                    AutoHolesAndBoundary = settings.AutoHolesAndBoundary,
+                    ConcentricShellsParameter = settings.ConcentricShellsParameter,
+                    Preprocessor = settings.Preprocessor,
+                    RefinementThresholds = { Angle = settings.RefinementThresholds.Angle, Area = settings.RefinementThresholds.Area},
+                    RefineMesh = settings.RefineMesh,
+                    RestoreBoundary = settings.RestoreBoundary,
+                    SloanMaxIters = settings.SloanMaxIters,
+                    ValidateInput = true,
+                    Verbose = settings.Verbose
+                }
+            };
+
+            if (expectError)
+            {
+                LogAssert.Expect(LogType.Error, new Regex(".*"));
+            }
+            if (expectWarning)
+            {
+                LogAssert.Expect(LogType.Warning, new Regex(".*"));
+            }
+
+            triangulator.Run();
+
+            if (expectError)
+            {
+                Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR));
+            }
         }
 
         private static readonly TestCaseData[] validateInputPositionsTestData = new TestCaseData[]
