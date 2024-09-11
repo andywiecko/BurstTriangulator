@@ -61,5 +61,5 @@ jobs:
           artifactsPath: ${{ matrix.testMode }}-artifacts
       - uses: actions/upload-artifact@v4
         with:
-          name: Test results for ${{ matrix.testMode }}
+          name: Test results for ${{ matrix.testMode }} (${{ matrix.manifest }})
           path: ${{ steps.tests.outputs.artifactsPath }}
