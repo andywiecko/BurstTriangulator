@@ -46,6 +46,15 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 #endif
     public class TriangulatorGenericsEditorTests<T> where T : unmanaged
     {
+        private static RunState IgnoreInt2AndFp2() => default(T) switch
+        {
+            int2 => RunState.Ignored,
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            fp2 => RunState.Ignored,
+#endif
+            _ => RunState.Runnable,
+        };
+
         [Test]
         public void DelaunayTriangulationWithoutRefinementTest()
         {
@@ -91,7 +100,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test, TestCaseSource(nameof(validateArgsTestData))]
         public void ValidateArgsTest(TriangulationSettings settings, bool expectWarning, bool expectError, bool constrain)
         {
-            using var constraints = constrain ? new NativeArray<int>(new[] { 0, 1 }, Allocator.Persistent) : default(NativeArray<int>);
+            using var constraints = constrain ? new NativeArray<int>(new[] { 0, 1 }, Allocator.Persistent) : default;
             using var positions = new NativeArray<T>(new[] { math.float2(0, 0), math.float2(1, 0), math.float2(1, 1) }.DynamicCast<T>(), Allocator.Persistent);
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
@@ -153,7 +162,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 1),
                     math.float2(0, 1)
                 }
-            ) { TestName = "Test Case 3 (point with NaN)" },
+            ) { TestName = "Test Case 3 (point with NaN)", RunState = IgnoreInt2AndFp2() },
             new(
                 new[]
                 {
@@ -162,7 +171,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 1),
                     math.float2(0, 1)
                 }
-            ) { TestName = "Test Case 4 (point with +inf)" },
+            ) { TestName = "Test Case 4 (point with +inf)", RunState = IgnoreInt2AndFp2() },
             new(
                 new[]
                 {
@@ -171,7 +180,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 1),
                     math.float2(0, 1)
                 }
-            ) { TestName = "Test Case 4 (point with -inf)" },
+            ) { TestName = "Test Case 4 (point with -inf)", RunState = IgnoreInt2AndFp2() },
             new(
                 new[]
                 {
@@ -183,25 +192,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             ) { TestName = "Test Case 5 (all collinear)" }
         }.SelectMany(i => new[]
         {
-            new TestCaseData(i.Arguments[0], true){ TestName = i.TestName + ", verbose"},
-            new TestCaseData(i.Arguments[0], false){ TestName = i.TestName + ", no verbose" }
+            new TestCaseData(i.Arguments[0], true){ TestName = i.TestName + ", verbose", RunState = i.RunState },
+            new TestCaseData(i.Arguments[0], false){ TestName = i.TestName + ", no verbose", RunState = i.RunState }
         }).ToArray();
 
         [Test, TestCaseSource(nameof(validateInputPositionsTestData))]
         public void ValidateInputPositionsTest(float2[] managedPositions, bool verbose)
         {
-            if (typeof(T) == typeof(int2) && managedPositions.Any(p => !math.all(math.isfinite(p))))
-            {
-                Assert.Ignore("Integer coordinates cannot be infinite or NaN.");
-            }
-
-#if UNITY_MATHEMATICS_FIXEDPOINT
-            if (typeof(T) == typeof(fp2) && managedPositions.Any(p => !math.all(math.isfinite(p))))
-            {
-                Assert.Ignore("Fixed-point coordinates cannot be infinite or NaN.");
-            }
-#endif
-
             using var positions = new NativeArray<T>(managedPositions.DynamicCast<T>(), Allocator.Persistent);
             using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
             {
@@ -384,6 +381,53 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Run();
 
             Assert.That(triangulator.Output.Status.Value, Is.EqualTo(warning ? Status.OK : Status.ERR));
+        }
+
+        private static readonly TestCaseData[] validateHolesTestData = new[]
+        {
+            new TestCaseData(default(int[]), new[]{ math.float2(2, 1) / 3, math.float2(2, 1) / 3 }, Status.OK)
+            { TestName = "Test case 1 (log warning, constraints buffer not provided)"},
+            new TestCaseData(default(int[]), new[]{ (float2)float.NaN }, Status.ERR)
+            { TestName = "Test case 2 (log error, nan)", RunState = IgnoreInt2AndFp2() },
+            new TestCaseData(default(int[]), new[]{ (float2)float.PositiveInfinity}, Status.ERR)
+            { TestName = "Test case 3 (log error, +inf)", RunState = IgnoreInt2AndFp2() },
+            new TestCaseData(default(int[]), new[]{ (float2)float.NegativeInfinity }, Status.ERR)
+            { TestName = "Test case 4 (log error, -inf)", RunState = IgnoreInt2AndFp2() },
+        }.SelectMany(i => new[]
+        {
+            new TestCaseData(i.Arguments[0], i.Arguments[1], i.Arguments[2], true){ TestName = i.TestName + ", verbose", RunState = i.RunState },
+            new TestCaseData(i.Arguments[0], i.Arguments[1], i.Arguments[2], false){ TestName = i.TestName + ", no verbose", RunState = i.RunState }
+        }).ToArray();
+
+        [Test, TestCaseSource(nameof(validateHolesTestData))]
+        public void ValidateHolesTest(int[] constraints, float2[] holes, Status expected, bool verbose)
+        {
+            using var positions = new NativeArray<T>(new float2[] { 0, math.float2(1, 0), math.float2(1, 1), }.DynamicCast<T>(), Allocator.Persistent);
+            using var constraintEdges = constraints != null ? new NativeArray<int>(constraints, Allocator.Persistent) : default;
+            using var holeSeeds = new NativeArray<T>(holes.DynamicCast<T>(), Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(capacity: 1024, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = true,
+                    Verbose = verbose,
+                },
+                Input =
+                {
+                    Positions = positions,
+                    ConstraintEdges = constraintEdges,
+                    HoleSeeds = holeSeeds,
+                }
+            };
+
+            if (verbose)
+            {
+                LogAssert.Expect(expected == Status.OK ? LogType.Warning : LogType.Error, new Regex(".*"));
+            }
+
+            triangulator.Run();
+
+            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(expected));
         }
 
         private static readonly TestCaseData[] edgeConstraintsTestData =
