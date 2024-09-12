@@ -1090,6 +1090,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeReference<Status> status;
             private readonly Args args;
             private NativeArray<int>.ReadOnly constraints;
+            private NativeArray<T2>.ReadOnly holes;
             private NativeArray<bool>.ReadOnly ignoredConstraints;
 
             public ValidateInputStep(InputData<T2> input, OutputData<T2> output, Args args)
@@ -1098,6 +1099,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 status = output.Status;
                 this.args = args;
                 constraints = input.ConstraintEdges.AsReadOnly();
+                holes = input.HoleSeeds.AsReadOnly();
                 ignoredConstraints = input.IgnoreConstraintForPlantingSeeds.AsReadOnly();
             }
 
@@ -1113,6 +1115,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 ValidateArgs();
                 ValidatePositions();
                 ValidateConstraints();
+                ValidateHoles();
                 ValidateIgnoredConstraints();
             }
 
@@ -1198,6 +1201,28 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     {
                         status.Value |= Status.ERR;
                         return;
+                    }
+                }
+            }
+
+            private void ValidateHoles()
+            {
+                if (!holes.IsCreated)
+                {
+                    return;
+                }
+
+                if (!constraints.IsCreated)
+                {
+                    LogWarning($"[Triangulator]: HoleSeeds buffer is provided, but ConstraintEdges is missing. This setting has no effect.");
+                }
+
+                for (int i = 0; i < holes.Length; i++)
+                {
+                    if (math.any(!utils.isfinite(holes[i])))
+                    {
+                        LogError($"[Triangulator]: HoleSeeds[{i}] does not contain finite value: {holes[i]}!");
+                        status.Value |= Status.ERR;
                     }
                 }
             }
