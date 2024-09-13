@@ -266,7 +266,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 1),
                     math.float2(0, 1),
                 },
-                new[]{ 0, 5, 1 }
+                new[]{ 0, 5, 2 }
             ) { TestName = "Test Case 5 (odd number of elements in constraints buffer)" },
             new TestCaseData(
                 new[]
@@ -276,7 +276,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 1),
                     math.float2(0, 1),
                 },
-                new[]{ -1, 1, 1, 1 }
+                new[]{ -1, 1, 1, 2 }
             ) { TestName = "Test Case 6a (constraint out of positions range)" },
             new TestCaseData(
                 new[]
@@ -286,7 +286,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 1),
                     math.float2(0, 1),
                 },
-                new[]{ 1, -1, 1, 1 }
+                new[]{ 1, -1, 1, 2 }
             ) { TestName = "Test Case 6b (constraint out of positions range)" },
             new TestCaseData(
                 new[]
@@ -296,7 +296,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 1),
                     math.float2(0, 1),
                 },
-                new[]{ 5, 1, 1, 1 }
+                new[]{ 5, 1, 1, 2 }
             ) { TestName = "Test Case 6c (constraint out of positions range)" },
             new TestCaseData(
                 new[]
@@ -306,7 +306,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1, 1),
                     math.float2(0, 1),
                 },
-                new[]{ 1, 5, 1, 1 }
+                new[]{ 1, 5, 1, 2 }
             ) { TestName = "Test Case 6d (constraint out of positions range)" },
         }.SelectMany(i => new[]
         {
