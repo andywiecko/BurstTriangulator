@@ -1166,14 +1166,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 for (int i = 0; i < positions.Length; i++)
                 {
-                    if (!PointValidation(i))
+                    if (math.any(!utils.isfinite(positions[i])))
                     {
                         LogError($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
                         status.Value |= Status.ERR;
                     }
-                    if (!PointPointValidation(i))
+
+                    var pi = positions[i];
+                    for (int j = i + 1; j < positions.Length; j++)
                     {
-                        status.Value |= Status.ERR;
+                        var pj = positions[j];
+                        if (math.all(utils.eq(pi, pj)))
+                        {
+                            LogError($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
+                            status.Value |= Status.ERR;
+                        }
                     }
                 }
             }
@@ -1185,22 +1192,88 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     return;
                 }
 
-                if (constraints.Length % 2 == 1)
+                if (constraints.Length % 2 != 0)
                 {
                     LogError($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
                     status.Value |= Status.ERR;
                     return;
                 }
 
+                var invalid = false;
+                // Edge validation
                 for (int i = 0; i < constraints.Length / 2; i++)
                 {
-                    if (!EdgePositionsRangeValidation(i) ||
-                        !EdgeValidation(i) ||
-                        !EdgePointValidation(i) ||
-                        !EdgeEdgeValidation(i))
+                    var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                    var count = positions.Length;
+                    if (a0Id >= count || a0Id < 0 || a1Id >= count || a1Id < 0)
                     {
+                        LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
                         status.Value |= Status.ERR;
-                        return;
+                        invalid = true;
+                    }
+
+                    if (a0Id == a1Id)
+                    {
+                        LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is length zero!");
+                        status.Value |= Status.ERR;
+                        invalid = true;
+                    }
+                }
+
+                if (invalid)
+                {
+                    return;
+                }
+
+                // Edge-point validation
+                for (int i = 0; i < constraints.Length / 2; i++)
+                {
+                    var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                    var (a0, a1) = (positions[a0Id], positions[a1Id]);
+                    for (int j = 0; j < positions.Length; j++)
+                    {
+                        if (j == a0Id || j == a1Id)
+                        {
+                            continue;
+                        }
+
+                        var p = positions[j];
+                        if (PointLineSegmentIntersection(p, a0, a1))
+                        {
+                            LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and Positions[{j}] = <({utils.X(p)}, {utils.Y(p)})> are collinear!");
+                            status.Value |= Status.ERR;
+                        }
+                    }
+                }
+
+                // Edge-edge validation
+                for (int i = 0; i < constraints.Length / 2; i++)
+                {
+                    var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
+                    var (a0, a1) = (positions[a0Id], positions[a1Id]);
+
+                    for (int j = i + 1; j < constraints.Length / 2; j++)
+                    {
+                        var (b0Id, b1Id) = (constraints[2 * j], constraints[2 * j + 1]);
+
+                        if (a0Id == b0Id && a1Id == b1Id || a0Id == b1Id && a1Id == b0Id)
+                        {
+                            LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) are equivalent!");
+                            status.Value |= Status.ERR;
+                        }
+
+                        // One common point, cases should be filtered out at edge-point validation
+                        if (a0Id == b0Id || a0Id == b1Id || a1Id == b0Id || a1Id == b1Id)
+                        {
+                            continue;
+                        }
+
+                        var (b0, b1) = (positions[b0Id], positions[b1Id]);
+                        if (EdgeEdgeIntersection(a0, a1, b0, b1))
+                        {
+                            LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) = <({utils.X(b0)}, {utils.Y(b0)}), ({utils.X(b1)}, {utils.Y(b1)})> intersect!");
+                            status.Value |= Status.ERR;
+                        }
                     }
                 }
             }
@@ -1244,112 +1317,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     LogError($"[Triangulator]: IgnoreConstraintForPlantingSeeds length must be equal to half the length of ConstraintEdges!");
                     status.Value |= Status.ERR;
                 }
-            }
-
-            private bool PointValidation(int i) => math.all(utils.isfinite(positions[i]));
-
-            private bool PointPointValidation(int i)
-            {
-                var pi = positions[i];
-                for (int j = i + 1; j < positions.Length; j++)
-                {
-                    var pj = positions[j];
-                    if (math.all(utils.eq(pi, pj)))
-                    {
-                        LogError($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            private bool EdgePositionsRangeValidation(int i)
-            {
-                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
-                var count = positions.Length;
-                if (a0Id >= count || a0Id < 0 || a1Id >= count || a1Id < 0)
-                {
-                    LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
-                    return false;
-                }
-
-                return true;
-            }
-
-            private bool EdgeValidation(int i)
-            {
-                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
-                if (a0Id == a1Id)
-                {
-                    LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is length zero!");
-                    return false;
-                }
-                return true;
-            }
-
-            private bool EdgePointValidation(int i)
-            {
-                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
-                var (a0, a1) = (positions[a0Id], positions[a1Id]);
-
-                for (int j = 0; j < positions.Length; j++)
-                {
-                    if (j == a0Id || j == a1Id)
-                    {
-                        continue;
-                    }
-
-                    var p = positions[j];
-                    if (PointLineSegmentIntersection(p, a0, a1))
-                    {
-                        LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and Positions[{j}] = <({utils.X(p)}, {utils.Y(p)})> are collinear!");
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            private bool EdgeEdgeValidation(int i)
-            {
-                for (int j = i + 1; j < constraints.Length / 2; j++)
-                {
-                    if (!ValidatePair(i, j))
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            private bool ValidatePair(int i, int j)
-            {
-                var (a0Id, a1Id) = (constraints[2 * i], constraints[2 * i + 1]);
-                var (b0Id, b1Id) = (constraints[2 * j], constraints[2 * j + 1]);
-
-                // Repeated indicies
-                if (a0Id == b0Id && a1Id == b1Id ||
-                    a0Id == b1Id && a1Id == b0Id)
-                {
-                    LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) are equivalent!");
-                    return false;
-                }
-
-                // One common point, cases should be filtered out at EdgePointValidation
-                if (a0Id == b0Id || a0Id == b1Id || a1Id == b0Id || a1Id == b1Id)
-                {
-                    return true;
-                }
-
-                var (a0, a1, b0, b1) = (positions[a0Id], positions[a1Id], positions[b0Id], positions[b1Id]);
-                if (EdgeEdgeIntersection(a0, a1, b0, b1))
-                {
-                    LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) = <({utils.X(b0)}, {utils.Y(b0)}), ({utils.X(b1)}, {utils.Y(b1)})> intersect!");
-                    return false;
-                }
-
-                return true;
             }
 
             private readonly void LogError(string message)
@@ -1419,7 +1386,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             public void Execute(Allocator allocator)
             {
-                if (status.Value == Status.ERR)
+                if (status.Value != Status.OK)
                 {
                     return;
                 }
@@ -1841,7 +1808,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var iter = 0;
                 do
                 {
-                    if ((status.Value & Status.ERR) == Status.ERR)
+                    if (status.Value != Status.OK)
                     {
                         return;
                     }
