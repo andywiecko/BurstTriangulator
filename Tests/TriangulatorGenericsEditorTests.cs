@@ -22,8 +22,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public void MeshRefinementIntSupportTest()
         {
             using var positions = new NativeArray<int2>(LakeSuperior.Points.Select(i => (int2)(i * 1000)).ToArray(), Allocator.Persistent);
-            var holes = new NativeArray<int2>(LakeSuperior.Holes.Select(i => (int2)(i * 1000)).ToArray(), Allocator.Persistent);
-            var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
+            using var holes = new NativeArray<int2>(LakeSuperior.Holes.Select(i => (int2)(i * 1000)).ToArray(), Allocator.Persistent);
+            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
 
             using var triangulator = new Triangulator<int2>(Allocator.Persistent)
             {
