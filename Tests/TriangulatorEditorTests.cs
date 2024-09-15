@@ -105,5 +105,16 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(a, Is.EqualTo(new[] { 2, 3, 4, 5, 6, 7 }));
             handle.Free();
         }
+
+        [Test, Description("Checks for memory leaks during Triangulator allocation and disposal.")]
+        public void DisposeLeaksTest()
+        {
+            // Log and forgive any existing leaks before the test.
+            // Note: These leaks may not be related to Triangulator and could be caused by other internal systems (e.g., UIElements).
+            Unity.Collections.LowLevel.Unsafe.UnsafeUtility.CheckForLeaks();
+            new Triangulator(Allocator.Persistent).Dispose();
+            var leaks = Unity.Collections.LowLevel.Unsafe.UnsafeUtility.CheckForLeaks();
+            Assert.That(leaks, Is.Zero);
+        }
     }
 }
