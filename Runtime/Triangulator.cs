@@ -342,6 +342,7 @@ namespace andywiecko.BurstTriangulator
             status.Dispose();
             halfedges.Dispose();
             constrainedHalfedges.Dispose();
+            ignoredHalfedgesForPlantingSeeds.Dispose();
         }
     }
 
