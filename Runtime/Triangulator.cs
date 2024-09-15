@@ -2157,8 +2157,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 using var _ = Markers.PlantingSeedStep.Auto();
 
-                visitedTriangles = new(triangles.Length / 3, allocator);
-                trianglesQueue = new(allocator);
+                using var _visitedTriangles = visitedTriangles = new(triangles.Length / 3, allocator);
+                using var _trianglesQueue = trianglesQueue = new(allocator);
 
                 if (args.AutoHolesAndBoundary) PlantAuto(allocator);
                 if (holes.IsCreated) PlantHoleSeeds(holes);
