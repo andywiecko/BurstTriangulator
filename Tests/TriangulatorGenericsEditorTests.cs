@@ -35,6 +35,35 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             LogAssert.Expect(LogType.Error, new Regex("Mesh refinement is not supported for this coordinate type.*"));
         }
+
+        [Test]
+        public void IntOverflowTest()
+        {
+            //        ....'''''''''::::1
+            //     3::------ 2'''''  .'
+            //     '. '.  .' :     .'
+            //       '. '4'  :   .'
+            //         '. '. : .'
+            //           '.'.'
+            //             0
+            using var positions = new NativeArray<int2>(new int2[]
+            {
+                new(0, 0),
+                new(+50_000, +50_000),
+                new(+20_000, +49_000),
+                new(-50_000, +49_000),
+                new(-15_000, +40_000),
+            }, Allocator.Persistent);
+            using var triangulator = new Triangulator<int2>(Allocator.Persistent)
+            {
+                Input = { Positions = positions }
+            };
+
+            triangulator.Run();
+
+            int[] expected = { 4, 2, 0, 2, 1, 0, 0, 3, 4, 4, 3, 2, 2, 3, 1 };
+            Assert.That(triangulator.Output.Triangles.AsArray(), Is.EqualTo(expected).Using(TrianglesComparer.Instance));
+        }
     }
 
     [TestFixture(typeof(float2))]
