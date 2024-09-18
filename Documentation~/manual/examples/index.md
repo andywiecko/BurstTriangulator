@@ -22,7 +22,7 @@ var triangles = triangulator.Output.Triangles;
 > If you want to call this within a jobs pipeline, schedule a job using [`triangulator.Schedule(dependencies)`][schedule].
 > Click [**here**](xref:example-unity-jobs) to learn how to use triangulation within a jobs pipeline.
 
-If triangulation fails for some reason, you can catch the information using [`Status`][status]
+If triangulation fails for some reason, you can catch the information using [`Status`][status-ref]
 
 ```csharp
 status = triangulator.Output.Status.Value;
@@ -31,6 +31,10 @@ if (status != Status.OK) // ERROR!
   return;
 }
 ```
+
+> [!WARNING]  
+> The [Status][status-ref] can be used to handle various error codes.
+> For more information about other enum values, refer to the [API documentation][status].
 
 The result of the triangulation procedure will depend on the selected settings.
 There are a few settings for triangulation, which are briefly described in the [API documentation][settings].
@@ -43,4 +47,5 @@ In other examples, the following *cool* guitar was used as an input test case:
 [settings]: xref:andywiecko.BurstTriangulator.TriangulationSettings
 [run]: xref:andywiecko.BurstTriangulator.Triangulator.Run
 [schedule]: xref:andywiecko.BurstTriangulator.Triangulator.Schedule(Unity.Jobs.JobHandle)
-[status]: xref:andywiecko.BurstTriangulator.OutputData`1.Status
+[status-ref]: xref:andywiecko.BurstTriangulator.OutputData`1.Status
+[status]: xref:andywiecko.BurstTriangulator.Status
