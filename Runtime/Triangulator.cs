@@ -3143,6 +3143,59 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             && math.all(utils.ge(a, utils.min(b0, b1)) & utils.le(a, utils.max(b0, b1)));
     }
 
+    /// <summary>
+    /// A signed 128-bit integer.
+    /// </summary>
+    internal readonly struct I128
+    {
+        public readonly bool IsNegative => (hi & 0x8000000000000000UL) != 0;
+
+        private readonly ulong hi, lo;
+
+        public I128(ulong hi, ulong lo) => (this.hi, this.lo) = (hi, lo);
+
+        public static I128 operator +(I128 a, I128 b)
+        {
+            var lo = a.lo + b.lo;
+            var hi = a.hi + b.hi + (lo < a.lo ? 1UL : 0);
+            return new(hi, lo);
+        }
+
+        public static I128 operator -(I128 a, I128 b)
+        {
+            var lo = a.lo - b.lo;
+            var hi = a.hi - b.hi - (lo > a.lo ? 1UL : 0);
+            return new(hi, lo);
+        }
+
+        public static I128 operator -(I128 a) => new I128(~a.hi, ~a.lo) + new I128(0, 1);
+
+        /// <summary>
+        /// Multiplies two 64-bit signed integers, without any possibility of overflow.
+        /// </summary>
+        public static I128 Multiply(long slhs, long srhs)
+        {
+            // From https://stackoverflow.com/a/58381061
+            var negative = (slhs < 0) ^ (srhs < 0);
+            ulong lhs = (ulong)math.abs(slhs);
+            ulong rhs = (ulong)math.abs(srhs);
+
+            // First calculate all of the cross products.
+            ulong lo_lo = (lhs & 0xFFFFFFFFUL) * (rhs & 0xFFFFFFFFUL);
+            ulong hi_lo = (lhs >> 32) * (rhs & 0xFFFFFFFFUL);
+            ulong lo_hi = (lhs & 0xFFFFFFFFUL) * (rhs >> 32);
+            ulong hi_hi = (lhs >> 32) * (rhs >> 32);
+
+            // Now add the products together. These will never overflow.
+            ulong cross = (lo_lo >> 32) + (hi_lo & 0xFFFFFFFFUL) + lo_hi;
+            ulong upper = (hi_lo >> 32) + (cross >> 32) + hi_hi;
+
+            var res = new I128(upper, (cross << 32) | (lo_lo & 0xFFFFFFFFUL));
+            res = negative ? -res : res;
+            return res;
+        }
+    }
+
     internal interface ITransform<TSelf, T, T2> where T : unmanaged where T2 : unmanaged
     {
         T AreaScalingFactor { get; }
@@ -3778,20 +3831,32 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly long EPSILON() => 0;
         public readonly bool InCircle(int2 a, int2 b, int2 c, int2 p)
         {
-            var dx = (long)(a.x - p.x);
-            var dy = (long)(a.y - p.y);
-            var ex = (long)(b.x - p.x);
-            var ey = (long)(b.y - p.y);
-            var fx = (long)(c.x - p.x);
-            var fy = (long)(c.y - p.y);
+            // Do a coordinate change to check if the origin is inside abc instead.
+            // Note: Will overflow if the coordinates differ by more than 2^31 (but this is not the limiting factor)
+            a -= p;
+            b -= p;
+            c -= p;
+            // TODO: Is it better for performance to check if the coordinates are small,
+            // and if so, do the calculation with 64-bit arithmetic only?
 
-            var ap = dx * dx + dy * dy;
-            var bp = ex * ex + ey * ey;
-            var cp = fx * fx + fy * fy;
+            // Should not overflow since we cast to long
+            var ap = (long)a.x * a.x + (long)a.y * a.y;
+            var bp = (long)b.x * b.x + (long)b.y * b.y;
+            var cp = (long)c.x * c.x + (long)c.y * c.y;
 
-            // NOTE: This may fail with coordinates that differ by more than approximately 2^20.
-            // When verifying coordinates, we should thus ensure that the bounding box is smaller than 2^20.
-            return dx * (ey * cp - bp * fy) - dy * (ex * cp - bp * fx) + ap * (ex * fy - ey * fx) < 0;
+            // This is the calculation we want to do, but it may overflow for large coordinates.
+            // Therefore we first do 64-bit multiplications, and then the final 3 multiplications with 128-bit arithmetic.
+            // return a.x * (b.y * cp - bp * c.y) - a.y * (b.x * cp - bp * c.x) + ap * (b.x * c.y - b.y * c.x) < 0;
+
+            // May overflow for coordinates larger than about 2^20.
+            // Therefore, when verifying coordinates, we ensure that the bounding box is smaller than 2^20.
+            var det1 = b.y * cp - bp * c.y;
+            var det2 = b.x * cp - bp * c.x;
+            var det3 = b.x * (long)c.y - b.y * (long)c.x;
+
+            var res = I128.Multiply(a.x, det1) - I128.Multiply(a.y, det2) + I128.Multiply(ap, det3);
+
+            return res.IsNegative;
         }
         public readonly long MaxValue() => long.MaxValue;
         public readonly int2 MaxValue2() => int.MaxValue;
