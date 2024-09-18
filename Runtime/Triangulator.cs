@@ -42,16 +42,86 @@ using Unity.Mathematics.FixedPoint;
 
 namespace andywiecko.BurstTriangulator
 {
+    [Flags]
     public enum Status
     {
+#pragma warning disable IDE0055
         /// <summary>
-        /// State corresponds to triangulation completed successfully.
+        /// Triangulation completed successfully.
         /// </summary>
-        OK = 0,
+        OK                                   = 0x0000_0000,
         /// <summary>
-        /// State may suggest that some error occurs during triangulation. See console for more details.
+        /// An error occurred during triangulation. See the console for more details.
         /// </summary>
-        ERR = 1,
+        ERR                                  = 0x0000_0001,
+        /// <summary>
+        /// Invalid triangulation settings detected.
+        /// </summary>
+        ERR_ARGS_INVALID                     = 0x0000_0002 | ERR,
+        /// <summary>
+        /// Error when the length of <see cref="InputData{T2}.Positions"/> is less than 3.
+        /// </summary>
+        ERR_INPUT_POSITIONS_LENGTH           = 0x0000_0004 | ERR,
+        /// <summary>
+        /// Error when <see cref="InputData{T2}.Positions"/> contains an undefined value, such as
+        /// <see cref="float.NaN"/>, <see cref="float.PositiveInfinity"/>, or <see cref="float.NegativeInfinity"/>.
+        /// </summary>
+        ERR_INPUT_POSITIONS_UNDEFINED_VALUE  = 0x0000_0008 | ERR,
+        /// <summary>
+        /// Error when <see cref="InputData{T2}.Positions"/> contains duplicate values.
+        /// </summary>
+        ERR_INPUT_POSITIONS_DUPLICATES       = 0x0000_0010 | ERR,
+        /// <summary>
+        /// Error when the length of <see cref="InputData{T2}.ConstraintEdges"/> is not a multiple of 2.
+        /// </summary>
+        ERR_INPUT_CONSTRAINTS_LENGTH         = 0x0000_0020 | ERR,
+        /// <summary>
+        /// Error when <see cref="InputData{T2}.ConstraintEdges"/> contains a constraint outside the range of
+        /// <see cref="InputData{T2}.Positions"/>.
+        /// </summary>
+        ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE   = 0x0000_0040 | ERR,
+        /// <summary>
+        /// Error when <see cref="InputData{T2}.ConstraintEdges"/> contains a self-loop constraint, such as (1, 1).
+        /// </summary>
+        ERR_INPUT_CONSTRAINTS_SELF_LOOP      = 0x0000_0080 | ERR,
+        /// <summary>
+        /// Error when <see cref="InputData{T2}.ConstraintEdges"/> contains a collinear point not part of the constraint.
+        /// </summary>
+        ERR_INPUT_CONSTRAINTS_COLLINEAR      = 0x0000_0100 | ERR,
+        /// <summary>
+        /// Error when <see cref="InputData{T2}.ConstraintEdges"/> contains duplicate constraints,
+        /// such as (0, 1) and (1, 0).
+        /// </summary>
+        ERR_INPUT_CONSTRAINTS_DUPLICATES     = 0x0000_0200 | ERR,
+        /// <summary>
+        /// Error when <see cref="InputData{T2}.ConstraintEdges"/> contains intersecting constraints.
+        /// </summary>
+        ERR_INPUT_CONSTRAINTS_INTERSECTING   = 0x0000_0400 | ERR,
+        /// <summary>
+        /// Error when <see cref="InputData{T2}.HoleSeeds"/> contains an undefined value, such as
+        /// <see cref="float.NaN"/>, <see cref="float.PositiveInfinity"/>, or <see cref="float.NegativeInfinity"/>.
+        /// </summary>
+        ERR_INPUT_HOLES_UNDEFINED_VALUE      = 0x0000_0800 | ERR,
+        /// <summary>
+        /// Error when the length of <see cref="InputData{T2}.IgnoreConstraintForPlantingSeeds"/>
+        /// is not half the length of <see cref="InputData{T2}.ConstraintEdges"/>.
+        /// </summary>
+        ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH = 0x0000_1000 | ERR,
+        /// <summary>
+        /// Error when <see cref="InputData{T2}.Positions"/> contains duplicate or fully collinear points,
+        /// detected during the Delaunay triangulation step.
+        /// </summary>
+        ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR = 0x0000_2000 | ERR,
+        /// <summary>
+        /// Error when constrained triangulation gets stuck during the Sloan algorithm.
+        /// Consider increasing <see cref="TriangulationSettings.SloanMaxIters"/>.
+        /// </summary>
+        ERR_SLOAN_ITERS_EXCEEDED             = 0x0000_4000 | ERR,
+        /// <summary>
+        /// Error when mesh refinement is scheduled for a type T that does not support refinement.
+        /// </summary>
+        ERR_REFINEMENT_UNSUPPORTED           = 0x0000_8000 | ERR,
+#pragma warning restore
     }
 
     public enum Preprocessor
@@ -1135,25 +1205,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 if (args.RefineMesh && !utils.SupportRefinement())
                 {
                     LogError($"[Triangulator]: Invalid arguments! RefineMesh is selected, but the selected type T does not support mesh refinement.");
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_ARGS_INVALID;
                 }
 
                 if (constraints.IsCreated && args.SloanMaxIters < 1)
                 {
                     LogError($"[Triangulator]: Invalid arguments! SloanMaxIters must be a positive integer.");
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_ARGS_INVALID;
                 }
 
                 if (args.RefineMesh && args.RefinementThresholdArea < 0)
                 {
                     LogError($"[Triangulator]: Invalid arguments! RefinementThresholdArea must be a positive float.");
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_ARGS_INVALID;
                 }
 
                 if (args.RefineMesh && args.RefinementThresholdAngle < 0 || args.RefinementThresholdAngle > math.PI / 4)
                 {
                     LogError($"[Triangulator]: Invalid arguments! RefinementThresholdAngle must be in the range [0, π / 4]. Note that in the literature, the upper boundary for convergence is approximately π / 6.");
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_ARGS_INVALID;
                 }
             }
 
@@ -1162,7 +1232,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 if (positions.Length < 3)
                 {
                     LogError($"[Triangulator]: Positions.Length is less then 3!");
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_INPUT_POSITIONS_LENGTH;
                 }
 
                 for (int i = 0; i < positions.Length; i++)
@@ -1170,7 +1240,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     if (math.any(!utils.isfinite(positions[i])))
                     {
                         LogError($"[Triangulator]: Positions[{i}] does not contain finite value: {positions[i]}!");
-                        status.Value |= Status.ERR;
+                        status.Value |= Status.ERR_INPUT_POSITIONS_UNDEFINED_VALUE;
                     }
 
                     var pi = positions[i];
@@ -1180,7 +1250,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (math.all(utils.eq(pi, pj)))
                         {
                             LogError($"[Triangulator]: Positions[{i}] and [{j}] are duplicated with value: {pi}!");
-                            status.Value |= Status.ERR;
+                            status.Value |= Status.ERR_INPUT_POSITIONS_DUPLICATES;
                         }
                     }
                 }
@@ -1196,7 +1266,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 if (constraints.Length % 2 != 0)
                 {
                     LogError($"[Triangulator]: Constraint input buffer does not contain even number of elements!");
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_INPUT_CONSTRAINTS_LENGTH;
                     return;
                 }
 
@@ -1209,14 +1279,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     if (a0Id >= count || a0Id < 0 || a1Id >= count || a1Id < 0)
                     {
                         LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is out of range Positions.Length = {count}!");
-                        status.Value |= Status.ERR;
+                        status.Value |= Status.ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE;
                         invalid = true;
                     }
 
                     if (a0Id == a1Id)
                     {
                         LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) is length zero!");
-                        status.Value |= Status.ERR;
+                        status.Value |= Status.ERR_INPUT_CONSTRAINTS_SELF_LOOP;
                         invalid = true;
                     }
                 }
@@ -1242,7 +1312,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (PointLineSegmentIntersection(p, a0, a1))
                         {
                             LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and Positions[{j}] = <({utils.X(p)}, {utils.Y(p)})> are collinear!");
-                            status.Value |= Status.ERR;
+                            status.Value |= Status.ERR_INPUT_CONSTRAINTS_COLLINEAR;
                         }
                     }
                 }
@@ -1260,7 +1330,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (a0Id == b0Id && a1Id == b1Id || a0Id == b1Id && a1Id == b0Id)
                         {
                             LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) are equivalent!");
-                            status.Value |= Status.ERR;
+                            status.Value |= Status.ERR_INPUT_CONSTRAINTS_DUPLICATES;
                         }
 
                         // One common point, cases should be filtered out at edge-point validation
@@ -1273,7 +1343,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (EdgeEdgeIntersection(a0, a1, b0, b1))
                         {
                             LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) = <({utils.X(b0)}, {utils.Y(b0)}), ({utils.X(b1)}, {utils.Y(b1)})> intersect!");
-                            status.Value |= Status.ERR;
+                            status.Value |= Status.ERR_INPUT_CONSTRAINTS_INTERSECTING;
                         }
                     }
                 }
@@ -1296,7 +1366,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     if (math.any(!utils.isfinite(holes[i])))
                     {
                         LogError($"[Triangulator]: HoleSeeds[{i}] does not contain finite value: {holes[i]}!");
-                        status.Value |= Status.ERR;
+                        status.Value |= Status.ERR_INPUT_HOLES_UNDEFINED_VALUE;
                     }
                 }
             }
@@ -1316,7 +1386,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 if (constraints.IsCreated && ignoredConstraints.Length != constraints.Length / 2)
                 {
                     LogError($"[Triangulator]: IgnoreConstraintForPlantingSeeds length must be equal to half the length of ConstraintEdges!");
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH;
                 }
             }
 
@@ -1464,7 +1534,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     {
                         Debug.LogError("[Triangulator]: The provided input is not valid. There are either duplicate points or all are collinear.");
                     }
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR;
                     ids.Dispose();
                     return;
                 }
@@ -2106,7 +2176,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                             $"Please try to post-process input data or increase {nameof(TriangulationSettings.SloanMaxIters)} value."
                         );
                     }
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_SLOAN_ITERS_EXCEEDED;
                     return true;
                 }
                 return false;
@@ -2472,7 +2542,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 if (!utils.SupportRefinement())
                 {
                     Debug.LogError("Mesh refinement is not supported for this coordinate type.");
-                    status.Value |= Status.ERR;
+                    status.Value |= Status.ERR_REFINEMENT_UNSUPPORTED;
                     return;
                 }
 
