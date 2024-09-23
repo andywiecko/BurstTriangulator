@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.3.0] – 2024-09-23
+
+### Added
+
+- Ignored constraints for seed planting. Users can now ignore specific constraints during the seed planting process. This is especially useful when constraining edges without creating hole boundaries. This option can be set using `Input.IgnoreConstraintForPlantingSeeds`. Additionally, post-triangulation verification can be done with `Output.IgnoredHalfedgesForPlantingSeeds`, which provides a list of booleans indicating whether a given halfedge was ignored during seed planting.
+- Status error codes. New flags have been added to the `Status` enum for enhanced error handling during triangulation. Users can now catch errors during validation more effectively. Note: The `Status` enum is now decorated with the `[Flags]`. To check if no errors occurred, use `status == Status.OK`.
+
+### Changed
+
+- Faster hole planting. The complexity has improved from 𝒪(n²) to 𝒪(n), making hole planting almost free compared to the Delaunay step.
+- Improved validation. All input data buffers are now validated. Additionally, some unconfigured settings can trigger log warnings.
+
+### Fixed
+
+- Integer overflow for `int2` coordinates. Resolved an overflow issue for large coordinates with differences around ~2²⁰.
+
 ## [3.2.1] – 2024-09-03
 
 ### Changed
@@ -248,6 +264,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.3.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.3.0
 [3.2.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.2.1
 [3.2.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.2.0
 [3.1.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.1.0
