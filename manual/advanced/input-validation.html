@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.2.1</b></div>
+                "><b>v3.3.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -92,17 +92,25 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="input-validation">Input validation</h1>
 
-<p>If <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput.html#andywiecko_BurstTriangulator_TriangulationSettings_ValidateInput"><code>ValidateInput</code></a> is set to true, the provided data will be validated before running the triangulation procedure. Input positions, as well as input constraints, have several restrictions:</p>
+<p>If <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput.html#andywiecko_BurstTriangulator_TriangulationSettings_ValidateInput"><code>ValidateInput</code></a> set to true, the provided <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.html"><code>InputData&lt;T2&gt;</code></a> and <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.html"><code>TriangulationSettings</code></a> will be validated before executing the triangulation procedure.
+The input
+<a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions"><code>InputData&lt;T2&gt;.Positions</code></a>,
+<a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges"><code>InputData&lt;T2&gt;.ConstraintEdges</code></a>,
+<a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.HoleSeeds.html#andywiecko_BurstTriangulator_InputData_1_HoleSeeds"><code>InputData&lt;T2&gt;.HoleSeeds</code></a>,
+and <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html#andywiecko_BurstTriangulator_InputData_1_IgnoreConstraintForPlantingSeeds"><code>InputData&lt;T2&gt;.IgnoreConstraintForPlantingSeeds</code></a> have certain restrictions:</p>
 <ul>
-<li>Points count must be greater/equal 3.</li>
-<li>Points positions cannot be duplicated.</li>
-<li>Points cannot contain NaNs or infinities.</li>
-<li>Constraint edges cannot intersect with each other.</li>
-<li>Constraint edges cannot be duplicated or swapped duplicated.</li>
-<li>Zero-length constraint edges are forbidden.</li>
-<li>Constraint edges cannot intersect with points other than the points for which they are defined.</li>
+<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a> count must be greater or equal 3.</li>
+<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a> and <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.HoleSeeds.html#andywiecko_BurstTriangulator_InputData_1_HoleSeeds">HoleSeeds</a> cannot contain NaNs or infinities.</li>
+<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a> cannot be duplicated.</li>
+<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> should have length multiple of 2.</li>
+<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> should have constraints defined in <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a> range.</li>
+<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> cannot be duplicated, swapped duplicated, or create self-loop.</li>
+<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> cannot intersect with each other.</li>
+<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> cannot be collinear with positions which is not included in the constraint.</li>
+<li><a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html#andywiecko_BurstTriangulator_InputData_1_IgnoreConstraintForPlantingSeeds">IgnoreConstraintForPlantingSeeds</a> must have a length equal to half the length of <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a>.</li>
 </ul>
-<p>If any of these conditions fail, triangulation will not be calculated. You can catch this as an error by using <a class="xref" href="../../api/andywiecko.BurstTriangulator.Status.html"><code>Status</code></a> (native, can be used in jobs).</p>
+<p>If any of these conditions fail, triangulation will not be calculated. You can catch this as an error by using <a class="xref" href="../../api/andywiecko.BurstTriangulator.OutputData-1.Status.html#andywiecko_BurstTriangulator_OutputData_1_Status"><code>Status</code></a> (native reference, can be used in jobs).
+For more details about error codes, refer to the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Status.html">Status</a> API documentation.</p>
 <pre><code class="lang-csharp">using var triangulator = new Triangulator(Allocator.Persistent)
 {
   Input = { ... },

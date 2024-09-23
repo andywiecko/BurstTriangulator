@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.2.1</b></div>
+                "><b>v3.3.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -101,7 +101,8 @@
   <h6><strong>Assembly</strong>: .dll</h6>
   <h5 id="andywiecko_BurstTriangulator_Status_syntax">Syntax</h5>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public enum Status</code></pre>
+    <pre><code class="lang-csharp hljs">[Flags]
+public enum Status</code></pre>
   </div>
   <h3 id="fields">Fields
 </h3>
@@ -115,12 +116,94 @@
     </thead></thead><tbody>
       <tr>
         <td id="andywiecko_BurstTriangulator_Status_OK">OK</td>
-        <td><p>State corresponds to triangulation completed successfully.</p>
+        <td><p>Triangulation completed successfully.</p>
 </td>
       </tr>
       <tr>
         <td id="andywiecko_BurstTriangulator_Status_ERR">ERR</td>
-        <td><p>State may suggest that some error occurs during triangulation. See console for more details.</p>
+        <td><p>An error occurred during triangulation. See the console for more details.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_ARGS_INVALID">ERR_ARGS_INVALID</td>
+        <td><p>Invalid triangulation settings detected.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_POSITIONS_LENGTH">ERR_INPUT_POSITIONS_LENGTH</td>
+        <td><p>Error when the length of <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a> is less than 3.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_POSITIONS_UNDEFINED_VALUE">ERR_INPUT_POSITIONS_UNDEFINED_VALUE</td>
+        <td><p>Error when <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a> contains an undefined value, such as
+<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.single.nan">NaN</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.single.positiveinfinity">PositiveInfinity</a>, or <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.single.negativeinfinity">NegativeInfinity</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_POSITIONS_DUPLICATES">ERR_INPUT_POSITIONS_DUPLICATES</td>
+        <td><p>Error when <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a> contains duplicate values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_LENGTH">ERR_INPUT_CONSTRAINTS_LENGTH</td>
+        <td><p>Error when the length of <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> is not a multiple of 2.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE">ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE</td>
+        <td><p>Error when <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> contains a constraint outside the range of
+<a class="xref" href="andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_SELF_LOOP">ERR_INPUT_CONSTRAINTS_SELF_LOOP</td>
+        <td><p>Error when <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> contains a self-loop constraint, such as (1, 1).</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_COLLINEAR">ERR_INPUT_CONSTRAINTS_COLLINEAR</td>
+        <td><p>Error when <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> contains a collinear point not part of the constraint.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_DUPLICATES">ERR_INPUT_CONSTRAINTS_DUPLICATES</td>
+        <td><p>Error when <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> contains duplicate constraints,
+such as (0, 1) and (1, 0).</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_INTERSECTING">ERR_INPUT_CONSTRAINTS_INTERSECTING</td>
+        <td><p>Error when <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a> contains intersecting constraints.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_HOLES_UNDEFINED_VALUE">ERR_INPUT_HOLES_UNDEFINED_VALUE</td>
+        <td><p>Error when <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.HoleSeeds.html#andywiecko_BurstTriangulator_InputData_1_HoleSeeds">HoleSeeds</a> contains an undefined value, such as
+<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.single.nan">NaN</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.single.positiveinfinity">PositiveInfinity</a>, or <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.single.negativeinfinity">NegativeInfinity</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH">ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH</td>
+        <td><p>Error when the length of <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html#andywiecko_BurstTriangulator_InputData_1_IgnoreConstraintForPlantingSeeds">IgnoreConstraintForPlantingSeeds</a>
+is not half the length of <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR">ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR</td>
+        <td><p>Error when <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a> contains duplicate or fully collinear points,
+detected during the Delaunay triangulation step.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_SLOAN_ITERS_EXCEEDED">ERR_SLOAN_ITERS_EXCEEDED</td>
+        <td><p>Error when constrained triangulation gets stuck during the Sloan algorithm.
+Consider increasing <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters.html#andywiecko_BurstTriangulator_TriangulationSettings_SloanMaxIters">SloanMaxIters</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Status_ERR_REFINEMENT_UNSUPPORTED">ERR_REFINEMENT_UNSUPPORTED</td>
+        <td><p>Error when mesh refinement is scheduled for a type T that does not support refinement.</p>
 </td>
       </tr>
     </tbody>

@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.2.1</b></div>
+                "><b>v3.3.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -198,19 +198,21 @@ depending on the provided <a class="xref" href="andywiecko.BurstTriangulator.Inp
         <td id="andywiecko_BurstTriangulator_TriangulationSettings_ValidateInput" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput">
           <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput.html#andywiecko_BurstTriangulator_TriangulationSettings_ValidateInput">ValidateInput</a>
         </td>
-        <td class="markdown level1 summary"><p>If set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, the provided data will be validated before running the triangulation procedure.
-Input positions, as well as input constraints, have a few restrictions.
-See <a href="https://github.com/andywiecko/BurstTriangulator/blob/main/README.md">README.md</a> for more details.
-If one of the conditions fails, the triangulation will not be calculated.
-This can be detected as an error by inspecting <a class="xref" href="andywiecko.BurstTriangulator.OutputData-1.Status.html#andywiecko_BurstTriangulator_OutputData_1_Status">Status</a> value (native, can be used in jobs).
-Additionally, if <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.Verbose.html#andywiecko_BurstTriangulator_TriangulationSettings_Verbose">Verbose</a> is set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, the corresponding error will be logged in the Console.</p>
+        <td class="markdown level1 summary"><p>If set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, the provided <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.html">InputData&lt;T2&gt;</a> and <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.html">TriangulationSettings</a>
+will be validated before executing the triangulation procedure. The input <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions">Positions</a>,
+<a class="xref" href="andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html#andywiecko_BurstTriangulator_InputData_1_ConstraintEdges">ConstraintEdges</a>, and <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.html">TriangulationSettings</a> have certain restrictions.
+For more details, see the <a href="https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-validation.html">manual</a>.
+If any of the validation conditions are not met, the triangulation will not be performed.
+This can be detected as an error by checking the <a class="xref" href="andywiecko.BurstTriangulator.OutputData-1.Status.html#andywiecko_BurstTriangulator_OutputData_1_Status">Status</a> value (native, and usable in jobs).
+Additionally, if <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.Verbose.html#andywiecko_BurstTriangulator_TriangulationSettings_Verbose">Verbose</a> is set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, corresponding errors/warnings will be logged in the Console.
+Note that some conditions may result in warnings only.</p>
 </td>
       </tr>
       <tr>
         <td id="andywiecko_BurstTriangulator_TriangulationSettings_Verbose" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.Verbose">
           <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.Verbose.html#andywiecko_BurstTriangulator_TriangulationSettings_Verbose">Verbose</a>
         </td>
-        <td class="markdown level1 summary"><p>If set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, caught errors with <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.html">Triangulator</a> will be logged in the Console.</p>
+        <td class="markdown level1 summary"><p>If set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>, caught errors and warnings with <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.html">Triangulator</a> will be logged in the Console.</p>
 </td>
       </tr>
     </tbody>

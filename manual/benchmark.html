@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.2.1</b></div>
+                "><b>v3.3.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -120,6 +120,9 @@ The presented result is for <code>T2 = float2</code>.</p>
 <h5>Note</h5>
 <p>Since <code>v2.4</code>, the triangulation refinement algorithm has been updated, resulting in improved mesh quality.</p>
 </div>
+<h2 id="auto-holes">Auto holes</h2>
+<p>Below is a benchmark for Constrained Delaunay triangulation with the auto-holes option enabled. As a test case, we use a square containing <span class="math">\(n\times n\)</span> hole squares (denoted by #holes). Reference timings for the auto-holes option disabled are marked with a dashed line.</p>
+<p><img src="../images/benchmark-auto-holes.png" alt="Auto Holes Benchmark"></p>
 <h2 id="generic-coordinates">Generic coordinates</h2>
 <p>Below, one can see the benchmark for generic coordinates for Delaunay triangulation.
 <code>float2</code> seems to be slightly faster than <code>double2</code>, however, any significant difference is noticeable only for very <em>large</em> inputs.</p>

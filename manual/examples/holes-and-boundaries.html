@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.2.1</b></div>
+                "><b>v3.3.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -156,6 +156,30 @@ var triangles = triangulator.Output.Triangles;
 <p>The current implementation of <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary"><code>AutoHolesAndBoundary</code></a> detects only <em>1-level islands</em>.
 It will not detect holes in <em>solid</em> meshes inside other holes.</p>
 </div>
+<h2 id="ignore-constraints-for-planting-seeds">Ignore constraints for planting seeds</h2>
+<p>As described in the introduction, the algorithm for triangle removal (and automatic hole detection) is based on a &quot;spreading virus&quot; mechanism, where constrained edges block the propagation. This behavior can be overridden by setting <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html#andywiecko_BurstTriangulator_InputData_1_IgnoreConstraintForPlantingSeeds"><code>IgnoreConstraintForPlantingSeeds</code></a> to <code>true</code> for a given constraint</p>
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
+using var constraintEdges = new NativeArray&lt;int&gt;(..., Allocator.Persistent);
+using var ignoreConstraint = new NativeArray&lt;bool&gt;(..., Allocator.Persistent);
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+  Input = {
+    Positions = positions,
+    ConstraintEdges = constraintEdges,
+    IgnoreConstraintForPlantingSeeds = ignoreConstraint,
+  },
+  Settings = { AutoHolesAndBoundary = true, },
+};
+
+triangulator.Run();
+
+var triangles = triangulator.Output.Triangles;
+</code></pre>
+<p>This feature is especially useful when the user wants to include a constraint but does not wish to enable hole detection for that edge. Consider the following example input:</p>
+<br>
+<p align="center"><img src="../../images/manual-ignore-constraint-for-planting-seeds.svg" width="500"></p>
+<br>
+<p>In this example, the red constraint is set to <code>true</code> in <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html#andywiecko_BurstTriangulator_InputData_1_IgnoreConstraintForPlantingSeeds"><code>IgnoreConstraintForPlantingSeeds</code></a>. As a result, a hole is not generated from red constraint, and the edge remains part of the final triangulation.</p>
 
 </article>
           </div>

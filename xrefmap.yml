@@ -207,6 +207,22 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).HoleSeeds
   nameWithType: InputData<T2>.HoleSeeds
   nameWithType.vb: InputData(Of T2).HoleSeeds
+- uid: andywiecko.BurstTriangulator.InputData`1.IgnoreConstraintForPlantingSeeds
+  name: IgnoreConstraintForPlantingSeeds
+  href: api/andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html#andywiecko_BurstTriangulator_InputData_1_IgnoreConstraintForPlantingSeeds
+  commentId: P:andywiecko.BurstTriangulator.InputData`1.IgnoreConstraintForPlantingSeeds
+  fullName: andywiecko.BurstTriangulator.InputData<T2>.IgnoreConstraintForPlantingSeeds
+  fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).IgnoreConstraintForPlantingSeeds
+  nameWithType: InputData<T2>.IgnoreConstraintForPlantingSeeds
+  nameWithType.vb: InputData(Of T2).IgnoreConstraintForPlantingSeeds
+- uid: andywiecko.BurstTriangulator.InputData`1.IgnoreConstraintForPlantingSeeds*
+  name: IgnoreConstraintForPlantingSeeds
+  href: api/andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html
+  commentId: Overload:andywiecko.BurstTriangulator.InputData`1.IgnoreConstraintForPlantingSeeds
+  fullName: andywiecko.BurstTriangulator.InputData<T2>.IgnoreConstraintForPlantingSeeds
+  fullName.vb: andywiecko.BurstTriangulator.InputData(Of T2).IgnoreConstraintForPlantingSeeds
+  nameWithType: InputData<T2>.IgnoreConstraintForPlantingSeeds
+  nameWithType.vb: InputData(Of T2).IgnoreConstraintForPlantingSeeds
 - uid: andywiecko.BurstTriangulator.InputData`1.Positions
   name: Positions
   href: api/andywiecko.BurstTriangulator.InputData-1.Positions.html#andywiecko_BurstTriangulator_InputData_1_Positions
@@ -563,6 +579,14 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of T2).HoleSeeds
   nameWithType: InputData<T2>.HoleSeeds
   nameWithType.vb: InputData(Of T2).HoleSeeds
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.IgnoreConstraintForPlantingSeeds
+  name: IgnoreConstraintForPlantingSeeds
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.IgnoreConstraintForPlantingSeeds.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.IgnoreConstraintForPlantingSeeds
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData<T2>.IgnoreConstraintForPlantingSeeds
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData(Of T2).IgnoreConstraintForPlantingSeeds
+  nameWithType: InputData<T2>.IgnoreConstraintForPlantingSeeds
+  nameWithType.vb: InputData(Of T2).IgnoreConstraintForPlantingSeeds
 - uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.Positions
   name: Positions
   href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.Positions.html
@@ -596,6 +620,14 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of T2).Halfedges
   nameWithType: OutputData<T2>.Halfedges
   nameWithType.vb: OutputData(Of T2).Halfedges
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.IgnoredHalfedgesForPlantingSeeds
+  name: IgnoredHalfedgesForPlantingSeeds
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.IgnoredHalfedgesForPlantingSeeds.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.IgnoredHalfedgesForPlantingSeeds
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData<T2>.IgnoredHalfedgesForPlantingSeeds
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData(Of T2).IgnoredHalfedgesForPlantingSeeds
+  nameWithType: OutputData<T2>.IgnoredHalfedgesForPlantingSeeds
+  nameWithType.vb: OutputData(Of T2).IgnoredHalfedgesForPlantingSeeds
 - uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.Positions
   name: Positions
   href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.Positions.html
@@ -694,6 +726,22 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).Halfedges
   nameWithType: OutputData<T2>.Halfedges
   nameWithType.vb: OutputData(Of T2).Halfedges
+- uid: andywiecko.BurstTriangulator.OutputData`1.IgnoredHalfedgesForPlantingSeeds
+  name: IgnoredHalfedgesForPlantingSeeds
+  href: api/andywiecko.BurstTriangulator.OutputData-1.IgnoredHalfedgesForPlantingSeeds.html#andywiecko_BurstTriangulator_OutputData_1_IgnoredHalfedgesForPlantingSeeds
+  commentId: P:andywiecko.BurstTriangulator.OutputData`1.IgnoredHalfedgesForPlantingSeeds
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.IgnoredHalfedgesForPlantingSeeds
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).IgnoredHalfedgesForPlantingSeeds
+  nameWithType: OutputData<T2>.IgnoredHalfedgesForPlantingSeeds
+  nameWithType.vb: OutputData(Of T2).IgnoredHalfedgesForPlantingSeeds
+- uid: andywiecko.BurstTriangulator.OutputData`1.IgnoredHalfedgesForPlantingSeeds*
+  name: IgnoredHalfedgesForPlantingSeeds
+  href: api/andywiecko.BurstTriangulator.OutputData-1.IgnoredHalfedgesForPlantingSeeds.html
+  commentId: Overload:andywiecko.BurstTriangulator.OutputData`1.IgnoredHalfedgesForPlantingSeeds
+  fullName: andywiecko.BurstTriangulator.OutputData<T2>.IgnoredHalfedgesForPlantingSeeds
+  fullName.vb: andywiecko.BurstTriangulator.OutputData(Of T2).IgnoredHalfedgesForPlantingSeeds
+  nameWithType: OutputData<T2>.IgnoredHalfedgesForPlantingSeeds
+  nameWithType.vb: OutputData(Of T2).IgnoredHalfedgesForPlantingSeeds
 - uid: andywiecko.BurstTriangulator.OutputData`1.Positions
   name: Positions
   href: api/andywiecko.BurstTriangulator.OutputData-1.Positions.html#andywiecko_BurstTriangulator_OutputData_1_Positions
@@ -808,6 +856,96 @@ references:
   commentId: F:andywiecko.BurstTriangulator.Status.ERR
   fullName: andywiecko.BurstTriangulator.Status.ERR
   nameWithType: Status.ERR
+- uid: andywiecko.BurstTriangulator.Status.ERR_ARGS_INVALID
+  name: ERR_ARGS_INVALID
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_ARGS_INVALID
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_ARGS_INVALID
+  fullName: andywiecko.BurstTriangulator.Status.ERR_ARGS_INVALID
+  nameWithType: Status.ERR_ARGS_INVALID
+- uid: andywiecko.BurstTriangulator.Status.ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR
+  name: ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR
+  fullName: andywiecko.BurstTriangulator.Status.ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR
+  nameWithType: Status.ERR_DELAUNAY_DUPLICATES_OR_COLLINEAR
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_COLLINEAR
+  name: ERR_INPUT_CONSTRAINTS_COLLINEAR
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_COLLINEAR
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_COLLINEAR
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_COLLINEAR
+  nameWithType: Status.ERR_INPUT_CONSTRAINTS_COLLINEAR
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_DUPLICATES
+  name: ERR_INPUT_CONSTRAINTS_DUPLICATES
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_DUPLICATES
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_DUPLICATES
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_DUPLICATES
+  nameWithType: Status.ERR_INPUT_CONSTRAINTS_DUPLICATES
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_INTERSECTING
+  name: ERR_INPUT_CONSTRAINTS_INTERSECTING
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_INTERSECTING
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_INTERSECTING
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_INTERSECTING
+  nameWithType: Status.ERR_INPUT_CONSTRAINTS_INTERSECTING
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_LENGTH
+  name: ERR_INPUT_CONSTRAINTS_LENGTH
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_LENGTH
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_LENGTH
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_LENGTH
+  nameWithType: Status.ERR_INPUT_CONSTRAINTS_LENGTH
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE
+  name: ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE
+  nameWithType: Status.ERR_INPUT_CONSTRAINTS_OUT_OF_RANGE
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_SELF_LOOP
+  name: ERR_INPUT_CONSTRAINTS_SELF_LOOP
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_CONSTRAINTS_SELF_LOOP
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_SELF_LOOP
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_CONSTRAINTS_SELF_LOOP
+  nameWithType: Status.ERR_INPUT_CONSTRAINTS_SELF_LOOP
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_HOLES_UNDEFINED_VALUE
+  name: ERR_INPUT_HOLES_UNDEFINED_VALUE
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_HOLES_UNDEFINED_VALUE
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_HOLES_UNDEFINED_VALUE
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_HOLES_UNDEFINED_VALUE
+  nameWithType: Status.ERR_INPUT_HOLES_UNDEFINED_VALUE
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH
+  name: ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH
+  nameWithType: Status.ERR_INPUT_IGNORED_CONSTRAINTS_LENGTH
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_POSITIONS_DUPLICATES
+  name: ERR_INPUT_POSITIONS_DUPLICATES
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_POSITIONS_DUPLICATES
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_POSITIONS_DUPLICATES
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_POSITIONS_DUPLICATES
+  nameWithType: Status.ERR_INPUT_POSITIONS_DUPLICATES
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_POSITIONS_LENGTH
+  name: ERR_INPUT_POSITIONS_LENGTH
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_POSITIONS_LENGTH
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_POSITIONS_LENGTH
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_POSITIONS_LENGTH
+  nameWithType: Status.ERR_INPUT_POSITIONS_LENGTH
+- uid: andywiecko.BurstTriangulator.Status.ERR_INPUT_POSITIONS_UNDEFINED_VALUE
+  name: ERR_INPUT_POSITIONS_UNDEFINED_VALUE
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_INPUT_POSITIONS_UNDEFINED_VALUE
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_INPUT_POSITIONS_UNDEFINED_VALUE
+  fullName: andywiecko.BurstTriangulator.Status.ERR_INPUT_POSITIONS_UNDEFINED_VALUE
+  nameWithType: Status.ERR_INPUT_POSITIONS_UNDEFINED_VALUE
+- uid: andywiecko.BurstTriangulator.Status.ERR_REFINEMENT_UNSUPPORTED
+  name: ERR_REFINEMENT_UNSUPPORTED
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_REFINEMENT_UNSUPPORTED
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_REFINEMENT_UNSUPPORTED
+  fullName: andywiecko.BurstTriangulator.Status.ERR_REFINEMENT_UNSUPPORTED
+  nameWithType: Status.ERR_REFINEMENT_UNSUPPORTED
+- uid: andywiecko.BurstTriangulator.Status.ERR_SLOAN_ITERS_EXCEEDED
+  name: ERR_SLOAN_ITERS_EXCEEDED
+  href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_ERR_SLOAN_ITERS_EXCEEDED
+  commentId: F:andywiecko.BurstTriangulator.Status.ERR_SLOAN_ITERS_EXCEEDED
+  fullName: andywiecko.BurstTriangulator.Status.ERR_SLOAN_ITERS_EXCEEDED
+  nameWithType: Status.ERR_SLOAN_ITERS_EXCEEDED
 - uid: andywiecko.BurstTriangulator.Status.OK
   name: OK
   href: api/andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_OK
