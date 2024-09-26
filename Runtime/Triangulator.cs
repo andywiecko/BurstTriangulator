@@ -144,40 +144,30 @@ namespace andywiecko.BurstTriangulator
         /// Specifies the maximum area constraint for triangles in the resulting mesh refinement.
         /// Ensures that no triangle in the mesh has an area larger than the specified value.
         /// </summary>
-        [field: SerializeField]
+        [field: SerializeField, Min(0)]
+        [field: Tooltip(
+            "Specifies the maximum area constraint for triangles in the resulting mesh refinement. " +
+            "Ensures that no triangle in the mesh has an area larger than the specified value."
+        )]
         public float Area { get; set; } = 1f;
         /// <summary>
         /// Specifies the refinement angle constraint for triangles in the resulting mesh.
         /// Ensures that no triangle in the mesh has an angle smaller than the specified value.
         /// </summary>
         /// <remarks>
-        /// Expressed in <em>radians</em>.
+        /// Expressed in <em>radians</em>. Note that in the literature, the upper boundary for convergence is approximately π / 6.
         /// </remarks>
-        [field: SerializeField]
+        [field: SerializeField, Range(0, math.PI / 4)]
+        [field: Tooltip(
+            "Specifies the refinement angle constraint for triangles in the resulting mesh. " +
+            "Ensures that no triangle in the mesh has an angle smaller than the specified value.\n\n" +
+            "Expressed in <i>radians</i>. Note that in the literature, the upper boundary for convergence is approximately π / 6.")]
         public float Angle { get; set; } = math.radians(5);
     }
 
     [Serializable]
     public class TriangulationSettings
     {
-        /// <summary>
-        /// If set to <see langword="true"/>, holes and boundaries will be created automatically
-        /// depending on the provided <see cref="InputData{T2}.ConstraintEdges"/>.
-        /// </summary>
-        /// <remarks>
-        /// The current implementation detects only <em>1-level islands</em>.
-        /// It will not detect holes in <em>solid</em> meshes inside other holes.
-        /// </remarks>
-        [field: SerializeField]
-        public bool AutoHolesAndBoundary { get; set; } = false;
-        [field: SerializeField]
-        public RefinementThresholds RefinementThresholds { get; private set; } = new();
-        /// <summary>
-        /// If <see langword="true"/> refines mesh using
-        /// <see href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</see>.
-        /// </summary>
-        [field: SerializeField]
-        public bool RefineMesh { get; set; } = false;
         /// <summary>
         /// If set to <see langword="true"/>, the provided <see cref="InputData{T2}"/> and <see cref="TriangulationSettings"/> 
         /// will be validated before executing the triangulation procedure. The input <see cref="InputData{T2}.Positions"/>, 
@@ -191,7 +181,17 @@ namespace andywiecko.BurstTriangulator
         /// <remarks>
         /// Input validation can be expensive. If you are certain of your input, consider disabling this option for additional performance.
         /// </remarks>
-        [field: SerializeField]
+        [field: Header("General")]
+        [field: SerializeField, Tooltip(
+            "If set to true, the provided Input and TriangulationSettings will be validated before executing the triangulation procedure. " +
+            "The input Positions, ConstraintEdges, and TriangulationSettings have certain restrictions. " +
+            "For more details, see the manual. If any of the validation conditions are not met, the triangulation will not be performed. " +
+            "This can be detected as an error by checking the Output.Status value (native, and usable in jobs)." +
+            "Additionally, if Verbose is set to true, corresponding errors/warnings will be logged in the Console. " +
+            "Note that some conditions may result in warnings only.\n" +
+            "\n" +
+            "<b>Input validation can be expensive. If you are certain of your input, consider disabling this option for additional performance.</b>"
+        )]
         public bool ValidateInput { get; set; } = true;
         /// <summary>
         /// If set to <see langword="true"/>, caught errors and warnings with <see cref="Triangulator"/> will be logged in the Console.
@@ -200,30 +200,72 @@ namespace andywiecko.BurstTriangulator
         /// See also the <see cref="ValidateInput"/> settings.
         /// </remarks>
         /// <seealso cref="ValidateInput"/>
-        [field: SerializeField]
+        [field: SerializeField, Tooltip("If set to true, caught errors and warnings with Triangulator will be logged in the Console.")]
         public bool Verbose { get; set; } = true;
+        /// <summary>
+        /// Preprocessing algorithm for the input data. Default is <see cref="Preprocessor.None"/>.
+        /// </summary>
+        [field: SerializeField, Tooltip("Preprocessing algorithm for the input data.")]
+        public Preprocessor Preprocessor { get; set; } = Preprocessor.None;
+
+        /// <summary>
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically
+        /// depending on the provided <see cref="InputData{T2}.ConstraintEdges"/>.
+        /// </summary>
+        /// <remarks>
+        /// The current implementation detects only <em>1-level islands</em>.
+        /// It will not detect holes in <em>solid</em> meshes inside other holes.
+        /// </remarks>
+        [field: Header("Constraints and holes")]
+        [field: SerializeField]
+        [field: Tooltip(
+            "If set to true, holes and boundaries will be created automatically " +
+            "depending on the provided Input.ConstraintEdges.\n" +
+            "\n" +
+            "The current implementation detects only <i>1-level islands</i>. " +
+            "It will not detect holes in <i>solid</i> meshes inside other holes."
+        )]
+        public bool AutoHolesAndBoundary { get; set; } = false;
         /// <summary>
         /// If <see langword="true"/> the mesh boundary is restored using <see cref="InputData{T}.ConstraintEdges"/>.
         /// </summary>
         [field: SerializeField]
+        [field: Tooltip("If true the mesh boundary is restored using Input.ConstraintEdges.")]
         public bool RestoreBoundary { get; set; } = false;
         /// <summary>
         /// Max iteration count during Sloan's algorithm (constraining edges).
         /// <b>Modify this only if you know what you are doing.</b>
         /// </summary>
-        [field: SerializeField]
+        [field: SerializeField, Min(0)]
+        [field: Tooltip(
+            "Max iteration count during <i>Sloan's algorithm</i> (constraining edges). " +
+            "<b>Modify this only if you know what you are doing.</b>"
+        )]
         public int SloanMaxIters { get; set; } = 1_000_000;
+
+        /// <summary>
+        /// If <see langword="true"/> refines mesh using
+        /// <see href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</see>.
+        /// </summary>
+        [field: Header("Refinement")]
+        [field: SerializeField]
+        [field: Tooltip("If true refines mesh using <i>Ruppert's algorithm</i>.")]
+        public bool RefineMesh { get; set; } = false;
+        /// <summary>
+        /// Thresholds used in mesh refinement. See <see cref="RefinementThresholds.Angle"/> and <see cref="RefinementThresholds.Area"/>.
+        /// </summary>
+        [field: SerializeField, Tooltip("Thresholds used in mesh refinement. See Angle and Area.")]
+        public RefinementThresholds RefinementThresholds { get; private set; } = new();
         /// <summary>
         /// Constant used in <em>concentric shells</em> segment splitting.
         /// <b>Modify this only if you know what you are doing!</b>
         /// </summary>
-        [field: SerializeField]
+        [field: SerializeField, Min(0)]
+        [field: Tooltip(
+            "Constant used in <i>concentric shells</i> segment splitting. " +
+            "<b>Modify this only if you know what you are doing!</b>"
+            )]
         public float ConcentricShellsParameter { get; set; } = 0.001f;
-        /// <summary>
-        /// Preprocessing algorithm for the input data. Default is <see cref="Preprocessor.None"/>.
-        /// </summary>
-        [field: SerializeField]
-        public Preprocessor Preprocessor { get; set; } = Preprocessor.None;
     }
 
     public class InputData<T2> where T2 : unmanaged
