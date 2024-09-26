@@ -171,7 +171,7 @@ namespace andywiecko.BurstTriangulator
         [field: SerializeField]
         public bool AutoHolesAndBoundary { get; set; } = false;
         [field: SerializeField]
-        public RefinementThresholds RefinementThresholds { get; } = new();
+        public RefinementThresholds RefinementThresholds { get; private set; } = new();
         /// <summary>
         /// If <see langword="true"/> refines mesh using
         /// <see href="https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm">Ruppert's algorithm</see>.
