@@ -134,18 +134,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
                 Input = { Positions = positions, ConstraintEdges = constraints },
-                Settings =
-                {
-                    AutoHolesAndBoundary = settings.AutoHolesAndBoundary,
-                    ConcentricShellsParameter = settings.ConcentricShellsParameter,
-                    Preprocessor = settings.Preprocessor,
-                    RefinementThresholds = { Angle = settings.RefinementThresholds.Angle, Area = settings.RefinementThresholds.Area},
-                    RefineMesh = settings.RefineMesh,
-                    RestoreBoundary = settings.RestoreBoundary,
-                    SloanMaxIters = settings.SloanMaxIters,
-                    ValidateInput = true,
-                    Verbose = settings.Verbose
-                }
+                Settings = settings,
             };
 
             LogAssert.Expect(expectedStatus == Status.OK ? LogType.Warning : LogType.Error, new Regex(".*"));

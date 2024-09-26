@@ -386,7 +386,7 @@ namespace andywiecko.BurstTriangulator
     /// <seealso cref="Triangulator{T2}"/>
     public class Triangulator : IDisposable
     {
-        public TriangulationSettings Settings => impl.Settings;
+        public TriangulationSettings Settings { get => impl.Settings; set => impl.Settings = value; }
         public InputData<double2> Input { get => impl.Input; set => impl.Input = value; }
         public OutputData<double2> Output => impl.Output;
         private readonly Triangulator<double2> impl;
@@ -418,7 +418,7 @@ namespace andywiecko.BurstTriangulator
 
     public class Triangulator<T2> : IDisposable where T2 : unmanaged
     {
-        public TriangulationSettings Settings { get; } = new();
+        public TriangulationSettings Settings { get; set; } = new();
         public InputData<T2> Input { get; set; } = new();
         public OutputData<T2> Output { get; }
 
