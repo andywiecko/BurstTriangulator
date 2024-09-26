@@ -59,7 +59,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var impl = new Triangulator<double2>(Allocator.Persistent)
             {
                 Input = triangulator.Input,
-                Settings = { AutoHolesAndBoundary = input.autoHoles, RefineMesh = input.refineMesh, RestoreBoundary = input.restoreBoundary, Preprocessor = input.preprocessor }
+                Settings = triangulator.Settings,
             };
 
             triangulator.Run();
@@ -73,6 +73,15 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             if (holes.IsCreated) { holes.Dispose(); }
             if (constraints.IsCreated) { constraints.Dispose(); }
+        }
+
+        [Test]
+        public void TriangulatorWrapperSettingsTest()
+        {
+            var settings = new TriangulationSettings { SloanMaxIters = 42 };
+            using var t = new Triangulator(Allocator.Persistent) { Settings = settings };
+            Assert.That(t.Settings, Is.EqualTo(settings));
+            Assert.That(t.Settings.SloanMaxIters, Is.EqualTo(42));
         }
 
         [Test]
