@@ -24,12 +24,14 @@
       {"src": "manual", "files": ["*.yml", "*.md", "**/*.md"], "dest": "manual"},
       {"src": "api", "files": ["*.yml", "index.md", "andywiecko.md"], "dest": "api"},
       {"src": "changelog", "files": ["toc.yml", "CHANGELOG.md"], "dest": "changelog"},
-      {"src": "license", "files": ["toc.yml", "LICENSE*.md"], "dest": "license"}
+      {"src": "license", "files": ["toc.yml", "LICENSE*.md"], "dest": "license"},
+      {"src": "demo", "files": ["toc.yml", "index.md"], "dest": "demo"}
     ],
     "resource": [
       {
         "files": [
-          "images/**"
+          "images/**",
+          "demo/Demo/**"
         ]
       }
     ],
