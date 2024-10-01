@@ -28,6 +28,9 @@ jobs:
         manifest:
           - default
           - fixed-math
+        include:
+          - testMode: playmode
+            manifest: fixed-math
     steps:
       - uses: actions/checkout@v4
         with:
