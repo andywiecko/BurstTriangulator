@@ -13,3 +13,7 @@
 - name: License
   href: license/
   homepage: license/LICENSE.md
+
+- name: Demo
+  href: demo/
+  homepage: demo/index.md
