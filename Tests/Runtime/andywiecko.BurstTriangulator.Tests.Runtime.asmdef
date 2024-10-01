@@ -1,0 +1,25 @@
+{
+    "name": "andywiecko.BurstTriangulator.Tests.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "andywiecko.BurstTriangulator",
+        "UnityEditor.TestRunner",
+        "UnityEngine.TestRunner",
+        "Unity.Burst",
+        "Unity.Mathematics",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
