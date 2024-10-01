@@ -25,12 +25,10 @@ jobs:
           - 2022.2.15f1
         testMode:
           - editmode
+          - playmode
         manifest:
           - default
           - fixed-math
-        include:
-          - testMode: playmode
-            manifest: fixed-math
     steps:
       - uses: actions/checkout@v4
         with:
