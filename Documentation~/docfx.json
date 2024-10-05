@@ -20,7 +20,7 @@
       "markdigExtensions": [ "footnotes" ]
     },
     "content": [
-      {"files": ["*.md", "toc.yml"]},
+      {"files": ["index.md", "toc.yml"]},
       {"src": "manual", "files": ["*.yml", "*.md", "**/*.md"], "dest": "manual"},
       {"src": "api", "files": ["*.yml", "index.md", "andywiecko.md"], "dest": "api"},
       {"src": "changelog", "files": ["toc.yml", "CHANGELOG.md"], "dest": "changelog"},
