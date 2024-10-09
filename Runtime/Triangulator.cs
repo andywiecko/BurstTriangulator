@@ -3118,7 +3118,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 if (heQueue.IsCreated)
                 {
-                    for (int i = 0; i < pathPoints.Length - 1; i++)
+                    for (int i = 0; i < pathPoints.Length; i++)
                     {
                         var he = heOffset + 3 * i + 1;
                         if (constrainedHalfedges[he] && IsEncroached(he))

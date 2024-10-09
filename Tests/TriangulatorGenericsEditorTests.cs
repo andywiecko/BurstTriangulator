@@ -1824,30 +1824,32 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     math.float2(1f, 0.5f),
                     math.float2(0.5f, 0f),
                     math.float2(0f, 0.5f),
+                    math.float2(0.5f, 1f),
                     math.float2(0.8189806f, 0.8189806f),
                     math.float2(0.1810194f, 0.1810194f),
-                    math.float2(0.5f, 1f),
+                    math.float2(0.744f, 1f),
+                    math.float2(1f, 0.744f),
                     math.float2(0.256f, 0f),
                     math.float2(0f, 0.256f),
-                    math.float2(0.744f, 1f),
                 },
                 new []
                 {
                     6, 4, 5,
                     6, 5, 1,
-                    8, 2, 5,
-                    8, 5, 4,
-                    9, 4, 6,
-                    9, 7, 4,
-                    10, 4, 7,
-                    10, 7, 3,
-                    10, 8, 4,
-                    11, 0, 9,
-                    11, 9, 6,
-                    12, 7, 9,
-                    12, 9, 0,
-                    13, 2, 8,
-                    13, 8, 10,
+                    8, 4, 7,
+                    8, 7, 3,
+                    9, 5, 4,
+                    9, 4, 8,
+                    10, 7, 4,
+                    10, 4, 6,
+                    11, 2, 9,
+                    11, 9, 8,
+                    12, 5, 9,
+                    12, 9, 2,
+                    13, 0, 10,
+                    13, 10, 6,
+                    14, 7, 10,
+                    14, 10, 0,
                 }
             )){ TestName = "Test case 1 (square)" },
 
@@ -2344,6 +2346,40 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             }
             // Naive check if all points are "visited".
             Assert.That(visited[..LakeSuperior.Points.Length], Has.All.True);
+        }
+
+        [Test]
+        public void RefinementWithNeedleConstraintClusterTest()
+        {
+            using var positions = new NativeArray<T>(new[] {
+                math.float2(0, 0),
+                math.float2(9, 0),
+                math.float2(9, 7),
+                math.float2(-1, 7),
+                math.float2(-1, .2f),
+            }.DynamicCast<T>(), Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new[] { 0, 1, 1, 4, }, Allocator.Persistent);
+
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints, HoleSeeds = default },
+                Settings = { RefineMesh = true, Preprocessor = Preprocessor.None, ValidateInput = true, RefinementThresholds = { Area = 10, Angle = math.radians(25) } }
+            };
+
+            triangulator.Run();
+            triangulator.Draw(color: Color.blue);
+
+            var result = triangulator.Output.Positions.AsReadOnly()
+                .Select(i => default(T) switch
+                {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+                    fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
+#endif
+                    _ => (float2)(dynamic)i,
+                })
+                .Select(i => math.all(i >= math.float2(-1, 0) & i <= math.float2(9, 7))).ToArray();
+
+            Assert.That(result, Has.All.True);
         }
     }
 }
