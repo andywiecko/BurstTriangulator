@@ -2301,5 +2301,49 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 false, false, false, false, true, true,
             }));
         }
+
+        [Test]
+        public void ConstraintsArePresentWithRefinementButWithoutHolesTest()
+        {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            if (typeof(T) == typeof(fp2))
+            {
+                Assert.Ignore(
+                    "This input gets stuck with this configuration.\n" +
+                    "\n" +
+                    "Explanation: When constraints and refinement are enabled, but restore boundary is not, \n" +
+                    "the refinement procedure can quickly get stuck and produce an excessive number of triangles. \n" +
+                    "According to the literature, there are many examples suggesting that one should plant holes first, \n" +
+                    "then refine the mesh. These small triangles fall outside of `fp2` precision."
+                );
+            }
+#endif
+
+            using var positions = new NativeArray<T>(LakeSuperior.Points.DynamicCast<T>(), Allocator.Persistent);
+            using var holes = new NativeArray<T>(LakeSuperior.Holes.DynamicCast<T>(), Allocator.Persistent);
+            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
+
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints, HoleSeeds = default },
+                Settings = { RefineMesh = true, Preprocessor = Preprocessor.None, ValidateInput = true }
+            };
+
+            triangulator.Run();
+
+            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
+            var triangles = triangulator.Output.Triangles;
+            var constrainedHalfedges = triangulator.Output.ConstrainedHalfedges;
+            var visited = new bool[triangulator.Output.Positions.Length];
+            for (int he = 0; he < constrainedHalfedges.Length; he++)
+            {
+                if (constrainedHalfedges[he])
+                {
+                    visited[triangles[he]] = visited[triangles[NextHalfedge(he)]] = true;
+                }
+            }
+            // Naive check if all points are "visited".
+            Assert.That(visited[..LakeSuperior.Points.Length], Has.All.True);
+        }
     }
 }
