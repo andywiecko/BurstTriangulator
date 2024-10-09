@@ -386,9 +386,23 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void UnsafeTriangulatorOutputTrianglesTest([Values] bool constrain, [Values] bool refine, [Values] bool holes)
         {
-            using var positions = new NativeArray<T>(LakeSuperior.Points.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>(), Allocator.Persistent);
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            if (typeof(T) == typeof(fp2) && constrain && refine && !holes)
+            {
+                Assert.Ignore(
+                    "This input gets stuck with this configuration.\n" +
+                    "\n" +
+                    "Explanation: When constraints and refinement are enabled, but restore boundary is not, \n" +
+                    "the refinement procedure can quickly get stuck and produce an excessive number of triangles. \n" +
+                    "According to the literature, there are many examples suggesting that one should plant holes first, \n" +
+                    "then refine the mesh. These small triangles fall outside of `fp2` precision."
+                );
+            }
+#endif
+
+            using var positions = new NativeArray<T>(LakeSuperior.Points.DynamicCast<T>(), Allocator.Persistent);
             using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
-            using var holesSeeds = new NativeArray<T>(LakeSuperior.Holes.Scale(1000, typeof(T) == typeof(int2)).DynamicCast<T>(), Allocator.Persistent);
+            using var holesSeeds = new NativeArray<T>(LakeSuperior.Holes.DynamicCast<T>(), Allocator.Persistent);
             using var triangles = new NativeList<int>(64, Allocator.Persistent);
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {

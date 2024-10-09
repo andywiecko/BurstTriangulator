@@ -1,4 +1,4 @@
-﻿/*
+/*
 MIT License
 
 Copyright (c) 2021 Andrzej Więckowski, Ph.D., https://github.com/andywiecko/BurstTriangulator
@@ -2592,7 +2592,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 {
                     for (int he = 0; he < constrainedHalfedges.Length; he++)
                     {
-                        constrainedHalfedges[he] = halfedges[he] == -1;
+                        constrainedHalfedges[he] |= halfedges[he] == -1;
                     }
                 }
 
