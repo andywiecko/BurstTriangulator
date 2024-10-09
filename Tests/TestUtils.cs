@@ -179,7 +179,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public static T[] DynamicCast<T>(this IEnumerable<float2> data) where T : unmanaged => default(T) switch
         {
 #if UNITY_MATHEMATICS_FIXEDPOINT
-            fp2 _ => data.Select(i => (T)(dynamic)i.ToFp2()).ToArray(),
+            fp2 => data.Select(i => (T)(dynamic)i.ToFp2()).ToArray(),
 #endif
             _ => data.Select(i => (T)(dynamic)i).ToArray()
         };
@@ -187,20 +187,20 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public static T[] DynamicCast<T>(this IEnumerable<double2> data) where T : unmanaged => default(T) switch
         {
             // TODO: this extension can be removed entirely.
-            Vector2 _ => data.Select(i => (T)(dynamic)(float2)i).ToArray(),
+            Vector2 => data.Select(i => (T)(dynamic)(float2)i).ToArray(),
 #if UNITY_MATHEMATICS_FIXEDPOINT
-            fp2 _ => data.Select(i => (T)(dynamic)((float2)i).ToFp2()).ToArray(),
+            fp2 => data.Select(i => (T)(dynamic)((float2)i).ToFp2()).ToArray(),
 #endif
             _ => data.Select(i => (T)(dynamic)i).ToArray()
         };
         public static IEqualityComparer<T> Comparer<T>(float epsilon = 0.0001f) => default(T) switch
         {
-            float2 _ => Float2Comparer.With(epsilon) as IEqualityComparer<T>,
-            double2 _ => Double2Comparer.With(epsilon) as IEqualityComparer<T>,
+            float2 => Float2Comparer.With(epsilon) as IEqualityComparer<T>,
+            double2 => Double2Comparer.With(epsilon) as IEqualityComparer<T>,
 #if UNITY_MATHEMATICS_FIXEDPOINT
-            fp2 _ => Fp2Comparer.With(epsilon) as IEqualityComparer<T>,
+            fp2 => Fp2Comparer.With(epsilon) as IEqualityComparer<T>,
 #endif
-            Vector2 _ => new Vector2EqualityComparer(epsilon) as IEqualityComparer<T>,
+            Vector2 => new Vector2EqualityComparer(epsilon) as IEqualityComparer<T>,
             _ => throw new NotImplementedException()
         };
         public static void Draw(this Triangulator triangulator, Color? color = null, float duration = 5f) => TestUtils.Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)i).ToArray(), triangulator.Output.Triangles.AsArray().AsReadOnlySpan(), color ?? Color.red, duration);
@@ -208,7 +208,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 triangulator.Output.Positions.AsArray().Select(i => default(T) switch
                 {
 #if UNITY_MATHEMATICS_FIXEDPOINT
-                    fp2 v => math.float2((float)v.x, (float)v.y),
+                    fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
 #endif
                     _ => (float2)(dynamic)i
                 }
