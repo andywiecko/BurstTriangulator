@@ -121,7 +121,7 @@ namespace andywiecko.BurstTriangulator
         /// Error when mesh refinement is scheduled for a type T that does not support refinement.
         /// </summary>
         ERR_REFINEMENT_UNSUPPORTED           = 0x0000_8000 | ERR,
-#pragma warning restore
+#pragma warning restore IDE0055
     }
 
     public enum Preprocessor
