@@ -2876,32 +2876,23 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 while (trianglesQueue.TryDequeue(out var tId))
                 {
-                    VisitEdge(p, 3 * tId + 0);
-                    VisitEdge(p, 3 * tId + 1);
-                    VisitEdge(p, 3 * tId + 2);
-                }
-            }
+                    for (int i = 0; i < 3; i++)
+                    {
+                        var he = halfedges[3 * tId + i];
+                        var otherId = he / 3;
+                        if (he == -1 || constrainedHalfedges[he] || visitedTriangles[otherId])
+                        {
+                            continue;
+                        }
 
-            private void VisitEdge(T2 p, int t0)
-            {
-                var he = halfedges[t0];
-                if (he == -1 || constrainedHalfedges[he])
-                {
-                    return;
-                }
-
-                var otherId = he / 3;
-                if (visitedTriangles[otherId])
-                {
-                    return;
-                }
-
-                var circle = circles[otherId];
-                if (utils.le(utils.Cast(utils.distancesq(circle.Center, p)), circle.RadiusSq))
-                {
-                    badTriangles.Add(otherId);
-                    trianglesQueue.Enqueue(otherId);
-                    visitedTriangles[otherId] = true;
+                        var circle = circles[otherId];
+                        if (utils.le(utils.Cast(utils.distancesq(circle.Center, p)), circle.RadiusSq))
+                        {
+                            badTriangles.Add(otherId);
+                            trianglesQueue.Enqueue(otherId);
+                            visitedTriangles[otherId] = true;
+                        }
+                    }
                 }
             }
 
@@ -2979,6 +2970,17 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             private void ProcessBadTriangles(NativeList<int> heQueue, NativeList<int> tQueue)
             {
+                static void RemoveHalfedge(NativeList<int> halfedges, int he, int offset)
+                {
+                    var ohe = halfedges[he];
+                    var o = ohe > he ? ohe - offset : ohe;
+                    if (o > -1)
+                    {
+                        halfedges[o] = -1;
+                    }
+                    halfedges.RemoveAt(he);
+                }
+
                 // Remove bad triangles and recalculate polygon path halfedges.
                 badTriangles.Sort();
                 for (int t = badTriangles.Length - 1; t >= 0; t--)
@@ -2988,9 +2990,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     triangles.RemoveAt(3 * tId + 1);
                     triangles.RemoveAt(3 * tId + 0);
                     circles.RemoveAt(tId);
-                    RemoveHalfedge(3 * tId + 2, 0);
-                    RemoveHalfedge(3 * tId + 1, 1);
-                    RemoveHalfedge(3 * tId + 0, 2);
+                    RemoveHalfedge(halfedges, 3 * tId + 2, 0);
+                    RemoveHalfedge(halfedges, 3 * tId + 1, 1);
+                    RemoveHalfedge(halfedges, 3 * tId + 0, 2);
                     constrainedHalfedges.RemoveAt(3 * tId + 2);
                     constrainedHalfedges.RemoveAt(3 * tId + 1);
                     constrainedHalfedges.RemoveAt(3 * tId + 0);
@@ -3051,17 +3053,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         }
                     }
                 }
-            }
-
-            private void RemoveHalfedge(int he, int offset)
-            {
-                var ohe = halfedges[he];
-                var o = ohe > he ? ohe - offset : ohe;
-                if (o > -1)
-                {
-                    halfedges[o] = -1;
-                }
-                halfedges.RemoveAt(he);
             }
 
             private void BuildNewTrianglesForStar(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
