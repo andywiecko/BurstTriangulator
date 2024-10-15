@@ -2701,6 +2701,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 if (halfedges[he] != -1)
                 {
                     UnsafeInsertPointBulk(p, initTriangle: he / 3, heQueue, tQueue);
+                    ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: false);
 
                     var h0 = triangles.Length - 3;
                     var hi = -1;
@@ -2748,6 +2749,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 else
                 {
                     UnsafeInsertPointBoundary(p, initHe: he, heQueue, tQueue);
+                    ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: true);
 
                     //var h0 = triangles.Length - 3;
                     var id = 3 * (pathPoints.Length - 1);
@@ -2804,6 +2806,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 if (edges.IsEmpty)
                 {
                     UnsafeInsertPointBulk(c.Center, initTriangle: tId, heQueue, tQueue);
+                    ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: false);
                 }
                 else
                 {
@@ -2861,7 +2864,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var pId = UnsafeInsertPointCommon(p, initTriangle);
                 BuildStarPolygon();
                 ProcessBadTriangles(heQueue, tQueue);
-                BuildNewTrianglesForStar(pId, heQueue, tQueue);
+                BuildNewTrianglesForStar(pId);
             }
 
             private void UnsafeInsertPointBoundary(T2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
@@ -2869,7 +2872,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var pId = UnsafeInsertPointCommon(p, initHe / 3);
                 BuildAmphitheaterPolygon(initHe);
                 ProcessBadTriangles(heQueue, tQueue);
-                BuildNewTrianglesForAmphitheater(pId, heQueue, tQueue);
+                BuildNewTrianglesForAmphitheater(pId);
             }
 
             private void RecalculateBadTriangles(T2 p)
@@ -3055,7 +3058,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
             }
 
-            private void BuildNewTrianglesForStar(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
+            private void BuildNewTrianglesForStar(int pId)
             {
                 // Build triangles/circles for inserted point pId.
                 var initTriangles = triangles.Length;
@@ -3106,25 +3109,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 halfedges[heOffset] = heOffset + 3 * (pathPoints.Length - 1) + 2;
                 halfedges[heOffset + 3 * (pathPoints.Length - 1) + 2] = heOffset;
-
-                if (heQueue.IsCreated)
-                {
-                    for (int i = 0; i < pathPoints.Length; i++)
-                    {
-                        var he = heOffset + 3 * i + 1;
-                        if (constrainedHalfedges[he] && IsEncroached(he))
-                        {
-                            heQueue.Add(he);
-                        }
-                        else if (tQueue.IsCreated && IsBadTriangle(he / 3))
-                        {
-                            tQueue.Add(he / 3);
-                        }
-                    }
-                }
             }
 
-            private void BuildNewTrianglesForAmphitheater(int pId, NativeList<int> heQueue, NativeList<int> tQueue)
+            private void BuildNewTrianglesForAmphitheater(int pId)
             {
                 // Build triangles/circles for inserted point pId.
                 var initTriangles = triangles.Length;
@@ -3172,10 +3159,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 halfedges[heOffset] = -1;
                 halfedges[heOffset + 3 * (pathPoints.Length - 2) + 2] = -1;
+            }
+
+            private void ProcessPathHalfedgesForEnqueueing(NativeList<int> heQueue, NativeList<int> tQueue, bool boundary)
+            {
+                var iters = boundary ? pathPoints.Length - 1 : pathPoints.Length;
+                var heOffset = halfedges.Length - 3 * iters;
 
                 if (heQueue.IsCreated)
                 {
-                    for (int i = 0; i < pathPoints.Length - 1; i++)
+                    for (int i = 0; i < iters; i++)
                     {
                         var he = heOffset + 3 * i + 1;
                         if (constrainedHalfedges[he] && IsEncroached(he))
