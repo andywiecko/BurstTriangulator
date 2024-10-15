@@ -2700,7 +2700,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 if (halfedges[he] != -1)
                 {
-                    UnsafeInsertPointBulk(p, initTriangle: he / 3, heQueue, tQueue);
+                    UnsafeInsertPointBulk(p, initTriangle: he / 3);
+                    AdaptQueues(heQueue, tQueue);
                     ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: false);
 
                     var h0 = triangles.Length - 3;
@@ -2748,7 +2749,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 else
                 {
-                    UnsafeInsertPointBoundary(p, initHe: he, heQueue, tQueue);
+                    UnsafeInsertPointBoundary(p, initHe: he);
+                    AdaptQueues(heQueue, tQueue);
                     ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: true);
 
                     //var h0 = triangles.Length - 3;
@@ -2805,7 +2807,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 if (edges.IsEmpty)
                 {
-                    UnsafeInsertPointBulk(c.Center, initTriangle: tId, heQueue, tQueue);
+                    UnsafeInsertPointBulk(c.Center, initTriangle: tId);
+                    AdaptQueues(heQueue, tQueue);
                     ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: false);
                 }
                 else
@@ -2859,19 +2862,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return pId;
             }
 
-            private void UnsafeInsertPointBulk(T2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+            private void UnsafeInsertPointBulk(T2 p, int initTriangle)
             {
                 var pId = UnsafeInsertPointCommon(p, initTriangle);
                 BuildStarPolygon();
-                ProcessBadTriangles(heQueue, tQueue);
+                ProcessBadTriangles();
                 BuildNewTrianglesForStar(pId);
             }
 
-            private void UnsafeInsertPointBoundary(T2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+            private void UnsafeInsertPointBoundary(T2 p, int initHe)
             {
                 var pId = UnsafeInsertPointCommon(p, initHe / 3);
                 BuildAmphitheaterPolygon(initHe);
-                ProcessBadTriangles(heQueue, tQueue);
+                ProcessBadTriangles();
                 BuildNewTrianglesForAmphitheater(pId);
             }
 
@@ -2971,7 +2974,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
             }
 
-            private void ProcessBadTriangles(NativeList<int> heQueue, NativeList<int> tQueue)
+            private void ProcessBadTriangles()
             {
                 static void RemoveHalfedge(NativeList<int> halfedges, int he, int offset)
                 {
@@ -3015,44 +3018,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (pathHalfedges[i] > 3 * tId + 2)
                         {
                             pathHalfedges[i] -= 3;
-                        }
-                    }
-
-                    // Adapt he queue
-                    if (heQueue.IsCreated)
-                    {
-                        for (int i = 0; i < heQueue.Length; i++)
-                        {
-                            var he = heQueue[i];
-                            if (he == 3 * tId + 0 || he == 3 * tId + 1 || he == 3 * tId + 2)
-                            {
-                                heQueue[i] = -1;
-                                continue;
-                            }
-
-                            if (he > 3 * tId + 2)
-                            {
-                                heQueue[i] -= 3;
-                            }
-                        }
-                    }
-
-                    // Adapt t queue
-                    if (tQueue.IsCreated)
-                    {
-                        for (int i = 0; i < tQueue.Length; i++)
-                        {
-                            var q = tQueue[i];
-                            if (q == tId)
-                            {
-                                tQueue[i] = -1;
-                                continue;
-                            }
-
-                            if (q > tId)
-                            {
-                                tQueue[i]--;
-                            }
                         }
                     }
                 }
@@ -3159,6 +3124,50 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 halfedges[heOffset] = -1;
                 halfedges[heOffset + 3 * (pathPoints.Length - 2) + 2] = -1;
+            }
+
+            private void AdaptQueues(NativeList<int> heQueue, NativeList<int> tQueue)
+            {
+                for (int t = badTriangles.Length - 1; t >= 0; t--)
+                {
+                    var tId = badTriangles[t];
+
+                    if (heQueue.IsCreated)
+                    {
+                        for (int i = 0; i < heQueue.Length; i++)
+                        {
+                            var he = heQueue[i];
+                            if (he == 3 * tId + 0 || he == 3 * tId + 1 || he == 3 * tId + 2)
+                            {
+                                heQueue[i] = -1;
+                                continue;
+                            }
+
+                            if (he > 3 * tId + 2)
+                            {
+                                heQueue[i] -= 3;
+                            }
+                        }
+                    }
+
+                    if (tQueue.IsCreated)
+                    {
+                        for (int i = 0; i < tQueue.Length; i++)
+                        {
+                            var q = tQueue[i];
+                            if (q == tId)
+                            {
+                                tQueue[i] = -1;
+                                continue;
+                            }
+
+                            if (q > tId)
+                            {
+                                tQueue[i]--;
+                            }
+                        }
+                    }
+                }
             }
 
             private void ProcessPathHalfedgesForEnqueueing(NativeList<int> heQueue, NativeList<int> tQueue, bool boundary)
