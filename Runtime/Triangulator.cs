@@ -2911,6 +2911,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 private void RecalculateBadTriangles(T2 p)
                 {
+                    var triangles = Output.Triangles;
+
                     while (TrianglesQueue.TryDequeue(out var tId))
                     {
                         for (int i = 0; i < 3; i++)
@@ -2922,7 +2924,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                                 continue;
                             }
 
-                            var circle = Circles[otherId];
+                            var circle = Circles.IsCreated ? Circles[otherId] : new(CalculateCircumCircle(triangles[3 * otherId + 0], triangles[3 * otherId + 1], triangles[3 * otherId + 2], Output.Positions.AsArray()));
                             if (utils.le(utils.Cast(utils.distancesq(circle.Center, p)), circle.RadiusSq))
                             {
                                 BadTriangles.Add(otherId);
@@ -3035,13 +3037,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         triangles.RemoveAt(3 * tId + 2);
                         triangles.RemoveAt(3 * tId + 1);
                         triangles.RemoveAt(3 * tId + 0);
-                        Circles.RemoveAt(tId);
                         RemoveHalfedge(3 * tId + 2, 0);
                         RemoveHalfedge(3 * tId + 1, 1);
                         RemoveHalfedge(3 * tId + 0, 2);
                         constrainedHalfedges.RemoveAt(3 * tId + 2);
                         constrainedHalfedges.RemoveAt(3 * tId + 1);
                         constrainedHalfedges.RemoveAt(3 * tId + 0);
+                        if (Circles.IsCreated)
+                        {
+                            Circles.RemoveAt(tId);
+                        }
 
                         for (int i = 3 * tId; i < halfedges.Length; i++)
                         {
@@ -3072,18 +3077,27 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     // Build triangles/circles for inserted point pId.
                     var initTriangles = triangles.Length;
                     triangles.Length += 3 * PathPoints.Length;
-                    Circles.Length += PathPoints.Length;
+                    if (Circles.IsCreated)
+                    {
+                        Circles.Length += PathPoints.Length;
+                    }
                     for (int i = 0; i < PathPoints.Length - 1; i++)
                     {
                         triangles[initTriangles + 3 * i + 0] = pId;
                         triangles[initTriangles + 3 * i + 1] = PathPoints[i];
                         triangles[initTriangles + 3 * i + 2] = PathPoints[i + 1];
-                        Circles[initTriangles / 3 + i] = new(CalculateCircumCircle(pId, PathPoints[i], PathPoints[i + 1], Output.Positions.AsArray()));
+                        if (Circles.IsCreated)
+                        {
+                            Circles[initTriangles / 3 + i] = new(CalculateCircumCircle(pId, PathPoints[i], PathPoints[i + 1], Output.Positions.AsArray()));
+                        }
                     }
                     triangles[^3] = pId;
                     triangles[^2] = PathPoints[^1];
                     triangles[^1] = PathPoints[0];
-                    Circles[^1] = new(CalculateCircumCircle(pId, PathPoints[^1], PathPoints[0], Output.Positions.AsArray()));
+                    if (Circles.IsCreated)
+                    {
+                        Circles[^1] = new(CalculateCircumCircle(pId, PathPoints[^1], PathPoints[0], Output.Positions.AsArray()));
+                    }
 
                     // Build half-edges for inserted point pId.
                     var heOffset = halfedges.Length;
@@ -3129,13 +3143,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     // Build triangles/circles for inserted point pId.
                     var initTriangles = triangles.Length;
                     triangles.Length += 3 * (PathPoints.Length - 1);
-                    Circles.Length += PathPoints.Length - 1;
+                    if (Circles.IsCreated)
+                    {
+                        Circles.Length += PathPoints.Length - 1;
+                    }
                     for (int i = 0; i < PathPoints.Length - 1; i++)
                     {
                         triangles[initTriangles + 3 * i + 0] = pId;
                         triangles[initTriangles + 3 * i + 1] = PathPoints[i];
                         triangles[initTriangles + 3 * i + 2] = PathPoints[i + 1];
-                        Circles[initTriangles / 3 + i] = new(CalculateCircumCircle(pId, PathPoints[i], PathPoints[i + 1], Output.Positions.AsArray()));
+                        if (Circles.IsCreated)
+                        {
+                            Circles[initTriangles / 3 + i] = new(CalculateCircumCircle(pId, PathPoints[i], PathPoints[i + 1], Output.Positions.AsArray()));
+                        }
                     }
 
                     // Build half-edges for inserted point pId.
