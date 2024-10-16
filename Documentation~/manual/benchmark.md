@@ -35,7 +35,7 @@ The presented result is for `T2 = float2`.
 
 ## Delaunay triangulation with mesh refinement
 
-Furthermore, we present a performance comparison (with Burst enabled) between `v1.0`, `v2.0`, `v2.3`, `v2.4`, and `v3.0` for the refinement task.
+Furthermore, we present a performance comparison (with Burst enabled) between `v1.0`, `v2.0`, `v2.3`, `v2.4`, `v3.0`, and `v3.4` for the refinement task.
 The presented result is for `T2 = float2`.
 
 ![Refinement Benchmark](../images/benchmark-refinement.png)
