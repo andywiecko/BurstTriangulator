@@ -220,6 +220,101 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
     public static class TestUtils
     {
+        /// <summary>
+        /// Asserts that all <paramref name="triangles"/> are oriented clockwise and do not intersect with one another.
+        /// </summary>
+        /// <exception cref="AssertionException"></exception>
+        public static void AssertValidTriangulation<T2>(Triangulator<T2> triangulator) where T2 : unmanaged => AssertValidTriangulation(
+            positions: triangulator.Output.Positions.AsReadOnly().Select(i => default(T2) switch
+            {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+                fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
+#endif
+                _ => (float2)(dynamic)i,
+            }).ToArray(),
+            triangles: triangulator.Output.Triangles.AsReadOnly().AsReadOnlySpan()
+        );
+
+        /// <summary>
+        /// Asserts that all <paramref name="triangles"/> are oriented clockwise and do not intersect with one another.
+        /// </summary>
+        /// <exception cref="AssertionException"></exception>
+        public static void AssertValidTriangulation(Triangulator triangulator) => AssertValidTriangulation(
+            positions: triangulator.Output.Positions.AsReadOnly().Select(i => (float2)i).ToArray(),
+            triangles: triangulator.Output.Triangles.AsReadOnly().AsReadOnlySpan()
+        );
+
+        /// <summary>
+        /// Asserts that all <paramref name="triangles"/> are oriented clockwise and do not intersect with one another.
+        /// </summary>
+        /// <exception cref="AssertionException"></exception>
+        public static void AssertValidTriangulation(ReadOnlySpan<float2> positions, ReadOnlySpan<int> triangles)
+        {
+            static float cross(float2 a, float2 b) => a.x * b.y - a.y * b.x;
+
+            static bool inside(float2 p, float2 t0, float2 t1, float2 t2)
+            {
+                var (v0, v1, v2) = (t1 - t0, t2 - t0, p - t0);
+                var denInv = 1 / cross(v0, v1);
+                var v = denInv * cross(v2, v1);
+                var w = denInv * cross(v0, v2);
+                var u = 1f - v - w;
+                var bar = math.float3(u, v, w);
+                return math.cmax(-bar) <= 0;
+            }
+
+            static bool intersects(int i, int j, ReadOnlySpan<float2> positions, ReadOnlySpan<int> triangles)
+            {
+                var (p0, p1, p2) = (triangles[3 * i + 0], triangles[3 * i + 1], triangles[3 * i + 2]);
+                var (x0, x1, x2) = (positions[p0], positions[p1], positions[p2]);
+
+                var (q0, q1, q2) = (triangles[3 * j + 0], triangles[3 * j + 1], triangles[3 * j + 2]);
+                var (y0, y1, y2) = (positions[q0], positions[q1], positions[q2]);
+
+                return false
+                    || p0 != q0 && p0 != q1 && p0 != q2 && inside(x0, y0, y1, y2)
+                    || p1 != q0 && p1 != q1 && p1 != q2 && inside(x1, y0, y1, y2)
+                    || p2 != q0 && p2 != q1 && p2 != q2 && inside(x2, y0, y1, y2)
+                    || q0 != p0 && q0 != p1 && q0 != p2 && inside(y0, x0, x1, x2)
+                    || q1 != p0 && q1 != p1 && q1 != p2 && inside(y1, x0, x1, x2)
+                    || q2 != p0 && q2 != p1 && q2 != p2 && inside(y2, x0, x1, x2)
+                ;
+            }
+
+            var notclockwise = new List<int>();
+            for (int i = 0; i < triangles.Length / 3; i++)
+            {
+                var (p0, p1, p2) = (triangles[3 * i + 0], triangles[3 * i + 1], triangles[3 * i + 2]);
+                var (x0, x1, x2) = (positions[p0], positions[p1], positions[p2]);
+
+                if ((x2 - x0).y * (x1 - x0).x > (x1 - x0).y * (x2 - x0).x)
+                {
+                    notclockwise.Add(i);
+                }
+            }
+
+            var intersecting = new List<(int, int)>();
+            for (int i = 0; i < triangles.Length / 3; i++)
+            {
+                for (int j = i + 1; j < triangles.Length / 3; j++)
+                {
+                    if (intersects(i, j, positions, triangles))
+                    {
+                        intersecting.Add((i, j));
+                    }
+                }
+            }
+
+            var msg = "Triangulation is invalid!";
+            msg += notclockwise.Count == 0 ? "" : $"\n  - Some triangles are not oriented clockwise: [{string.Join(", ", notclockwise)}].";
+            msg += intersecting.Count == 0 ? "" : $"\n  - Some triangles are intersecting: [{string.Join(",", intersecting)}].";
+
+            if (notclockwise.Count != 0 || intersecting.Count != 0)
+            {
+                throw new AssertionException(msg);
+            }
+        }
+
         public static void Draw(ReadOnlySpan<float2> positions, ReadOnlySpan<int> triangles, Color color, float duration)
         {
             for (int i = 0; i < triangles.Length / 3; i++)
@@ -300,5 +395,95 @@ $@"\draw[gray]({p[i].x}, {p[i].y})--({p[j].x}, {p[j].y});
 
             return builder.ToString();
         }
+    }
+
+    public class AssertValidTriangulationTests
+    {
+        private static readonly TestCaseData[] validTestData =
+        {
+            new(new float2[]
+            {
+                new(0, 0), new(1, 0), new(1, 1),
+                new(2, 0), new(3, 0), new(3, 2),
+            },
+            new int[]
+            {
+                0, 2, 1,
+                3, 5, 4,
+            }) { TestName = "Case 1 (fully separated triangles)" },
+            new(new float2[]
+            {
+                new(0, 0), new(1, 0), new(1, 1),
+                new(-1, 0), new(-1, 1),
+            },
+            new int[]
+            {
+                0, 2, 1,
+                0, 3, 4,
+            }) { TestName = "Case 2 (triangles with one common point)" },
+            new(new float2[]
+            {
+                new(0, 0), new(1, 0), new(1, 1),
+                new(-1, 1),
+            },
+            new int[]
+            {
+                0, 2, 1,
+                0, 3, 2,
+            }) { TestName = "Case 3 (triangles with two common points)" },
+        };
+
+        [Test, TestCaseSource(nameof(validTestData))]
+        public void ValidTest(float2[] positions, int[] triangles) => TestUtils.AssertValidTriangulation(positions, triangles);
+
+        private static readonly TestCaseData[] throwAssertionExpectionTestData =
+        {
+            new(new float2[]
+            {
+                new(0, 0), new(1, 0), new(1, 1),
+                new(2, 0), new(3, 0), new(2f / 3, 1f / 3),
+            },
+            new int[]
+            {
+                0, 1, 2,
+                3, 4, 5
+            }) { TestName = "Case 1 (intersecting triangles, no common points)" },
+            new(new float2[]
+            {
+                new(0, 0), new(1, 0), new(1, 1),
+                new(0, 1), new(2f / 3, 1f / 3),
+            },
+            new int[]
+            {
+                0, 2, 1,
+                0, 3, 4
+            }) { TestName = "Case 2 (intersecting triangles, one common point)" },
+            new(new float2[]
+            {
+                new(0, 0), new(1, 0), new(1, 1),
+                new(2f / 3, 1f / 3),
+            },
+            new int[]
+            {
+                0, 2, 1,
+                0, 2, 3
+            }) { TestName = "Case 3 (intersecting triangles, two common points)" },
+
+            new(new float2[]
+            {
+                new(3, 0), new(4, 0), new(4, 4),
+                new(0, 0), new(1, 0), new(1, 1),
+            },
+            new int[]
+            {
+                0, 2, 1,
+                3, 4, 5
+            }) { TestName = "Case 4 (counterclockwise triangles)" },
+        };
+
+        [Test, TestCaseSource(nameof(throwAssertionExpectionTestData))]
+        public void ThrowAssertionExpectionTest(float2[] positions, int[] triangles) => Debug.Log(
+            Assert.Throws<AssertionException>(() => TestUtils.AssertValidTriangulation(positions, triangles)).Message
+        );
     }
 }

@@ -32,6 +32,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Run();
 
             triangulator.Draw();
+            TestUtils.AssertValidTriangulation(triangulator);
         }
 
         [Test]
@@ -64,6 +65,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Run();
 
             triangulator.Draw();
+            TestUtils.AssertValidTriangulation(triangulator);
         }
 
         [Test]
@@ -151,6 +153,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             Assert.That(triangulator.Output.Triangles, Has.Length.GreaterThan(0));
             triangulator.Draw();
+            TestUtils.AssertValidTriangulation(triangulator);
         }
     }
 }
