@@ -2380,6 +2380,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 .Select(i => math.all(i >= math.float2(-1, 0) & i <= math.float2(9, 7))).ToArray();
 
             Assert.That(result, Has.All.True);
+            TestUtils.AssertValidTriangulation(triangulator);
         }
     }
 }
