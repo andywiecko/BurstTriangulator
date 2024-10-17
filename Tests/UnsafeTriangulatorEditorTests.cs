@@ -5,6 +5,9 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
+using System;
+using System.Linq;
+
 #if UNITY_MATHEMATICS_FIXEDPOINT
 using Unity.Mathematics.FixedPoint;
 #endif
@@ -516,6 +519,92 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             h2.Free();
             h3.Free();
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray().ToArray()));
+        }
+
+        [Test]
+        public void DynamicInsertTest()
+        {
+            var managedInput = new float2[]
+            {
+                new(0, 0),
+                new(3, 0),
+                new(3, 3),
+                new(0, 3),
+
+                new(1, 1),
+                new(2, 1),
+                new(2, 2),
+                new(1, 2),
+            }.DynamicCast<T>();
+
+            int[] managedConstraints =
+            {
+                0, 1, 1, 2, 2, 3, 3, 0,
+                4, 5, 5, 6, 6, 7, 7, 4,
+            };
+
+            var t = new UnsafeTriangulator<T>();
+            using var positions = new NativeArray<T>(managedInput, Allocator.Persistent);
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var constraints = new NativeArray<int>(managedConstraints, Allocator.Persistent);
+
+            t.Triangulate(
+                input: new() { Positions = positions, ConstraintEdges = constraints },
+                output: new() { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges },
+                args: Args.Default(autoHolesAndBoundary: true), Allocator.Persistent
+            );
+
+            int FindTriangle(ReadOnlySpan<int> initialTriangles, int j)
+            {
+                var (s0, s1, s2) = (initialTriangles[3 * j + 0], initialTriangles[3 * j + 1], initialTriangles[3 * j + 2]);
+                for (int i = 0; i < triangles.Length / 3; i++)
+                {
+                    var (t0, t1, t2) = (triangles[3 * i + 0], triangles[3 * i + 1], triangles[3 * i + 2]);
+                    if (t0 == s0 && t1 == s1 && t2 == s2)
+                    {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+            float2[] CastFloat2() => outputPositions.AsReadOnly()
+                .Select(i => default(T) switch
+                {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+                    fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
+#endif
+                    _ => (float2)(dynamic)i,
+                })
+                .ToArray();
+
+            TestUtils.Draw(CastFloat2(), triangles.AsReadOnly(), Color.red, duration: 5f);
+
+            var random = new Unity.Mathematics.Random(seed: 42);
+            for (int iter = 0; iter < 5; iter++)
+            {
+                using var initialTriangles = triangles.ToArray(Allocator.Persistent);
+                for (int j = 0; j < initialTriangles.Length / 3; j++)
+                {
+                    var i = FindTriangle(initialTriangles, j);
+                    if (i != -1)
+                    {
+                        var bar = math.abs(random.NextFloat3Direction());
+                        bar /= bar.x + bar.y + bar.z;
+                        bar.z = 1 - bar.x - bar.y;
+
+                        var output = new LowLevel.Unsafe.OutputData<T> { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
+                        t.DynamicInsertPoint(output, i, bar, Allocator.Persistent);
+                    }
+                }
+
+                var result = CastFloat2();
+                TestUtils.Draw(result.Select(i => i + math.float2((iter + 1) * 4f, 0)).ToArray(), triangles.AsReadOnly(), Color.red, duration: 5f);
+                TestUtils.AssertValidTriangulation(result, triangles.AsReadOnly());
+            }
         }
     }
 }
