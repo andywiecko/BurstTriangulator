@@ -172,6 +172,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             LowLevel.Unsafe.Extensions.Triangulate((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
         public static void PlantHoleSeeds<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.InputData<T> input, LowLevel.Unsafe.OutputData<T> output, LowLevel.Unsafe.Args args, Allocator allocator) where T : unmanaged =>
             LowLevel.Unsafe.Extensions.PlantHoleSeeds((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
+        public static void DynamicInsertPoint<T2, T3>(this LowLevel.Unsafe.UnsafeTriangulator<T2> triangulator, LowLevel.Unsafe.OutputData<T2> output, int tId, T3 bar, Allocator allocator) where T2 : unmanaged where T3 : unmanaged => LowLevel.Unsafe.Extensions.DynamicInsertPoint((dynamic)triangulator, (dynamic)output, tId, default(T2) switch
+        {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            fp2 => new fp3((fp)((dynamic)bar).x, (fp)((dynamic)bar).y, (fp)((dynamic)bar).z),
+#endif
+            _ => (dynamic)bar
+        },
+            allocator);
         public static void Run<T>(this Triangulator<T> triangulator) where T : unmanaged =>
             Extensions.Run((dynamic)triangulator);
         public static JobHandle Schedule<T>(this Triangulator<T> triangulator, JobHandle dependencies = default) where T : unmanaged =>
