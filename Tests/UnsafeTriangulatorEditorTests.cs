@@ -571,17 +571,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 return -1;
             }
 
-            float2[] CastFloat2() => outputPositions.AsReadOnly()
-                .Select(i => default(T) switch
-                {
-#if UNITY_MATHEMATICS_FIXEDPOINT
-                    fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
-#endif
-                    _ => (float2)(dynamic)i,
-                })
-                .ToArray();
-
-            TestUtils.Draw(CastFloat2(), triangles.AsReadOnly(), Color.red, duration: 5f);
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.red, duration: 5f);
 
             var random = new Unity.Mathematics.Random(seed: 42);
             for (int iter = 0; iter < 5; iter++)
@@ -601,7 +591,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     }
                 }
 
-                var result = CastFloat2();
+                var result = outputPositions.AsReadOnly().CastToFloat2();
                 TestUtils.Draw(result.Select(i => i + math.float2((iter + 1) * 4f, 0)).ToArray(), triangles.AsReadOnly(), Color.red, duration: 5f);
                 TestUtils.AssertValidTriangulation(result, triangles.AsReadOnly());
             }
