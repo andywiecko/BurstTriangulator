@@ -184,6 +184,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Extensions.Run((dynamic)triangulator);
         public static JobHandle Schedule<T>(this Triangulator<T> triangulator, JobHandle dependencies = default) where T : unmanaged =>
             Extensions.Schedule((dynamic)triangulator, dependencies);
+
+        public static float2[] CastToFloat2<T>(this IEnumerable<T> data) where T : unmanaged => data.Select(i => default(T) switch
+        {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
+#endif
+            _ => (float2)(dynamic)i,
+        }).ToArray();
         public static T[] DynamicCast<T>(this IEnumerable<float2> data) where T : unmanaged => default(T) switch
         {
 #if UNITY_MATHEMATICS_FIXEDPOINT
@@ -213,15 +221,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         };
         public static void Draw(this Triangulator triangulator, Color? color = null, float duration = 5f) => TestUtils.Draw(triangulator.Output.Positions.AsArray().Select(i => (float2)i).ToArray(), triangulator.Output.Triangles.AsArray().AsReadOnlySpan(), color ?? Color.red, duration);
         public static void Draw<T>(this Triangulator<T> triangulator, Color? color = null, float duration = 5f) where T : unmanaged => TestUtils.Draw(
-                triangulator.Output.Positions.AsArray().Select(i => default(T) switch
-                {
-#if UNITY_MATHEMATICS_FIXEDPOINT
-                    fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
-#endif
-                    _ => (float2)(dynamic)i
-                }
-                )
-                .ToArray(),
+                triangulator.Output.Positions.AsArray().CastToFloat2(),
                 triangulator.Output.Triangles.AsArray().AsReadOnlySpan(), color ?? Color.red, duration
         );
     }
@@ -233,13 +233,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         /// </summary>
         /// <exception cref="AssertionException"></exception>
         public static void AssertValidTriangulation<T2>(Triangulator<T2> triangulator) where T2 : unmanaged => AssertValidTriangulation(
-            positions: triangulator.Output.Positions.AsReadOnly().Select(i => default(T2) switch
-            {
-#if UNITY_MATHEMATICS_FIXEDPOINT
-                fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
-#endif
-                _ => (float2)(dynamic)i,
-            }).ToArray(),
+            positions: triangulator.Output.Positions.AsReadOnly().CastToFloat2(),
             triangles: triangulator.Output.Triangles.AsReadOnly().AsReadOnlySpan()
         );
 

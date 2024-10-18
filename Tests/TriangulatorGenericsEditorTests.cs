@@ -2369,16 +2369,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Run();
             triangulator.Draw(color: Color.blue);
 
-            var result = triangulator.Output.Positions.AsReadOnly()
-                .Select(i => default(T) switch
-                {
-#if UNITY_MATHEMATICS_FIXEDPOINT
-                    fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
-#endif
-                    _ => (float2)(dynamic)i,
-                })
-                .Select(i => math.all(i >= math.float2(-1, 0) & i <= math.float2(9, 7))).ToArray();
-
+            var result = triangulator.Output.Positions.AsReadOnly().CastToFloat2().Select(i => math.all(i >= math.float2(-1, 0) & i <= math.float2(9, 7)));
             Assert.That(result, Has.All.True);
             TestUtils.AssertValidTriangulation(triangulator);
         }
