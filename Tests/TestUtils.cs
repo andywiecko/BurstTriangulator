@@ -184,7 +184,18 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Extensions.Run((dynamic)triangulator);
         public static JobHandle Schedule<T>(this Triangulator<T> triangulator, JobHandle dependencies = default) where T : unmanaged =>
             Extensions.Schedule((dynamic)triangulator, dependencies);
-
+        public static float3 NextBarcoords3(ref this Unity.Mathematics.Random random)
+        {
+            var bx = random.NextFloat();
+            var by = random.NextFloat();
+            if (bx + by > 1)
+            {
+                bx = 1 - bx;
+                by = 1 - by;
+            }
+            var bz = 1 - bx - by;
+            return new(bx, by, bz);
+        }
         public static float2[] CastToFloat2<T>(this IEnumerable<T> data) where T : unmanaged => data.Select(i => default(T) switch
         {
 #if UNITY_MATHEMATICS_FIXEDPOINT
