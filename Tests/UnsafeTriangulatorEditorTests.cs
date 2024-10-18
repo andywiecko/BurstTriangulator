@@ -550,12 +550,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var halfedges = new NativeList<int>(Allocator.Persistent);
             using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
             using var constraints = new NativeArray<int>(managedConstraints, Allocator.Persistent);
-
-            t.Triangulate(
-                input: new() { Positions = positions, ConstraintEdges = constraints },
-                output: new() { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges },
-                args: Args.Default(autoHolesAndBoundary: true), Allocator.Persistent
-            );
+            var input = new LowLevel.Unsafe.InputData<T> { Positions = positions, ConstraintEdges = constraints };
+            var output = new LowLevel.Unsafe.OutputData<T> { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
 
             int FindTriangle(ReadOnlySpan<int> initialTriangles, int j)
             {
@@ -571,6 +567,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 return -1;
             }
 
+            t.Triangulate(input, output, args: Args.Default(autoHolesAndBoundary: true), Allocator.Persistent);
             TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.red, duration: 5f);
 
             var random = new Unity.Mathematics.Random(seed: 42);
@@ -582,12 +579,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                     var i = FindTriangle(initialTriangles, j);
                     if (i != -1)
                     {
-                        var bar = math.abs(random.NextFloat3Direction());
-                        bar /= bar.x + bar.y + bar.z;
-                        bar.z = 1 - bar.x - bar.y;
-
-                        var output = new LowLevel.Unsafe.OutputData<T> { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
-                        t.DynamicInsertPoint(output, i, bar, Allocator.Persistent);
+                        t.DynamicInsertPoint(output, tId: i, bar: random.NextBarcoords3(), allocator: Allocator.Persistent);
                     }
                 }
 
