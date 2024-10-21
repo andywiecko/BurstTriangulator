@@ -37,6 +37,8 @@ items:
     href: advanced/input-managed.md
   - name: Unsafe Triangulator
     href: advanced/unsafe-triangulator.md
+  - name: Dynamic triangulation
+    href: advanced/dynamic-triangulation.md
 
 - name: Benchmark
   href: benchmark.md

@@ -28,17 +28,33 @@ references:
   name: float2
   href: https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html
 
+- uid: Unity.Mathematics.float3
+  name: float3
+  href: https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float3.html
+
 - uid: UnityEngine.Vector2
   name: Vector2
   href: https://docs.unity3d.com/ScriptReference/Vector2.html
+
+- uid: UnityEngine.Vector3
+  name: Vector3
+  href: https://docs.unity3d.com/ScriptReference/Vector3.html
 
 - uid: Unity.Mathematics.double2
   name: double2
   href: https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html
 
+- uid: Unity.Mathematics.double3
+  name: double3
+  href: https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double3.html
+
 - uid: Unity.Mathematics.int2
   name: int2
   href: https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html
+
+- uid: Unity.Mathematics.int3
+  name: int3
+  href: https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int3.html
 
 - uid: UnityEngine.MonoBehaviour
   name: MonoBehaviour

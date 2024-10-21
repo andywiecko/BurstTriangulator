@@ -159,6 +159,10 @@ t.Triangulate(input, output, Args.Default(restoreBoundary: true), Allocator.Pers
 t.RefineMesh(output, Allocator.Persistent, areaThreshold: 1, angleThreshold: 0.5f, constrainBoundary: false);
 ```
 
+### Dynamic triangulation
+
+The [`UnsafeTriangulator<T>`][unsafe-triangulator] API also offers an option for dynamic triangulation. For more details, refer to the [manual](xref:dynamic-triangulation-manual).
+
 [triangulator]: xref:andywiecko.BurstTriangulator.Triangulator`1
 [unsafe-triangulator]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator`1
 [n-input-data]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1
