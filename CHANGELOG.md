@@ -281,6 +281,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.4.0
 [3.3.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.3.0
 [3.2.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.2.1
 [3.2.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.2.0
