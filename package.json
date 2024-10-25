@@ -1,6 +1,6 @@
 {
     "name": "com.andywiecko.burst.triangulator",
-    "version": "3.3.0",
+    "version": "3.4.0",
     "displayName": "Burst Triangulator",
     "description": "A single-file package which provides Delaunay triangulation of the given set of points with constraints and mesh refinement.",
     "unity": "2022.2",
