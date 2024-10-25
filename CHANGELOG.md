@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.4.0] – 2024-10-25
+
+### Added
+
+- Dynamic triangulation support. Introduced `DynamicInsertPoint` extension for `UnsafeTriangulator` to support dynamic point insertion.
+- A new demo scene to better illustrate the functionality in [the documentation](https://andywiecko.github.io/BurstTriangulator/demo/).
+
+### Changed
+
+- Improved support for `TriangulatorSettings` in `UnityEditor` by adding a missing backing field, a setter, and editor-related attributes for properties.
+- Refinement step optimization. Refactored the refinement step to enhance performance and simplify the code.
+
+### Fixed
+
+- Refinement with constraints without holes. Corrected an issue where refinement with constraints would ignore boundaries when holes were absent.
+- Invalid refinement results. Fixed a rare issue where refinement could produce invalid results, especially when input data included subsegment clusters, leading to points appearing outside the triangulation domain.
+
 ## [3.3.0] – 2024-09-23
 
 ### Added
