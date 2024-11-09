@@ -7,11 +7,11 @@ uid: dynamic-triangulation-manual
 Using the [`UnsafeTriangulator<T>`][unsafe-triangulator] API, you can perform dynamic triangulation.
 This feature is especially useful in scenarios like path-finding in RTS games, where recalculating only a small portion of the mesh, instead of the entire mesh, can significantly improve efficiency.
 
-| Method                                     | Implemented |
-| :----------------------------------------  | :---:       |
-| [DynamicInsertPoint][dynamic-insert-point] | ✔️         |
-| DynamicSplitHalfedge                       | ❌         |
-| DynamicRemovePoint                         | ❌         |
+| Method                                         | Implemented |
+| :--------------------------------------------- | :---:       |
+| [DynamicInsertPoint][dynamic-insert-point]     | ✔️         |
+| [DynamicSplitHalfedge][dynamic-split-halfedge] | ✔️         |
+| DynamicRemovePoint                             | ❌         |
 
 ## DynamicInsertPoint
 
@@ -22,7 +22,7 @@ This package does not include acceleration structures, as it assumes the user wi
 It is recommended to use structures such as bounding volume hierarchies, 2D trees, grids, or buckets for efficient point lookup (`p` $\to \triangle$).
 The most suitable acceleration structure may vary depending on the use case.
 
-The [DynamicInsertPoint][dynamic-insert-point]  method accepts the following parameters (in addition to `output` and `allocator`):
+The [DynamicInsertPoint][dynamic-insert-point] method accepts the following parameters (in addition to `output` and `allocator`):
 
 - `tId` the index of the triangle where the point should be inserted.
 - `bar` the barycentric coordinates of the point inside triangle `tId`.
@@ -71,7 +71,39 @@ t.DynamicInsertPoint(output, tId: 42, bar: 1f / 3, allocator: Allocator.Persiste
 
 ## DynamicSplitHalfedge
 
-Not implemented.
+The [DynamicSplitHalfedge][dynamic-split-halfedge] method allows you to split specified halfedge by inserting a point at a position determined by linear interpolation.
+The position is interpolated between the start and end points of the halfedge in the triangulation using $\alpha$ as the interpolation parameter.
+This method preserves the "constrained" state of the halfedge, meaning that if the specified halfedge is constrained, the two resulting sub-segments will also be marked as constrained.
+
+The [DynamicSplitHalfedge][dynamic-split-halfedge] method accepts the following parameters (in addition to `output` and `allocator`):
+
+- `he` the index of the halfedge to split.
+- `alpha` the interpolation parameter for positioning the new point between the start and end points of the halfedge, where $p = (1 - \alpha) \, \text{start} + \alpha \, \text{end}$.
+
+Here is an example of how to use the API:
+
+```csharp
+var t = new UnsafeTriangulator<float2>();
+
+using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var constraints = new NativeArray<int>(..., Allocator.Persistent);
+var input = new InputData<float2> { Positions = positions, ConstraintEdges = constraints };
+
+using var outputPositions = new NativeList<float2>(Allocator.Persistent);
+using var triangles = new NativeList<int>(Allocator.Persistent);
+using var halfedges = new NativeList<int>(Allocator.Persistent);
+using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+var output = new OutputData<float2> { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
+
+t.Triangulate(input, output, args: Args.Default(autoHolesAndBoundary: true), Allocator.Persistent);
+
+// Iteratively split random halfedges.
+var random = new Unity.Mathematics.Random(seed: 42);
+for(int i = 0; i < 32; i++)
+{
+    t.DynamicInsertPoint(output, he: random.NextInt(0, triangle.Length), alpha: 0.5f, allocator: Allocator.Persistent);
+}
+```
 
 ## DynamicRemovePoint
 
@@ -79,3 +111,4 @@ Not implemented.
 
 [unsafe-triangulator]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator`1
 [dynamic-insert-point]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint*
+[dynamic-split-halfedge]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge*
