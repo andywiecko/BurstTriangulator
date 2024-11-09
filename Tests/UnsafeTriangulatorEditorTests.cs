@@ -588,5 +588,154 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 TestUtils.AssertValidTriangulation(result, triangles.AsReadOnly());
             }
         }
+
+        [Test]
+        public void DynamicSplitTest([Values] bool bulk)
+        {
+            var managedInput = new float2[]
+            {
+                new(0, 0),
+                new(1, 0),
+                new(1, 1),
+                new(0, 1),
+            }.DynamicCast<T>();
+
+            int[] managedConstraints =
+            {
+                0, 1, 1, 2, 2, 3, 3, 0, 0, 2,
+            };
+
+            var t = new UnsafeTriangulator<T>();
+            using var positions = new NativeArray<T>(managedInput, Allocator.Persistent);
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var constraints = new NativeArray<int>(managedConstraints, Allocator.Persistent);
+            var input = new LowLevel.Unsafe.InputData<T> { Positions = positions, ConstraintEdges = constraints };
+            var output = new LowLevel.Unsafe.OutputData<T> { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
+
+            t.Triangulate(input, output, args: Args.Default(), Allocator.Persistent);
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.red, duration: 5f);
+
+            for (int iter = 0; iter < 4; iter++)
+            {
+                do_iter(iter);
+            }
+
+            void do_iter(int iter)
+            {
+                var count = 0;
+                // If `bulk` is enabled we split 2^iter **diagonal** halfedges, where target length is sqrt(2) / 2^iter, otherwise
+                // we split 4^(iter+1) **boundary**  halfedges, where target length is 1 / 2^iter.
+                var dist = (bulk ? math.sqrt(2) : 1f) / (1 << iter);
+                while (count < (bulk ? 1 : 4) << iter)
+                {
+                    for (int he = 0; he < triangles.Length; he++)
+                    {
+                        var ell = len(he);
+                        if (constrainedHalfedges[he] && (bulk ? halfedges[he] != -1 : halfedges[he] == -1) && math.abs(ell - dist) <= math.EPSILON)
+                        {
+                            t.DynamicSplitHalfedge(output, he, 0.5f, Allocator.Persistent);
+                            count++;
+                        }
+                    }
+                }
+
+                var result = outputPositions.AsReadOnly().CastToFloat2();
+                TestUtils.Draw(result.Select(i => i + math.float2((iter + 1) * 2f, 0)).ToArray(), triangles.AsReadOnly(), Color.red, duration: 5f);
+                TestUtils.AssertValidTriangulation(result, triangles.AsReadOnly());
+            }
+
+            float len(int he)
+            {
+                var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
+                var (p, q) = (outputPositions[i].ToFloat2(), outputPositions[j].ToFloat2());
+                return math.distance(p, q);
+            }
+
+            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
+        }
+
+        [Test]
+        public void DynamicSplitRandomTest()
+        {
+            var managedInput = new float2[]
+            {
+                new(0, 0),
+                new(3, 0),
+                new(3, 3),
+                new(0, 3),
+
+                new(1, 1),
+                new(2, 1),
+                new(2, 2),
+                new(1, 2),
+            }.DynamicCast<T>();
+
+            int[] managedConstraints =
+            {
+                0, 1, 1, 2, 2, 3, 3, 0,
+                4, 5, 5, 6, 6, 7, 7, 4,
+            };
+
+            var t = new UnsafeTriangulator<T>();
+            using var positions = new NativeArray<T>(managedInput, Allocator.Persistent);
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var constraints = new NativeArray<int>(managedConstraints, Allocator.Persistent);
+            var input = new LowLevel.Unsafe.InputData<T> { Positions = positions, ConstraintEdges = constraints };
+            var output = new LowLevel.Unsafe.OutputData<T> { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
+
+            t.Triangulate(input, output, args: Args.Default(autoHolesAndBoundary: true), Allocator.Persistent);
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.red, duration: 5f);
+
+            var random = new Unity.Mathematics.Random(seed: 42);
+
+            for (int iter = 0; iter < 3; iter++)
+            {
+                for (int i = 0; i < 16; i++)
+                {
+                    var he = Find();
+                    var alpha = random.NextFloat(0.1f, 0.9f);
+                    t.DynamicSplitHalfedge(output, he, alpha, Allocator.Persistent);
+                }
+
+                var result = outputPositions.AsReadOnly().CastToFloat2();
+                TestUtils.Draw(result.Select(i => i + math.float2((iter + 1) * 4f, 0)).ToArray(), triangles.AsReadOnly(), Color.red, duration: 5f);
+                TestUtils.AssertValidTriangulation(result, triangles.AsReadOnly());
+            }
+
+            int Find()
+            {
+                var maxLen = float.MinValue;
+                var maxHe = -1;
+                for (int he = 0; he < triangles.Length; he++)
+                {
+                    if (!constrainedHalfedges[he])
+                    {
+                        continue;
+                    }
+
+                    var ell = len(he);
+                    if (ell > maxLen)
+                    {
+                        (maxHe, maxLen) = (he, ell);
+                    }
+                }
+                return maxHe;
+            }
+
+            float len(int he)
+            {
+                var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
+                var (p, q) = (outputPositions[i].ToFloat2(), outputPositions[j].ToFloat2());
+                return math.distance(p, q);
+            }
+
+            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
+        }
     }
 }

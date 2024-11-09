@@ -855,6 +855,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var p = bar.x * p0 + bar.y * p1 + bar.z * p2;
             new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().DynamicInsertPoint(output, tId, p, allocator);
         }
+        /// <summary>
+        /// Splits the halfedge specified by <paramref name="he"/> by inserting a point at a position determined by linear interpolation.
+        /// The position is interpolated between the start and end points of the halfedge in the triangulation <paramref name="output"/> 
+        /// using <paramref name="alpha"/> as the interpolation parameter.
+        /// This method preserves the "constrained" state of the halfedge, meaning that if the specified halfedge is constrained, 
+        /// the two resulting sub-segments will also be marked as constrained.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="he">The index of the halfedge to split.</param>
+        /// <param name="alpha">
+        /// The interpolation parameter for positioning the new point between the start and end points of the halfedge, 
+        /// where <c>p = (1 - alpha) * start + alpha * end</c>.
+        /// </param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicSplitHalfedge(this UnsafeTriangulator @this, OutputData<double2> output, int he, double alpha, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().DynamicSplitHalfedge(output, he, alpha, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -914,6 +933,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var p = bar.x * p0 + bar.y * p1 + bar.z * p2;
             new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().DynamicInsertPoint(output, tId, p, allocator);
         }
+        /// <summary>
+        /// Splits the halfedge specified by <paramref name="he"/> by inserting a point at a position determined by linear interpolation.
+        /// The position is interpolated between the start and end points of the halfedge in the triangulation <paramref name="output"/> 
+        /// using <paramref name="alpha"/> as the interpolation parameter.
+        /// This method preserves the "constrained" state of the halfedge, meaning that if the specified halfedge is constrained, 
+        /// the two resulting sub-segments will also be marked as constrained.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="he">The index of the halfedge to split.</param>
+        /// <param name="alpha">
+        /// The interpolation parameter for positioning the new point between the start and end points of the halfedge, 
+        /// where <c>p = (1 - alpha) * start + alpha * end</c>.
+        /// </param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicSplitHalfedge(this UnsafeTriangulator<float2> @this, OutputData<float2> output, int he, float alpha, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().DynamicSplitHalfedge(output, he, alpha, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -968,6 +1006,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicInsertPoint(this UnsafeTriangulator<Vector2> @this, OutputData<Vector2> output, int tId, Vector3 bar, Allocator allocator) =>
             new UnsafeTriangulator<float2>().DynamicInsertPoint(UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), tId, bar, allocator);
+        /// <summary>
+        /// Splits the halfedge specified by <paramref name="he"/> by inserting a point at a position determined by linear interpolation.
+        /// The position is interpolated between the start and end points of the halfedge in the triangulation <paramref name="output"/> 
+        /// using <paramref name="alpha"/> as the interpolation parameter.
+        /// This method preserves the "constrained" state of the halfedge, meaning that if the specified halfedge is constrained, 
+        /// the two resulting sub-segments will also be marked as constrained.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="he">The index of the halfedge to split.</param>
+        /// <param name="alpha">
+        /// The interpolation parameter for positioning the new point between the start and end points of the halfedge, 
+        /// where <c>p = (1 - alpha) * start + alpha * end</c>.
+        /// </param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicSplitHalfedge(this UnsafeTriangulator<Vector2> @this, OutputData<Vector2> output, int he, float alpha, Allocator allocator) => new UnsafeTriangulator<float2>().DynamicSplitHalfedge(UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), he, alpha, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -1027,6 +1084,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var p = bar.x * p0 + bar.y * p1 + bar.z * p2;
             new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().DynamicInsertPoint(output, tId, p, allocator);
         }
+        /// <summary>
+        /// Splits the halfedge specified by <paramref name="he"/> by inserting a point at a position determined by linear interpolation.
+        /// The position is interpolated between the start and end points of the halfedge in the triangulation <paramref name="output"/> 
+        /// using <paramref name="alpha"/> as the interpolation parameter.
+        /// This method preserves the "constrained" state of the halfedge, meaning that if the specified halfedge is constrained, 
+        /// the two resulting sub-segments will also be marked as constrained.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="he">The index of the halfedge to split.</param>
+        /// <param name="alpha">
+        /// The interpolation parameter for positioning the new point between the start and end points of the halfedge, 
+        /// where <c>p = (1 - alpha) * start + alpha * end</c>.
+        /// </param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicSplitHalfedge(this UnsafeTriangulator<double2> @this, OutputData<double2> output, int he, double alpha, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().DynamicSplitHalfedge(output, he, alpha, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -1109,6 +1185,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var p = bar.x * p0 + bar.y * p1 + bar.z * p2;
             new UnsafeTriangulator<fp, fp2, fp, TransformFp, FpUtils>().DynamicInsertPoint(output, tId, p, allocator);
         }
+        /// <summary>
+        /// Splits the halfedge specified by <paramref name="he"/> by inserting a point at a position determined by linear interpolation.
+        /// The position is interpolated between the start and end points of the halfedge in the triangulation <paramref name="output"/> 
+        /// using <paramref name="alpha"/> as the interpolation parameter.
+        /// This method preserves the "constrained" state of the halfedge, meaning that if the specified halfedge is constrained, 
+        /// the two resulting sub-segments will also be marked as constrained.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="he">The index of the halfedge to split.</param>
+        /// <param name="alpha">
+        /// The interpolation parameter for positioning the new point between the start and end points of the halfedge, 
+        /// where <c>p = (1 - alpha) * start + alpha * end</c>.
+        /// </param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicSplitHalfedge(this UnsafeTriangulator<fp2> @this, OutputData<fp2> output, int he, fp alpha, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, FpUtils>().DynamicSplitHalfedge(output, he, alpha, allocator);
 #endif
     }
 
@@ -1278,6 +1373,84 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 TrianglesQueue = trianglesQueue,
                 VisitedTriangles = visitedTriangles,
             }.UnsafeInsertPointBulk(p, tId);
+        }
+
+        public void DynamicSplitHalfedge(OutputData<T2> output, int he, T alpha, Allocator allocator)
+        {
+            using var badTriangles = new NativeList<int>(allocator);
+            using var pathHalfedges = new NativeList<int>(allocator);
+            using var pathPoints = new NativeList<int>(allocator);
+            using var trianglesQueue = new NativeQueue<int>(allocator);
+            using var visitedTriangles = new NativeList<bool>(allocator);
+
+            var triangles = output.Triangles;
+            var halfedges = output.Halfedges;
+            var constrainedHalfedges = output.ConstrainedHalfedges;
+
+            var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
+            var (p0, p1) = (output.Positions[i], output.Positions[j]);
+            var p = utils.lerp(p0, p1, alpha);
+
+            var bw = new RefineMeshStep.UnsafeBowerWatson
+            {
+                Circles = default,
+                Output = output,
+                BadTriangles = badTriangles,
+                PathHalfedges = pathHalfedges,
+                PathPoints = pathPoints,
+                TrianglesQueue = trianglesQueue,
+                VisitedTriangles = visitedTriangles,
+            };
+
+            constrainedHalfedges[he] = false;
+            var ohe = halfedges[he];
+            if (ohe != -1)
+            {
+                constrainedHalfedges[ohe] = false;
+            }
+
+            if (ohe == -1)
+            {
+                bw.UnsafeInsertPointBoundary(p, he);
+
+                //var h0 = triangles.Length - 3;
+                var id = 3 * (pathPoints.Length - 1);
+                var hi = halfedges.Length - 1;
+                var hj = halfedges.Length - id;
+                constrainedHalfedges[hi] = true;
+                constrainedHalfedges[hj] = true;
+            }
+            else
+            {
+                bw.UnsafeInsertPointBulk(p, he / 3);
+
+                var h0 = triangles.Length - 3;
+                var hi = -1;
+                var hj = -1;
+                while (hi == -1 || hj == -1)
+                {
+                    var h1 = NextHalfedge(h0);
+                    if (triangles[h1] == i)
+                    {
+                        hi = h0;
+                    }
+                    if (triangles[h1] == j)
+                    {
+                        hj = h0;
+                    }
+
+                    var h2 = NextHalfedge(h1);
+                    h0 = halfedges[h2];
+                }
+
+                var ohi = halfedges[hi];
+                var ohj = halfedges[hj];
+
+                constrainedHalfedges[hi] = true;
+                constrainedHalfedges[ohi] = true;
+                constrainedHalfedges[hj] = true;
+                constrainedHalfedges[ohj] = true;
+            }
         }
 
         private void PreProcessInputStep(InputData<T2> input, OutputData<T2> output, Args args, out NativeArray<T2> localHoles, out TTransform lt, Allocator allocator)
