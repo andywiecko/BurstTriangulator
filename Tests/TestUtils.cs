@@ -168,6 +168,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         // TODO: add cast in the fork repo.
         public static fp2 ToFp2(this float2 v) => new((fp)v.x, (fp)v.y);
 #endif
+        public static float2 ToFloat2<T2>(this T2 v) where T2 : unmanaged => default(T2) switch
+        {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            fp2 => math.float2((float)((dynamic)v).x, (float)((dynamic)v).y),
+#endif
+            _ => (float2)(dynamic)v,
+        };
         public static void Triangulate<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.InputData<T> input, LowLevel.Unsafe.OutputData<T> output, LowLevel.Unsafe.Args args, Allocator allocator) where T : unmanaged =>
             LowLevel.Unsafe.Extensions.Triangulate((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
         public static void PlantHoleSeeds<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.InputData<T> input, LowLevel.Unsafe.OutputData<T> output, LowLevel.Unsafe.Args args, Allocator allocator) where T : unmanaged =>
@@ -180,6 +187,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             _ => (dynamic)bar
         },
             allocator);
+        public static void DynamicSplitHalfedge<T2>(this LowLevel.Unsafe.UnsafeTriangulator<T2> triangulator, LowLevel.Unsafe.OutputData<T2> output, int he, float alpha, Allocator allocator) where T2 : unmanaged => LowLevel.Unsafe.Extensions.DynamicSplitHalfedge((dynamic)triangulator, (dynamic)output, he, default(T2) switch
+        {
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            fp2 => (fp)alpha,
+#endif
+            _ => (dynamic)alpha,
+        }, allocator);
         public static void Run<T>(this Triangulator<T> triangulator) where T : unmanaged =>
             Extensions.Run((dynamic)triangulator);
         public static JobHandle Schedule<T>(this Triangulator<T> triangulator, JobHandle dependencies = default) where T : unmanaged =>
@@ -196,13 +210,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             var bz = 1 - bx - by;
             return new(bx, by, bz);
         }
-        public static float2[] CastToFloat2<T>(this IEnumerable<T> data) where T : unmanaged => data.Select(i => default(T) switch
-        {
-#if UNITY_MATHEMATICS_FIXEDPOINT
-            fp2 => math.float2((float)((dynamic)i).x, (float)((dynamic)i).y),
-#endif
-            _ => (float2)(dynamic)i,
-        }).ToArray();
+        public static float2[] CastToFloat2<T>(this IEnumerable<T> data) where T : unmanaged => data.Select(i => i.ToFloat2()).ToArray();
         public static T[] DynamicCast<T>(this IEnumerable<float2> data) where T : unmanaged => default(T) switch
         {
 #if UNITY_MATHEMATICS_FIXEDPOINT
