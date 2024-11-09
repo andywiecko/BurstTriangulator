@@ -806,7 +806,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().Triangulate(input, output, args, allocator);
+        public static void Triangulate(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double2>().Triangulate(input, output, args, allocator);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
         /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
@@ -817,7 +817,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().PlantHoleSeeds(input, output, args, allocator);
+        public static void PlantHoleSeeds(this UnsafeTriangulator @this, InputData<double2> input, OutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double2>().PlantHoleSeeds(input, output, args, allocator);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -831,7 +831,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         /// <param name="angleThreshold">Expressed in <em>radians</em>. Default: 5° = 0.0872664626 rad.</param>
         /// <param name="constrainBoundary">Used to constrain boundary halfedges. Since the refinement algorithm (whether for constrained triangulation or not) requires constrained halfedges at the boundary, not setting this option may cause unexpected behavior, especially when the restoreBoundary option is disabled.</param>
-        public static void RefineMesh(this UnsafeTriangulator @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().RefineMesh(output, allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+        public static void RefineMesh(this UnsafeTriangulator @this, OutputData<double2> output, Allocator allocator, double areaThreshold = 1, double angleThreshold = 0.0872664626, double concentricShells = 0.001, bool constrainBoundary = false) => new UnsafeTriangulator<double2>().RefineMesh(output, allocator, areaThreshold, angleThreshold, concentricShells, constrainBoundary);
         /// <summary>
         /// Inserts a point into the given triangulation <paramref name="output"/> within the triangle at index <paramref name="tId"/>, using the specified barycentric coordinates <paramref name="bar"/>.
         /// For faster triangle lookup when inserting a point at specific coordinates, it is recommended to use an acceleration structure (e.g., bounding volume tree, buckets, etc.).
@@ -848,13 +848,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// All coordinates should be in the range (0, 1), and <paramref name="bar"/>.x + <paramref name="bar"/>.y + <paramref name="bar"/>.z must equal 1.
         /// </param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void DynamicInsertPoint(this UnsafeTriangulator @this, OutputData<double2> output, int tId, double3 bar, Allocator allocator)
-        {
-            var (t0, t1, t2) = (output.Triangles[3 * tId + 0], output.Triangles[3 * tId + 1], output.Triangles[3 * tId + 2]);
-            var (p0, p1, p2) = (output.Positions[t0], output.Positions[t1], output.Positions[t2]);
-            var p = bar.x * p0 + bar.y * p1 + bar.z * p2;
-            new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().DynamicInsertPoint(output, tId, p, allocator);
-        }
+        public static void DynamicInsertPoint(this UnsafeTriangulator @this, OutputData<double2> output, int tId, double3 bar, Allocator allocator) => new UnsafeTriangulator<double2>().DynamicInsertPoint(output, tId, bar, allocator);
         /// <summary>
         /// Splits the halfedge specified by <paramref name="he"/> by inserting a point at a position determined by linear interpolation.
         /// The position is interpolated between the start and end points of the halfedge in the triangulation <paramref name="output"/> 
@@ -873,7 +867,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// where <c>p = (1 - alpha) * start + alpha * end</c>.
         /// </param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void DynamicSplitHalfedge(this UnsafeTriangulator @this, OutputData<double2> output, int he, double alpha, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().DynamicSplitHalfedge(output, he, alpha, allocator);
+        public static void DynamicSplitHalfedge(this UnsafeTriangulator @this, OutputData<double2> output, int he, double alpha, Allocator allocator) => new UnsafeTriangulator<double2>().DynamicSplitHalfedge(output, he, alpha, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -987,7 +981,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         /// <param name="angleThreshold">Expressed in <em>radians</em>. Default: 5° = 0.0872664626 rad.</param>
         /// <param name="constrainBoundary">Used to constrain boundary halfedges. Since the refinement algorithm (whether for constrained triangulation or not) requires constrained halfedges at the boundary, not setting this option may cause unexpected behavior, especially when the restoreBoundary option is disabled.</param>
-        public static void RefineMesh(this UnsafeTriangulator<Vector2> @this, OutputData<Vector2> output, Allocator allocator, float areaThreshold = 1, float angleThreshold = 0.0872664626f, float concentricShells = 0.001f, bool constrainBoundary = false) => new UnsafeTriangulator<float2>().RefineMesh(UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), allocator, 2 * areaThreshold, angleThreshold, concentricShells, constrainBoundary);
+        public static void RefineMesh(this UnsafeTriangulator<Vector2> @this, OutputData<Vector2> output, Allocator allocator, float areaThreshold = 1, float angleThreshold = 0.0872664626f, float concentricShells = 0.001f, bool constrainBoundary = false) => new UnsafeTriangulator<float2>().RefineMesh(UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), allocator, areaThreshold, angleThreshold, concentricShells, constrainBoundary);
         /// <summary>
         /// Inserts a point into the given triangulation <paramref name="output"/> within the triangle at index <paramref name="tId"/>, using the specified barycentric coordinates <paramref name="bar"/>.
         /// For faster triangle lookup when inserting a point at specific coordinates, it is recommended to use an acceleration structure (e.g., bounding volume tree, buckets, etc.).
