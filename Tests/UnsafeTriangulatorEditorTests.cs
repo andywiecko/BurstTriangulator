@@ -737,5 +737,189 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         }
+
+        [Test]
+        public void RemovePointPartialTriangulationTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+
+            using var inputPositions = new NativeArray<T>(new[]
+            {
+                math.double2(0, 0),
+                math.double2(3, 0),
+                math.double2(3, 3),
+                math.double2(0, 3),
+                math.double2(1, 0.5f),
+                math.double2(2, 0.5f),
+                math.double2(2.5f, 1.5f),
+                math.double2(1.5f, 2.5f),
+                math.double2(0.5f, 1.5f),
+                math.double2(1.5f, 1.5f),
+            }.DynamicCast<T>(), Allocator.Persistent);
+
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(
+                input: new() { Positions = inputPositions },
+                output: new() { Positions = outputPositions, Triangles = triangles, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges },
+                args: Args.Default(),
+                allocator: Allocator.Persistent
+            );
+
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.blue, 5f);
+
+            var constrain = constrainedHalfedges.AsArray();
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                var p = triangles[i];
+                var q = triangles[NextHalfedge(i)];
+                static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
+                if (p == 5 && q == 6)
+                {
+                    constrain[i] = true;
+                    constrain[halfedges[i]] = true;
+                    break;
+                }
+            }
+
+            t.DynamicRemoveBulkPoint(
+                output: new() { Positions = outputPositions, Triangles = triangles, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges },
+                pId: 9,
+                allocator: Allocator.Persistent
+            );
+
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.red, 5f);
+
+            Assert.That(outputPositions.AsReadOnly(), Is.EqualTo(inputPositions.AsReadOnly().ToArray()[..^1]));
+            Assert.That(triangles.AsReadOnly(), Is.EqualTo(
+                //      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35
+                new[] { 6, 1, 5, 5, 1, 4, 7, 2, 6, 6, 2, 1, 1, 0, 4, 4, 0, 8, 8, 3, 7, 7, 3, 2, 0, 3, 8, 6, 5, 4, 4, 8, 6, 8, 7, 6, }
+            ));
+            Assert.That(halfedges.AsReadOnly(), Is.EqualTo(
+                //       0  1   2  3   4   5   6  7   8  9  10 11  12  13 14  15  16  17  18  19  20  21  22 23  24  25  26 27 28  29  30  31  32  33 34  35
+                new[] { 11, 3, 27, 1, 14, 28, 23, 9, 34, 7, -1, 0, -1, 15, 4, 13, 26, 30, 25, 21, 33, 19, -1, 6, -1, 18, 16, 2, 5, 32, 17, 35, 29, 20, 8, 31, }
+            ));
+            var expectedConstrained = new bool[36];
+            expectedConstrained[2] = true;
+            expectedConstrained[27] = true;
+            Assert.That(constrainedHalfedges.AsReadOnly(), Is.EqualTo(expectedConstrained));
+        }
+
+        [Test]
+        public void RemovePointFullTriangulationTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+
+            using var inputPositions = new NativeArray<T>(new[]
+            {
+                math.double2(0, 0),
+                math.double2(1, 0),
+                math.double2(2, 1),
+                math.double2(2, 2),
+                math.double2(1, 3),
+                math.double2(0, 3),
+                math.double2(-1, 2),
+                math.double2(-1, 1),
+                math.double2(1, 1),
+            }.DynamicCast<T>(), Allocator.Persistent);
+
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(
+                input: new() { Positions = inputPositions },
+                output: new() { Positions = outputPositions, Triangles = triangles, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges },
+                args: Args.Default(),
+                allocator: Allocator.Persistent
+            );
+
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.blue, 5f);
+
+            var constrain = constrainedHalfedges.AsArray();
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                var p = triangles[i];
+                var q = triangles[NextHalfedge(i)];
+                static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
+                if (p == 1 && q == 0)
+                {
+                    constrain[i] = true;
+                    break;
+                }
+            }
+
+            t.DynamicRemoveBulkPoint(
+                output: new() { Positions = outputPositions, Triangles = triangles, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges },
+                pId: 8,
+                allocator: Allocator.Persistent
+            );
+
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.red, 5f);
+
+            Assert.That(outputPositions.AsReadOnly(), Is.EqualTo(inputPositions.AsReadOnly().ToArray()[..^1]));
+            Assert.That(triangles.AsReadOnly(), Is.EqualTo(
+                //      0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 
+                new[] { 1, 0, 7, 7, 6, 1, 6, 5, 1, 5, 4, 1, 4, 3, 1, 3, 2, 1, }
+            ));
+            Assert.That(halfedges.AsReadOnly(), Is.EqualTo(
+                //       0   1  2   3  4  5   6   7  8   9  10 11  12  13  14  15  16  17 
+                new[] { -1, -1, 5, -1, 8, 2, -1, 11, 4, -1, 14, 7, -1, 17, 10, -1, -1, 13, }
+            ));
+            Assert.That(constrainedHalfedges.AsReadOnly(), Is.EqualTo(new[] {
+                true, false, false,
+                false, false, false, false, false,
+                false, false, false, false, false,
+                false, false, false, false, false,
+            }));
+        }
+
+        [Test]
+        public void RemovePointFromMiddleIndexTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+
+            using var inputPositions = new NativeArray<T>(new[]
+            {
+                math.double2(0, 0),
+                math.double2(1, 0),
+                math.double2(0.5f, 1),
+                math.double2(1.5f, 1.5f),
+                math.double2(0.5f, 2f),
+                math.double2(-0.5f, 1.5f),
+            }.DynamicCast<T>(), Allocator.Persistent);
+
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            t.Triangulate(
+                input: new() { Positions = inputPositions },
+                output: new() { Positions = outputPositions, Triangles = triangles, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges },
+                args: Args.Default(),
+                allocator: Allocator.Persistent
+            );
+
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.blue, 5f);
+
+            t.DynamicRemoveBulkPoint(
+                output: new() { Positions = outputPositions, Triangles = triangles, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges },
+                pId: 2,
+                allocator: Allocator.Persistent
+            );
+
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.red, 5f);
+
+            Assert.That(triangles.AsReadOnly(), Is.EqualTo(
+                //      0  1  2  3  4  5  6  7  8 
+                new[] { 3, 2, 1, 1, 0, 3, 0, 4, 3, }
+            ));
+            Assert.That(halfedges.AsReadOnly(), Is.EqualTo(
+                //       0   1  2   3  4  5   6   7  8
+                new[] { -1, -1, 5, -1, 8, 2, -1, -1, 4, }
+            ));
+        }
     }
 }

@@ -194,6 +194,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 #endif
             _ => (dynamic)alpha,
         }, allocator);
+        public static void DynamicRemoveBulkPoint<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.OutputData<T> output, int pId, Allocator allocator) where T : unmanaged => LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint((dynamic)triangulator, (dynamic)output, pId, allocator);
         public static void Run<T>(this Triangulator<T> triangulator) where T : unmanaged =>
             Extensions.Run((dynamic)triangulator);
         public static JobHandle Schedule<T>(this Triangulator<T> triangulator, JobHandle dependencies = default) where T : unmanaged =>

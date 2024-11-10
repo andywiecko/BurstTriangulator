@@ -868,6 +868,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicSplitHalfedge(this UnsafeTriangulator @this, OutputData<double2> output, int he, double alpha, Allocator allocator) => new UnsafeTriangulator<double2>().DynamicSplitHalfedge(output, he, alpha, allocator);
+        /// <summary>
+        /// Removes the specified point <paramref name="pId"/> from the <paramref name="output"/> data
+        /// and re-triangulates the affected region to maintain a valid triangulation.
+        /// This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicRemoveBulkPoint(this UnsafeTriangulator @this, OutputData<double2> output, int pId, Allocator allocator) => new UnsafeTriangulator<double2>().DynamicRemoveBulkPoint(output, pId, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -946,6 +959,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicSplitHalfedge(this UnsafeTriangulator<float2> @this, OutputData<float2> output, int he, float alpha, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().DynamicSplitHalfedge(output, he, alpha, allocator);
+        /// <summary>
+        /// Removes the specified point <paramref name="pId"/> from the <paramref name="output"/> data
+        /// and re-triangulates the affected region to maintain a valid triangulation.
+        /// This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<float2> @this, OutputData<float2> output, int pId, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, FloatUtils>().DynamicRemoveBulkPoint(output, pId, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -1019,6 +1045,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicSplitHalfedge(this UnsafeTriangulator<Vector2> @this, OutputData<Vector2> output, int he, float alpha, Allocator allocator) => new UnsafeTriangulator<float2>().DynamicSplitHalfedge(UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), he, alpha, allocator);
+        /// <summary>
+        /// Removes the specified point <paramref name="pId"/> from the <paramref name="output"/> data
+        /// and re-triangulates the affected region to maintain a valid triangulation.
+        /// This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<Vector2> @this, OutputData<Vector2> output, int pId, Allocator allocator) => new UnsafeTriangulator<float2>().DynamicRemoveBulkPoint(UnsafeUtility.As<OutputData<Vector2>, OutputData<float2>>(ref output), pId, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -1097,6 +1136,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicSplitHalfedge(this UnsafeTriangulator<double2> @this, OutputData<double2> output, int he, double alpha, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().DynamicSplitHalfedge(output, he, alpha, allocator);
+        /// <summary>
+        /// Removes the specified point <paramref name="pId"/> from the <paramref name="output"/> data
+        /// and re-triangulates the affected region to maintain a valid triangulation.
+        /// This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<double2> @this, OutputData<double2> output, int pId, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>().DynamicRemoveBulkPoint(output, pId, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -1198,6 +1250,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicSplitHalfedge(this UnsafeTriangulator<fp2> @this, OutputData<fp2> output, int he, fp alpha, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, FpUtils>().DynamicSplitHalfedge(output, he, alpha, allocator);
+        /// <summary>
+        /// Removes the specified point <paramref name="pId"/> from the <paramref name="output"/> data
+        /// and re-triangulates the affected region to maintain a valid triangulation.
+        /// This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<fp2> @this, OutputData<fp2> output, int pId, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, FpUtils>().DynamicRemoveBulkPoint(output, pId, allocator);
 #endif
     }
 
@@ -1440,6 +1505,229 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 constrainedHalfedges[ohi] = true;
                 constrainedHalfedges[hj] = true;
                 constrainedHalfedges[ohj] = true;
+            }
+        }
+
+        public void DynamicRemoveBulkPoint(OutputData<T2> output, int pId, Allocator allocator)
+        {
+            /// This utility removes the specified point `pId`. It is designed specifically for handling bulk points only!
+            ///
+            /// The algorithm operates as follows:
+            ///
+            /// 1. Iterate over all triangles containing `pId` to create:
+            ///    loops of halfedges `heLoop`, points `pIdLoop`, and visited triangles.
+            ///
+            ///        p1  h1        p2 h2
+            ///         o --------- o
+            ///       .'             '.
+            ///     .'                 '.
+            ///   .'       * pId         'o p3 h3
+            ///  o p0 h0               ..''
+            ///   ....           ....''
+            ///       '''....o'''
+            ///                p4 h3
+            ///
+            ///   heLoop  = [h0, h1, h2, h3, h4]
+            ///   pIdLoop = [p0, p1, p2, p3, p4]
+            ///   oheLoop = [h0', h1', h2', h3', h4'], hi' = halfedges[hi]
+            ///
+            /// 2. Remove all visited triangles and adapt `oheLoop` to reflect the changes.
+            /// 3. Triangulate (with restoring boundaries) the cavity created by `pIdLoop` points.
+            /// 4. Merge the resulting triangulation with the newly created triangulated cavity.
+            /// 5. Remove `pId` and adjust triangle indexes accordingly.
+            using var heLoop = new NativeList<int>(allocator);
+            BuildHeLoop(output, heLoop, pId);
+            using var visitedTriangles = new NativeArray<bool>(output.Triangles.Length / 3, allocator);
+            using var pIdLoop = new NativeArray<int>(heLoop.Length, allocator);
+            using var oheLoop = new NativeArray<int>(heLoop.Length, allocator);
+            using var oheConstrained = new NativeArray<bool>(heLoop.Length, allocator);
+            BuildLoops(output, heLoop, visitedTriangles, pIdLoop, oheLoop, oheConstrained, out var tIdMinVisited);
+            RemoveTriangles(output, visitedTriangles, tIdMinVisited, oheLoop);
+            using var cavityTriangles = new NativeList<int>(allocator);
+            using var cavityHalfedges = new NativeList<int>(allocator);
+            TriangulateCavity(output, pIdLoop, cavityTriangles, cavityHalfedges, allocator);
+            MergeTriangulations(output, pIdLoop, cavityTriangles, cavityHalfedges, oheLoop, oheConstrained);
+            AdaptPoints(output, pId);
+        }
+
+        private static void BuildHeLoop(OutputData<T2> output, NativeList<int> heLoop, int pId)
+        {
+            var h0 = -1;
+            /// NOTE: This can be optimized to an O(1) operation by introducing a `pointToHalfedge` buffer.
+            ///       However, `pointToHalfedge` is currently only utilized during the Sloan algorithm (constraints),
+            ///       and other parts of the code are not yet adapted to incorporate `pointToHalfedge`.
+            ///       That said, having O(n) complexity here is not a significant issue.
+            for (int i = 0; i < output.Triangles.Length; i++)
+            {
+                if (output.Triangles[i] == pId)
+                {
+                    h0 = i;
+                    break;
+                }
+            }
+
+            h0 = NextHalfedge(h0);
+            var h1 = NextHalfedge(h0);
+            var p = output.Triangles[h0];
+            var q = output.Triangles[h1];
+            heLoop.Add(h0);
+            while (p != q)
+            {
+                h0 = NextHalfedge(output.Halfedges[h1]);
+                h1 = NextHalfedge(h0);
+                q = output.Triangles[h1];
+                heLoop.Add(h0);
+            }
+        }
+
+        private static void BuildLoops(OutputData<T2> output, NativeList<int> heLoop, NativeArray<bool> visitedTriangles, NativeArray<int> pIdLoop, NativeArray<int> oheLoop, NativeArray<bool> oheConstrained, out int tIdMinVisited)
+        {
+            tIdMinVisited = int.MaxValue;
+            for (int i = 0; i < heLoop.Length; i++)
+            {
+                var he = heLoop[i];
+                visitedTriangles[he / 3] = true;
+                tIdMinVisited = math.min(he / 3, tIdMinVisited);
+                pIdLoop[i] = output.Triangles[he];
+                oheLoop[i] = output.Halfedges[he];
+                oheConstrained[i] = output.ConstrainedHalfedges[he];
+            }
+        }
+
+        private static void RemoveTriangles(OutputData<T2> output, NativeArray<bool> visitedTriangles, int tIdMinVisited, NativeArray<int> halfedgeLoop)
+        {
+            static void DisableHe(NativeList<int> halfedges, int he, int rId)
+            {
+                var ohe = halfedges[3 * rId + he];
+                if (ohe != -1)
+                {
+                    halfedges[ohe] = -1;
+                }
+            }
+
+            static void AdaptHe(NativeList<int> halfedges, int he, int rId, int wId)
+            {
+                var ohe = halfedges[3 * rId + he];
+                halfedges[3 * wId + he] = ohe;
+                if (ohe != -1)
+                {
+                    halfedges[ohe] = 3 * wId + he;
+                }
+            }
+
+            var triangles = output.Triangles;
+            var halfedges = output.Halfedges;
+            var constrainedHalfedges = output.ConstrainedHalfedges;
+
+            // Reinterpret to a larger struct to make copies of whole triangles slightly more efficient
+            var constrainedHalfedges3 = constrainedHalfedges.AsArray().Reinterpret<bool3>(1);
+            var triangles3 = triangles.AsArray().Reinterpret<int3>(4);
+
+            var wId = tIdMinVisited;
+            for (int rId = tIdMinVisited; rId < triangles3.Length; rId++)
+            {
+                if (!visitedTriangles[rId])
+                {
+                    triangles3[wId] = triangles3[rId];
+                    constrainedHalfedges3[wId] = constrainedHalfedges3[rId];
+                    AdaptHe(halfedges, 0, rId, wId);
+                    AdaptHe(halfedges, 1, rId, wId);
+                    AdaptHe(halfedges, 2, rId, wId);
+                    wId++;
+                }
+                else
+                {
+                    DisableHe(halfedges, 0, rId);
+                    DisableHe(halfedges, 1, rId);
+                    DisableHe(halfedges, 2, rId);
+
+                    for (int i = 0; i < halfedgeLoop.Length; i++)
+                    {
+                        var he = halfedgeLoop[i];
+                        halfedgeLoop[i] = he != -1 && he / 3 > wId ? he - 3 : he;
+                    }
+                }
+            }
+
+            // Trim the data to reflect removed triangles.
+            triangles.Length = 3 * wId;
+            constrainedHalfedges.Length = 3 * wId;
+            halfedges.Length = 3 * wId;
+        }
+
+        private static void TriangulateCavity(OutputData<T2> output, NativeArray<int> pIdLoop, NativeList<int> cavityTriangles, NativeList<int> cavityHalfedges, Allocator allocator)
+        {
+            using var cavityPositions = new NativeArray<T2>(pIdLoop.Length, allocator);
+            using var cavityConstraints = new NativeArray<int>(2 * pIdLoop.Length, allocator);
+
+            void BuildInput(NativeArray<T2> cavityPositions, NativeArray<int> cavityConstraints)
+            {
+                for (int i = 0; i < pIdLoop.Length; i++)
+                {
+                    cavityPositions[i] = output.Positions[pIdLoop[i]];
+                }
+                for (int i = 0; i < pIdLoop.Length - 1; i++)
+                {
+                    cavityConstraints[2 * i + 0] = i;
+                    cavityConstraints[2 * i + 1] = i + 1;
+                }
+                cavityConstraints[^2] = pIdLoop.Length - 1;
+                cavityConstraints[^1] = 0;
+            }
+
+            BuildInput(cavityPositions, cavityConstraints);
+
+            new UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>().Triangulate(
+                input: new() { Positions = cavityPositions, ConstraintEdges = cavityConstraints },
+                output: new() { Triangles = cavityTriangles, Halfedges = cavityHalfedges },
+                args: Args.Default(restoreBoundary: true),
+                allocator
+            );
+        }
+
+        private static void MergeTriangulations(OutputData<T2> output, NativeArray<int> pIdLoop, NativeList<int> cavityTriangles, NativeList<int> cavityHalfedges, NativeArray<int> oheLoop, NativeArray<bool> oheConstrained)
+        {
+            output.ConstrainedHalfedges.Length += cavityHalfedges.Length;
+
+            var ell = output.Triangles.Length;
+            for (int i = 0; i < cavityHalfedges.Length; i++)
+            {
+                var he = cavityHalfedges[i];
+                if (he != -1)
+                {
+                    cavityHalfedges[i] = he + ell;
+                }
+                else
+                {
+                    var id = cavityTriangles[i];
+                    var ohe = oheLoop[id];
+                    output.ConstrainedHalfedges[i + ell] |= oheConstrained[id];
+                    cavityHalfedges[i] = ohe;
+                    if (ohe != -1)
+                    {
+                        output.Halfedges[ohe] = i + ell;
+                    }
+                }
+            }
+
+            for (int i = 0; i < cavityTriangles.Length; i++)
+            {
+                cavityTriangles[i] = pIdLoop[cavityTriangles[i]];
+            }
+
+            output.Triangles.AddRange(cavityTriangles.AsArray());
+            output.Halfedges.AddRange(cavityHalfedges.AsArray());
+        }
+
+        private static void AdaptPoints(OutputData<T2> output, int pId)
+        {
+            output.Positions.RemoveAt(pId);
+
+            var triangles = output.Triangles;
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                var t = triangles[i];
+                triangles[i] = t > pId ? t - 1 : t;
             }
         }
 
