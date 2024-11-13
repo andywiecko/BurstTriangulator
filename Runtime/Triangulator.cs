@@ -3311,50 +3311,78 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 private void ProcessBadTriangles()
                 {
+                    static void DisableHe(NativeList<int> halfedges, int he)
+                    {
+                        var ohe = halfedges[he];
+                        if (ohe != -1)
+                        {
+                            halfedges[he] = -1;
+                            halfedges[ohe] = -1;
+                        }
+                    }
+
+                    static void AdaptHe(NativeList<int> halfedges, int he, int rId, int wId)
+                    {
+                        var ohe = halfedges[3 * rId + he];
+                        halfedges[3 * wId + he] = ohe;
+                        if (ohe != -1)
+                        {
+                            halfedges[ohe] = 3 * wId + he;
+                        }
+                    }
+
+                    if (BadTriangles.IsEmpty)
+                    {
+                        return;
+                    }
+
                     var triangles = Output.Triangles;
                     var halfedges = Output.Halfedges;
                     var constrainedHalfedges = Output.ConstrainedHalfedges;
 
-                    void RemoveHalfedge(int he, int offset)
+                    // Reinterpret to a larger struct to make copies of whole triangles slightly more efficient
+                    var constrainedHalfedges3 = constrainedHalfedges.AsArray().Reinterpret<bool3>(1);
+                    var triangles3 = triangles.AsArray().Reinterpret<int3>(4);
+
+                    BadTriangles.Sort();
+                    foreach (var tId in BadTriangles)
                     {
-                        var ohe = halfedges[he];
-                        var o = ohe > he ? ohe - offset : ohe;
-                        if (o > -1)
-                        {
-                            halfedges[o] = -1;
-                        }
-                        halfedges.RemoveAt(he);
+                        DisableHe(halfedges, 3 * tId + 0);
+                        DisableHe(halfedges, 3 * tId + 1);
+                        DisableHe(halfedges, 3 * tId + 2);
                     }
 
-                    // Remove bad triangles and recalculate polygon path halfedges.
-                    BadTriangles.Sort();
+                    var wId = BadTriangles[0];
+                    for (int rId = BadTriangles[0]; rId < triangles3.Length; rId++)
+                    {
+                        if (!VisitedTriangles[rId])
+                        {
+                            triangles3[wId] = triangles3[rId];
+                            constrainedHalfedges3[wId] = constrainedHalfedges3[rId];
+                            AdaptHe(halfedges, 0, rId, wId);
+                            AdaptHe(halfedges, 1, rId, wId);
+                            AdaptHe(halfedges, 2, rId, wId);
+                            if (Circles.IsCreated)
+                            {
+                                Circles[wId] = Circles[rId];
+                            }
+                            wId++;
+                        }
+                    }
+
+                    // Trim the data to reflect removed triangles.
+                    triangles.Length = 3 * wId;
+                    constrainedHalfedges.Length = 3 * wId;
+                    halfedges.Length = 3 * wId;
+                    if (Circles.IsCreated)
+                    {
+                        Circles.Length = wId;
+                    }
+
+                    // Assume that BadTriangles is sorted.
                     for (int t = BadTriangles.Length - 1; t >= 0; t--)
                     {
                         var tId = BadTriangles[t];
-                        triangles.RemoveAt(3 * tId + 2);
-                        triangles.RemoveAt(3 * tId + 1);
-                        triangles.RemoveAt(3 * tId + 0);
-                        RemoveHalfedge(3 * tId + 2, 0);
-                        RemoveHalfedge(3 * tId + 1, 1);
-                        RemoveHalfedge(3 * tId + 0, 2);
-                        constrainedHalfedges.RemoveAt(3 * tId + 2);
-                        constrainedHalfedges.RemoveAt(3 * tId + 1);
-                        constrainedHalfedges.RemoveAt(3 * tId + 0);
-                        if (Circles.IsCreated)
-                        {
-                            Circles.RemoveAt(tId);
-                        }
-
-                        for (int i = 3 * tId; i < halfedges.Length; i++)
-                        {
-                            var he = halfedges[i];
-                            if (he == -1)
-                            {
-                                continue;
-                            }
-                            halfedges[he < 3 * tId ? he : i] -= 3;
-                        }
-
                         for (int i = 0; i < PathHalfedges.Length; i++)
                         {
                             if (PathHalfedges[i] > 3 * tId + 2)
