@@ -322,6 +322,69 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
         }
 
+        private static readonly TestCaseData[] refineMeshLakeBenchmarkTestData =
+        {
+            new(00.00f, 100),
+            new(05.00f, 100),
+            new(10.00f, 100),
+            new(15.00f, 100),
+            new(20.00f, 100),
+            new(25.00f, 100),
+            new(28.00f, 100),
+            new(30.00f, 100),
+            new(31.50f, 100),
+            new(33.00f, 100),
+            new(33.50f, 100),
+            new(33.70f, 100),
+            new(33.72f, 100),
+            new(33.73f, 100),
+            //new(33.75f, 1), // Limit
+        };
+
+        [Test, TestCaseSource(nameof(refineMeshLakeBenchmarkTestData))]
+        public void RefineMeshLakeBenchmarkTest(float angle, int N)
+        {
+            var debuggerInitialValue = Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled;
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = false;
+
+            using var positions = new NativeArray<float2>(LakeSuperior.Points, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
+            using var holeSeeds = new NativeArray<float2>(LakeSuperior.Holes, Allocator.Persistent);
+            using var triangulator = new Triangulator<float2>(1024 * 1024, Allocator.Persistent)
+            {
+                Settings =
+                {
+                    ValidateInput = false,
+                    RefineMesh = true,
+                    RestoreBoundary = true,
+                    RefinementThresholds =
+                    {
+                        Area = 100f,
+                        Angle = math.radians(angle),
+                    }
+                },
+                Input =
+                {
+                    Positions = positions,
+                    ConstraintEdges = constraintEdges,
+                    HoleSeeds = holeSeeds,
+                }
+            };
+
+            var stopwatch = Stopwatch.StartNew();
+            for (int i = 0; i < N; i++)
+            {
+                triangulator.Run();
+            }
+            stopwatch.Stop();
+
+            triangulator.Draw();
+
+            UnityEngine.Debug.Log($"{triangulator.Output.Triangles.Length / 3} {stopwatch.Elapsed.TotalMilliseconds / N}");
+
+            Unity.Jobs.LowLevel.Unsafe.JobsUtility.JobDebuggerEnabled = debuggerInitialValue;
+        }
+
         private static TestCaseData PlantingHolesCase(int n, int N) => new((n, N)) { TestName = $"Holes: {n * n} (N: {N})" };
 
         private static readonly TestCaseData[] plantingAutoHolesBenchmarkTestData =
