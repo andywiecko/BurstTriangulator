@@ -3531,7 +3531,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         for (int i = 0; i < heQueue.Length; i++)
                         {
                             var he = heQueue[i];
-                            if (he == 3 * tId + 0 || he == 3 * tId + 1 || he == 3 * tId + 2)
+                            if (he / 3 == tId)
                             {
                                 heQueue[i] = -1;
                                 continue;
