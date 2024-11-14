@@ -3200,7 +3200,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public void UnsafeInsertPointBulk(T2 p, int initTriangle)
                 {
                     var pId = UnsafeInsertPointCommon(p, initTriangle);
-                    BuildStarPolygon();
+                    var initHe = FindInitPolygonHalfedge();
+                    BuildPolygon(initHe, amphitheater: false);
                     ProcessBadTriangles();
                     BuildNewTrianglesForStar(pId);
                 }
@@ -3208,7 +3209,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public void UnsafeInsertPointBoundary(T2 p, int initHe)
                 {
                     var pId = UnsafeInsertPointCommon(p, initHe / 3);
-                    BuildAmphitheaterPolygon(initHe);
+                    BuildPolygon(initHe, amphitheater: true);
                     ProcessBadTriangles();
                     BuildNewTrianglesForAmphitheater(pId);
                 }
@@ -3239,7 +3240,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     }
                 }
 
-                private void BuildAmphitheaterPolygon(int initHe)
+                private void BuildPolygon(int initHe, bool amphitheater)
                 {
                     var triangles = Output.Triangles;
 
@@ -3254,7 +3255,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         }
 
                         var he = Output.Halfedges[id];
-                        if (he == -1 || !BadTriangles.Contains(he / 3))
+                        if (he == -1 || !VisitedTriangles[he / 3])
                         {
                             PathPoints.Add(triangles[id]);
                             PathHalfedges.Add(he);
@@ -3262,58 +3263,36 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         }
                         id = he;
                     }
-                    PathPoints.Add(triangles[initHe]);
-                    PathHalfedges.Add(-1);
+
+                    if (amphitheater)
+                    {
+                        PathPoints.Add(triangles[initHe]);
+                        PathHalfedges.Add(-1);
+                    }
                 }
 
-                private void BuildStarPolygon()
+                // TODO: this operation can be optimized.
+                private int FindInitPolygonHalfedge()
                 {
-                    var triangles = Output.Triangles;
-                    var halfedges = Output.Halfedges;
-
                     // Find the "first" halfedge of the polygon.
-                    var initHe = -1;
                     for (int i = 0; i < BadTriangles.Length; i++)
                     {
                         var tId = BadTriangles[i];
                         for (int t = 0; t < 3; t++)
                         {
                             var he = 3 * tId + t;
-                            var ohe = halfedges[he];
-                            if (ohe == -1 || !BadTriangles.Contains(ohe / 3))
+                            var ohe = Output.Halfedges[he];
+                            if (ohe == -1 || !VisitedTriangles[ohe / 3])
                             {
-                                PathPoints.Add(triangles[he]);
+                                PathPoints.Add(Output.Triangles[he]);
                                 PathHalfedges.Add(ohe);
-                                initHe = he;
-                                break;
+                                return he;
                             }
                         }
-                        if (initHe != -1)
-                        {
-                            break;
-                        }
                     }
 
-                    // Build polygon path from halfedges and points.
-                    var id = initHe;
-                    var initPoint = PathPoints[0];
-                    while (true)
-                    {
-                        id = NextHalfedge(id);
-                        if (triangles[id] == initPoint)
-                        {
-                            break;
-                        }
-
-                        var he = halfedges[id];
-                        if (he == -1 || !BadTriangles.Contains(he / 3))
-                        {
-                            PathPoints.Add(triangles[id]);
-                            PathHalfedges.Add(he);
-                            continue;
-                        }
-                        id = he;
-                    }
+                    // Note: This should be guaranteed that such `he` exists in proper mesh.
+                    return -1;
                 }
 
                 private void ProcessBadTriangles()
