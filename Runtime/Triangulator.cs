@@ -3297,12 +3297,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 private void ProcessBadTriangles()
                 {
-                    static void DisableHe(NativeList<int> halfedges, int he)
+                    static void DisableHe(NativeList<int> halfedges, int he, int rId)
                     {
-                        var ohe = halfedges[he];
+                        var ohe = halfedges[3 * rId + he];
                         if (ohe != -1)
                         {
-                            halfedges[he] = -1;
                             halfedges[ohe] = -1;
                         }
                     }
@@ -3330,13 +3329,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var constrainedHalfedges3 = constrainedHalfedges.AsArray().Reinterpret<bool3>(1);
                     var triangles3 = triangles.AsArray().Reinterpret<int3>(4);
 
+                    // TODO:
+                    //  This is required for proper adapt heQueue, tQueue.
+                    //  This instruction, as well as, `BadTriangles` buffer
+                    //  will be eliminated in the future entirely.
                     BadTriangles.Sort();
-                    foreach (var tId in BadTriangles)
-                    {
-                        DisableHe(halfedges, 3 * tId + 0);
-                        DisableHe(halfedges, 3 * tId + 1);
-                        DisableHe(halfedges, 3 * tId + 2);
-                    }
 
                     var wId = BadTriangles[0];
                     for (int rId = BadTriangles[0]; rId < triangles3.Length; rId++)
@@ -3354,6 +3351,20 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                             }
                             wId++;
                         }
+                        else
+                        {
+                            DisableHe(halfedges, 0, rId);
+                            DisableHe(halfedges, 1, rId);
+                            DisableHe(halfedges, 2, rId);
+
+                            for (int i = 0; i < PathHalfedges.Length; i++)
+                            {
+                                if (PathHalfedges[i] > 3 * wId + 2)
+                                {
+                                    PathHalfedges[i] -= 3;
+                                }
+                            }
+                        }
                     }
 
                     // Trim the data to reflect removed triangles.
@@ -3363,19 +3374,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     if (Circles.IsCreated)
                     {
                         Circles.Length = wId;
-                    }
-
-                    // Assume that BadTriangles is sorted.
-                    for (int t = BadTriangles.Length - 1; t >= 0; t--)
-                    {
-                        var tId = BadTriangles[t];
-                        for (int i = 0; i < PathHalfedges.Length; i++)
-                        {
-                            if (PathHalfedges[i] > 3 * tId + 2)
-                            {
-                                PathHalfedges[i] -= 3;
-                            }
-                        }
                     }
                 }
 
