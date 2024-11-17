@@ -2841,11 +2841,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<bool> constrainedHalfedges;
 
             private NativeList<Circle> circles;
-            private NativeQueue<int> trianglesQueue;
-            private NativeList<int> badTriangles;
-            private NativeList<int> pathPoints;
-            private NativeList<int> pathHalfedges;
-            private NativeList<bool> visitedTriangles;
+            private UnsafeBowerWatson bw;
 
             private readonly T maximumArea2, angleThreshold, shells;
             private readonly int initialPointsCount;
@@ -2867,13 +2863,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 outputPositions = output.Positions;
                 halfedges = output.Halfedges;
                 constrainedHalfedges = output.ConstrainedHalfedges;
-
                 circles = default;
-                trianglesQueue = default;
-                badTriangles = default;
-                pathPoints = default;
-                pathHalfedges = default;
-                visitedTriangles = default;
+                bw = default;
             }
 
             public void Execute(Allocator allocator, bool refineMesh, bool constrainBoundary)
@@ -2901,11 +2892,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 using var _circles = circles = new(allocator) { Length = triangles.Length / 3 };
-                using var _trianglesQueue = trianglesQueue = new(allocator);
-                using var _badTriangles = badTriangles = new(triangles.Length / 3, allocator);
-                using var _pathPoints = pathPoints = new(allocator);
-                using var _pathHalfedges = pathHalfedges = new(allocator);
-                using var _visitedTriangles = visitedTriangles = new(triangles.Length / 3, allocator);
+                using var trianglesQueue = new NativeQueue<int>(allocator);
+                using var badTriangles = new NativeList<int>(triangles.Length / 3, allocator);
+                using var pathPoints = new NativeList<int>(allocator);
+                using var pathHalfedges = new NativeList<int>(allocator);
+                using var visitedTriangles = new NativeList<bool>(triangles.Length / 3, allocator);
 
                 using var heQueue = new NativeList<int>(triangles.Length, allocator);
                 using var tQueue = new NativeList<int>(triangles.Length, allocator);
@@ -2915,6 +2906,23 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     circles[tId] = new(CalculateCircumCircle(i, j, k, outputPositions.AsArray()));
                 }
+
+                bw = new()
+                {
+                    Output = new()
+                    {
+                        Triangles = triangles,
+                        Halfedges = halfedges,
+                        Positions = outputPositions,
+                        ConstrainedHalfedges = constrainedHalfedges,
+                    },
+                    Circles = circles,
+                    TrianglesQueue = trianglesQueue,
+                    PathHalfedges = pathHalfedges,
+                    PathPoints = pathPoints,
+                    VisitedTriangles = visitedTriangles,
+                    BadTriangles = badTriangles
+                };
 
                 // Collect encroached half-edges.
                 for (int he = 0; he < constrainedHalfedges.Length; he++)
@@ -3004,8 +3012,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 if (halfedges[he] != -1)
                 {
-                    UnsafeInsertPointBulk(p, initTriangle: he / 3, heQueue, tQueue);
-                    ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: false);
+                    var cavityLength = bw.UnsafeInsertPointBulk(p, initTriangle: he / 3, heQueue, tQueue);
+                    ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: false, cavityLength);
 
                     var h0 = triangles.Length - 3;
                     var hi = -1;
@@ -3052,11 +3060,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
                 else
                 {
-                    UnsafeInsertPointBoundary(p, initHe: he, heQueue, tQueue);
-                    ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: true);
+                    var cavityLength = bw.UnsafeInsertPointBoundary(p, initHe: he, heQueue, tQueue);
+                    ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: true, cavityLength);
 
                     //var h0 = triangles.Length - 3;
-                    var id = 3 * (pathPoints.Length - 1);
+                    var id = 3 * (cavityLength - 1);
                     var hi = halfedges.Length - 1;
                     var hj = halfedges.Length - id;
 
@@ -3109,8 +3117,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 if (edges.IsEmpty)
                 {
-                    UnsafeInsertPointBulk(c.Center, initTriangle: tId, heQueue, tQueue);
-                    ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: false);
+                    var cavityLength = bw.UnsafeInsertPointBulk(c.Center, initTriangle: tId, heQueue, tQueue);
+                    ProcessPathHalfedgesForEnqueueing(heQueue, tQueue, boundary: false, cavityLength);
                 }
                 else
                 {
@@ -3142,9 +3150,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>.AngleIsTooSmall(pA, pB, pC, minimumAngle);
             }
 
-            private void UnsafeInsertPointBulk(T2 p, int initTriangle, NativeList<int> heQueue, NativeList<int> tQueue) => new UnsafeBowerWatson(this).UnsafeInsertPointBulk(p, initTriangle, heQueue, tQueue);
-            private void UnsafeInsertPointBoundary(T2 p, int initHe, NativeList<int> heQueue, NativeList<int> tQueue) => new UnsafeBowerWatson(this).UnsafeInsertPointBoundary(p, initHe, heQueue, tQueue);
-
             public struct UnsafeBowerWatson
             {
                 public OutputData<T2> Output;
@@ -3155,23 +3160,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public NativeList<int> PathPoints;
                 public NativeList<int> PathHalfedges;
                 public NativeList<bool> VisitedTriangles;
-
-                public UnsafeBowerWatson(RefineMeshStep @this)
-                {
-                    Output = new()
-                    {
-                        Triangles = @this.triangles,
-                        Halfedges = @this.halfedges,
-                        Positions = @this.outputPositions,
-                        ConstrainedHalfedges = @this.constrainedHalfedges,
-                    };
-                    Circles = @this.circles;
-                    BadTriangles = @this.badTriangles;
-                    TrianglesQueue = @this.trianglesQueue;
-                    PathPoints = @this.pathPoints;
-                    PathHalfedges = @this.pathHalfedges;
-                    VisitedTriangles = @this.visitedTriangles;
-                }
 
                 private int UnsafeInsertPointCommon(T2 p, int initTriangle)
                 {
@@ -3194,21 +3182,23 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     return pId;
                 }
 
-                public void UnsafeInsertPointBulk(T2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+                public int UnsafeInsertPointBulk(T2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
                 {
                     var pId = UnsafeInsertPointCommon(p, initTriangle);
                     var initHe = FindInitPolygonHalfedge();
                     BuildPolygon(initHe, amphitheater: false);
                     ProcessBadTriangles(heQueue, tQueue);
                     BuildNewTrianglesForStar(pId);
+                    return PathPoints.Length;
                 }
 
-                public void UnsafeInsertPointBoundary(T2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+                public int UnsafeInsertPointBoundary(T2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
                 {
                     var pId = UnsafeInsertPointCommon(p, initHe / 3);
                     BuildPolygon(initHe, amphitheater: true);
                     ProcessBadTriangles(heQueue, tQueue);
                     BuildNewTrianglesForAmphitheater(pId);
+                    return PathPoints.Length;
                 }
 
                 private void RecalculateBadTriangles(T2 p)
@@ -3543,9 +3533,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
             }
 
-            private void ProcessPathHalfedgesForEnqueueing(NativeList<int> heQueue, NativeList<int> tQueue, bool boundary)
+            private void ProcessPathHalfedgesForEnqueueing(NativeList<int> heQueue, NativeList<int> tQueue, bool boundary, int cavityLength)
             {
-                var iters = boundary ? pathPoints.Length - 1 : pathPoints.Length;
+                var iters = boundary ? cavityLength - 1 : cavityLength;
                 var heOffset = halfedges.Length - 3 * iters;
 
                 if (heQueue.IsCreated)
