@@ -3161,6 +3161,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public NativeList<int> PathHalfedges;
                 public NativeList<bool> VisitedTriangles;
 
+                private int tIdMinVisited;
+
                 private int UnsafeInsertPointCommon(T2 p, int initTriangle)
                 {
                     var pId = Output.Positions.Length;
@@ -3170,14 +3172,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     TrianglesQueue.Clear();
                     PathPoints.Clear();
                     PathHalfedges.Clear();
-
                     VisitedTriangles.Clear();
                     VisitedTriangles.Length = Output.Triangles.Length / 3;
 
-                    TrianglesQueue.Enqueue(initTriangle);
-                    BadTriangles.Add(initTriangle);
-                    VisitedTriangles[initTriangle] = true;
-                    RecalculateBadTriangles(p);
+                    RecalculateBadTriangles(p, initTriangle);
 
                     return pId;
                 }
@@ -3201,9 +3199,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     return PathPoints.Length;
                 }
 
-                private void RecalculateBadTriangles(T2 p)
+                private void RecalculateBadTriangles(T2 p, int initTriangle)
                 {
                     var triangles = Output.Triangles;
+
+                    TrianglesQueue.Enqueue(initTriangle);
+                    BadTriangles.Add(initTriangle);
+                    VisitedTriangles[initTriangle] = true;
+                    tIdMinVisited = initTriangle;
 
                     while (TrianglesQueue.TryDequeue(out var tId))
                     {
@@ -3222,6 +3225,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                                 BadTriangles.Add(otherId);
                                 TrianglesQueue.Enqueue(otherId);
                                 VisitedTriangles[otherId] = true;
+                                tIdMinVisited = math.min(tIdMinVisited, otherId);
                             }
                         }
                     }
@@ -3303,11 +3307,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         }
                     }
 
-                    if (BadTriangles.IsEmpty)
-                    {
-                        return;
-                    }
-
                     var triangles = Output.Triangles;
                     var halfedges = Output.Halfedges;
                     var constrainedHalfedges = Output.ConstrainedHalfedges;
@@ -3316,14 +3315,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var constrainedHalfedges3 = constrainedHalfedges.AsArray().Reinterpret<bool3>(1);
                     var triangles3 = triangles.AsArray().Reinterpret<int3>(4);
 
-                    // TODO:
-                    //  This is required for proper adapt heQueue, tQueue.
-                    //  This instruction, as well as, `BadTriangles` buffer
-                    //  will be eliminated in the future entirely.
-                    BadTriangles.Sort();
-
-                    var wId = BadTriangles[0];
-                    for (int rId = BadTriangles[0]; rId < triangles3.Length; rId++)
+                    var wId = tIdMinVisited;
+                    for (int rId = tIdMinVisited; rId < triangles3.Length; rId++)
                     {
                         if (!VisitedTriangles[rId])
                         {
