@@ -1351,7 +1351,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public void DynamicInsertPoint(OutputData<T2> output, int tId, T2 p, Allocator allocator)
         {
-            using var badTriangles = new NativeList<int>(allocator);
             using var pathHalfedges = new NativeList<int>(allocator);
             using var pathPoints = new NativeList<int>(allocator);
             using var trianglesQueue = new NativeQueue<int>(allocator);
@@ -1361,7 +1360,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 Circles = default,
                 Output = output,
-                BadTriangles = badTriangles,
                 PathHalfedges = pathHalfedges,
                 PathPoints = pathPoints,
                 TrianglesQueue = trianglesQueue,
@@ -1371,7 +1369,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public void DynamicSplitHalfedge(OutputData<T2> output, int he, T alpha, Allocator allocator)
         {
-            using var badTriangles = new NativeList<int>(allocator);
             using var pathHalfedges = new NativeList<int>(allocator);
             using var pathPoints = new NativeList<int>(allocator);
             using var trianglesQueue = new NativeQueue<int>(allocator);
@@ -1389,7 +1386,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 Circles = default,
                 Output = output,
-                BadTriangles = badTriangles,
                 PathHalfedges = pathHalfedges,
                 PathPoints = pathPoints,
                 TrianglesQueue = trianglesQueue,
@@ -2893,7 +2889,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 using var _circles = circles = new(allocator) { Length = triangles.Length / 3 };
                 using var trianglesQueue = new NativeQueue<int>(allocator);
-                using var badTriangles = new NativeList<int>(triangles.Length / 3, allocator);
                 using var pathPoints = new NativeList<int>(allocator);
                 using var pathHalfedges = new NativeList<int>(allocator);
                 using var visitedTriangles = new NativeList<bool>(triangles.Length / 3, allocator);
@@ -2921,7 +2916,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     PathHalfedges = pathHalfedges,
                     PathPoints = pathPoints,
                     VisitedTriangles = visitedTriangles,
-                    BadTriangles = badTriangles
                 };
 
                 // Collect encroached half-edges.
@@ -3155,20 +3149,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public OutputData<T2> Output;
                 public NativeList<Circle> Circles;
 
-                public NativeList<int> BadTriangles;
                 public NativeQueue<int> TrianglesQueue;
                 public NativeList<int> PathPoints;
                 public NativeList<int> PathHalfedges;
                 public NativeList<bool> VisitedTriangles;
 
+                /// <summary>
+                /// Used to find minimal triangle id which is visited.
+                /// </summary>
                 private int tIdMinVisited;
+                /// <summary>
+                /// Used to find cavity boundary halfedge.
+                /// </summary>
+                private int heLoopId;
 
                 private int UnsafeInsertPointCommon(T2 p, int initTriangle)
                 {
                     var pId = Output.Positions.Length;
                     Output.Positions.Add(p);
 
-                    BadTriangles.Clear();
                     TrianglesQueue.Clear();
                     PathPoints.Clear();
                     PathHalfedges.Clear();
@@ -3183,8 +3182,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public int UnsafeInsertPointBulk(T2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
                 {
                     var pId = UnsafeInsertPointCommon(p, initTriangle);
-                    var initHe = FindInitPolygonHalfedge();
-                    BuildPolygon(initHe, amphitheater: false);
+                    BuildPolygon(initHe: heLoopId, amphitheater: false);
                     ProcessBadTriangles(heQueue, tQueue);
                     BuildNewTrianglesForStar(pId);
                     return PathPoints.Length;
@@ -3202,9 +3200,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 private void RecalculateBadTriangles(T2 p, int initTriangle)
                 {
                     var triangles = Output.Triangles;
-
+                    heLoopId = -1;
                     TrianglesQueue.Enqueue(initTriangle);
-                    BadTriangles.Add(initTriangle);
                     VisitedTriangles[initTriangle] = true;
                     tIdMinVisited = initTriangle;
 
@@ -3214,18 +3211,28 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         {
                             var he = Output.Halfedges[3 * tId + i];
                             var otherId = he / 3;
-                            if (he == -1 || Output.ConstrainedHalfedges[he] || VisitedTriangles[otherId])
+
+                            if (he != -1 && VisitedTriangles[otherId])
                             {
+                                continue;
+                            }
+
+                            if (he == -1 || Output.ConstrainedHalfedges[he])
+                            {
+                                heLoopId = heLoopId == -1 ? 3 * tId + i : heLoopId;
                                 continue;
                             }
 
                             var circle = Circles.IsCreated ? Circles[otherId] : new(CalculateCircumCircle(triangles[3 * otherId + 0], triangles[3 * otherId + 1], triangles[3 * otherId + 2], Output.Positions.AsArray()));
                             if (utils.le(utils.Cast(utils.distancesq(circle.Center, p)), circle.RadiusSq))
                             {
-                                BadTriangles.Add(otherId);
                                 TrianglesQueue.Enqueue(otherId);
                                 VisitedTriangles[otherId] = true;
                                 tIdMinVisited = math.min(tIdMinVisited, otherId);
+                            }
+                            else
+                            {
+                                heLoopId = heLoopId == -1 ? 3 * tId + i : heLoopId;
                             }
                         }
                     }
@@ -3234,6 +3241,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 private void BuildPolygon(int initHe, bool amphitheater)
                 {
                     var triangles = Output.Triangles;
+                    var halfedges = Output.Halfedges;
+
+                    if (!amphitheater)
+                    {
+                        PathPoints.Add(triangles[initHe]);
+                        PathHalfedges.Add(halfedges[initHe]);
+                    }
 
                     var id = initHe;
                     var initPoint = triangles[id];
@@ -3245,7 +3259,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                             break;
                         }
 
-                        var he = Output.Halfedges[id];
+                        var he = halfedges[id];
                         if (he == -1 || !VisitedTriangles[he / 3])
                         {
                             PathPoints.Add(triangles[id]);
@@ -3260,30 +3274,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         PathPoints.Add(triangles[initHe]);
                         PathHalfedges.Add(-1);
                     }
-                }
-
-                // TODO: this operation can be optimized.
-                private int FindInitPolygonHalfedge()
-                {
-                    // Find the "first" halfedge of the polygon.
-                    for (int i = 0; i < BadTriangles.Length; i++)
-                    {
-                        var tId = BadTriangles[i];
-                        for (int t = 0; t < 3; t++)
-                        {
-                            var he = 3 * tId + t;
-                            var ohe = Output.Halfedges[he];
-                            if (ohe == -1 || !VisitedTriangles[ohe / 3])
-                            {
-                                PathPoints.Add(Output.Triangles[he]);
-                                PathHalfedges.Add(ohe);
-                                return he;
-                            }
-                        }
-                    }
-
-                    // Note: This should be guaranteed that such `he` exists in proper mesh.
-                    return -1;
                 }
 
                 private void ProcessBadTriangles(NativeList<int> heQueue, NativeList<int> tQueue)
