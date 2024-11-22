@@ -3163,38 +3163,29 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 /// </summary>
                 private int heLoopId;
 
-                private int UnsafeInsertPointCommon(T2 p, int initTriangle)
+                public int UnsafeInsertPointBulk(T2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default) => UnsafeInsertPoint(p, initTriangle, initHe: -1, boundary: false, heQueue, tQueue);
+
+                public int UnsafeInsertPointBoundary(T2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default) => UnsafeInsertPoint(p, initTriangle: -1, initHe, boundary: true, heQueue, tQueue);
+
+                private int UnsafeInsertPoint(T2 p, int initTriangle, int initHe, bool boundary, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
                 {
                     var pId = Output.Positions.Length;
                     Output.Positions.Add(p);
+                    ClearTmpBuffers();
+                    RecalculateBadTriangles(p, initTriangle: boundary ? initHe / 3 : initTriangle);
+                    BuildPolygon(initHe: boundary ? initHe : heLoopId, boundary);
+                    ProcessBadTriangles(heQueue, tQueue);
+                    BuildNewTriangles(pId, boundary);
+                    return PathPoints.Length;
+                }
 
+                private void ClearTmpBuffers()
+                {
                     TrianglesQueue.Clear();
                     PathPoints.Clear();
                     PathHalfedges.Clear();
                     VisitedTriangles.Clear();
                     VisitedTriangles.Length = Output.Triangles.Length / 3;
-
-                    RecalculateBadTriangles(p, initTriangle);
-
-                    return pId;
-                }
-
-                public int UnsafeInsertPointBulk(T2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
-                {
-                    var pId = UnsafeInsertPointCommon(p, initTriangle);
-                    BuildPolygon(initHe: heLoopId, amphitheater: false);
-                    ProcessBadTriangles(heQueue, tQueue);
-                    BuildNewTrianglesForStar(pId);
-                    return PathPoints.Length;
-                }
-
-                public int UnsafeInsertPointBoundary(T2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
-                {
-                    var pId = UnsafeInsertPointCommon(p, initHe / 3);
-                    BuildPolygon(initHe, amphitheater: true);
-                    ProcessBadTriangles(heQueue, tQueue);
-                    BuildNewTrianglesForAmphitheater(pId);
-                    return PathPoints.Length;
                 }
 
                 private void RecalculateBadTriangles(T2 p, int initTriangle)
@@ -3238,12 +3229,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     }
                 }
 
-                private void BuildPolygon(int initHe, bool amphitheater)
+                private void BuildPolygon(int initHe, bool boundary)
                 {
                     var triangles = Output.Triangles;
                     var halfedges = Output.Halfedges;
 
-                    if (!amphitheater)
+                    if (!boundary)
                     {
                         PathPoints.Add(triangles[initHe]);
                         PathHalfedges.Add(halfedges[initHe]);
@@ -3269,7 +3260,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         id = he;
                     }
 
-                    if (amphitheater)
+                    if (boundary)
                     {
                         PathPoints.Add(triangles[initHe]);
                         PathHalfedges.Add(-1);
@@ -3349,18 +3340,46 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     }
                 }
 
-                private void BuildNewTrianglesForStar(int pId)
+                private void BuildNewTriangles(int pId, bool boundary)
                 {
+                    // Note: In this method, we create new triangles with the inserted point `pId`.
+                    //       There are two possible topologies to consider, depending on whether
+                    //       the point is inserted on the boundary or not.
+                    //
+                    //       - **Star topology**. The inserted point (pId) lies entirely within the region,
+                    //         forming new triangles radiating outward from it. All new triangles share pId
+                    //         as a common vertex, resembling a star. Example:
+                    //
+                    //              ..................
+                    //           ..' :.      ....''':
+                    //        .'''    :...'''     :'
+                    //        :.......* pId      :'
+                    //        :.     .''..      .:
+                    //         :.  .'     ''..  :
+                    //          :.'...........:.'
+                    //
+                    //       - **Amphitheater topology**. The inserted point (pId) lies on the boundary,
+                    //         creating new triangles that connect to the cavity edges. Example:
+                    //
+                    //             ....
+                    //            .':  ''''''....
+                    //           :'  :        ..:'':
+                    //         .:     : ...'''     ''..
+                    //       .:........*...............:.
+                    //                    pId
+                    //
                     var triangles = Output.Triangles;
                     var halfedges = Output.Halfedges;
                     var constrainedHalfedges = Output.ConstrainedHalfedges;
 
+                    var createdTrianglesCount = boundary ? PathPoints.Length - 1 : PathPoints.Length;
+
                     // Build triangles/circles for inserted point pId.
                     var initTriangles = triangles.Length;
-                    triangles.Length += 3 * PathPoints.Length;
+                    triangles.Length += 3 * createdTrianglesCount;
                     if (Circles.IsCreated)
                     {
-                        Circles.Length += PathPoints.Length;
+                        Circles.Length += createdTrianglesCount;
                     }
                     for (int i = 0; i < PathPoints.Length - 1; i++)
                     {
@@ -3372,19 +3391,22 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                             Circles[initTriangles / 3 + i] = new(CalculateCircumCircle(pId, PathPoints[i], PathPoints[i + 1], Output.Positions.AsArray()));
                         }
                     }
-                    triangles[^3] = pId;
-                    triangles[^2] = PathPoints[^1];
-                    triangles[^1] = PathPoints[0];
-                    if (Circles.IsCreated)
+                    if (!boundary)
                     {
-                        Circles[^1] = new(CalculateCircumCircle(pId, PathPoints[^1], PathPoints[0], Output.Positions.AsArray()));
+                        triangles[^3] = pId;
+                        triangles[^2] = PathPoints[^1];
+                        triangles[^1] = PathPoints[0];
+                        if (Circles.IsCreated)
+                        {
+                            Circles[^1] = new(CalculateCircumCircle(pId, PathPoints[^1], PathPoints[0], Output.Positions.AsArray()));
+                        }
                     }
 
                     // Build half-edges for inserted point pId.
                     var heOffset = halfedges.Length;
-                    halfedges.Length += 3 * PathPoints.Length;
-                    constrainedHalfedges.Length += 3 * PathPoints.Length;
-                    for (int i = 0; i < PathPoints.Length - 1; i++)
+                    halfedges.Length += 3 * createdTrianglesCount;
+                    constrainedHalfedges.Length += 3 * createdTrianglesCount;
+                    for (int i = 0; i < createdTrianglesCount - 1; i++)
                     {
                         var he = PathHalfedges[i];
                         halfedges[3 * i + 1 + heOffset] = he;
@@ -3400,79 +3422,19 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         halfedges[3 * i + 2 + heOffset] = 3 * i + 3 + heOffset;
                         halfedges[3 * i + 3 + heOffset] = 3 * i + 2 + heOffset;
                     }
-                    var phe = PathHalfedges[^1];
-                    halfedges[heOffset + 3 * (PathPoints.Length - 1) + 1] = phe;
+                    var phe = boundary ? PathHalfedges[^2] : PathHalfedges[^1];
+                    halfedges[heOffset + 3 * (createdTrianglesCount - 1) + 1] = phe;
                     if (phe != -1)
                     {
-                        halfedges[phe] = heOffset + 3 * (PathPoints.Length - 1) + 1;
-                        constrainedHalfedges[heOffset + 3 * (PathPoints.Length - 1) + 1] = constrainedHalfedges[phe];
+                        halfedges[phe] = heOffset + 3 * (createdTrianglesCount - 1) + 1;
+                        constrainedHalfedges[heOffset + 3 * (createdTrianglesCount - 1) + 1] = constrainedHalfedges[phe];
                     }
                     else
                     {
-                        constrainedHalfedges[heOffset + 3 * (PathPoints.Length - 1) + 1] = true;
+                        constrainedHalfedges[heOffset + 3 * (createdTrianglesCount - 1) + 1] = true;
                     }
-                    halfedges[heOffset] = heOffset + 3 * (PathPoints.Length - 1) + 2;
-                    halfedges[heOffset + 3 * (PathPoints.Length - 1) + 2] = heOffset;
-                }
-
-                private void BuildNewTrianglesForAmphitheater(int pId)
-                {
-                    var triangles = Output.Triangles;
-                    var halfedges = Output.Halfedges;
-                    var constrainedHalfedges = Output.ConstrainedHalfedges;
-
-                    // Build triangles/circles for inserted point pId.
-                    var initTriangles = triangles.Length;
-                    triangles.Length += 3 * (PathPoints.Length - 1);
-                    if (Circles.IsCreated)
-                    {
-                        Circles.Length += PathPoints.Length - 1;
-                    }
-                    for (int i = 0; i < PathPoints.Length - 1; i++)
-                    {
-                        triangles[initTriangles + 3 * i + 0] = pId;
-                        triangles[initTriangles + 3 * i + 1] = PathPoints[i];
-                        triangles[initTriangles + 3 * i + 2] = PathPoints[i + 1];
-                        if (Circles.IsCreated)
-                        {
-                            Circles[initTriangles / 3 + i] = new(CalculateCircumCircle(pId, PathPoints[i], PathPoints[i + 1], Output.Positions.AsArray()));
-                        }
-                    }
-
-                    // Build half-edges for inserted point pId.
-                    var heOffset = halfedges.Length;
-                    halfedges.Length += 3 * (PathPoints.Length - 1);
-                    constrainedHalfedges.Length += 3 * (PathPoints.Length - 1);
-                    for (int i = 0; i < PathPoints.Length - 2; i++)
-                    {
-                        var he = PathHalfedges[i];
-                        halfedges[3 * i + 1 + heOffset] = he;
-                        if (he != -1)
-                        {
-                            halfedges[he] = 3 * i + 1 + heOffset;
-                            constrainedHalfedges[3 * i + 1 + heOffset] = constrainedHalfedges[he];
-                        }
-                        else
-                        {
-                            constrainedHalfedges[3 * i + 1 + heOffset] = true;
-                        }
-                        halfedges[3 * i + 2 + heOffset] = 3 * i + 3 + heOffset;
-                        halfedges[3 * i + 3 + heOffset] = 3 * i + 2 + heOffset;
-                    }
-
-                    var phe = PathHalfedges[^2];
-                    halfedges[heOffset + 3 * (PathPoints.Length - 2) + 1] = phe;
-                    if (phe != -1)
-                    {
-                        halfedges[phe] = heOffset + 3 * (PathPoints.Length - 2) + 1;
-                        constrainedHalfedges[heOffset + 3 * (PathPoints.Length - 2) + 1] = constrainedHalfedges[phe];
-                    }
-                    else
-                    {
-                        constrainedHalfedges[heOffset + 3 * (PathPoints.Length - 2) + 1] = true;
-                    }
-                    halfedges[heOffset] = -1;
-                    halfedges[heOffset + 3 * (PathPoints.Length - 2) + 2] = -1;
+                    halfedges[heOffset] = boundary ? -1 : heOffset + 3 * (createdTrianglesCount - 1) + 2;
+                    halfedges[heOffset + 3 * (createdTrianglesCount - 1) + 2] = boundary ? -1 : heOffset;
                 }
 
                 private readonly void AdaptQueues(int wId, NativeList<int> heQueue, NativeList<int> tQueue)
