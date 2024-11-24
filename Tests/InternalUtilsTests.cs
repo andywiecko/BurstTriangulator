@@ -19,7 +19,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         };
 
         [Test, TestCaseSource(nameof(alphaTestData))]
-        public double AlphaTest(double D, double d) => default(DoubleUtils).alpha(D, d * d);
+        public double AlphaTest(double D, double d) => default(UtilsDouble).alpha(D, d * d);
 
         private static readonly TestCaseData[] angleTestData = new TestCaseData[]
         {
@@ -38,7 +38,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         };
 
         [Test, TestCaseSource(nameof(angleTestData))]
-        public bool AngleTest(double2 a, double2 b, double2 c, double minAngle) => UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>.AngleIsTooSmall(a, b, c, minAngle);
+        public bool AngleTest(double2 a, double2 b, double2 c, double minAngle) => UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>.AngleIsTooSmall(a, b, c, minAngle);
 
         private static readonly TestCaseData[] area2testData = new TestCaseData[]
         {
@@ -63,7 +63,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test, TestCaseSource(nameof(area2testData))]
         public void Area2Test(double2 a, double2 b, double2 c, double expected)
         {
-            var result = UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>.Area2(a, b, c);
+            var result = UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>.Area2(a, b, c);
             Assert.That(result, Is.EqualTo(expected).Within(1e-9));
         }
 
@@ -114,7 +114,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         ).ToArray();
 
         [Test, TestCaseSource(nameof(edegeVsEdgeTestData))]
-        public bool EdgeEdgeIntersectionTest(double2 a0, double2 a1, double2 b0, double2 b1) => UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
+        public bool EdgeEdgeIntersectionTest(double2 a0, double2 a1, double2 b0, double2 b1) => UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>.EdgeEdgeIntersection(a0, a1, b0, b1);
 
         private static readonly TestCaseData[] isConvexQuadrilateralTestData = new TestCaseData[]
         {
@@ -146,7 +146,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }).ToArray();
 
         [Test, TestCaseSource(nameof(isConvexQuadrilateralTestData))]
-        public bool IsConvexQuadrilateralTest(double2 a, double2 b, double2 c, double2 d) => UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>.IsConvexQuadrilateral(a, b, c, d);
+        public bool IsConvexQuadrilateralTest(double2 a, double2 b, double2 c, double2 d) => UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>.IsConvexQuadrilateral(a, b, c, d);
 
         private static readonly TestCaseData[] pointLineSegmentIntersectionTestData = new TestCaseData[]
         {
@@ -170,7 +170,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }).ToArray();
 
         [Test, TestCaseSource(nameof(pointLineSegmentIntersectionTestData))]
-        public bool PointLineSegmentIntersectionTest(double2 a, double2 b0, double2 b1) => UnsafeTriangulator<double, double2, double, TransformDouble, DoubleUtils>.PointLineSegmentIntersection(a, b0, b1);
+        public bool PointLineSegmentIntersectionTest(double2 a, double2 b0, double2 b1) => UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>.PointLineSegmentIntersection(a, b0, b1);
 
         private static readonly TestCaseData[] pointInsideTriangleTestData = new TestCaseData[]
         {
@@ -192,6 +192,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }).ToArray();
 
         [Test, TestCaseSource(nameof(pointInsideTriangleTestData))]
-        public bool PointInsideTriangleTest(double2 p, double2 a, double2 b, double2 c) => default(DoubleUtils).PointInsideTriangle(p, a, b, c);
+        public bool PointInsideTriangleTest(double2 p, double2 a, double2 b, double2 c) => default(UtilsDouble).PointInsideTriangle(p, a, b, c);
     }
 }
