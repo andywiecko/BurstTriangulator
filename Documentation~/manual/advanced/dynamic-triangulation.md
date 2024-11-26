@@ -7,12 +7,6 @@ uid: dynamic-triangulation-manual
 Using the [`UnsafeTriangulator<T>`][unsafe-triangulator] API, you can perform dynamic triangulation.
 This feature is especially useful in scenarios like path-finding in RTS games, where recalculating only a small portion of the mesh, instead of the entire mesh, can significantly improve efficiency.
 
-| Method                                         | Implemented |
-| :--------------------------------------------- | :---:       |
-| [DynamicInsertPoint][dynamic-insert-point]     | ✔️         |
-| [DynamicSplitHalfedge][dynamic-split-halfedge] | ✔️         |
-| DynamicRemovePoint                             | ❌         |
-
 ## DynamicInsertPoint
 
 The [DynamicInsertPoint][dynamic-insert-point] method allows you to insert a point into a specified triangle using barycentric coordinates. This method only supports point insertion within the original triangulation domain and cannot be used to insert points outside the existing mesh.
@@ -105,10 +99,35 @@ for(int i = 0; i < 32; i++)
 }
 ```
 
-## DynamicRemovePoint
+## DynamicRemoveBulkPoint
 
-Not implemented.
+The [DynamicRemoveBulkPoint][dynamic-remove-point] method allows you to remove bulk points, i.e. points which are not boundary ones, and re-triangulates the affected region to maintain a valid triangulation.
+In addition to `output` and `allocator`, the method requires the index of the point to be removed, specified as `pId`.
+
+Below is an example demonstrating how to use the [DynamicRemoveBulkPoint][dynamic-remove-point] API:
+
+```csharp
+using var inputPositions = new NativeArray<double2>(..., Allocator.Persistent);
+using var outputPositions = new NativeList<double2>(Allocator.Persistent);
+using var triangles = new NativeList<int>(Allocator.Persistent);
+using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+using var halfedges = new NativeList<int>(Allocator.Persistent);
+
+var t = new UnsafeTriangulator<double2>();
+var input = new InputData<double2> { Positions = inputPositions };
+var output = new OutputData<double2>
+{
+    Positions = outputPositions,
+    Triangles = triangles,
+    ConstrainedHalfedges = constrainedHalfedges,
+    Halfedges = halfedges,
+};
+
+t.Triangulate(input, output, args: Args.Default(), allocator: Allocator.Persistent);
+t.DynamicRemoveBulkPoint(output, pId: 8, allocator: Allocator.Persistent);
+```
 
 [unsafe-triangulator]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator`1
 [dynamic-insert-point]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint*
 [dynamic-split-halfedge]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge*
+[dynamic-remove-point]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint*
