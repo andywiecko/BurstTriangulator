@@ -921,5 +921,44 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 new[] { -1, -1, 5, -1, 8, 2, -1, -1, 4, }
             ));
         }
+
+        [Test]
+        public void RemovePointFromLakeTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+
+            using var inputPositions = new NativeArray<T>(LakeSuperior.Points.DynamicCast<T>(), Allocator.Persistent);
+            using var constraints = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
+
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+
+            var output = new LowLevel.Unsafe.OutputData<T> { Positions = outputPositions, Triangles = triangles, ConstrainedHalfedges = constrainedHalfedges, Halfedges = halfedges };
+
+            t.Triangulate(
+                input: new() { Positions = inputPositions, ConstraintEdges = constraints },
+                output, args: Args.Default(autoHolesAndBoundary: true), allocator: Allocator.Persistent
+            );
+
+            var random = new Unity.Mathematics.Random(42);
+            for (int i = 0; i < 15; i++)
+            {
+                t.DynamicInsertPoint(output, random.NextInt(0, triangles.Length / 3), (float3)1 / 3f, Allocator.Persistent);
+            }
+
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.red, 5f);
+
+            for (int i = 0; i < 15; i++)
+            {
+                t.DynamicRemoveBulkPoint(output, outputPositions.Length - 1, Allocator.Persistent);
+            }
+
+            TestUtils.Draw(outputPositions.AsReadOnly().CastToFloat2(), triangles.AsReadOnly(), Color.blue, 5f);
+
+            var result = outputPositions.AsReadOnly().CastToFloat2();
+            TestUtils.AssertValidTriangulation(result, triangles.AsReadOnly());
+        }
     }
 }
