@@ -35,13 +35,19 @@ The presented result is for `T2 = float2`.
 
 ## Delaunay triangulation with mesh refinement
 
-Furthermore, we present a performance comparison (with Burst enabled) between `v1.0`, `v2.0`, `v2.3`, `v2.4`, `v3.0`, and `v3.4` for the refinement task.
+Furthermore, we present a performance comparison (with Burst enabled) between `v1.0..v3.5` for the refinement task.
 The presented result is for `T2 = float2`.
+This test case executes triangulation for a unit square box.
 
 ![Refinement Benchmark](../images/benchmark-refinement.png)
 
 > [!NOTE]  
 > Since `v2.4`, the triangulation refinement algorithm has been updated, resulting in improved mesh quality.
+
+Additionally, below we provide a benchmark for a more general test case than the unit square box.
+Specifically, the input in this case corresponds to Lake Superior, as commonly used in examples from the package.
+
+![Refinement Benchmark Lake](../images/benchmark-refinement-lake.png)
 
 ## Auto holes
 
