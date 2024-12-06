@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Method DynamicInsertPoint | BurstTriangulator </title>
+      <title>Method DynamicRemoveBulkPoint | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Method DynamicInsertPoint | BurstTriangulator ">
+      <meta name="title" content="Method DynamicRemoveBulkPoint | BurstTriangulator ">
     
     
       <link rel="shortcut icon" href="../images/favicon.ico">
@@ -89,23 +89,24 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint*">
+            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint*">
 
 
 
-<h1 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint*">Method DynamicInsertPoint</h1>
+<h1 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint*">Method DynamicRemoveBulkPoint</h1>
 <div class="markdown level0 summary"></div>
 <div class="markdown level0 conceptual"></div>
 
-<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint*"></a>
-<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__System_Int32_Unity_Mathematics_double3_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},System.Int32,Unity.Mathematics.double3,Unity.Collections.Allocator)">DynamicInsertPoint(UnsafeTriangulator, OutputData&lt;double2&gt;, int, double3, Allocator)</h4>
-<div class="markdown level1 summary"><p>Inserts a point into the given triangulation <code class="paramref">output</code> within the triangle at index <code class="paramref">tId</code>, using the specified barycentric coordinates <code class="paramref">bar</code>.
-For faster triangle lookup when inserting a point at specific coordinates, it is recommended to use an acceleration structure (e.g., bounding volume tree, buckets, etc.).</p>
+<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint*"></a>
+<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__System_Int32_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},System.Int32,Unity.Collections.Allocator)">DynamicRemoveBulkPoint(UnsafeTriangulator, OutputData&lt;double2&gt;, int, Allocator)</h4>
+<div class="markdown level1 summary"><p>Removes the specified point <code class="paramref">pId</code> from the <code class="paramref">output</code> data
+and re-triangulates the affected region to maintain a valid triangulation.
+This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void DynamicInsertPoint(this UnsafeTriangulator @this, OutputData&lt;double2&gt; output, int tId, double3 bar, Allocator allocator)</code></pre>
+  <pre><code class="lang-csharp hljs">public static void DynamicRemoveBulkPoint(this UnsafeTriangulator @this, OutputData&lt;double2&gt; output, int pId, Allocator allocator)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-condensed">
@@ -129,15 +130,8 @@ For faster triangle lookup when inserting a point at specific coordinates, it is
     </tr>
     <tr>
       <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></td>
-      <td><span class="parametername">tId</span></td>
-      <td><p>The index of the triangle in which the point should be inserted.</p>
-</td>
-    </tr>
-    <tr>
-      <td><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double3.html">double3</a></td>
-      <td><span class="parametername">bar</span></td>
-      <td><p>The barycentric coordinates of the point to insert inside the triangle <code class="paramref">tId</code>.
-All coordinates should be in the range (0, 1), and <code class="paramref">bar</code>.x + <code class="paramref">bar</code>.y + <code class="paramref">bar</code>.z must equal 1.</p>
+      <td><span class="parametername">pId</span></td>
+      <td><p>The index of the <b>bulk</b> point to remove.</p>
 </td>
     </tr>
     <tr>
@@ -148,21 +142,21 @@ All coordinates should be in the range (0, 1), and <code class="paramref">bar</c
     </tr>
   </tbody>
 </table>
-<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__System_Int32_Unity_Mathematics_double3_Unity_Collections_Allocator__remarks">Remarks</h5>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__System_Int32_Unity_Collections_Allocator__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p><b>Note:</b>
-Only point insertion within the mesh bulk is supported.
 This method requires that <code class="paramref">output</code> contains valid triangulation data.
 The <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
 </div>
-<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint*"></a>
-<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__System_Int32_Unity_Mathematics_float3_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},System.Int32,Unity.Mathematics.float3,Unity.Collections.Allocator)">DynamicInsertPoint(UnsafeTriangulator&lt;float2&gt;, OutputData&lt;float2&gt;, int, float3, Allocator)</h4>
-<div class="markdown level1 summary"><p>Inserts a point into the given triangulation <code class="paramref">output</code> within the triangle at index <code class="paramref">tId</code>, using the specified barycentric coordinates <code class="paramref">bar</code>.
-For faster triangle lookup when inserting a point at specific coordinates, it is recommended to use an acceleration structure (e.g., bounding volume tree, buckets, etc.).</p>
+<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint*"></a>
+<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__System_Int32_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.float2},System.Int32,Unity.Collections.Allocator)">DynamicRemoveBulkPoint(UnsafeTriangulator&lt;float2&gt;, OutputData&lt;float2&gt;, int, Allocator)</h4>
+<div class="markdown level1 summary"><p>Removes the specified point <code class="paramref">pId</code> from the <code class="paramref">output</code> data
+and re-triangulates the affected region to maintain a valid triangulation.
+This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void DynamicInsertPoint(this UnsafeTriangulator&lt;float2&gt; @this, OutputData&lt;float2&gt; output, int tId, float3 bar, Allocator allocator)</code></pre>
+  <pre><code class="lang-csharp hljs">public static void DynamicRemoveBulkPoint(this UnsafeTriangulator&lt;float2&gt; @this, OutputData&lt;float2&gt; output, int pId, Allocator allocator)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-condensed">
@@ -186,15 +180,8 @@ For faster triangle lookup when inserting a point at specific coordinates, it is
     </tr>
     <tr>
       <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></td>
-      <td><span class="parametername">tId</span></td>
-      <td><p>The index of the triangle in which the point should be inserted.</p>
-</td>
-    </tr>
-    <tr>
-      <td><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float3.html">float3</a></td>
-      <td><span class="parametername">bar</span></td>
-      <td><p>The barycentric coordinates of the point to insert inside the triangle <code class="paramref">tId</code>.
-All coordinates should be in the range (0, 1), and <code class="paramref">bar</code>.x + <code class="paramref">bar</code>.y + <code class="paramref">bar</code>.z must equal 1.</p>
+      <td><span class="parametername">pId</span></td>
+      <td><p>The index of the <b>bulk</b> point to remove.</p>
 </td>
     </tr>
     <tr>
@@ -205,21 +192,21 @@ All coordinates should be in the range (0, 1), and <code class="paramref">bar</c
     </tr>
   </tbody>
 </table>
-<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__System_Int32_Unity_Mathematics_float3_Unity_Collections_Allocator__remarks">Remarks</h5>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_float2__System_Int32_Unity_Collections_Allocator__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p><b>Note:</b>
-Only point insertion within the mesh bulk is supported.
 This method requires that <code class="paramref">output</code> contains valid triangulation data.
 The <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
 </div>
-<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint*"></a>
-<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_UnityEngine_Vector2__System_Int32_UnityEngine_Vector3_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{UnityEngine.Vector2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{UnityEngine.Vector2},System.Int32,UnityEngine.Vector3,Unity.Collections.Allocator)">DynamicInsertPoint(UnsafeTriangulator&lt;Vector2&gt;, OutputData&lt;Vector2&gt;, int, Vector3, Allocator)</h4>
-<div class="markdown level1 summary"><p>Inserts a point into the given triangulation <code class="paramref">output</code> within the triangle at index <code class="paramref">tId</code>, using the specified barycentric coordinates <code class="paramref">bar</code>.
-For faster triangle lookup when inserting a point at specific coordinates, it is recommended to use an acceleration structure (e.g., bounding volume tree, buckets, etc.).</p>
+<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint*"></a>
+<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_UnityEngine_Vector2__System_Int32_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{UnityEngine.Vector2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{UnityEngine.Vector2},System.Int32,Unity.Collections.Allocator)">DynamicRemoveBulkPoint(UnsafeTriangulator&lt;Vector2&gt;, OutputData&lt;Vector2&gt;, int, Allocator)</h4>
+<div class="markdown level1 summary"><p>Removes the specified point <code class="paramref">pId</code> from the <code class="paramref">output</code> data
+and re-triangulates the affected region to maintain a valid triangulation.
+This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void DynamicInsertPoint(this UnsafeTriangulator&lt;Vector2&gt; @this, OutputData&lt;Vector2&gt; output, int tId, Vector3 bar, Allocator allocator)</code></pre>
+  <pre><code class="lang-csharp hljs">public static void DynamicRemoveBulkPoint(this UnsafeTriangulator&lt;Vector2&gt; @this, OutputData&lt;Vector2&gt; output, int pId, Allocator allocator)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-condensed">
@@ -243,15 +230,8 @@ For faster triangle lookup when inserting a point at specific coordinates, it is
     </tr>
     <tr>
       <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></td>
-      <td><span class="parametername">tId</span></td>
-      <td><p>The index of the triangle in which the point should be inserted.</p>
-</td>
-    </tr>
-    <tr>
-      <td><a class="xref" href="https://docs.unity3d.com/ScriptReference/Vector3.html">Vector3</a></td>
-      <td><span class="parametername">bar</span></td>
-      <td><p>The barycentric coordinates of the point to insert inside the triangle <code class="paramref">tId</code>.
-All coordinates should be in the range (0, 1), and <code class="paramref">bar</code>.x + <code class="paramref">bar</code>.y + <code class="paramref">bar</code>.z must equal 1.</p>
+      <td><span class="parametername">pId</span></td>
+      <td><p>The index of the <b>bulk</b> point to remove.</p>
 </td>
     </tr>
     <tr>
@@ -262,21 +242,21 @@ All coordinates should be in the range (0, 1), and <code class="paramref">bar</c
     </tr>
   </tbody>
 </table>
-<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_UnityEngine_Vector2__System_Int32_UnityEngine_Vector3_Unity_Collections_Allocator__remarks">Remarks</h5>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_UnityEngine_Vector2__System_Int32_Unity_Collections_Allocator__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p><b>Note:</b>
-Only point insertion within the mesh bulk is supported.
 This method requires that <code class="paramref">output</code> contains valid triangulation data.
 The <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
 </div>
-<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint*"></a>
-<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__System_Int32_Unity_Mathematics_double3_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},System.Int32,Unity.Mathematics.double3,Unity.Collections.Allocator)">DynamicInsertPoint(UnsafeTriangulator&lt;double2&gt;, OutputData&lt;double2&gt;, int, double3, Allocator)</h4>
-<div class="markdown level1 summary"><p>Inserts a point into the given triangulation <code class="paramref">output</code> within the triangle at index <code class="paramref">tId</code>, using the specified barycentric coordinates <code class="paramref">bar</code>.
-For faster triangle lookup when inserting a point at specific coordinates, it is recommended to use an acceleration structure (e.g., bounding volume tree, buckets, etc.).</p>
+<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint*"></a>
+<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__System_Int32_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.double2},System.Int32,Unity.Collections.Allocator)">DynamicRemoveBulkPoint(UnsafeTriangulator&lt;double2&gt;, OutputData&lt;double2&gt;, int, Allocator)</h4>
+<div class="markdown level1 summary"><p>Removes the specified point <code class="paramref">pId</code> from the <code class="paramref">output</code> data
+and re-triangulates the affected region to maintain a valid triangulation.
+This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void DynamicInsertPoint(this UnsafeTriangulator&lt;double2&gt; @this, OutputData&lt;double2&gt; output, int tId, double3 bar, Allocator allocator)</code></pre>
+  <pre><code class="lang-csharp hljs">public static void DynamicRemoveBulkPoint(this UnsafeTriangulator&lt;double2&gt; @this, OutputData&lt;double2&gt; output, int pId, Allocator allocator)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-condensed">
@@ -300,15 +280,8 @@ For faster triangle lookup when inserting a point at specific coordinates, it is
     </tr>
     <tr>
       <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></td>
-      <td><span class="parametername">tId</span></td>
-      <td><p>The index of the triangle in which the point should be inserted.</p>
-</td>
-    </tr>
-    <tr>
-      <td><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double3.html">double3</a></td>
-      <td><span class="parametername">bar</span></td>
-      <td><p>The barycentric coordinates of the point to insert inside the triangle <code class="paramref">tId</code>.
-All coordinates should be in the range (0, 1), and <code class="paramref">bar</code>.x + <code class="paramref">bar</code>.y + <code class="paramref">bar</code>.z must equal 1.</p>
+      <td><span class="parametername">pId</span></td>
+      <td><p>The index of the <b>bulk</b> point to remove.</p>
 </td>
     </tr>
     <tr>
@@ -319,21 +292,21 @@ All coordinates should be in the range (0, 1), and <code class="paramref">bar</c
     </tr>
   </tbody>
 </table>
-<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__System_Int32_Unity_Mathematics_double3_Unity_Collections_Allocator__remarks">Remarks</h5>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_double2__System_Int32_Unity_Collections_Allocator__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p><b>Note:</b>
-Only point insertion within the mesh bulk is supported.
 This method requires that <code class="paramref">output</code> contains valid triangulation data.
 The <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
 </div>
-<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint*"></a>
-<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_FixedPoint_fp2__System_Int32_Unity_Mathematics_FixedPoint_fp3_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.FixedPoint.fp2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.FixedPoint.fp2},System.Int32,Unity.Mathematics.FixedPoint.fp3,Unity.Collections.Allocator)">DynamicInsertPoint(UnsafeTriangulator&lt;fp2&gt;, OutputData&lt;fp2&gt;, int, fp3, Allocator)</h4>
-<div class="markdown level1 summary"><p>Inserts a point into the given triangulation <code class="paramref">output</code> within the triangle at index <code class="paramref">tId</code>, using the specified barycentric coordinates <code class="paramref">bar</code>.
-For faster triangle lookup when inserting a point at specific coordinates, it is recommended to use an acceleration structure (e.g., bounding volume tree, buckets, etc.).</p>
+<a id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint*"></a>
+<h4 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_FixedPoint_fp2__System_Int32_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.FixedPoint.fp2},andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData{Unity.Mathematics.FixedPoint.fp2},System.Int32,Unity.Collections.Allocator)">DynamicRemoveBulkPoint(UnsafeTriangulator&lt;fp2&gt;, OutputData&lt;fp2&gt;, int, Allocator)</h4>
+<div class="markdown level1 summary"><p>Removes the specified point <code class="paramref">pId</code> from the <code class="paramref">output</code> data
+and re-triangulates the affected region to maintain a valid triangulation.
+This method supports only the removal of <b>bulk</b> points, i.e., points that are not located on the triangulation boundary.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void DynamicInsertPoint(this UnsafeTriangulator&lt;fp2&gt; @this, OutputData&lt;fp2&gt; output, int tId, fp3 bar, Allocator allocator)</code></pre>
+  <pre><code class="lang-csharp hljs">public static void DynamicRemoveBulkPoint(this UnsafeTriangulator&lt;fp2&gt; @this, OutputData&lt;fp2&gt; output, int pId, Allocator allocator)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-condensed">
@@ -357,15 +330,8 @@ For faster triangle lookup when inserting a point at specific coordinates, it is
     </tr>
     <tr>
       <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></td>
-      <td><span class="parametername">tId</span></td>
-      <td><p>The index of the triangle in which the point should be inserted.</p>
-</td>
-    </tr>
-    <tr>
-      <td><span class="xref">fp3</span></td>
-      <td><span class="parametername">bar</span></td>
-      <td><p>The barycentric coordinates of the point to insert inside the triangle <code class="paramref">tId</code>.
-All coordinates should be in the range (0, 1), and <code class="paramref">bar</code>.x + <code class="paramref">bar</code>.y + <code class="paramref">bar</code>.z must equal 1.</p>
+      <td><span class="parametername">pId</span></td>
+      <td><p>The index of the <b>bulk</b> point to remove.</p>
 </td>
     </tr>
     <tr>
@@ -376,9 +342,8 @@ All coordinates should be in the range (0, 1), and <code class="paramref">bar</c
     </tr>
   </tbody>
 </table>
-<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicInsertPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_FixedPoint_fp2__System_Int32_Unity_Mathematics_FixedPoint_fp3_Unity_Collections_Allocator__remarks">Remarks</h5>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_DynamicRemoveBulkPoint_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_Unity_Mathematics_FixedPoint_fp2__System_Int32_Unity_Collections_Allocator__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p><b>Note:</b>
-Only point insertion within the mesh bulk is supported.
 This method requires that <code class="paramref">output</code> contains valid triangulation data.
 The <code class="paramref">output</code> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.</p>
 </div>

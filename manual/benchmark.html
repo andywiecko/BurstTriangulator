@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
 
@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.4.0</b></div>
+                "><b>v3.5.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -76,7 +76,7 @@
           <div class="sr-items">
             <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
           </div>
-          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
         </div>
       </div>
       <div role="main" class="container body-content hide-when-search">
@@ -113,13 +113,17 @@ In the figure below, you can also see example test cases: red represents resulti
 The presented result is for <code>T2 = float2</code>.</p>
 <p><img src="../images/benchmark-constraint.png" alt="Constraint Benchmark"></p>
 <h2 id="delaunay-triangulation-with-mesh-refinement">Delaunay triangulation with mesh refinement</h2>
-<p>Furthermore, we present a performance comparison (with Burst enabled) between <code>v1.0</code>, <code>v2.0</code>, <code>v2.3</code>, <code>v2.4</code>, <code>v3.0</code>, and <code>v3.4</code> for the refinement task.
-The presented result is for <code>T2 = float2</code>.</p>
+<p>Furthermore, we present a performance comparison (with Burst enabled) between <code>v1.0..v3.5</code> for the refinement task.
+The presented result is for <code>T2 = float2</code>.
+This test case executes triangulation for a unit square box.</p>
 <p><img src="../images/benchmark-refinement.png" alt="Refinement Benchmark"></p>
 <div class="NOTE">
 <h5>Note</h5>
 <p>Since <code>v2.4</code>, the triangulation refinement algorithm has been updated, resulting in improved mesh quality.</p>
 </div>
+<p>Additionally, below we provide a benchmark for a more general test case than the unit square box.
+Specifically, the input in this case corresponds to Lake Superior, as commonly used in examples from the package.</p>
+<p><img src="../images/benchmark-refinement-lake.png" alt="Refinement Benchmark Lake"></p>
 <h2 id="auto-holes">Auto holes</h2>
 <p>Below is a benchmark for Constrained Delaunay triangulation with the auto-holes option enabled. As a test case, we use a square containing <span class="math">\(n\times n\)</span> hole squares (denoted by #holes). Reference timings for the auto-holes option disabled are marked with a dashed line.</p>
 <p><img src="../images/benchmark-auto-holes.png" alt="Auto Holes Benchmark"></p>
@@ -168,6 +172,6 @@ The presented result is for <code>T2 = float2</code>.</p>
     }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   </body>
 </html>
