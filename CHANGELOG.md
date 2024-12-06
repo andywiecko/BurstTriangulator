@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.5.0] – 2024-12-06
+
+### Added
+
+- `DynamicSplitHalfedge` extension for `UnsafeTriangulator`, enabling point insertion by splitting a selected halfedge.
+- `DynamicRemoveBulkPoint` extension for `UnsafeTriangulator`, facilitating the removal of points from the mesh bulk.
+
+### Changed
+
+- Refactor Bower-Watson point insertion algorithm to achieve approximately a 25% performance improvement during the refinement step and dynamic triangulation routines.
+- Optimized planting seeds job for slightly increased performance and reduced memory allocation.
+- (Internal) Various refactors to improve code clarity and maintainability.
+
 ## [3.4.0] – 2024-10-25
 
 ### Added
@@ -281,6 +294,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.5.0
 [3.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.4.0
 [3.3.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.3.0
 [3.2.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.2.1
