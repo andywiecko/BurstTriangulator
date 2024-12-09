@@ -6,7 +6,7 @@ All triangles in the generated mesh are clockwise.
 For example, consider triangle $(a, b, c)$ (at indexes: $i, i+1, i+2$ in [`Output.Triangles`][triangles]), which is made of 3 halfedges $(a, b)$, $(b, c)$, $(c, a)$.
 A halfedge is a directed edge, i.e., $(i, j) \neq (j, i)$.
 In the halfedges buffer, one can find the $\mathtt{id}$ of the opposite halfedge, if it exists.
-In the case when the opposite halfedge is not present in a mesh, then `Output.Triangles[id] = -1`.
+In the case when the opposite halfedge is not present in a mesh, then `Output.Halfedges[id] = -1`.
 
 ```csharp
 using var triangulator = new Triangulator(Allocator.Persistent){ Input = { ... } };
