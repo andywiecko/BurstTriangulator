@@ -1,6 +1,8 @@
 using andywiecko.BurstTriangulator.LowLevel.Unsafe;
 using NUnit.Framework;
+using System;
 using System.Linq;
+using Unity.Collections;
 using Unity.Mathematics;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
@@ -193,5 +195,137 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
         [Test, TestCaseSource(nameof(pointInsideTriangleTestData))]
         public bool PointInsideTriangleTest(double2 p, double2 a, double2 b, double2 c) => default(UtilsDouble).PointInsideTriangle(p, a, b, c);
+    }
+
+    public class NativeListQueueTests
+    {
+        [Test]
+        public void IsCreatedTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+            Assert.That(queue.IsCreated, Is.True);
+        }
+
+        [Test]
+        public void CountTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+
+            var count0 = queue.Count;
+            queue.Enqueue(default);
+            queue.Enqueue(default);
+            queue.Enqueue(default);
+            var count3 = queue.Count;
+            queue.Dequeue();
+            queue.Dequeue();
+            var count1 = queue.Count;
+
+            Assert.That(count0, Is.EqualTo(0));
+            Assert.That(count3, Is.EqualTo(3));
+            Assert.That(count1, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void AsReadOnlySpanTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+            queue.Enqueue(0);
+            queue.Enqueue(1);
+            queue.Enqueue(2);
+            queue.Enqueue(3);
+            queue.Dequeue();
+
+            var span = queue.AsReadOnlySpan();
+            Assert.That(span.ToArray(), Is.EqualTo(new[] { 1, 2, 3 }));
+        }
+
+        [Test]
+        public void AsSpanTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+            queue.Enqueue(0);
+            queue.Enqueue(1);
+            queue.Enqueue(2);
+            queue.Enqueue(3);
+            queue.Dequeue();
+
+            var span = queue.AsSpan();
+            Assert.That(span.ToArray(), Is.EqualTo(new[] { 1, 2, 3 }));
+        }
+
+        [Test]
+        public void ClearTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+            queue.Enqueue(0);
+            queue.Enqueue(1);
+            queue.Enqueue(2);
+            queue.Enqueue(3);
+
+            queue.Clear();
+
+            Assert.That(queue.Count, Is.EqualTo(0));
+            Assert.That(queue.AsReadOnlySpan().ToArray(), Is.Empty);
+        }
+
+        [Test]
+        public void DisposeTest()
+        {
+            var queue = new NativeQueueList<int>(Allocator.Persistent);
+            queue.Dispose();
+            Assert.That(queue.IsCreated, Is.False);
+        }
+
+        [Test]
+        public void EnqueueTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+            queue.Enqueue(42);
+            Assert.That(queue.AsReadOnlySpan()[0], Is.EqualTo(42));
+        }
+
+        [Test]
+        public void DequeueTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+            queue.Enqueue(1);
+            queue.Enqueue(2);
+            var el = queue.Dequeue();
+            Assert.That(el, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void IsEmptyTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+            queue.Enqueue(1);
+            queue.Dequeue();
+            Assert.That(queue.IsEmpty(), Is.True);
+        }
+
+        [Test]
+        public void TryDequeueTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+            queue.Enqueue(0);
+            queue.Enqueue(1);
+            queue.Enqueue(2);
+            queue.Enqueue(3);
+
+            using var tmp = new NativeList<int>(Allocator.Persistent);
+            while (queue.TryDequeue(out var el))
+            {
+                tmp.Add(el);
+            }
+
+            Assert.That(tmp.AsReadOnly(), Is.EqualTo(new[] { 0, 1, 2, 3 }));
+        }
+
+        [Test]
+        public void ThrowDequeueTest()
+        {
+            using var queue = new NativeQueueList<int>(Allocator.Persistent);
+            Assert.Throws<IndexOutOfRangeException>(() => queue.Dequeue());
+        }
     }
 }

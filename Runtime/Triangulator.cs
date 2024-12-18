@@ -1266,6 +1266,56 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 #endif
     }
 
+    /// <summary>
+    /// Custom queue implementation which is a wrapper for <see cref="NativeList{T}"/>.
+    /// This implementation is memory <b>extensive</b>.
+    /// </summary>
+    internal struct NativeQueueList<T> : IDisposable where T : unmanaged
+    {
+        public readonly bool IsCreated => impl.IsCreated;
+        public readonly int Count => math.max(impl.Length - indexRef.Value, 0);
+
+        private NativeList<T> impl;
+        private NativeReference<int> indexRef;
+
+        public NativeQueueList(int capacity, Allocator allocator)
+        {
+            impl = new(capacity, allocator);
+            indexRef = new(0, allocator);
+        }
+
+        public NativeQueueList(Allocator allocator) : this(1, allocator) { }
+
+        public ReadOnlySpan<T> AsReadOnlySpan() => impl.AsReadOnly().AsReadOnlySpan()[indexRef.Value..];
+        public Span<T> AsSpan() => impl.AsArray().AsSpan()[indexRef.Value..];
+
+        public void Clear()
+        {
+            impl.Clear();
+            indexRef.Value = 0;
+        }
+
+        public void Dispose()
+        {
+            impl.Dispose();
+            indexRef.Dispose();
+        }
+
+        public void Enqueue(T item) => impl.Add(item);
+        public T Dequeue() => impl[indexRef.Value++];
+        public readonly bool IsEmpty() => Count == 0;
+        public bool TryDequeue(out T item)
+        {
+            var isEmpty = IsEmpty();
+            if (isEmpty)
+            {
+                Clear();
+            }
+            item = isEmpty ? default : Dequeue();
+            return !isEmpty;
+        }
+    }
+
     [BurstCompile]
     internal struct TriangulationJob<T, T2, TBig, TTransform, TUtils> : IJob
         where T : unmanaged, IComparable<T>
