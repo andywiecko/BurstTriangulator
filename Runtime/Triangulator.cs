@@ -1468,7 +1468,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             using var pathHalfedges = new NativeList<int>(allocator);
             using var pathPoints = new NativeList<int>(allocator);
-            using var trianglesQueue = new NativeQueue<int>(allocator);
+            using var trianglesQueue = new NativeQueueList<int>(allocator);
             using var visitedTriangles = new NativeList<bool>(allocator);
 
             new RefineMeshStep.UnsafeBowerWatson
@@ -1486,7 +1486,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             using var pathHalfedges = new NativeList<int>(allocator);
             using var pathPoints = new NativeList<int>(allocator);
-            using var trianglesQueue = new NativeQueue<int>(allocator);
+            using var trianglesQueue = new NativeQueueList<int>(allocator);
             using var visitedTriangles = new NativeList<bool>(allocator);
 
             var triangles = output.Triangles;
@@ -3226,7 +3226,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 using var _circles = circles = new(allocator) { Length = triangles.Length / 3 };
-                using var trianglesQueue = new NativeQueue<int>(allocator);
+                using var trianglesQueue = new NativeQueueList<int>(allocator);
                 using var pathPoints = new NativeList<int>(allocator);
                 using var pathHalfedges = new NativeList<int>(allocator);
                 using var visitedTriangles = new NativeList<bool>(triangles.Length / 3, allocator);
@@ -3487,7 +3487,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public OutputData<T2> Output;
                 public NativeList<Circle> Circles;
 
-                public NativeQueue<int> TrianglesQueue;
+                public NativeQueueList<int> TrianglesQueue;
                 public NativeList<int> PathPoints;
                 public NativeList<int> PathHalfedges;
                 public NativeList<bool> VisitedTriangles;
