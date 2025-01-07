@@ -2866,7 +2866,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<int> halfedges;
             private NativeList<bool> ignoredHalfedges;
             private NativeArray<bool> visitedTriangles;
-            private NativeQueue<int> trianglesQueue;
+            private NativeQueueList<int> trianglesQueue;
             private NativeArray<T2> holes;
 
             private readonly Args args;
