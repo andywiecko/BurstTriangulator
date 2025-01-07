@@ -3045,7 +3045,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             private void PlantAuto(Allocator allocator)
             {
-                using var heQueue = new NativeQueue<int>(allocator);
+                using var heQueue = new NativeQueueList<int>(allocator);
                 using var loop = new NativeList<int>(allocator);
                 var heVisited = new NativeArray<bool>(halfedges.Length, allocator);
 
@@ -3113,7 +3113,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 // Plant seeds for non visited constraint edges
-                foreach (var h1 in loop)
+                foreach (var h1 in loop.AsReadOnly())
                 {
                     var h2 = NextHalfedge(h1);
                     if (!heVisited[h2])
