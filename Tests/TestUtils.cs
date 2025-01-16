@@ -10,7 +10,9 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.TestTools.Utils;
-#if UNITY_MATHEMATICS_FIXEDPOINT 
+using andywiecko.BurstTriangulator.LowLevel.Unsafe;
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
 using Unity.Mathematics.FixedPoint;
 #endif
 
@@ -175,11 +177,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 #endif
             _ => (float2)(dynamic)v,
         };
-        public static void Triangulate<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.InputData<T> input, LowLevel.Unsafe.OutputData<T> output, LowLevel.Unsafe.Args args, Allocator allocator) where T : unmanaged =>
-            LowLevel.Unsafe.Extensions.Triangulate((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
-        public static void PlantHoleSeeds<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.InputData<T> input, LowLevel.Unsafe.OutputData<T> output, LowLevel.Unsafe.Args args, Allocator allocator) where T : unmanaged =>
-            LowLevel.Unsafe.Extensions.PlantHoleSeeds((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
-        public static void DynamicInsertPoint<T2, T3>(this LowLevel.Unsafe.UnsafeTriangulator<T2> triangulator, LowLevel.Unsafe.OutputData<T2> output, int tId, T3 bar, Allocator allocator) where T2 : unmanaged where T3 : unmanaged => LowLevel.Unsafe.Extensions.DynamicInsertPoint((dynamic)triangulator, (dynamic)output, tId, default(T2) switch
+        public static void Triangulate<T>(this UnsafeTriangulator<T> triangulator, NativeInputData<T> input, NativeOutputData<T> output, Args args, Allocator allocator) where T : unmanaged => LowLevel.Unsafe.Extensions.Triangulate((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
+        public static void PlantHoleSeeds<T>(this UnsafeTriangulator<T> triangulator, NativeInputData<T> input, NativeOutputData<T> output, Args args, Allocator allocator) where T : unmanaged => LowLevel.Unsafe.Extensions.PlantHoleSeeds((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
+        public static void DynamicInsertPoint<T2, T3>(this UnsafeTriangulator<T2> triangulator, NativeOutputData<T2> output, int tId, T3 bar, Allocator allocator) where T2 : unmanaged where T3 : unmanaged => LowLevel.Unsafe.Extensions.DynamicInsertPoint((dynamic)triangulator, (dynamic)output, tId, default(T2) switch
         {
 #if UNITY_MATHEMATICS_FIXEDPOINT
             fp2 => new fp3((fp)((dynamic)bar).x, (fp)((dynamic)bar).y, (fp)((dynamic)bar).z),
@@ -187,14 +187,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             _ => (dynamic)bar
         },
             allocator);
-        public static void DynamicSplitHalfedge<T2>(this LowLevel.Unsafe.UnsafeTriangulator<T2> triangulator, LowLevel.Unsafe.OutputData<T2> output, int he, float alpha, Allocator allocator) where T2 : unmanaged => LowLevel.Unsafe.Extensions.DynamicSplitHalfedge((dynamic)triangulator, (dynamic)output, he, default(T2) switch
+        public static void DynamicSplitHalfedge<T2>(this UnsafeTriangulator<T2> triangulator, NativeOutputData<T2> output, int he, float alpha, Allocator allocator) where T2 : unmanaged => LowLevel.Unsafe.Extensions.DynamicSplitHalfedge((dynamic)triangulator, (dynamic)output, he, default(T2) switch
         {
 #if UNITY_MATHEMATICS_FIXEDPOINT
             fp2 => (fp)alpha,
 #endif
             _ => (dynamic)alpha,
         }, allocator);
-        public static void DynamicRemoveBulkPoint<T>(this LowLevel.Unsafe.UnsafeTriangulator<T> triangulator, LowLevel.Unsafe.OutputData<T> output, int pId, Allocator allocator) where T : unmanaged => LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint((dynamic)triangulator, (dynamic)output, pId, allocator);
+        public static void DynamicRemoveBulkPoint<T>(this UnsafeTriangulator<T> triangulator, NativeOutputData<T> output, int pId, Allocator allocator) where T : unmanaged => LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint((dynamic)triangulator, (dynamic)output, pId, allocator);
         public static void Run<T>(this Triangulator<T> triangulator) where T : unmanaged =>
             Extensions.Run((dynamic)triangulator);
         public static JobHandle Schedule<T>(this Triangulator<T> triangulator, JobHandle dependencies = default) where T : unmanaged =>
