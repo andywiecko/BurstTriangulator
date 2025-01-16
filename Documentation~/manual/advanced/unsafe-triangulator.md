@@ -49,8 +49,8 @@ Learn more in the [Parameters](#parameters) section about how to set up the tria
 All extension methods related to [`UnsafeTriangulator<T2>`][unsafe-triangulator] API except standard additional parameters,
 include custom struct parameters:
 
-- [`LowLevel.Unsafe.InputData<T2>`][n-input-data],
-- [`LowLevel.Unsafe.OutputData<T2>`][n-output-data],
+- [`LowLevel.Unsafe.NativeInputData<T2>`][n-input-data],
+- [`LowLevel.Unsafe.NativeOutputData<T2>`][n-output-data],
 - [`LowLevel.Unsafe.Args`][n-args].
 
 The first two structs are the same as managed types [`InputData<T2>`][m-input-data] and [`OutputData<T2>`][m-output-data], respectively. They have the same fields/properties.
@@ -80,7 +80,7 @@ Args args = settings;
 
 Below, you can find extensions (with descriptions and examples) that can be used with [`UnsafeTriangulator`][unsafe-triangulator]. Check out the unit tests for additional use cases.
 
-### `Triangulate`
+### Triangulate
 
 The extension [`Triangulate(input, output, args, allocator)`][triangulate] is the simplest option to use. The action of this extension essentially produces the same result as the [`Run`][run] method for the managed [`Triangulator`][triangulator]. It can be useful when triangulation is done with [`Allocator.Temp`][allocator-temp] in a single job or to combine this with different extensions.
 
@@ -97,12 +97,12 @@ new UnsafeTriangulator<float2>().Triangulate(
 );
 ```
 
-### `PlantHoleSeeds`
+### PlantHoleSeeds
 
 The extension [`PlantHoleSeeds(input, output, args, allocator)`][plant-seeds] is particularly useful when the user requires mesh data *without* removed triangles and additional mesh copy *with* removed triangles. In this case, the triangulation is performed once, which is generally a more expensive operation. Below is an example usage with the `autoHolesAndBoundary` option selected:
 
 ```csharp
-var input = new LowLevel.Unsafe.InputData<double2>
+var input = new NativeInputData<double2>
 {
     Positions = ...,
     ConstraintEdges = ...,
@@ -110,7 +110,7 @@ var input = new LowLevel.Unsafe.InputData<double2>
 using var triangles = new NativeList<int>(Allocator.Persistent);
 using var halfedges = new NativeList<int>(Allocator.Persistent);
 using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
-var output = new LowLevel.Unsafe.OutputData<double2>
+var output = new NativeOutputData<double2>
 {
     Triangles = triangles,
     Halfedges = halfedges,
@@ -123,9 +123,9 @@ t.PlantHoleSeeds(input, output, args.With(autoHolesAndBoundary: true), Allocator
 ```
 
 > [!NOTE]  
-> Depending on the options, some of the buffers may not be required for [`PlantHoleSeeds`][plant-seeds]. For example, when the user provides `HoleSeeds` in [`InputData<T2>`][n-output-data], `Positions` in [`OutputData<T2>`][n-output-data] must be provided. However, in other cases, it may not be required.
+> Depending on the options, some of the buffers may not be required for [`PlantHoleSeeds`][plant-seeds]. For example, when the user provides `HoleSeeds` in [`NativeInputData<T2>`][n-output-data], `Positions` in [`NativeOutputData<T2>`][n-output-data] must be provided. However, in other cases, it may not be required.
 
-### `RefineMesh`
+### RefineMesh
 
 The extension [`RefineMesh(output, allocator, areaThreshold?, angleThreshold?, concentricShells?, constrainBoundary?)`][refine-mesh] can be used to refine any triangulation mesh, even an already refined one. Please note that both the managed [`TriangulationSettings`][m-settings] and native [`Args`][n-args] provide refinement parameter setups only for [`float`][float] precision. This extension allows you to provide these parameters with the selected precision type `T` in generics. These parameters have the following default values (in the given precision type `T`, if this extension is available for `T`):
 
@@ -142,12 +142,12 @@ using var triangles = new NativeList<int>(Allocator.Persistent);
 using var halfedges = new NativeList<int>(Allocator.Persistent);
 using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
 using var outputPositions = new NativeList<float2>(Allocator.Persistent);
-var input = new LowLevel.Unsafe.InputData<float2>
+var input = new NativeInputData<float2>
 {
     Positions = ...,
     ConstraintEdges = ...,
 };
-var output = new LowLevel.Unsafe.OutputData<float2>
+var output = new NativeOutputData<float2>
 {
     Triangles = triangles,
     Halfedges = halfedges,
@@ -165,8 +165,8 @@ The [`UnsafeTriangulator<T>`][unsafe-triangulator] API also offers an option for
 
 [triangulator]: xref:andywiecko.BurstTriangulator.Triangulator`1
 [unsafe-triangulator]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator`1
-[n-input-data]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1
-[n-output-data]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1
+[n-input-data]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData`1
+[n-output-data]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1
 [n-args]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args
 [m-input-data]: xref:andywiecko.BurstTriangulator.InputData`1
 [m-output-data]: xref:andywiecko.BurstTriangulator.OutputData`1

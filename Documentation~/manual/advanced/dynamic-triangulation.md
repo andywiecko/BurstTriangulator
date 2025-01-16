@@ -34,13 +34,23 @@ var t = new UnsafeTriangulator<float2>();
 
 using var positions = new NativeArray<float2>(..., Allocator.Persistent);
 using var constraints = new NativeArray<int>(..., Allocator.Persistent);
-var input = new InputData<float2> { Positions = positions, ConstraintEdges = constraints };
+var input = new NativeInputData<float2>
+{
+    Positions = positions,
+    ConstraintEdges = constraints
+};
 
 using var outputPositions = new NativeList<float2>(Allocator.Persistent);
 using var triangles = new NativeList<int>(Allocator.Persistent);
 using var halfedges = new NativeList<int>(Allocator.Persistent);
 using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
-var output = new OutputData<float2> { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
+var output = new NativeOutputData<float2>
+{
+    Positions = outputPositions,
+    Triangles = triangles,
+    Halfedges = halfedges,
+    ConstrainedHalfedges = constrainedHalfedges
+};
 
 t.Triangulate(input, output, args: Args.Default(autoHolesAndBoundary: true), Allocator.Persistent);
 
@@ -81,13 +91,23 @@ var t = new UnsafeTriangulator<float2>();
 
 using var positions = new NativeArray<float2>(..., Allocator.Persistent);
 using var constraints = new NativeArray<int>(..., Allocator.Persistent);
-var input = new InputData<float2> { Positions = positions, ConstraintEdges = constraints };
+var input = new NativeInputData<float2>
+{
+    Positions = positions,
+    ConstraintEdges = constraints
+};
 
 using var outputPositions = new NativeList<float2>(Allocator.Persistent);
 using var triangles = new NativeList<int>(Allocator.Persistent);
 using var halfedges = new NativeList<int>(Allocator.Persistent);
 using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
-var output = new OutputData<float2> { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
+var output = new NativeOutputData<float2>
+{
+    Positions = outputPositions,
+    Triangles = triangles,
+    Halfedges = halfedges,
+    ConstrainedHalfedges = constrainedHalfedges
+};
 
 t.Triangulate(input, output, args: Args.Default(autoHolesAndBoundary: true), Allocator.Persistent);
 
@@ -114,8 +134,8 @@ using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
 using var halfedges = new NativeList<int>(Allocator.Persistent);
 
 var t = new UnsafeTriangulator<double2>();
-var input = new InputData<double2> { Positions = inputPositions };
-var output = new OutputData<double2>
+var input = new NativeInputData<double2> { Positions = inputPositions };
+var output = new NativeOutputData<double2>
 {
     Positions = outputPositions,
     Triangles = triangles,
