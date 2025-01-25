@@ -3273,8 +3273,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 using var pathHalfedges = new NativeList<int>(allocator);
                 using var visitedTriangles = new NativeList<bool>(triangles.Length / 3, allocator);
 
-                using var heQueue = new NativeList<int>(triangles.Length, allocator);
-                using var tQueue = new NativeList<int>(triangles.Length, allocator);
+                using var heQueue = new NativeQueueList<int>(triangles.Length, allocator);
+                using var tQueue = new NativeQueueList<int>(triangles.Length, allocator);
 
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
                 {
@@ -3303,7 +3303,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 {
                     if (constrainedHalfedges[he] && IsEncroached(he))
                     {
-                        heQueue.Add(he);
+                        heQueue.Enqueue(he);
                     }
                 }
 
@@ -3314,14 +3314,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 {
                     if (IsBadTriangle(tId))
                     {
-                        tQueue.Add(tId);
+                        tQueue.Enqueue(tId);
                     }
                 }
 
                 // Split triangles
-                for (int i = 0; i < tQueue.Length; i++)
+                while (tQueue.TryDequeue(out var tId))
                 {
-                    var tId = tQueue[i];
                     if (tId != -1)
                     {
                         SplitTriangle(tId, heQueue, tQueue, allocator);
@@ -3329,11 +3328,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
             }
 
-            private void SplitEncroachedEdges(NativeList<int> heQueue, NativeList<int> tQueue)
+            private void SplitEncroachedEdges(NativeQueueList<int> heQueue, NativeQueueList<int> tQueue)
             {
-                for (int i = 0; i < heQueue.Length; i++)
+                while (heQueue.TryDequeue(out var he))
                 {
-                    var he = heQueue[i];
                     if (he != -1)
                     {
                         SplitEdge(he, heQueue, tQueue);
@@ -3355,7 +3353,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return utils.le(utils.dot(utils.diff(p0, p2), utils.diff(p1, p2)), utils.Zero());
             }
 
-            private void SplitEdge(int he, NativeList<int> heQueue, NativeList<int> tQueue)
+            private void SplitEdge(int he, NativeQueueList<int> heQueue, NativeQueueList<int> tQueue)
             {
                 var (i, j) = (triangles[he], triangles[NextHalfedge(he)]);
                 var (e0, e1) = (outputPositions[i], outputPositions[j]);
@@ -3410,21 +3408,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                     if (IsEncroached(hi))
                     {
-                        heQueue.Add(hi);
+                        heQueue.Enqueue(hi);
                     }
                     var ohi = halfedges[hi];
                     if (IsEncroached(ohi))
                     {
-                        heQueue.Add(ohi);
+                        heQueue.Enqueue(ohi);
                     }
                     if (IsEncroached(hj))
                     {
-                        heQueue.Add(hj);
+                        heQueue.Enqueue(hj);
                     }
                     var ohj = halfedges[hj];
                     if (IsEncroached(ohj))
                     {
-                        heQueue.Add(ohj);
+                        heQueue.Enqueue(ohj);
                     }
 
                     constrainedHalfedges[hi] = true;
@@ -3444,12 +3442,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                     if (IsEncroached(hi))
                     {
-                        heQueue.Add(hi);
+                        heQueue.Enqueue(hi);
                     }
 
                     if (IsEncroached(hj))
                     {
-                        heQueue.Add(hj);
+                        heQueue.Enqueue(hj);
                     }
 
                     constrainedHalfedges[hi] = true;
@@ -3466,7 +3464,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return utils.greater(area2, maximumArea2) || AngleIsTooSmall(tId, angleThreshold);
             }
 
-            private void SplitTriangle(int tId, NativeList<int> heQueue, NativeList<int> tQueue, Allocator allocator)
+            private void SplitTriangle(int tId, NativeQueueList<int> heQueue, NativeQueueList<int> tQueue, Allocator allocator)
             {
                 var c = circles[tId];
                 var edges = new NativeList<int>(allocator);
@@ -3503,12 +3501,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     {
                         foreach (var he in edges.AsReadOnly())
                         {
-                            heQueue.Add(he);
+                            heQueue.Enqueue(he);
                         }
                     }
-                    if (!heQueue.IsEmpty)
+                    if (!heQueue.IsEmpty())
                     {
-                        tQueue.Add(tId);
+                        tQueue.Enqueue(tId);
                         SplitEncroachedEdges(heQueue, tQueue);
                     }
                 }
@@ -3543,11 +3541,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 /// </summary>
                 private int heLoopId;
 
-                public int UnsafeInsertPointBulk(T2 p, int initTriangle, NativeList<int> heQueue = default, NativeList<int> tQueue = default) => UnsafeInsertPoint(p, initTriangle, initHe: -1, boundary: false, heQueue, tQueue);
+                public int UnsafeInsertPointBulk(T2 p, int initTriangle, NativeQueueList<int> heQueue = default, NativeQueueList<int> tQueue = default) => UnsafeInsertPoint(p, initTriangle, initHe: -1, boundary: false, heQueue, tQueue);
 
-                public int UnsafeInsertPointBoundary(T2 p, int initHe, NativeList<int> heQueue = default, NativeList<int> tQueue = default) => UnsafeInsertPoint(p, initTriangle: -1, initHe, boundary: true, heQueue, tQueue);
+                public int UnsafeInsertPointBoundary(T2 p, int initHe, NativeQueueList<int> heQueue = default, NativeQueueList<int> tQueue = default) => UnsafeInsertPoint(p, initTriangle: -1, initHe, boundary: true, heQueue, tQueue);
 
-                private int UnsafeInsertPoint(T2 p, int initTriangle, int initHe, bool boundary, NativeList<int> heQueue = default, NativeList<int> tQueue = default)
+                private int UnsafeInsertPoint(T2 p, int initTriangle, int initHe, bool boundary, NativeQueueList<int> heQueue = default, NativeQueueList<int> tQueue = default)
                 {
                     var pId = Output.Positions.Length;
                     Output.Positions.Add(p);
@@ -3647,7 +3645,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     }
                 }
 
-                private void ProcessBadTriangles(NativeList<int> heQueue, NativeList<int> tQueue)
+                private void ProcessBadTriangles(NativeQueueList<int> heQueue, NativeQueueList<int> tQueue)
                 {
                     static void DisableHe(NativeList<int> halfedges, int he, int rId)
                     {
@@ -3817,48 +3815,50 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     halfedges[heOffset + 3 * (createdTrianglesCount - 1) + 2] = boundary ? -1 : heOffset;
                 }
 
-                private readonly void AdaptQueues(int wId, NativeList<int> heQueue, NativeList<int> tQueue)
+                private readonly void AdaptQueues(int wId, NativeQueueList<int> heQueue, NativeQueueList<int> tQueue)
                 {
                     // NOTE: we use write index `wId`, since queues will be changed during adaptation.
                     if (heQueue.IsCreated)
                     {
-                        for (int i = 0; i < heQueue.Length; i++)
+                        var heSpan = heQueue.AsSpan();
+                        for (int i = 0; i < heSpan.Length; i++)
                         {
-                            var he = heQueue[i];
+                            var he = heSpan[i];
                             if (he / 3 == wId)
                             {
-                                heQueue[i] = -1;
+                                heSpan[i] = -1;
                                 continue;
                             }
 
                             if (he > 3 * wId + 2)
                             {
-                                heQueue[i] -= 3;
+                                heSpan[i] -= 3;
                             }
                         }
                     }
 
                     if (tQueue.IsCreated)
                     {
-                        for (int i = 0; i < tQueue.Length; i++)
+                        var tSpan = tQueue.AsSpan();
+                        for (int i = 0; i < tSpan.Length; i++)
                         {
-                            var q = tQueue[i];
+                            var q = tSpan[i];
                             if (q == wId)
                             {
-                                tQueue[i] = -1;
+                                tSpan[i] = -1;
                                 continue;
                             }
 
                             if (q > wId)
                             {
-                                tQueue[i]--;
+                                tSpan[i]--;
                             }
                         }
                     }
                 }
             }
 
-            private void ProcessPathHalfedgesForEnqueueing(NativeList<int> heQueue, NativeList<int> tQueue, bool boundary, int cavityLength)
+            private void ProcessPathHalfedgesForEnqueueing(NativeQueueList<int> heQueue, NativeQueueList<int> tQueue, bool boundary, int cavityLength)
             {
                 var iters = boundary ? cavityLength - 1 : cavityLength;
                 var heOffset = halfedges.Length - 3 * iters;
@@ -3870,11 +3870,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         var he = heOffset + 3 * i + 1;
                         if (constrainedHalfedges[he] && IsEncroached(he))
                         {
-                            heQueue.Add(he);
+                            heQueue.Enqueue(he);
                         }
                         else if (tQueue.IsCreated && IsBadTriangle(he / 3))
                         {
-                            tQueue.Add(he / 3);
+                            tQueue.Enqueue(he / 3);
                         }
                     }
                 }
