@@ -42,6 +42,10 @@ using Unity.Mathematics.FixedPoint;
 
 namespace andywiecko.BurstTriangulator
 {
+    /// <summary>
+    /// An <see cref="Enum"/> representing the status of triangulation.
+    /// To check if the triangulation was successful, compare the status with <see cref="Status.OK"/>.
+    /// </summary>
     [Flags]
     public enum Status
     {
@@ -124,8 +128,14 @@ namespace andywiecko.BurstTriangulator
 #pragma warning restore IDE0055
     }
 
+    /// <summary>
+    /// An <see cref="Enum"/> representing the type of transformation applied to input positions before triangulation.
+    /// </summary>
     public enum Preprocessor
     {
+        /// <summary>
+        /// Identity transformation.
+        /// </summary>
         None = 0,
         /// <summary>
         /// Transforms <see cref="Input"/> to local coordinate system using <em>center of mass</em>.
@@ -137,6 +147,9 @@ namespace andywiecko.BurstTriangulator
         PCA
     }
 
+    /// <summary>
+    /// A helper class for setting up refinement thresholds.
+    /// </summary>
     [Serializable]
     public class RefinementThresholds
     {
@@ -165,6 +178,9 @@ namespace andywiecko.BurstTriangulator
         public float Angle { get; set; } = math.radians(5);
     }
 
+    /// <summary>
+    /// A helper class for configuring triangulation parameters.
+    /// </summary>
     [Serializable]
     public class TriangulationSettings
     {
@@ -268,6 +284,18 @@ namespace andywiecko.BurstTriangulator
         public float ConcentricShellsParameter { get; set; } = 0.001f;
     }
 
+    /// <summary>
+    /// A managed helper class that contains all native buffers for triangulation input.
+    /// </summary>
+    /// <typeparam name="T2">The coordinate type. Supported types include:
+    /// <see cref="float2"/>,
+    /// <see cref="Vector2"/>,
+    /// <see cref="double2"/>,
+    /// <see cref="fp2"/>,
+    /// and
+    /// <see cref="int2"/>.
+    /// For more information on type restrictions, refer to the documentation.
+    /// </typeparam>
     public class InputData<T2> where T2 : unmanaged
     {
         /// <summary>
@@ -315,6 +343,18 @@ namespace andywiecko.BurstTriangulator
         };
     }
 
+    /// <summary>
+    /// A managed helper class that contains all native buffers for triangulation output.
+    /// </summary>
+    /// <typeparam name="T2">The coordinate type. Supported types include:
+    /// <see cref="float2"/>,
+    /// <see cref="Vector2"/>,
+    /// <see cref="double2"/>,
+    /// <see cref="fp2"/>,
+    /// and
+    /// <see cref="int2"/>.
+    /// For more information on type restrictions, refer to the documentation.
+    /// </typeparam>
     public class OutputData<T2> where T2 : unmanaged
     {
         /// <summary>
@@ -353,6 +393,7 @@ namespace andywiecko.BurstTriangulator
         public NativeList<bool> IgnoredHalfedgesForPlantingSeeds => owner.ignoredHalfedgesForPlantingSeeds;
 
         private readonly Triangulator<T2> owner;
+        /// <exclude />
         [Obsolete("This will be converted into internal ctor.")]
         public OutputData(Triangulator<T2> owner) => this.owner = owner;
     }
@@ -416,6 +457,15 @@ namespace andywiecko.BurstTriangulator
         public JobHandle Schedule(JobHandle dependencies = default) => impl.Schedule(dependencies);
     }
 
+    /// <typeparam name="T2">The coordinate type. Supported types include:
+    /// <see cref="float2"/>,
+    /// <see cref="Vector2"/>,
+    /// <see cref="double2"/>,
+    /// <see cref="fp2"/>,
+    /// and
+    /// <see cref="int2"/>.
+    /// For more information on type restrictions, refer to the documentation.
+    /// </typeparam>
     public class Triangulator<T2> : IDisposable where T2 : unmanaged
     {
         public TriangulationSettings Settings { get; set; } = new();
@@ -613,6 +663,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     /// <summary>
     /// <b>Obsolete:</b> use <see cref="NativeInputData{T2}"/> instead.
     /// </summary>
+    /// <exclude />
     [Obsolete("Use " + nameof(NativeInputData<T2>) + "<> instead.")]
     public struct InputData<T2> where T2 : unmanaged
     {
@@ -632,6 +683,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     /// <summary>
     /// <b>Obsolete:</b> use <see cref="NativeOutputData{T2}"/> instead.
     /// </summary>
+    /// <exclude />
     [Obsolete("Use " + nameof(NativeOutputData<T2>) + "<> instead.")]
     public struct OutputData<T2> where T2 : unmanaged
     {
