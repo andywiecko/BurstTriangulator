@@ -422,16 +422,60 @@ namespace andywiecko.BurstTriangulator
     }
 
     /// <summary>
-    /// A wrapper for <see cref="Triangulator{T2}"/> where T2 is <see cref="double2"/>.
+    /// A base class for triangulation, which provides the core functionality for performing triangulation on 2D geometric data.
+    /// It acts as a wrapper for <see cref="Triangulator{T2}"/> where T2 is <see cref="double2"/>.
     /// </summary>
+    /// <remarks>
+    /// The triangulation process can be configured using the parameters available in <see cref="Settings"/>.
+    /// Provide the input data via <see cref="Input"/>, and then execute the triangulation using
+    /// <see cref="Run"/> or <see cref="Schedule(JobHandle)"/>.
+    /// The triangulation results will be available in <see cref="Output"/>.
+    /// Ensure you call <see cref="Dispose"/> on the object after use to release resources.
+    /// Example usage:
+    /// <code>
+    /// using var positions = new NativeArray&lt;double2&gt;(new[]
+    /// {
+    ///     new (0, 0), new (1, 0), new (1, 1), new (0, 1)
+    /// }, Allocator.Persistent);
+    /// using var triangulator = new Triangulator(Allocator.Persistent)
+    /// {
+    ///     Input = { Positions = positions },
+    ///     Settings = { ValidateInput = false },
+    /// };
+    ///
+    /// triangulator.Run();
+    ///
+    /// var triangles = triangulator.Output.Triangles;
+    /// </code>
+    /// For advanced customization of the triangulation process, refer to <see cref="UnsafeTriangulator{T2}"/>.
+    /// </remarks>
     /// <seealso cref="Triangulator{T2}"/>
+    /// <seealso cref="UnsafeTriangulator{T2}"/>
     public class Triangulator : IDisposable
     {
+        /// <summary>
+        /// Settings used for triangulation.
+        /// </summary>
         public TriangulationSettings Settings { get => impl.Settings; set => impl.Settings = value; }
+        /// <summary>
+        /// Input data used for triangulation.
+        /// </summary>
         public InputData<double2> Input { get => impl.Input; set => impl.Input = value; }
+        /// <summary>
+        /// Output data resulting from the triangulation process.
+        /// </summary>
         public OutputData<double2> Output => impl.Output;
         private readonly Triangulator<double2> impl;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Triangulator"/> class with the specified <paramref name="capacity"/> and memory <paramref name="allocator"/>.
+        /// </summary>
+        /// <param name="capacity">The capacity of the triangulator.</param>
+        /// <param name="allocator">The allocator to use.</param>
         public Triangulator(int capacity, Allocator allocator) => impl = new(capacity, allocator);
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Triangulator"/> class with the default capacity (16×1024) and specified memory <paramref name="allocator"/>.
+        /// </summary>
+        /// <param name="allocator">The allocator to use.</param>
         public Triangulator(Allocator allocator) => impl = new(allocator);
 
         /// <summary>
@@ -457,6 +501,33 @@ namespace andywiecko.BurstTriangulator
         public JobHandle Schedule(JobHandle dependencies = default) => impl.Schedule(dependencies);
     }
 
+    /// <summary>
+    /// A generic class for triangulation of coordinate type <typeparamref name="T2"/>, which provides the core functionality for performing triangulation on 2D geometric data.
+    /// </summary>
+    /// <remarks>
+    /// The triangulation process can be configured using the parameters available in <see cref="Settings"/>. 
+    /// Provide the input data via <see cref="Input"/>, and then execute the triangulation using a proper extension
+    /// <see cref="Extensions.Run"/> or <see cref="Extensions.Schedule"/>.
+    /// The triangulation results will be available in <see cref="Output"/>.
+    /// Ensure you call <see cref="Dispose"/> on the object after use to release resources.
+    /// Example usage:
+    /// <code>
+    /// using var positions = new NativeArray&lt;double2&gt;(new[]
+    /// {
+    ///     new (0, 0), new (1, 0), new (1, 1), new (0, 1)
+    /// }, Allocator.Persistent);
+    /// using var triangulator = new Triangulator&lt;double2&gt;(Allocator.Persistent)
+    /// {
+    ///     Input = { Positions = positions },
+    ///     Settings = { ValidateInput = false },
+    /// };
+    ///
+    /// triangulator.Run();
+    ///
+    /// var triangles = triangulator.Output.Triangles;
+    /// </code>
+    /// For advanced customization of the triangulation process, refer to <see cref="UnsafeTriangulator{T2}"/>.
+    /// </remarks>
     /// <typeparam name="T2">The coordinate type. Supported types include:
     /// <see cref="float2"/>,
     /// <see cref="Vector2"/>,
@@ -466,10 +537,22 @@ namespace andywiecko.BurstTriangulator
     /// <see cref="int2"/>.
     /// For more information on type restrictions, refer to the documentation.
     /// </typeparam>
+    /// <seealso cref="Triangulator"/>
+    /// <seealso cref="UnsafeTriangulator{T2}"/>
+    /// <seealso cref="Extensions"/>
     public class Triangulator<T2> : IDisposable where T2 : unmanaged
     {
+        /// <summary>
+        /// Settings used for triangulation.
+        /// </summary>
         public TriangulationSettings Settings { get; set; } = new();
+        /// <summary>
+        /// Input data used for triangulation.
+        /// </summary>
         public InputData<T2> Input { get; set; } = new();
+        /// <summary>
+        /// Output data resulting from the triangulation process.
+        /// </summary>
         public OutputData<T2> Output { get; }
 
         internal NativeList<T2> outputPositions;
@@ -479,6 +562,11 @@ namespace andywiecko.BurstTriangulator
         internal NativeList<bool> ignoredHalfedgesForPlantingSeeds;
         internal NativeReference<Status> status;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Triangulator{T2}"/> class with the specified <paramref name="capacity"/> and memory <paramref name="allocator"/>.
+        /// </summary>
+        /// <param name="capacity">The capacity of the triangulator.</param>
+        /// <param name="allocator">The allocator to use.</param>
         public Triangulator(int capacity, Allocator allocator)
         {
             outputPositions = new(capacity, allocator);
@@ -492,6 +580,10 @@ namespace andywiecko.BurstTriangulator
 #pragma warning restore CS0618
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Triangulator{T2}"/> class with the default capacity (16×1024) and memory <paramref name="allocator"/>.
+        /// </summary>
+        /// <param name="allocator">The allocator to use.</param>
         public Triangulator(Allocator allocator) : this(capacity: 16 * 1024, allocator) { }
 
         /// <summary>
