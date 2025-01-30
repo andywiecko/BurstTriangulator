@@ -2724,16 +2724,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         inputConstraintEdges[2 * index + 1]
                     );
                     c = c.x < c.y ? c.xy : c.yx; // Backward compatibility. To remove in the future.
-                    TryApplyConstraint(c, index);
+                    TryApplyConstraint(c, ignoreForPlantingSeeds: ignoreConstraintForPlantingSeeds.IsCreated && ignoreConstraintForPlantingSeeds[index]);
                 }
             }
 
-            private void TryApplyConstraint(int2 c, int index)
+            private void TryApplyConstraint(int2 c, bool ignoreForPlantingSeeds)
             {
                 intersections.Clear();
                 unresolvedIntersections.Clear();
 
-                CollectIntersections(c, index);
+                CollectIntersections(c, ignoreForPlantingSeeds);
 
                 var iter = 0;
                 do
@@ -2744,11 +2744,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     }
 
                     (intersections, unresolvedIntersections) = (unresolvedIntersections, intersections);
-                    TryResolveIntersections(c, index, ref iter);
+                    TryResolveIntersections(c, ignoreForPlantingSeeds, ref iter);
                 } while (!unresolvedIntersections.IsEmpty);
             }
 
-            private void TryResolveIntersections(int2 c, int index, ref int iter)
+            private void TryResolveIntersections(int2 c, bool ignoreForPlantingSeeds, ref int iter)
             {
                 for (int i = 0; i < intersections.Length; i++)
                 {
@@ -2847,8 +2847,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     {
                         constrainedHalfedges[h2] = true;
                         constrainedHalfedges[h5] = true;
-                        ignoredHalfedgesForPlantingSeeds[h2] = IsConstraintIgnoredForPlanting(index);
-                        ignoredHalfedgesForPlantingSeeds[h5] = IsConstraintIgnoredForPlanting(index);
+                        ignoredHalfedgesForPlantingSeeds[h2] = ignoreForPlantingSeeds;
+                        ignoredHalfedgesForPlantingSeeds[h5] = ignoreForPlantingSeeds;
                     }
                     if (EdgeEdgeIntersection(c, swapped))
                     {
@@ -2858,8 +2858,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 intersections.Clear();
             }
-
-            private bool IsConstraintIgnoredForPlanting(int index) => ignoreConstraintForPlantingSeeds.IsCreated && ignoreConstraintForPlantingSeeds[index];
 
             /// <summary>
             /// Replaces <paramref name="h0"/> with <paramref name="h1"/>.
@@ -2886,7 +2884,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
             }
 
-            private void CollectIntersections(int2 edge, int index)
+            private void CollectIntersections(int2 edge, bool ignoreForPlantingSeeds)
             {
                 // 1. Check if h1 is cj
                 // 2. Check if h1-h2 intersects with ci-cj
@@ -2912,12 +2910,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     if (triangles[h1] == cj)
                     {
                         constrainedHalfedges[h0] = true;
-                        ignoredHalfedgesForPlantingSeeds[h0] = IsConstraintIgnoredForPlanting(index);
+                        ignoredHalfedgesForPlantingSeeds[h0] = ignoreForPlantingSeeds;
                         var oh0 = halfedges[h0];
                         if (oh0 != -1)
                         {
                             constrainedHalfedges[oh0] = true;
-                            ignoredHalfedgesForPlantingSeeds[oh0] = IsConstraintIgnoredForPlanting(index);
+                            ignoredHalfedgesForPlantingSeeds[oh0] = ignoreForPlantingSeeds;
                         }
                         break;
                     }
@@ -2937,7 +2935,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (triangles[h2] == cj)
                         {
                             constrainedHalfedges[h2] = true;
-                            ignoredHalfedgesForPlantingSeeds[h2] = IsConstraintIgnoredForPlanting(index);
+                            ignoredHalfedgesForPlantingSeeds[h2] = ignoreForPlantingSeeds;
                         }
 
                         // possible that triangles[h2] == cj, not need to check
@@ -2956,12 +2954,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (triangles[h1] == cj)
                         {
                             constrainedHalfedges[h0] = true;
-                            ignoredHalfedgesForPlantingSeeds[h0] = IsConstraintIgnoredForPlanting(index);
+                            ignoredHalfedgesForPlantingSeeds[h0] = ignoreForPlantingSeeds;
                             var oh0 = halfedges[h0];
                             if (oh0 != -1)
                             {
                                 constrainedHalfedges[oh0] = true;
-                                ignoredHalfedgesForPlantingSeeds[oh0] = IsConstraintIgnoredForPlanting(index);
+                                ignoredHalfedgesForPlantingSeeds[oh0] = ignoreForPlantingSeeds;
                             }
                             break;
                         }
