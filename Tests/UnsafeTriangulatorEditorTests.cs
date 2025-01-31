@@ -376,6 +376,65 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangles1.AsArray(), Has.Length.EqualTo(3 * 12));
             Assert.That(triangles1.AsArray(), Is.EqualTo(triangles2.AsArray()).Using(TrianglesComparer.Instance));
         }
+
+        [Test]
+        public void ConstrainEdgeTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+
+            using var inputPositions = new NativeArray<T>(
+                new float2[] { new(0, 0), new(1, 0), new(1, 1), new(0, 1), }.DynamicCast<T>(),
+                Allocator.Persistent
+            );
+
+            using var status = new NativeReference<Status>(Status.OK, Allocator.Persistent);
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var ignoredHalfedgesForPlantingSeeds = new NativeList<bool>(Allocator.Persistent);
+
+            var args = Args.Default();
+            var output = new NativeOutputData<T>
+            {
+                Status = status,
+                Positions = outputPositions,
+                Triangles = triangles,
+                Halfedges = halfedges,
+                ConstrainedHalfedges = constrainedHalfedges,
+                IgnoredHalfedgesForPlantingSeeds = ignoredHalfedgesForPlantingSeeds,
+            };
+
+            t.Triangulate(new() { Positions = inputPositions }, output, args, Allocator.Persistent);
+
+            var p = HasEdge(0, 2) ? math.int2(1, 3) : math.int2(0, 2);
+            t.ConstrainEdge(output, pi: p.x, pj: p.y, args, allocator: Allocator.Persistent, ignoreForPlantingSeeds: true);
+
+            var he = FindEdge(p.x, p.y);
+            var ohe = halfedges[he];
+            Assert.That(HasEdge(p.x, p.y), Is.True);
+            var expected = new bool[ignoredHalfedgesForPlantingSeeds.Length];
+            expected[he] = true;
+            expected[ohe] = true;
+            Assert.That(ignoredHalfedgesForPlantingSeeds.AsReadOnly(), Is.EqualTo(expected));
+
+            bool HasEdge(int pi, int pj) => FindEdge(pi, pj) != -1;
+            int FindEdge(int pi, int pj)
+            {
+                for (int i = 0; i < triangles.Length; i++)
+                {
+                    var qi = triangles[i];
+                    var qj = triangles[NextHalfedge(i)];
+                    if (pi == qi && pj == qj || pi == qj && pj == qi)
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
+        }
     }
 
     [TestFixture(typeof(float2))]
