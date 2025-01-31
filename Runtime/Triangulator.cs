@@ -2676,10 +2676,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeArray<bool> ignoreConstraintForPlantingSeeds;
             private readonly Args args;
 
-            private NativeList<int> intersections;
-            private NativeList<int> unresolvedIntersections;
-            private NativeArray<int> pointToHalfedge;
-
             public ConstrainEdgesStep(NativeInputData<T2> input, NativeOutputData<T2> output, Args args)
             {
                 status = output.Status;
@@ -2691,10 +2687,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 constrainedHalfedges = output.ConstrainedHalfedges;
                 ignoredHalfedgesForPlantingSeeds = output.IgnoredHalfedgesForPlantingSeeds;
                 this.args = args;
-
-                intersections = default;
-                unresolvedIntersections = default;
-                pointToHalfedge = default;
             }
 
             public void Execute(Allocator allocator)
@@ -2706,16 +2698,35 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 using var _ = Markers.ConstrainEdgesStep.Auto();
 
-                using var _intersections = intersections = new NativeList<int>(allocator);
-                using var _unresolvedIntersections = unresolvedIntersections = new NativeList<int>(allocator);
-                using var _pointToHalfedge = pointToHalfedge = new NativeArray<int>(positions.Length, allocator);
+                using var intersections = new NativeList<int>(allocator);
+                using var unresolvedIntersections = new NativeList<int>(allocator);
+                using var pointToHalfedge = new NativeArray<int>(positions.Length, allocator);
                 ignoredHalfedgesForPlantingSeeds.Length = halfedges.Length;
 
-                // build point to halfedge
-                for (int i = 0; i < triangles.Length; i++)
+                FillPointToHalfedge(pointToHalfedge, triangles);
+                static void FillPointToHalfedge(Span<int> pointToHalfedge, ReadOnlySpan<int> triangles)
                 {
-                    pointToHalfedge[triangles[i]] = i;
+                    for (int i = 0; i < triangles.Length; i++)
+                    {
+                        pointToHalfedge[triangles[i]] = i;
+                    }
                 }
+
+                var sloan = new UnsafeSloan()
+                {
+                    Status = status,
+                    Positions = positions,
+                    Triangles = triangles,
+                    Halfedges = halfedges,
+                    ConstrainedHalfedges = constrainedHalfedges,
+                    IgnoredHalfedgesForPlantingSeeds = ignoredHalfedgesForPlantingSeeds,
+
+                    Intersections = intersections,
+                    UnresolvedIntersections = unresolvedIntersections,
+                    PointToHalfedge = pointToHalfedge,
+
+                    Args = args,
+                };
 
                 for (int index = 0; index < inputConstraintEdges.Length / 2; index++)
                 {
@@ -2724,319 +2735,335 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         inputConstraintEdges[2 * index + 1]
                     );
                     c = c.x < c.y ? c.xy : c.yx; // Backward compatibility. To remove in the future.
-                    TryApplyConstraint(c, ignoreForPlantingSeeds: ignoreConstraintForPlantingSeeds.IsCreated && ignoreConstraintForPlantingSeeds[index]);
+                    sloan.TryApplyConstraint(c, ignoreForPlantingSeeds: ignoreConstraintForPlantingSeeds.IsCreated && ignoreConstraintForPlantingSeeds[index]);
                 }
             }
 
-            private void TryApplyConstraint(int2 c, bool ignoreForPlantingSeeds)
+            public struct UnsafeSloan
             {
-                intersections.Clear();
-                unresolvedIntersections.Clear();
+                public NativeReference<Status> Status;
+                public NativeArray<T2>.ReadOnly Positions;
+                public NativeArray<int> Triangles;
+                public NativeList<int> Halfedges;
+                public NativeList<bool> ConstrainedHalfedges;
+                public NativeList<bool> IgnoredHalfedgesForPlantingSeeds;
 
-                CollectIntersections(c, ignoreForPlantingSeeds);
+                public NativeList<int> Intersections;
+                public NativeList<int> UnresolvedIntersections;
+                public NativeArray<int> PointToHalfedge;
 
-                var iter = 0;
-                do
+                public Args Args;
+
+                public void TryApplyConstraint(int2 c, bool ignoreForPlantingSeeds)
                 {
-                    if (status.Value != Status.OK)
+                    Intersections.Clear();
+                    UnresolvedIntersections.Clear();
+
+                    CollectIntersections(c, ignoreForPlantingSeeds);
+
+                    var iter = 0;
+                    do
                     {
-                        return;
-                    }
-
-                    (intersections, unresolvedIntersections) = (unresolvedIntersections, intersections);
-                    TryResolveIntersections(c, ignoreForPlantingSeeds, ref iter);
-                } while (!unresolvedIntersections.IsEmpty);
-            }
-
-            private void TryResolveIntersections(int2 c, bool ignoreForPlantingSeeds, ref int iter)
-            {
-                for (int i = 0; i < intersections.Length; i++)
-                {
-                    if (IsMaxItersExceeded(iter++, args.SloanMaxIters))
-                    {
-                        return;
-                    }
-
-                    //  p                             i
-                    //      h2 -----------> h0   h4
-                    //      ^             .'   .^:
-                    //      :           .'   .'  :
-                    //      :         .'   .'    :
-                    //      :       .'   .'      :
-                    //      :     .'   .'        :
-                    //      :   .'   .'          :
-                    //      : v'   .'            v
-                    //      h1   h3 <----------- h5
-                    // j                              q
-                    //
-                    //  p                             i
-                    //      h2   h3 -----------> h4
-                    //      ^ '.   ^.            :
-                    //      :   '.   '.          :
-                    //      :     '.   '.        :
-                    //      :       '.   '.      :
-                    //      :         '.   '.    :
-                    //      :           '.   '.  :
-                    //      :             'v   '.v
-                    //      h1 <----------- h0   h5
-                    // j                              q
-                    //
-                    // Changes:
-                    // ---------------------------------------------
-                    //              h0   h1   h2   |   h3   h4   h5
-                    // ---------------------------------------------
-                    // triangles     i    j    p   |    j    i    q
-                    // triangles'   *q*   j    p   |   *p*   i    q
-                    // ---------------------------------------------
-                    // halfedges    h3   g1   g2   |   h0   f1   f2
-                    // halfedges'  *h5'* g1  *h5*  |  *h2'* f1  *h2*, where hi' = halfedge[hi]
-                    // ---------------------------------------------
-                    // intersec.'    X    X   h3   |    X    X   h0
-                    // ---------------------------------------------
-
-                    var h0 = intersections[i];
-                    var h1 = NextHalfedge(h0);
-                    var h2 = NextHalfedge(h1);
-
-                    var h3 = halfedges[h0];
-                    var h4 = NextHalfedge(h3);
-                    var h5 = NextHalfedge(h4);
-
-                    var _i = triangles[h0];
-                    var _j = triangles[h1];
-                    var _p = triangles[h2];
-                    var _q = triangles[h5];
-
-                    var (p0, p1, p2, p3) = (positions[_i], positions[_q], positions[_j], positions[_p]);
-                    if (!IsConvexQuadrilateral(p0, p1, p2, p3))
-                    {
-                        unresolvedIntersections.Add(h0);
-                        continue;
-                    }
-
-                    // Swap edge (see figure above)
-                    triangles[h0] = _q;
-                    triangles[h3] = _p;
-                    pointToHalfedge[_q] = h0;
-                    pointToHalfedge[_p] = h3;
-                    pointToHalfedge[_i] = h4;
-                    pointToHalfedge[_j] = h1;
-                    ReplaceHalfedge(h5, h0);
-                    ReplaceHalfedge(h2, h3);
-                    halfedges[h2] = h5;
-                    halfedges[h5] = h2;
-                    constrainedHalfedges[h2] = false;
-                    constrainedHalfedges[h5] = false;
-                    ignoredHalfedgesForPlantingSeeds[h2] = false;
-                    ignoredHalfedgesForPlantingSeeds[h5] = false;
-
-                    // Fix intersections
-                    for (int j = i + 1; j < intersections.Length; j++)
-                    {
-                        var tmp = intersections[j];
-                        intersections[j] = tmp == h2 ? h3 : tmp == h5 ? h0 : tmp;
-                    }
-                    for (int j = 0; j < unresolvedIntersections.Length; j++)
-                    {
-                        var tmp = unresolvedIntersections[j];
-                        unresolvedIntersections[j] = tmp == h2 ? h3 : tmp == h5 ? h0 : tmp;
-                    }
-
-                    var swapped = math.int2(_p, _q);
-                    if (math.all(c.xy == swapped.xy) || math.all(c.xy == swapped.yx))
-                    {
-                        constrainedHalfedges[h2] = true;
-                        constrainedHalfedges[h5] = true;
-                        ignoredHalfedgesForPlantingSeeds[h2] = ignoreForPlantingSeeds;
-                        ignoredHalfedgesForPlantingSeeds[h5] = ignoreForPlantingSeeds;
-                    }
-                    if (EdgeEdgeIntersection(c, swapped))
-                    {
-                        unresolvedIntersections.Add(h2);
-                    }
-                }
-
-                intersections.Clear();
-            }
-
-            /// <summary>
-            /// Replaces <paramref name="h0"/> with <paramref name="h1"/>.
-            /// </summary>
-            private void ReplaceHalfedge(int h0, int h1)
-            {
-                var h0p = halfedges[h0];
-                halfedges[h1] = h0p;
-                constrainedHalfedges[h1] = constrainedHalfedges[h0];
-                ignoredHalfedgesForPlantingSeeds[h1] = ignoredHalfedgesForPlantingSeeds[h0];
-
-                if (h0p != -1)
-                {
-                    halfedges[h0p] = h1;
-                    constrainedHalfedges[h0p] = constrainedHalfedges[h0];
-                    ignoredHalfedgesForPlantingSeeds[h0p] = ignoredHalfedgesForPlantingSeeds[h0];
-                }
-            }
-
-            private bool EdgeEdgeIntersection(int2 e1, int2 e2)
-            {
-                var (a0, a1) = (positions[e1.x], positions[e1.y]);
-                var (b0, b1) = (positions[e2.x], positions[e2.y]);
-                return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
-            }
-
-            private void CollectIntersections(int2 edge, bool ignoreForPlantingSeeds)
-            {
-                // 1. Check if h1 is cj
-                // 2. Check if h1-h2 intersects with ci-cj
-                // 3. After each iteration: h0 <- h0'
-                //
-                //          h1
-                //       .^ |
-                //     .'   |
-                //   .'     v
-                // h0 <---- h2
-                // h0'----> h1'
-                //   ^.     |
-                //     '.   |
-                //       '. v
-                //          h2'
-                var tunnelInit = -1;
-                var (ci, cj) = (edge.x, edge.y);
-                var h0init = pointToHalfedge[ci];
-                var h0 = h0init;
-                do
-                {
-                    var h1 = NextHalfedge(h0);
-                    if (triangles[h1] == cj)
-                    {
-                        constrainedHalfedges[h0] = true;
-                        ignoredHalfedgesForPlantingSeeds[h0] = ignoreForPlantingSeeds;
-                        var oh0 = halfedges[h0];
-                        if (oh0 != -1)
+                        if (Status.Value != BurstTriangulator.Status.OK)
                         {
-                            constrainedHalfedges[oh0] = true;
-                            ignoredHalfedgesForPlantingSeeds[oh0] = ignoreForPlantingSeeds;
-                        }
-                        break;
-                    }
-                    var h2 = NextHalfedge(h1);
-                    if (EdgeEdgeIntersection(edge, new(triangles[h1], triangles[h2])))
-                    {
-                        unresolvedIntersections.Add(h1);
-                        tunnelInit = halfedges[h1];
-                        break;
-                    }
-
-                    h0 = halfedges[h2];
-
-                    // Boundary reached check other side
-                    if (h0 == -1)
-                    {
-                        if (triangles[h2] == cj)
-                        {
-                            constrainedHalfedges[h2] = true;
-                            ignoredHalfedgesForPlantingSeeds[h2] = ignoreForPlantingSeeds;
+                            return;
                         }
 
-                        // possible that triangles[h2] == cj, not need to check
-                        break;
-                    }
-                } while (h0 != h0init);
+                        (Intersections, UnresolvedIntersections) = (UnresolvedIntersections, Intersections);
+                        TryResolveIntersections(c, ignoreForPlantingSeeds, ref iter);
+                    } while (!UnresolvedIntersections.IsEmpty);
+                }
 
-                h0 = halfedges[h0init];
-                if (tunnelInit == -1 && h0 != -1)
+                private void TryResolveIntersections(int2 c, bool ignoreForPlantingSeeds, ref int iter)
                 {
-                    h0 = NextHalfedge(h0);
-                    // Same but reversed
+                    for (int i = 0; i < Intersections.Length; i++)
+                    {
+                        if (IsMaxItersExceeded(iter++, Args.SloanMaxIters))
+                        {
+                            return;
+                        }
+
+                        //  p                             i
+                        //      h2 -----------> h0   h4
+                        //      ^             .'   .^:
+                        //      :           .'   .'  :
+                        //      :         .'   .'    :
+                        //      :       .'   .'      :
+                        //      :     .'   .'        :
+                        //      :   .'   .'          :
+                        //      : v'   .'            v
+                        //      h1   h3 <----------- h5
+                        // j                              q
+                        //
+                        //  p                             i
+                        //      h2   h3 -----------> h4
+                        //      ^ '.   ^.            :
+                        //      :   '.   '.          :
+                        //      :     '.   '.        :
+                        //      :       '.   '.      :
+                        //      :         '.   '.    :
+                        //      :           '.   '.  :
+                        //      :             'v   '.v
+                        //      h1 <----------- h0   h5
+                        // j                              q
+                        //
+                        // Changes:
+                        // ---------------------------------------------
+                        //              h0   h1   h2   |   h3   h4   h5
+                        // ---------------------------------------------
+                        // triangles     i    j    p   |    j    i    q
+                        // triangles'   *q*   j    p   |   *p*   i    q
+                        // ---------------------------------------------
+                        // halfedges    h3   g1   g2   |   h0   f1   f2
+                        // halfedges'  *h5'* g1  *h5*  |  *h2'* f1  *h2*, where hi' = halfedge[hi]
+                        // ---------------------------------------------
+                        // intersec.'    X    X   h3   |    X    X   h0
+                        // ---------------------------------------------
+
+                        var h0 = Intersections[i];
+                        var h1 = NextHalfedge(h0);
+                        var h2 = NextHalfedge(h1);
+
+                        var h3 = Halfedges[h0];
+                        var h4 = NextHalfedge(h3);
+                        var h5 = NextHalfedge(h4);
+
+                        var _i = Triangles[h0];
+                        var _j = Triangles[h1];
+                        var _p = Triangles[h2];
+                        var _q = Triangles[h5];
+
+                        var (p0, p1, p2, p3) = (Positions[_i], Positions[_q], Positions[_j], Positions[_p]);
+                        if (!IsConvexQuadrilateral(p0, p1, p2, p3))
+                        {
+                            UnresolvedIntersections.Add(h0);
+                            continue;
+                        }
+
+                        // Swap edge (see figure above)
+                        Triangles[h0] = _q;
+                        Triangles[h3] = _p;
+                        PointToHalfedge[_q] = h0;
+                        PointToHalfedge[_p] = h3;
+                        PointToHalfedge[_i] = h4;
+                        PointToHalfedge[_j] = h1;
+                        ReplaceHalfedge(h5, h0);
+                        ReplaceHalfedge(h2, h3);
+                        Halfedges[h2] = h5;
+                        Halfedges[h5] = h2;
+                        ConstrainedHalfedges[h2] = false;
+                        ConstrainedHalfedges[h5] = false;
+                        IgnoredHalfedgesForPlantingSeeds[h2] = false;
+                        IgnoredHalfedgesForPlantingSeeds[h5] = false;
+
+                        // Fix intersections
+                        for (int j = i + 1; j < Intersections.Length; j++)
+                        {
+                            var tmp = Intersections[j];
+                            Intersections[j] = tmp == h2 ? h3 : tmp == h5 ? h0 : tmp;
+                        }
+                        for (int j = 0; j < UnresolvedIntersections.Length; j++)
+                        {
+                            var tmp = UnresolvedIntersections[j];
+                            UnresolvedIntersections[j] = tmp == h2 ? h3 : tmp == h5 ? h0 : tmp;
+                        }
+
+                        var swapped = math.int2(_p, _q);
+                        if (math.all(c.xy == swapped.xy) || math.all(c.xy == swapped.yx))
+                        {
+                            ConstrainedHalfedges[h2] = true;
+                            ConstrainedHalfedges[h5] = true;
+                            IgnoredHalfedgesForPlantingSeeds[h2] = ignoreForPlantingSeeds;
+                            IgnoredHalfedgesForPlantingSeeds[h5] = ignoreForPlantingSeeds;
+                        }
+                        if (EdgeEdgeIntersection(c, swapped))
+                        {
+                            UnresolvedIntersections.Add(h2);
+                        }
+                    }
+
+                    Intersections.Clear();
+                }
+
+                /// <summary>
+                /// Replaces <paramref name="h0"/> with <paramref name="h1"/>.
+                /// </summary>
+                private void ReplaceHalfedge(int h0, int h1)
+                {
+                    var h0p = Halfedges[h0];
+                    Halfedges[h1] = h0p;
+                    ConstrainedHalfedges[h1] = ConstrainedHalfedges[h0];
+                    IgnoredHalfedgesForPlantingSeeds[h1] = IgnoredHalfedgesForPlantingSeeds[h0];
+
+                    if (h0p != -1)
+                    {
+                        Halfedges[h0p] = h1;
+                        ConstrainedHalfedges[h0p] = ConstrainedHalfedges[h0];
+                        IgnoredHalfedgesForPlantingSeeds[h0p] = IgnoredHalfedgesForPlantingSeeds[h0];
+                    }
+                }
+
+                private bool EdgeEdgeIntersection(int2 e1, int2 e2)
+                {
+                    var (a0, a1) = (Positions[e1.x], Positions[e1.y]);
+                    var (b0, b1) = (Positions[e2.x], Positions[e2.y]);
+                    return !(math.any(e1.xy == e2.xy | e1.xy == e2.yx)) && UnsafeTriangulator<T, T2, TBig, TTransform, TUtils>.EdgeEdgeIntersection(a0, a1, b0, b1);
+                }
+
+                private void CollectIntersections(int2 edge, bool ignoreForPlantingSeeds)
+                {
+                    // 1. Check if h1 is cj
+                    // 2. Check if h1-h2 intersects with ci-cj
+                    // 3. After each iteration: h0 <- h0'
+                    //
+                    //          h1
+                    //       .^ |
+                    //     .'   |
+                    //   .'     v
+                    // h0 <---- h2
+                    // h0'----> h1'
+                    //   ^.     |
+                    //     '.   |
+                    //       '. v
+                    //          h2'
+                    var tunnelInit = -1;
+                    var (ci, cj) = (edge.x, edge.y);
+                    var h0init = PointToHalfedge[ci];
+                    var h0 = h0init;
                     do
                     {
                         var h1 = NextHalfedge(h0);
-                        if (triangles[h1] == cj)
+                        if (Triangles[h1] == cj)
                         {
-                            constrainedHalfedges[h0] = true;
-                            ignoredHalfedgesForPlantingSeeds[h0] = ignoreForPlantingSeeds;
-                            var oh0 = halfedges[h0];
+                            ConstrainedHalfedges[h0] = true;
+                            IgnoredHalfedgesForPlantingSeeds[h0] = ignoreForPlantingSeeds;
+                            var oh0 = Halfedges[h0];
                             if (oh0 != -1)
                             {
-                                constrainedHalfedges[oh0] = true;
-                                ignoredHalfedgesForPlantingSeeds[oh0] = ignoreForPlantingSeeds;
+                                ConstrainedHalfedges[oh0] = true;
+                                IgnoredHalfedgesForPlantingSeeds[oh0] = ignoreForPlantingSeeds;
                             }
                             break;
                         }
                         var h2 = NextHalfedge(h1);
-                        if (EdgeEdgeIntersection(edge, new(triangles[h1], triangles[h2])))
+                        if (EdgeEdgeIntersection(edge, new(Triangles[h1], Triangles[h2])))
                         {
-                            unresolvedIntersections.Add(h1);
-                            tunnelInit = halfedges[h1];
+                            UnresolvedIntersections.Add(h1);
+                            tunnelInit = Halfedges[h1];
                             break;
                         }
 
-                        h0 = halfedges[h0];
-                        // Boundary reached
+                        h0 = Halfedges[h2];
+
+                        // Boundary reached check other side
                         if (h0 == -1)
                         {
+                            if (Triangles[h2] == cj)
+                            {
+                                ConstrainedHalfedges[h2] = true;
+                                IgnoredHalfedgesForPlantingSeeds[h2] = ignoreForPlantingSeeds;
+                            }
+
+                            // possible that triangles[h2] == cj, not need to check
                             break;
                         }
-                        h0 = NextHalfedge(h0);
                     } while (h0 != h0init);
+
+                    h0 = Halfedges[h0init];
+                    if (tunnelInit == -1 && h0 != -1)
+                    {
+                        h0 = NextHalfedge(h0);
+                        // Same but reversed
+                        do
+                        {
+                            var h1 = NextHalfedge(h0);
+                            if (Triangles[h1] == cj)
+                            {
+                                ConstrainedHalfedges[h0] = true;
+                                IgnoredHalfedgesForPlantingSeeds[h0] = ignoreForPlantingSeeds;
+                                var oh0 = Halfedges[h0];
+                                if (oh0 != -1)
+                                {
+                                    ConstrainedHalfedges[oh0] = true;
+                                    IgnoredHalfedgesForPlantingSeeds[oh0] = ignoreForPlantingSeeds;
+                                }
+                                break;
+                            }
+                            var h2 = NextHalfedge(h1);
+                            if (EdgeEdgeIntersection(edge, new(Triangles[h1], Triangles[h2])))
+                            {
+                                UnresolvedIntersections.Add(h1);
+                                tunnelInit = Halfedges[h1];
+                                break;
+                            }
+
+                            h0 = Halfedges[h0];
+                            // Boundary reached
+                            if (h0 == -1)
+                            {
+                                break;
+                            }
+                            h0 = NextHalfedge(h0);
+                        } while (h0 != h0init);
+                    }
+
+                    // Tunnel algorithm
+                    //
+                    // h2'
+                    //  ^'.
+                    //  |  '.
+                    //  |    'v
+                    // h1'<-- h0'
+                    // h1 --> h2  h1''
+                    //  ^   .'   ^ |
+                    //  | .'   .'  |
+                    //  |v   .'    v
+                    // h0   h0''<--h2''
+                    //
+                    // 1. if h2 == cj break
+                    // 2. if h1-h2 intersects ci-cj, repeat with h0 <- halfedges[h1] = h0'
+                    // 3. if h2-h0 intersects ci-cj, repeat with h0 <- halfedges[h2] = h0''
+                    while (tunnelInit != -1)
+                    {
+                        var h0p = tunnelInit;
+                        tunnelInit = -1;
+                        var h1p = NextHalfedge(h0p);
+                        var h2p = NextHalfedge(h1p);
+
+                        if (Triangles[h2p] == cj)
+                        {
+                            break;
+                        }
+                        else if (EdgeEdgeIntersection(edge, new(Triangles[h1p], Triangles[h2p])))
+                        {
+                            UnresolvedIntersections.Add(h1p);
+                            tunnelInit = Halfedges[h1p];
+                        }
+                        else if (EdgeEdgeIntersection(edge, new(Triangles[h2p], Triangles[h0p])))
+                        {
+                            UnresolvedIntersections.Add(h2p);
+                            tunnelInit = Halfedges[h2p];
+                        }
+                    }
                 }
 
-                // Tunnel algorithm
-                //
-                // h2'
-                //  ^'.
-                //  |  '.
-                //  |    'v
-                // h1'<-- h0'
-                // h1 --> h2  h1''
-                //  ^   .'   ^ |
-                //  | .'   .'  |
-                //  |v   .'    v
-                // h0   h0''<--h2''
-                //
-                // 1. if h2 == cj break
-                // 2. if h1-h2 intersects ci-cj, repeat with h0 <- halfedges[h1] = h0'
-                // 3. if h2-h0 intersects ci-cj, repeat with h0 <- halfedges[h2] = h0''
-                while (tunnelInit != -1)
+                private bool IsMaxItersExceeded(int iter, int maxIters)
                 {
-                    var h0p = tunnelInit;
-                    tunnelInit = -1;
-                    var h1p = NextHalfedge(h0p);
-                    var h2p = NextHalfedge(h1p);
-
-                    if (triangles[h2p] == cj)
+                    if (iter >= maxIters)
                     {
-                        break;
+                        if (Args.Verbose)
+                        {
+                            Debug.LogError(
+                                $"[Triangulator]: Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +
+                                $"It usually happens when the scale of the input positions is not uniform. " +
+                                $"Please try to post-process input data or increase {nameof(TriangulationSettings.SloanMaxIters)} value."
+                            );
+                        }
+                        Status.Value |= BurstTriangulator.Status.ERR_SLOAN_ITERS_EXCEEDED;
+                        return true;
                     }
-                    else if (EdgeEdgeIntersection(edge, new(triangles[h1p], triangles[h2p])))
-                    {
-                        unresolvedIntersections.Add(h1p);
-                        tunnelInit = halfedges[h1p];
-                    }
-                    else if (EdgeEdgeIntersection(edge, new(triangles[h2p], triangles[h0p])))
-                    {
-                        unresolvedIntersections.Add(h2p);
-                        tunnelInit = halfedges[h2p];
-                    }
+                    return false;
                 }
-            }
-
-            private bool IsMaxItersExceeded(int iter, int maxIters)
-            {
-                if (iter >= maxIters)
-                {
-                    if (args.Verbose)
-                    {
-                        Debug.LogError(
-                            $"[Triangulator]: Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +
-                            $"It usually happens when the scale of the input positions is not uniform. " +
-                            $"Please try to post-process input data or increase {nameof(TriangulationSettings.SloanMaxIters)} value."
-                        );
-                    }
-                    status.Value |= Status.ERR_SLOAN_ITERS_EXCEEDED;
-                    return true;
-                }
-                return false;
             }
         }
 
