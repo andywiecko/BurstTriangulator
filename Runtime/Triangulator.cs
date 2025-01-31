@@ -993,6 +993,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double2>().Triangulate(input, output, args, allocator);
+        public static void ConstrainEdge(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double2>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
         /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
@@ -1078,6 +1079,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<float2> @this, NativeInputData<float2> input, NativeOutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().Triangulate(input, output, args, allocator);
+        public static void ConstrainEdge(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
         /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
@@ -1169,6 +1171,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<Vector2> @this, NativeInputData<Vector2> input, NativeOutputData<Vector2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float2>().Triangulate(UnsafeUtility.As<NativeInputData<Vector2>, NativeInputData<float2>>(ref input), UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), args, allocator);
+        public static void ConstrainEdge(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float2>().ConstrainEdge(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
         /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
@@ -1255,6 +1258,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<double2> @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().Triangulate(input, output, args, allocator);
+        public static void ConstrainEdge(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
         /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
@@ -1346,6 +1350,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().Triangulate(input, output, args, allocator);
+        public static void ConstrainEdge(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
         /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
@@ -1369,6 +1374,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<fp2> @this, NativeInputData<fp2> input, NativeOutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().Triangulate(input, output, args, allocator);
+        public static void ConstrainEdge(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
         /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
@@ -1638,6 +1644,39 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             if (tmpHalfedges.IsCreated) tmpHalfedges.Dispose();
             if (tmpConstrainedHalfedges.IsCreated) tmpConstrainedHalfedges.Dispose();
             if (tmpIgnoredHalfedgesForPlantingSeeds.IsCreated) tmpIgnoredHalfedgesForPlantingSeeds.Dispose();
+        }
+
+        public void ConstrainEdge(NativeOutputData<T2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds)
+        {
+            using var intersections = new NativeList<int>(allocator);
+            using var unresolvedIntersections = new NativeList<int>(allocator);
+            using var pointToHalfedge = new NativeArray<int>(output.Positions.Length, allocator);
+            output.IgnoredHalfedgesForPlantingSeeds.Length = output.Halfedges.Length;
+
+            FillPointToHalfedge(pointToHalfedge, output.Triangles.AsReadOnly());
+            static void FillPointToHalfedge(Span<int> pointToHalfedge, ReadOnlySpan<int> triangles)
+            {
+                for (int i = 0; i < triangles.Length; i++)
+                {
+                    pointToHalfedge[triangles[i]] = i;
+                }
+            }
+
+            new ConstrainEdgesStep.UnsafeSloan
+            {
+                Status = output.Status,
+                Positions = output.Positions.AsReadOnly(),
+                Triangles = output.Triangles.AsArray(),
+                Halfedges = output.Halfedges,
+                ConstrainedHalfedges = output.ConstrainedHalfedges,
+                IgnoredHalfedgesForPlantingSeeds = output.IgnoredHalfedgesForPlantingSeeds,
+
+                Intersections = intersections,
+                UnresolvedIntersections = unresolvedIntersections,
+                PointToHalfedge = pointToHalfedge,
+
+                Args = args,
+            }.TryApplyConstraint(new(pi, pj), ignoreForPlantingSeeds);
         }
 
         public void PlantHoleSeeds(NativeInputData<T2> input, NativeOutputData<T2> output, Args args, Allocator allocator)
