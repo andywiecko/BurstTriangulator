@@ -993,6 +993,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double2>().Triangulate(input, output, args, allocator);
+        /// <summary>
+        /// Constrains the edge formed by the point indices (<paramref name="pi"/>, <paramref name="pj"/>)
+        /// using the provided <paramref name="output"/> triangulation data.
+        /// </summary>
+        /// <remarks>
+        /// <para><b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </para>
+        /// <para><b>Limitations:</b>
+        /// This method is designed to work only on a <b>bulk</b> mesh and does not support constraining edges that pass through holes in the triangulation.
+        /// </para>
+        /// </remarks>
+        /// <param name="pi">The index of the first point of the edge to constrain.</param>
+        /// <param name="pj">The index of the second point of the edge to constrain.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="ignoreForPlantingSeeds">
+        /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
+        /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double2>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
@@ -1079,6 +1098,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<float2> @this, NativeInputData<float2> input, NativeOutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().Triangulate(input, output, args, allocator);
+        /// <summary>
+        /// Constrains the edge formed by the point indices (<paramref name="pi"/>, <paramref name="pj"/>)
+        /// using the provided <paramref name="output"/> triangulation data.
+        /// </summary>
+        /// <remarks>
+        /// <para><b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </para>
+        /// <para><b>Limitations:</b>
+        /// This method is designed to work only on a <b>bulk</b> mesh and does not support constraining edges that pass through holes in the triangulation.
+        /// </para>
+        /// </remarks>
+        /// <param name="pi">The index of the first point of the edge to constrain.</param>
+        /// <param name="pj">The index of the second point of the edge to constrain.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="ignoreForPlantingSeeds">
+        /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
+        /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
@@ -1171,6 +1209,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<Vector2> @this, NativeInputData<Vector2> input, NativeOutputData<Vector2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float2>().Triangulate(UnsafeUtility.As<NativeInputData<Vector2>, NativeInputData<float2>>(ref input), UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), args, allocator);
+        /// <summary>
+        /// Constrains the edge formed by the point indices (<paramref name="pi"/>, <paramref name="pj"/>)
+        /// using the provided <paramref name="output"/> triangulation data.
+        /// </summary>
+        /// <remarks>
+        /// <para><b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </para>
+        /// <para><b>Limitations:</b>
+        /// This method is designed to work only on a <b>bulk</b> mesh and does not support constraining edges that pass through holes in the triangulation.
+        /// </para>
+        /// </remarks>
+        /// <param name="pi">The index of the first point of the edge to constrain.</param>
+        /// <param name="pj">The index of the second point of the edge to constrain.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="ignoreForPlantingSeeds">
+        /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
+        /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float2>().ConstrainEdge(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
@@ -1258,6 +1315,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<double2> @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().Triangulate(input, output, args, allocator);
+        /// <summary>
+        /// Constrains the edge formed by the point indices (<paramref name="pi"/>, <paramref name="pj"/>)
+        /// using the provided <paramref name="output"/> triangulation data.
+        /// </summary>
+        /// <remarks>
+        /// <para><b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </para>
+        /// <para><b>Limitations:</b>
+        /// This method is designed to work only on a <b>bulk</b> mesh and does not support constraining edges that pass through holes in the triangulation.
+        /// </para>
+        /// </remarks>
+        /// <param name="pi">The index of the first point of the edge to constrain.</param>
+        /// <param name="pj">The index of the second point of the edge to constrain.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="ignoreForPlantingSeeds">
+        /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
+        /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
@@ -1350,6 +1426,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().Triangulate(input, output, args, allocator);
+        /// <summary>
+        /// Constrains the edge formed by the point indices (<paramref name="pi"/>, <paramref name="pj"/>)
+        /// using the provided <paramref name="output"/> triangulation data.
+        /// </summary>
+        /// <remarks>
+        /// <para><b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </para>
+        /// <para><b>Limitations:</b>
+        /// This method is designed to work only on a <b>bulk</b> mesh and does not support constraining edges that pass through holes in the triangulation.
+        /// </para>
+        /// </remarks>
+        /// <param name="pi">The index of the first point of the edge to constrain.</param>
+        /// <param name="pj">The index of the second point of the edge to constrain.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="ignoreForPlantingSeeds">
+        /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
+        /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
@@ -1374,6 +1469,25 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void Triangulate(this UnsafeTriangulator<fp2> @this, NativeInputData<fp2> input, NativeOutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().Triangulate(input, output, args, allocator);
+        /// <summary>
+        /// Constrains the edge formed by the point indices (<paramref name="pi"/>, <paramref name="pj"/>)
+        /// using the provided <paramref name="output"/> triangulation data.
+        /// </summary>
+        /// <remarks>
+        /// <para><b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </para>
+        /// <para><b>Limitations:</b>
+        /// This method is designed to work only on a <b>bulk</b> mesh and does not support constraining edges that pass through holes in the triangulation.
+        /// </para>
+        /// </remarks>
+        /// <param name="pi">The index of the first point of the edge to constrain.</param>
+        /// <param name="pj">The index of the second point of the edge to constrain.</param>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="ignoreForPlantingSeeds">
+        /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
+        /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)

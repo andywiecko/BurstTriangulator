@@ -97,6 +97,45 @@ new UnsafeTriangulator<float2>().Triangulate(
 );
 ```
 
+### ConstrainEdge
+
+The [`ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds)`][constrain-edge] extension allows for constraining the edge `(pi, pj)`.
+This is especially useful during dynamic triangulation when the user wants to insert a path dynamically and constrain the edges.
+This method is restricted to **bulk** mesh, meaning the edge to be constrained must not intersect any holes.
+The optional parameter `ignoreForPlantingSeeds` is used to ignore the halfedges corresponding to `(pi, pj)` during the seed planting step.
+
+Below is an example demonstrating how to use the [`ConstrainEdge`][constrain-edge] extension:
+
+```csharp
+using var inputPositions = new NativeArray<double2>(..., Allocator.Persistent);
+var output = new NativeOutputData<double2>
+{
+    Positions = inputPositions,
+};
+
+using var status = new NativeReference<Status>(Status.OK, Allocator.Persistent);
+using var outputPositions = new NativeList<double2>(Allocator.Persistent);
+using var triangles = new NativeList<int>(Allocator.Persistent);
+using var halfedges = new NativeList<int>(Allocator.Persistent);
+using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+using var ignoredHalfedgesForPlantingSeeds = new NativeList<bool>(Allocator.Persistent);
+var output = new NativeOutputData<double2>
+{
+    Status = status,
+    Positions = outputPositions,
+    Triangles = triangles,
+    Halfedges = halfedges,
+    ConstrainedHalfedges = constrainedHalfedges,
+    IgnoredHalfedgesForPlantingSeeds = ignoredHalfedgesForPlantingSeeds,
+};
+
+var args = Args.Default();
+
+var t = new UnsafeTriangulator<double2>();
+t.Triangulate(input, output, args, Allocator.Persistent);
+t.ConstrainEdge(output, pi: 0, pj: 1, args, allocator: Allocator.Persistent, ignoreForPlantingSeeds: true);
+```
+
 ### PlantHoleSeeds
 
 The extension [`PlantHoleSeeds(input, output, args, allocator)`][plant-seeds] is particularly useful when the user requires mesh data *without* removed triangles and additional mesh copy *with* removed triangles. In this case, the triangulation is performed once, which is generally a more expensive operation. Below is an example usage with the `autoHolesAndBoundary` option selected:
@@ -176,6 +215,7 @@ The [`UnsafeTriangulator<T>`][unsafe-triangulator] API also offers an option for
 [args-with]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With*
 [triangulate]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*
 [run]: xref:andywiecko.BurstTriangulator.Extensions.Run*
+[constrain-edge]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge*
 [plant-seeds]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds*
 [refine-mesh]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh*
 [float]: xref:System.Single
