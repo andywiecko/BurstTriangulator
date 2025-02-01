@@ -5,11 +5,11 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Field ConstrainedHalfedges | BurstTriangulator </title>
+      <title>Field Status | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Field ConstrainedHalfedges | BurstTriangulator ">
+      <meta name="title" content="Field Status | BurstTriangulator ">
     
-    <meta name="description" content="Buffer corresponding to . true indicates that the halfedge is constrained, false otherwise.">
+    <meta name="description" content="Status of the triangulation. Retrieve this value to detect any errors that occurred during triangulation.">
       <link rel="shortcut icon" href="../images/favicon.ico">
       <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
       <link rel="stylesheet" href="../styles/docfx.css">
@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.5.0</b></div>
+                "><b>v3.6.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -89,20 +89,20 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.ConstrainedHalfedges">
+            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.Status">
 
 
 
 
-<h1 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_1_ConstrainedHalfedges" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData`1.ConstrainedHalfedges" class="text-break">Field ConstrainedHalfedges</h1>
-<div class="markdown level0 summary"><p>Buffer corresponding to <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.OutputData-1.Halfedges.html">Halfedges</a>. <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a> indicates that the halfedge is constrained, <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a> otherwise.</p>
+<h1 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_Status" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.Status" class="text-break">Field Status</h1>
+<div class="markdown level0 summary"><p>Status of the triangulation. Retrieve this value to detect any errors that occurred during triangulation.</p>
 </div>
 <div class="markdown level0 conceptual"></div>
 <h6><strong>Namespace</strong>: <a class="xref" href="andywiecko.html">andywiecko</a>.<a class="xref" href="andywiecko.BurstTriangulator.html">BurstTriangulator</a>.<a class="xref" href="andywiecko.BurstTriangulator.LowLevel.html">LowLevel</a>.<a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.html">Unsafe</a></h6>
 <h6><strong>Assembly</strong>: .dll</h6>
-<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_OutputData_1_ConstrainedHalfedges_syntax">Syntax</h5>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_Status_syntax">Syntax</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public NativeList&lt;bool&gt; ConstrainedHalfedges</code></pre>
+  <pre><code class="lang-csharp hljs">public NativeReference&lt;Status&gt; Status</code></pre>
 </div>
 <h5 class="returns">Returns</h5>
 <table class="table table-bordered table-condensed">
@@ -114,8 +114,8 @@
   </thead>
   <tbody>
     <tr>
-      <td><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.collections@2.2/api/Unity.Collections.NativeList-1.html">NativeList</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a>&gt;</td>
-      <td>Buffer corresponding to . true indicates that the halfedge is constrained, false otherwise.</td>
+      <td><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.collections@2.2/api/Unity.Collections.NativeReference-1.html">NativeReference</a>&lt;<a class="xref" href="andywiecko.BurstTriangulator.Status.html">Status</a>&gt;</td>
+      <td>Status of the triangulation. Retrieve this value to detect any errors that occurred during triangulation.</td>
     </tr>
   </tbody>
 </table>

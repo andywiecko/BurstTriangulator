@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.5.0</b></div>
+                "><b>v3.6.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -101,18 +101,24 @@ Classes
       <h4><a class="xref" href="andywiecko.BurstTriangulator.Extensions.html">Extensions</a></h4>
       <section></section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.InputData-1.html">InputData&lt;T2&gt;</a></h4>
-      <section></section>
+      <section><p>A managed helper class that contains all native buffers for triangulation input.</p>
+</section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.OutputData-1.html">OutputData&lt;T2&gt;</a></h4>
-      <section></section>
+      <section><p>A managed helper class that contains all native buffers for triangulation output.</p>
+</section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.RefinementThresholds.html">RefinementThresholds</a></h4>
-      <section></section>
+      <section><p>A helper class for setting up refinement thresholds.</p>
+</section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.html">TriangulationSettings</a></h4>
-      <section></section>
+      <section><p>A helper class for configuring triangulation parameters.</p>
+</section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.Triangulator.html">Triangulator</a></h4>
-      <section><p>A wrapper for <a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator&lt;T2&gt;</a> where T2 is <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>.</p>
+      <section><p>A base class for triangulation, which provides the core functionality for performing triangulation on 2D geometric data.
+It acts as a wrapper for <a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator&lt;T2&gt;</a> where T2 is <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>.</p>
 </section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator&lt;T2&gt;</a></h4>
-      <section></section>
+      <section><p>A generic class for triangulation of coordinate type <code class="typeparamref">T2</code>, which provides the core functionality for performing triangulation on 2D geometric data.</p>
+</section>
     <h3 id="structs">
 Structs
 </h3>
@@ -124,9 +130,12 @@ Call <a class="xref" href="andywiecko.BurstTriangulator.Handle.Free.html#andywie
 Enums
 </h3>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.Preprocessor.html">Preprocessor</a></h4>
-      <section></section>
+      <section><p>An <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.enum">Enum</a> representing the type of transformation applied to input positions before triangulation.</p>
+</section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.Status.html">Status</a></h4>
-      <section></section>
+      <section><p>An <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.enum">Enum</a> representing the status of triangulation.
+To check if the triangulation was successful, compare the status with <a class="xref" href="andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_OK">OK</a>.</p>
+</section>
 
 
 </article>

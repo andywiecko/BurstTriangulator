@@ -9,7 +9,7 @@
       <meta name="viewport" content="width=device-width">
       <meta name="title" content="Class Triangulator | BurstTriangulator ">
     
-    <meta name="description" content="A wrapper for  where T2 is .">
+    <meta name="description" content="A base class for triangulation, which provides the core functionality for performing triangulation on 2D geometric data. It acts as a wrapper for  where T2 is .">
       <link rel="shortcut icon" href="../images/favicon.ico">
       <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
       <link rel="stylesheet" href="../styles/docfx.css">
@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.5.0</b></div>
+                "><b>v3.6.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -94,7 +94,8 @@
 
 
   <h1 id="andywiecko_BurstTriangulator_Triangulator" data-uid="andywiecko.BurstTriangulator.Triangulator" class="text-break">Class Triangulator</h1>
-  <div class="markdown level0 summary"><p>A wrapper for <a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator&lt;T2&gt;</a> where T2 is <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>.</p>
+  <div class="markdown level0 summary"><p>A base class for triangulation, which provides the core functionality for performing triangulation on 2D geometric data.
+It acts as a wrapper for <a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator&lt;T2&gt;</a> where T2 is <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="inheritance">
@@ -136,6 +137,28 @@
   <div class="codewrapper">
     <pre><code class="lang-csharp hljs">public class Triangulator : IDisposable</code></pre>
   </div>
+  <h5 id="andywiecko_BurstTriangulator_Triangulator_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>The triangulation process can be configured using the parameters available in <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Settings.html#andywiecko_BurstTriangulator_Triangulator_Settings">Settings</a>.
+Provide the input data via <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Input.html#andywiecko_BurstTriangulator_Triangulator_Input">Input</a>, and then execute the triangulation using
+<a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Run.html#andywiecko_BurstTriangulator_Triangulator_Run">Run()</a> or <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Schedule.html#andywiecko_BurstTriangulator_Triangulator_Schedule_Unity_Jobs_JobHandle_">Schedule(JobHandle)</a>.
+The triangulation results will be available in <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Output.html#andywiecko_BurstTriangulator_Triangulator_Output">Output</a>.
+Ensure you call <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Dispose.html#andywiecko_BurstTriangulator_Triangulator_Dispose">Dispose()</a> on the object after use to release resources.
+Example usage:</p>
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;double2&gt;(new[]
+{
+    new (0, 0), new (1, 0), new (1, 1), new (0, 1)
+}, Allocator.Persistent);
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+    Input = { Positions = positions },
+    Settings = { ValidateInput = false },
+};
+
+triangulator.Run();
+
+var triangles = triangulator.Output.Triangles;</code></pre>
+<p>For advanced customization of the triangulation process, refer to <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html">UnsafeTriangulator&lt;T2&gt;</a>.</p>
+</div>
   <h3 id="constructors">Constructors
 </h3>
   <table class="table table-bordered table-condensed">
@@ -150,13 +173,15 @@
         <td id="andywiecko_BurstTriangulator_Triangulator__ctor_System_Int32_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.Triangulator.#ctor(System.Int32,Unity.Collections.Allocator)">
           <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.-ctor.html#andywiecko_BurstTriangulator_Triangulator__ctor_System_Int32_Unity_Collections_Allocator_">Triangulator(int, Allocator)</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.html">Triangulator</a> class with the specified <code class="paramref">capacity</code> and memory <code class="paramref">allocator</code>.</p>
+</td>
       </tr>
       <tr>
         <td id="andywiecko_BurstTriangulator_Triangulator__ctor_Unity_Collections_Allocator_" data-uid="andywiecko.BurstTriangulator.Triangulator.#ctor(Unity.Collections.Allocator)">
           <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.-ctor.html#andywiecko_BurstTriangulator_Triangulator__ctor_Unity_Collections_Allocator_">Triangulator(Allocator)</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.html">Triangulator</a> class with the default capacity (16×1024) and specified memory <code class="paramref">allocator</code>.</p>
+</td>
       </tr>
     </tbody>
   </table>
@@ -174,19 +199,22 @@
         <td id="andywiecko_BurstTriangulator_Triangulator_Input" data-uid="andywiecko.BurstTriangulator.Triangulator.Input">
           <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Input.html#andywiecko_BurstTriangulator_Triangulator_Input">Input</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Input data used for triangulation.</p>
+</td>
       </tr>
       <tr>
         <td id="andywiecko_BurstTriangulator_Triangulator_Output" data-uid="andywiecko.BurstTriangulator.Triangulator.Output">
           <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Output.html#andywiecko_BurstTriangulator_Triangulator_Output">Output</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Output data resulting from the triangulation process.</p>
+</td>
       </tr>
       <tr>
         <td id="andywiecko_BurstTriangulator_Triangulator_Settings" data-uid="andywiecko.BurstTriangulator.Triangulator.Settings">
           <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Settings.html#andywiecko_BurstTriangulator_Triangulator_Settings">Settings</a>
         </td>
-        <td class="markdown level1 summary"></td>
+        <td class="markdown level1 summary"><p>Settings used for triangulation.</p>
+</td>
       </tr>
     </tbody>
   </table>
@@ -226,6 +254,7 @@
   <h3 id="seealso">See Also</h3>
   <div class="seealso">
       <div><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator</a>&lt;T2&gt;</div>
+      <div><a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html">UnsafeTriangulator</a>&lt;T2&gt;</div>
   </div>
 
 </article>

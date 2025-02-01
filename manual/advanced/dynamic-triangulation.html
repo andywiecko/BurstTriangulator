@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.5.0</b></div>
+                "><b>v3.6.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -118,13 +118,23 @@ The most suitable acceleration structure may vary depending on the use case.</p>
 
 using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
 using var constraints = new NativeArray&lt;int&gt;(..., Allocator.Persistent);
-var input = new InputData&lt;float2&gt; { Positions = positions, ConstraintEdges = constraints };
+var input = new NativeInputData&lt;float2&gt;
+{
+    Positions = positions,
+    ConstraintEdges = constraints
+};
 
 using var outputPositions = new NativeList&lt;float2&gt;(Allocator.Persistent);
 using var triangles = new NativeList&lt;int&gt;(Allocator.Persistent);
 using var halfedges = new NativeList&lt;int&gt;(Allocator.Persistent);
 using var constrainedHalfedges = new NativeList&lt;bool&gt;(Allocator.Persistent);
-var output = new OutputData&lt;float2&gt; { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
+var output = new NativeOutputData&lt;float2&gt;
+{
+    Positions = outputPositions,
+    Triangles = triangles,
+    Halfedges = halfedges,
+    ConstrainedHalfedges = constrainedHalfedges
+};
 
 t.Triangulate(input, output, args: Args.Default(autoHolesAndBoundary: true), Allocator.Persistent);
 
@@ -159,13 +169,23 @@ This method preserves the &quot;constrained&quot; state of the halfedge, meaning
 
 using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
 using var constraints = new NativeArray&lt;int&gt;(..., Allocator.Persistent);
-var input = new InputData&lt;float2&gt; { Positions = positions, ConstraintEdges = constraints };
+var input = new NativeInputData&lt;float2&gt;
+{
+    Positions = positions,
+    ConstraintEdges = constraints
+};
 
 using var outputPositions = new NativeList&lt;float2&gt;(Allocator.Persistent);
 using var triangles = new NativeList&lt;int&gt;(Allocator.Persistent);
 using var halfedges = new NativeList&lt;int&gt;(Allocator.Persistent);
 using var constrainedHalfedges = new NativeList&lt;bool&gt;(Allocator.Persistent);
-var output = new OutputData&lt;float2&gt; { Positions = outputPositions, Triangles = triangles, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges };
+var output = new NativeOutputData&lt;float2&gt;
+{
+    Positions = outputPositions,
+    Triangles = triangles,
+    Halfedges = halfedges,
+    ConstrainedHalfedges = constrainedHalfedges
+};
 
 t.Triangulate(input, output, args: Args.Default(autoHolesAndBoundary: true), Allocator.Persistent);
 
@@ -187,8 +207,8 @@ using var constrainedHalfedges = new NativeList&lt;bool&gt;(Allocator.Persistent
 using var halfedges = new NativeList&lt;int&gt;(Allocator.Persistent);
 
 var t = new UnsafeTriangulator&lt;double2&gt;();
-var input = new InputData&lt;double2&gt; { Positions = inputPositions };
-var output = new OutputData&lt;double2&gt;
+var input = new NativeInputData&lt;double2&gt; { Positions = inputPositions };
+var output = new NativeOutputData&lt;double2&gt;
 {
     Positions = outputPositions,
     Triangles = triangles,

@@ -5,11 +5,11 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Field IgnoreConstraintForPlantingSeeds | BurstTriangulator </title>
+      <title>Field Positions | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Field IgnoreConstraintForPlantingSeeds | BurstTriangulator ">
+      <meta name="title" content="Field Positions | BurstTriangulator ">
     
-    <meta name="description" content="Optional buffer used to mark constraints that should be ignored during the seed planting step. The buffer length should be half the length of .">
+    <meta name="description" content="Positions of triangulation points.">
       <link rel="shortcut icon" href="../images/favicon.ico">
       <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
       <link rel="stylesheet" href="../styles/docfx.css">
@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.5.0</b></div>
+                "><b>v3.6.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -89,21 +89,20 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.IgnoreConstraintForPlantingSeeds">
+            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.Positions">
 
 
 
 
-<h1 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_1_IgnoreConstraintForPlantingSeeds" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.IgnoreConstraintForPlantingSeeds" class="text-break">Field IgnoreConstraintForPlantingSeeds</h1>
-<div class="markdown level0 summary"><p>Optional buffer used to mark constraints that should be ignored during the seed planting step.
-The buffer length should be half the length of <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.ConstraintEdges.html">ConstraintEdges</a>.</p>
+<h1 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_Positions" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.Positions" class="text-break">Field Positions</h1>
+<div class="markdown level0 summary"><p>Positions of triangulation points.</p>
 </div>
 <div class="markdown level0 conceptual"></div>
 <h6><strong>Namespace</strong>: <a class="xref" href="andywiecko.html">andywiecko</a>.<a class="xref" href="andywiecko.BurstTriangulator.html">BurstTriangulator</a>.<a class="xref" href="andywiecko.BurstTriangulator.LowLevel.html">LowLevel</a>.<a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.html">Unsafe</a></h6>
 <h6><strong>Assembly</strong>: .dll</h6>
-<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_1_IgnoreConstraintForPlantingSeeds_syntax">Syntax</h5>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_Positions_syntax">Syntax</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public NativeArray&lt;bool&gt; IgnoreConstraintForPlantingSeeds</code></pre>
+  <pre><code class="lang-csharp hljs">public NativeList&lt;T2&gt; Positions</code></pre>
 </div>
 <h5 class="returns">Returns</h5>
 <table class="table table-bordered table-condensed">
@@ -115,11 +114,15 @@ The buffer length should be half the length of <a class="xref" href="andywiecko.
   </thead>
   <tbody>
     <tr>
-      <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Collections.NativeArray_1.html">NativeArray</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a>&gt;</td>
-      <td>Optional buffer used to mark constraints that should be ignored during the seed planting step. The buffer length should be half the length of .</td>
+      <td><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.collections@2.2/api/Unity.Collections.NativeList-1.html">NativeList</a>&lt;T2&gt;</td>
+      <td>Positions of triangulation points.</td>
     </tr>
   </tbody>
 </table>
+<h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_Positions_remarks"><strong>Remarks</strong></h5>
+<div class="markdown level0 remarks"><p><b>Note:</b> This buffer may include additional points than <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.Positions.html">Positions</a> if refinement is enabled.
+Additionally, the positions might differ slightly (by a small ε) if a <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Preprocessor.html">Preprocessor</a> is applied.</p>
+</div>
 </article>
           </div>
 

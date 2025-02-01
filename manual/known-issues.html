@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.5.0</b></div>
+                "><b>v3.6.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -92,11 +92,30 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="known-issues">Known Issues</h1>
 
-<h2 id="103-leak-detected-warning-in-the-console"><a href="https://github.com/andywiecko/BurstTriangulator/issues/103">#103</a>: Leak Detected Warning in the Console</h2>
+<p>Currently, there are no known issues. If you found a bug, please report it by opening a <strong><a href="https://github.com/andywiecko/BurstTriangulator/issues/new?template=Blank+issue">GitHub issue</a></strong>.</p>
+<hr>
+<details>
+    <summary>
+        <strong>📂 Archived Issues (Click to expand)</strong>
+    </summary>
+<h2>Archive</h2>
+<h3>
+    <a href="https://github.com/andywiecko/BurstTriangulator/issues/103">#103</a>:
+    Leak Detected Warning in the Console
+</h3>
 <p>In the Unity Editor, you may encounter the following log message:</p>
 <pre><code class="lang-bash">Leak Detected : Persistent allocates 257 individual allocations. To find out more please enable 'Jobs/LeakDetection/Full StackTraces' and reproduce the leak again.
 </code></pre>
 <p>Not to worry, this issue is likely related to an internal bug in the <code>Unity.Collections</code> or <code>Unity.Burst</code> package (related to <code>NativeQueue&lt;&gt;</code> allocation).</p>
+<p><em>Resolved: NativeQueue&lt;T&gt; is no longer used in the package. The log should no longer be visible since v3.6.</em></p>
+<h3>
+    <a href="https://github.com/andywiecko/BurstTriangulator/issues/105">#105</a>,
+    <a href="https://github.com/andywiecko/BurstTriangulator/issues/106">#106</a>:
+    Incorrect triangulations for complicated input
+</h3>
+<p>Due to floating-point precision, triangulation may fail for some input. This is often related to single-point precision. Changing coordinates from <code>float2</code> to <code>double2</code> solves the issue. This will be addressed in the upcoming release. If you want to try it now, there is an experimental branch available <a href="https://github.com/andywiecko/BurstTriangulator/tree/experimental/double2-coords"><strong>here</strong></a>.</p>
+<p><em>Resolved: Use <code>double2</code> precision (e.g., <code>Triangulator&lt;double2&gt;</code>). Fixed since v3.</em></p>
+</details>
 
 </article>
           </div>

@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Struct InputData&lt;T2&gt; | BurstTriangulator </title>
+      <title>Struct NativeOutputData&lt;T2&gt; | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Struct InputData&lt;T2&gt; | BurstTriangulator ">
+      <meta name="title" content="Struct NativeOutputData&lt;T2&gt; | BurstTriangulator ">
     
     <meta name="description" content="Native correspondence to .">
       <link rel="shortcut icon" href="../images/favicon.ico">
@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.5.0</b></div>
+                "><b>v3.6.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -89,12 +89,12 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1">
+            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1">
 
 
 
-  <h1 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_1" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1" class="text-break">Struct InputData&lt;T2&gt;</h1>
-  <div class="markdown level0 summary"><p>Native correspondence to <a class="xref" href="andywiecko.BurstTriangulator.InputData-1.html">InputData&lt;T2&gt;</a>.</p>
+  <h1 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1" class="text-break">Struct NativeOutputData&lt;T2&gt;</h1>
+  <div class="markdown level0 summary"><p>Native correspondence to <a class="xref" href="andywiecko.BurstTriangulator.OutputData-1.html">OutputData&lt;T2&gt;</a>.</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <div class="inheritedMembers">
@@ -120,9 +120,9 @@
   </div>
   <h6><strong>Namespace</strong>: <a class="xref" href="andywiecko.html">andywiecko</a>.<a class="xref" href="andywiecko.BurstTriangulator.html">BurstTriangulator</a>.<a class="xref" href="andywiecko.BurstTriangulator.LowLevel.html">LowLevel</a>.<a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.html">Unsafe</a></h6>
   <h6><strong>Assembly</strong>: .dll</h6>
-  <h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_1_syntax">Syntax</h5>
+  <h5 id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_syntax">Syntax</h5>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public struct InputData&lt;T2&gt; where T2 : unmanaged</code></pre>
+    <pre><code class="lang-csharp hljs">public struct NativeOutputData&lt;T2&gt; where T2 : unmanaged</code></pre>
   </div>
   <h5 class="typeParameters">Type Parameters</h5>
   <table class="table table-bordered table-condensed">
@@ -150,43 +150,53 @@
     </thead>
     <tbody>
       <tr>
-        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_1_ConstraintEdges" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.ConstraintEdges">
-          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.ConstraintEdges.html">ConstraintEdges</a>
+        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_ConstrainedHalfedges" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.ConstrainedHalfedges">
+          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.ConstrainedHalfedges.html">ConstrainedHalfedges</a>
         </td>
-        <td class="markdown level1 summary"><p>Optional buffer for constraint edges. This array constrains specific edges to be included in the final
-triangulation result. It should contain indexes corresponding to the <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.Positions.html">Positions</a> of the edges
-in the format [a₀, a₁, b₀, b₁, c₀, c₁, ...], where (a₀, a₁), (b₀, b₁), (c₀, c₁), etc., represent the constraint edges.</p>
+        <td class="markdown level1 summary"><p>Buffer corresponding to <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.Halfedges.html">Halfedges</a>. <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a> indicates that the halfedge is constrained, <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a> otherwise.</p>
 </td>
       </tr>
       <tr>
-        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_1_HoleSeeds" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.HoleSeeds">
-          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.HoleSeeds.html">HoleSeeds</a>
+        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_Halfedges" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.Halfedges">
+          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.Halfedges.html">Halfedges</a>
         </td>
-        <td class="markdown level1 summary"><p>Optional buffer containing seeds for holes. These hole seeds serve as starting points for a removal process that
-mimics the spread of a virus. During this process, <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.ConstraintEdges.html">ConstraintEdges</a> act as barriers to prevent further propagation.
-For more information, refer to the documentation.</p>
+        <td class="markdown level1 summary"><p>Continuous buffer of resulting halfedges. A value of -1 indicates that there is no corresponding opposite halfedge.
+For more information, refer to the documentation on halfedges.</p>
 </td>
       </tr>
       <tr>
-        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_1_IgnoreConstraintForPlantingSeeds" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.IgnoreConstraintForPlantingSeeds">
-          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.IgnoreConstraintForPlantingSeeds.html">IgnoreConstraintForPlantingSeeds</a>
+        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_IgnoredHalfedgesForPlantingSeeds" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.IgnoredHalfedgesForPlantingSeeds">
+          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.IgnoredHalfedgesForPlantingSeeds.html">IgnoredHalfedgesForPlantingSeeds</a>
         </td>
-        <td class="markdown level1 summary"><p>Optional buffer used to mark constraints that should be ignored during the seed planting step.
-The buffer length should be half the length of <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.ConstraintEdges.html">ConstraintEdges</a>.</p>
+        <td class="markdown level1 summary"><p>Buffer corresponding to <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.Halfedges.html">Halfedges</a>. <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a> indicates that the halfedge was ignored during planting seed step, <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a> otherwise. Constraint edges to ignore can be set in input using <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.IgnoreConstraintForPlantingSeeds.html">IgnoreConstraintForPlantingSeeds</a>.</p>
 </td>
       </tr>
       <tr>
-        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_InputData_1_Positions" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData`1.Positions">
-          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.InputData-1.Positions.html">Positions</a>
+        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_Positions" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.Positions">
+          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.Positions.html">Positions</a>
         </td>
-        <td class="markdown level1 summary"><p>Positions of points used in triangulation.</p>
+        <td class="markdown level1 summary"><p>Positions of triangulation points.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_Status" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.Status">
+          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.Status.html">Status</a>
+        </td>
+        <td class="markdown level1 summary"><p>Status of the triangulation. Retrieve this value to detect any errors that occurred during triangulation.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_1_Triangles" data-uid="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData`1.Triangles">
+          <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.Triangles.html">Triangles</a>
+        </td>
+        <td class="markdown level1 summary"><p>Continuous buffer of resulting triangles. All triangles are guaranteed to be oriented clockwise.</p>
 </td>
       </tr>
     </tbody>
   </table>
   <h3 id="seealso">See Also</h3>
   <div class="seealso">
-      <div><a class="xref" href="andywiecko.BurstTriangulator.InputData-1.html">InputData</a>&lt;T2&gt;</div>
+      <div><a class="xref" href="andywiecko.BurstTriangulator.OutputData-1.html">OutputData</a>&lt;T2&gt;</div>
   </div>
 
 </article>

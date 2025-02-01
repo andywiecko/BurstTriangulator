@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.5.0</b></div>
+                "><b>v3.6.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -98,7 +98,7 @@ All triangles in the generated mesh are clockwise.
 For example, consider triangle <span class="math">\((a, b, c)\)</span> (at indexes: <span class="math">\(i, i+1, i+2\)</span> in <a class="xref" href="../../api/andywiecko.BurstTriangulator.OutputData-1.Triangles.html#andywiecko_BurstTriangulator_OutputData_1_Triangles"><code>Output.Triangles</code></a>), which is made of 3 halfedges <span class="math">\((a, b)\)</span>, <span class="math">\((b, c)\)</span>, <span class="math">\((c, a)\)</span>.
 A halfedge is a directed edge, i.e., <span class="math">\((i, j) \neq (j, i)\)</span>.
 In the halfedges buffer, one can find the <span class="math">\(\mathtt{id}\)</span> of the opposite halfedge, if it exists.
-In the case when the opposite halfedge is not present in a mesh, then <code>Output.Triangles[id] = -1</code>.</p>
+In the case when the opposite halfedge is not present in a mesh, then <code>Output.Halfedges[id] = -1</code>.</p>
 <pre><code class="lang-csharp">using var triangulator = new Triangulator(Allocator.Persistent){ Input = { ... } };
 triangulator.Run();
 var halfedges = triangulator.Output.Halfedges;
