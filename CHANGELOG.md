@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.6.0] – 2025-02-01
+
+### Added
+
+- `ConstrainEdge` extension for `UnsafeTriangulator<T>`. Edges can now be constrained dynamically.
+- `NativeInputData<T>` and `NativeOutputData<T>`, which are essentially `LowLevel.Unsafe.InputData<T>` and `LowLevel.Unsafe.OutputData<T>`. This change resolves ambiguity between managed and unmanaged input/output data.
+- (Internal) `NativeQueueList<T>`, an alternative implementation to `Unity.Collections.NativeQueue<T>`. This wrapper is more stable and faster, though it consumes more memory.
+
+### Changed
+
+- Improved the performance of the refinement step. Depending on the input, speedups of up to 50% can be observed!
+- Various documentation (summary/manual/scripting API) tweaks.
+
+### Deprecated
+
+- `LowLevel.Unsafe.InputData<T>` and `LowLevel.Unsafe.OutputData<T>` have been deprecated. Use `NativeInputData<T>` and `NativeOutputData<T>` instead.
+
+### Fixed
+
+- A rare issue causing an editor crash when reloading the domain, apparently caused by `NativeQueue`. This has been resolved by replacing `NativeQueue` with the internal `NativeQueueList<T>` implementation.
+
 ## [3.5.0] – 2024-12-06
 
 ### Added
@@ -294,6 +315,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.6.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.6.0
 [3.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.5.0
 [3.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.4.0
 [3.3.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.3.0
