@@ -748,6 +748,67 @@ namespace andywiecko.BurstTriangulator
             new TriangulationJob<fp, fp2, fp, TransformFp, UtilsFp>(@this).Schedule(dependencies);
 #endif
     }
+
+    /// <summary>
+    /// A collection of utility functions related to triangulation.
+    /// </summary>
+    public static class Utilities
+    {
+        /// <summary>
+        /// Generates <paramref name="halfedges"/> using the provided <paramref name="triangles"/>.
+        /// </summary>
+        /// <remarks>
+        /// Note: The <paramref name="triangles"/> buffer must form a continuous and valid mesh.
+        /// Refer to the manual for more details.
+        /// </remarks>
+        /// <param name="halfedges">The buffer to be filled with halfedges. It must have the same length as <paramref name="triangles"/>.</param>
+        /// <param name="triangles">The triangles used for halfedge generation.</param>
+        /// <param name="allocator">The allocator to use for temporary data.</param>
+        public static void GenerateHalfedges(Span<int> halfedges, ReadOnlySpan<int> triangles, Allocator allocator)
+        {
+            CheckAndThrowIfLengthNotEqual(halfedges, triangles);
+
+            for (int i = 0; i < halfedges.Length; i++)
+            {
+                halfedges[i] = -1;
+            }
+
+            using var tmp = new NativeHashMap<int2, int>(triangles.Length, allocator);
+            for (int he = 0; he < halfedges.Length; he++)
+            {
+                var e0 = triangles[he];
+                var e1 = triangles[NextHalfedge(he)];
+                (e0, e1) = e0 < e1 ? (e0, e1) : (e1, e0);
+                var edge = math.int2(e0, e1);
+
+                if (tmp.TryGetValue(edge, out var ohe))
+                {
+                    halfedges[he] = ohe;
+                    halfedges[ohe] = he;
+                }
+                else
+                {
+                    tmp.Add(edge, he);
+                }
+            }
+
+            // NOTE:
+            //   This is duplicated within the package in multiple files/places,
+            //   and could be useful for users, should be extracted as utility?
+            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
+        }
+
+        [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        private static void CheckAndThrowIfLengthNotEqual(ReadOnlySpan<int> halfedges, ReadOnlySpan<int> triangles)
+        {
+            if (halfedges.Length != triangles.Length)
+            {
+                throw new ArgumentException(
+                    $"The provided halfedges[{halfedges.Length}] does not match the length of triangles[{triangles.Length}]."
+                );
+            }
+        }
+    }
 }
 
 namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
