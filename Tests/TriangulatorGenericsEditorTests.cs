@@ -9,6 +9,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.TestTools;
 using NUnit.Framework.Interfaces;
+using static andywiecko.BurstTriangulator.Utilities;
 
 #if UNITY_MATHEMATICS_FIXEDPOINT
 using Unity.Mathematics.FixedPoint;
@@ -2333,7 +2334,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Run();
 
-            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
             var triangles = triangulator.Output.Triangles;
             var constrainedHalfedges = triangulator.Output.ConstrainedHalfedges;
             var visited = new bool[triangulator.Output.Positions.Length];

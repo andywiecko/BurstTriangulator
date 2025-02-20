@@ -7,6 +7,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using System;
 using System.Linq;
+using static andywiecko.BurstTriangulator.Utilities;
 
 #if UNITY_MATHEMATICS_FIXEDPOINT
 using Unity.Mathematics.FixedPoint;
@@ -433,7 +434,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
                 return -1;
             }
-            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         }
     }
 
@@ -712,8 +712,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 var (p, q) = (outputPositions[i].ToFloat2(), outputPositions[j].ToFloat2());
                 return math.distance(p, q);
             }
-
-            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         }
 
         [Test]
@@ -793,8 +791,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 var (p, q) = (outputPositions[i].ToFloat2(), outputPositions[j].ToFloat2());
                 return math.distance(p, q);
             }
-
-            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         }
 
         [Test]
@@ -834,7 +830,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 var p = triangles[i];
                 var q = triangles[NextHalfedge(i)];
-                static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
                 if (p == 5 && q == 6)
                 {
                     constrain[i] = true;
@@ -902,7 +897,6 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 var p = triangles[i];
                 var q = triangles[NextHalfedge(i)];
-                static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
                 if (p == 1 && q == 0)
                 {
                     constrain[i] = true;
