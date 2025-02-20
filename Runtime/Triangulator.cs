@@ -37,6 +37,7 @@ using UnityEngine;
 #if UNITY_MATHEMATICS_FIXEDPOINT
 using Unity.Mathematics.FixedPoint;
 #endif
+using static andywiecko.BurstTriangulator.Utilities;
 
 [assembly: InternalsVisibleTo("andywiecko.BurstTriangulator.Tests")]
 
@@ -791,12 +792,20 @@ namespace andywiecko.BurstTriangulator
                     tmp.Add(edge, he);
                 }
             }
-
-            // NOTE:
-            //   This is duplicated within the package in multiple files/places,
-            //   and could be useful for users, should be extracted as utility?
-            static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         }
+
+        /// <summary>
+        /// Returns the next halfedge index after <paramref name="he"/>.
+        /// Useful for iterating over a triangle mesh.
+        /// </summary>
+        /// <remarks>
+        /// This method calculates the next halfedge index using:
+        /// <c>he % 3 == 2 ? he - 2 : he + 1</c>.
+        /// </remarks>
+        /// <param name="he">The current halfedge index. Should be non-negative.</param>
+        /// <returns>The next halfedge index.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
 
         [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
         private static void CheckAndThrowIfLengthNotEqual(ReadOnlySpan<int> halfedges, ReadOnlySpan<int> triangles)
@@ -4302,7 +4311,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// Segments intersecting only at their endpoints may or may not return <see langword="true"/>, depending on their orientation.
         /// </remarks>
         internal static bool EdgeEdgeIntersection(T2 a0, T2 a1, T2 b0, T2 b1) => ccw(a0, a1, b0) != ccw(a0, a1, b1) && ccw(b0, b1, a0) != ccw(b0, b1, a1);
-        private static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
         internal static bool IsConvexQuadrilateral(T2 a, T2 b, T2 c, T2 d) => true
             && utils.greater(utils.abs(Orient2dFast(a, c, b)), utils.EPSILON())
             && utils.greater(utils.abs(Orient2dFast(a, c, d)), utils.EPSILON())

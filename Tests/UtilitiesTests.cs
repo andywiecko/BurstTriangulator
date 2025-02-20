@@ -48,5 +48,18 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         {
             Assert.Throws<ArgumentException>(() => Utilities.GenerateHalfedges(new int[4], new int[7], Allocator.Persistent));
         }
+
+        private static readonly TestCaseData[] nextHalfedgeTestData =
+        {
+            new(0) { ExpectedResult = 1, TestName= "Test case 1 (NextHalfedgeTest)"},
+            new(1) { ExpectedResult = 2, TestName= "Test case 2 (NextHalfedgeTest)"},
+            new(2) { ExpectedResult = 0, TestName= "Test case 3 (NextHalfedgeTest)"},
+            new(3) { ExpectedResult = 4, TestName= "Test case 4 (NextHalfedgeTest)"},
+            new(4) { ExpectedResult = 5, TestName= "Test case 5 (NextHalfedgeTest)"},
+            new(5) { ExpectedResult = 3, TestName= "Test case 6 (NextHalfedgeTest)"},
+        };
+
+        [Test, TestCaseSource(nameof(nextHalfedgeTestData))]
+        public int NextHalfedgeTest(int he) => Utilities.NextHalfedge(he);
     }
 }
