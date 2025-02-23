@@ -1,6 +1,9 @@
 using NUnit.Framework;
 using System;
+using System.Linq;
 using Unity.Collections;
+using Unity.Collections.NotBurstCompatible;
+using Unity.Mathematics;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -61,5 +64,57 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
         [Test, TestCaseSource(nameof(nextHalfedgeTestData))]
         public int NextHalfedgeTest(int he) => Utilities.NextHalfedge(he);
+
+        private static readonly TestCaseData[] insertSubMeshTestData =
+        {
+            new(
+                (new float2[]{ }, new int[]{ }),
+                (new float2[]{ }, new int[]{ })
+            )
+            {
+                ExpectedResult = new int[]{ },
+                TestName = "Test case 1 - identity (InsertSubMeshTest)"
+            },
+            new(
+                (new float2[]{ }, new int[]{ }),
+                (new float2[]{ default, default, default }, new int[]{ 0, 1, 2 })
+            )
+            {
+                ExpectedResult = new int[]{ 0, 1, 2 },
+                TestName = "Test case 2 - empty mesh (InsertSubMeshTest)"
+            },
+            new(
+                (new float2[]{ 1, 2, 3 }, new int[]{ 0, 1, 2 }),
+                (new float2[]{ 4, 5, 6 }, new int[]{ 0, 1, 2 })
+            )
+            {
+                ExpectedResult = new int[]{ 0, 1, 2, 3, 4, 5 },
+                TestName = "Test case 3 (InsertSubMeshTest)"
+            },
+            new(
+                (new float2[]{ 1, 2, 3, 4 }, new int[]{ 0, 1, 2, 2, 1, 3 }),
+                (new float2[]{ 4, 5, 6, 7, 8, 9 }, new int[]{ 3, 4, 5, 2, 1, 0 })
+            )
+            {
+                ExpectedResult = new int[]{ 0, 1, 2, 2, 1, 3, 7, 8, 9, 6, 5, 4 },
+                TestName = "Test case 4 (InsertSubMeshTest)"
+            },
+        };
+
+        [Test, TestCaseSource(nameof(insertSubMeshTestData))]
+        public int[] InsertSubMeshTest((float2[] p, int[] t) mesh, (float2[] p, int[] t) subMesh)
+        {
+            using var positions = new NativeList<float2>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            positions.CopyFromNBC(mesh.p);
+            triangles.CopyFromNBC(mesh.t);
+
+            Utilities.InsertSubMesh(positions, triangles, subMesh.p, subMesh.t);
+
+            // NOTE:
+            //   NUnit does not support for returning type of (float2[], int[]).
+            Assert.That(positions.AsArray(), Is.EqualTo(mesh.p.Concat(subMesh.p)));
+            return triangles.AsReadOnly().ToArray();
+        }
     }
 }

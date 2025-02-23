@@ -795,6 +795,40 @@ namespace andywiecko.BurstTriangulator
         }
 
         /// <summary>
+        /// Inserts a sub-mesh, defined by (<paramref name="subpositions"/>, <paramref name="subtriangles"/>), into the main mesh
+        /// represented by (<paramref name="positions"/>, <paramref name="triangles"/>).
+        /// The <paramref name="subtriangles"/> will be adjusted by the initial count of <paramref name="positions"/>
+        /// to ensure proper indexing before insertion. It assumes that both the main mesh and the sub-mesh are valid.
+        /// Refer to the documentation for more details.
+        /// </summary>
+        /// <typeparam name="T">The data type of the positions.</typeparam>
+        /// <param name="positions">The list of positions representing the main mesh.</param>
+        /// <param name="triangles">The list of triangles defining the mesh.</param>
+        /// <param name="subpositions">The positions buffer of the sub-mesh to insert.</param>
+        /// <param name="subtriangles">The triangles buffer of the sub-mesh to insert.</param>
+        public static unsafe void InsertSubMesh<T>(NativeList<T> positions, NativeList<int> triangles, ReadOnlySpan<T> subpositions, ReadOnlySpan<int> subtriangles)
+            where T : unmanaged
+        {
+            var offset = positions.Length;
+            var t0 = triangles.Length;
+
+            fixed (void* p = subpositions)
+            {
+                positions.AddRange(p, subpositions.Length);
+            }
+
+            fixed (void* t = subtriangles)
+            {
+                triangles.AddRange(t, subtriangles.Length);
+            }
+
+            for (int i = t0; i < triangles.Length; i++)
+            {
+                triangles[i] += offset;
+            }
+        }
+
+        /// <summary>
         /// Returns the next halfedge index after <paramref name="he"/>.
         /// Useful for iterating over a triangle mesh.
         /// </summary>
