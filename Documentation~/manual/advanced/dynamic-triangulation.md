@@ -115,7 +115,7 @@ t.Triangulate(input, output, args: Args.Default(autoHolesAndBoundary: true), All
 var random = new Unity.Mathematics.Random(seed: 42);
 for(int i = 0; i < 32; i++)
 {
-    t.DynamicInsertPoint(output, he: random.NextInt(0, triangle.Length), alpha: 0.5f, allocator: Allocator.Persistent);
+    t.DynamicInsertPoint(output, he: random.NextInt(0, triangles.Length), alpha: 0.5f, allocator: Allocator.Persistent);
 }
 ```
 
