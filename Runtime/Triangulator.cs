@@ -758,10 +758,6 @@ namespace andywiecko.BurstTriangulator
         /// <summary>
         /// Generates <paramref name="halfedges"/> using the provided <paramref name="triangles"/>.
         /// </summary>
-        /// <remarks>
-        /// Note: The <paramref name="triangles"/> buffer must form a continuous and valid mesh.
-        /// Refer to the manual for more details.
-        /// </remarks>
         /// <param name="halfedges">The buffer to be filled with halfedges. It must have the same length as <paramref name="triangles"/>.</param>
         /// <param name="triangles">The triangles used for halfedge generation.</param>
         /// <param name="allocator">The allocator to use for temporary data.</param>
@@ -798,8 +794,7 @@ namespace andywiecko.BurstTriangulator
         /// Inserts a sub-mesh, defined by (<paramref name="subpositions"/>, <paramref name="subtriangles"/>), into the main mesh
         /// represented by (<paramref name="positions"/>, <paramref name="triangles"/>).
         /// The <paramref name="subtriangles"/> will be adjusted by the initial count of <paramref name="positions"/>
-        /// to ensure proper indexing before insertion. It assumes that both the main mesh and the sub-mesh are valid.
-        /// Refer to the documentation for more details.
+        /// to ensure proper indexing before insertion.
         /// </summary>
         /// <typeparam name="T">The data type of the positions.</typeparam>
         /// <param name="positions">The list of positions representing the main mesh.</param>
