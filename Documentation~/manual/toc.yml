@@ -40,6 +40,9 @@ items:
   - name: Dynamic triangulation
     href: advanced/dynamic-triangulation.md
 
+- name: Utilities
+  href: utilities.md
+
 - name: Benchmark
   href: benchmark.md
 
