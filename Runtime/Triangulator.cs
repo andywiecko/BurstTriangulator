@@ -1879,7 +1879,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 Status = output.Status,
                 Positions = output.Positions.AsReadOnly(),
-                Triangles = output.Triangles.AsArray(),
+                Triangles = output.Triangles,
                 Halfedges = output.Halfedges,
                 ConstrainedHalfedges = output.ConstrainedHalfedges,
                 IgnoredHalfedgesForPlantingSeeds = output.IgnoredHalfedgesForPlantingSeeds,
@@ -2912,9 +2912,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             private NativeReference<Status> status;
             private NativeArray<T2>.ReadOnly positions;
-            private NativeArray<int> triangles;
             private NativeArray<int>.ReadOnly inputConstraintEdges;
-            // NOTE: `halfedges` and `constrainedHalfedges` can be NativeArray, however, Job system can throw here the exception:
+            // NOTE: `triangles`, `halfedges`, and `constrainedHalfedges` can be NativeArray, however, Job system can throw here the exception:
             //
             // ```
             // InvalidOperationException: The Unity.Collections.NativeList`1[System.Int32]
@@ -2922,6 +2921,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             // ```
             //
             // See the `UsingTempAllocatorInJobTest` to learn more.
+            private NativeList<int> triangles;
             private NativeList<int> halfedges;
             private NativeList<bool> constrainedHalfedges;
             private NativeList<bool> ignoredHalfedgesForPlantingSeeds;
@@ -2932,7 +2932,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 status = output.Status;
                 positions = output.Positions.AsReadOnly();
-                triangles = output.Triangles.AsArray();
+                triangles = output.Triangles;
                 inputConstraintEdges = input.ConstraintEdges.AsReadOnly();
                 ignoreConstraintForPlantingSeeds = input.IgnoreConstraintForPlantingSeeds;
                 halfedges = output.Halfedges;
@@ -2955,7 +2955,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 using var pointToHalfedge = new NativeArray<int>(positions.Length, allocator);
                 ignoredHalfedgesForPlantingSeeds.Length = halfedges.Length;
 
-                FillPointToHalfedge(pointToHalfedge, triangles);
+                FillPointToHalfedge(pointToHalfedge, triangles.AsReadOnly());
                 static void FillPointToHalfedge(Span<int> pointToHalfedge, ReadOnlySpan<int> triangles)
                 {
                     for (int i = 0; i < triangles.Length; i++)
@@ -2995,7 +2995,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 public NativeReference<Status> Status;
                 public NativeArray<T2>.ReadOnly Positions;
-                public NativeArray<int> Triangles;
+                public NativeList<int> Triangles;
                 public NativeList<int> Halfedges;
                 public NativeList<bool> ConstrainedHalfedges;
                 public NativeList<bool> IgnoredHalfedgesForPlantingSeeds;

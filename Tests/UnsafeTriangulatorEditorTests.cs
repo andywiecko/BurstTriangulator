@@ -109,6 +109,130 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var triangles = new NativeList<int>(Allocator.Persistent);
             new UnsafeTriangulatorWithTempAllocatorJob { positions = positions, constraints = constraints, triangles = triangles }.Run();
         }
+
+        [BurstCompile]
+        private struct UnsafeTriangulatorWithTempInputAllocatorJob : IJob
+        {
+            public NativeList<double2> positions;
+            public NativeList<int> triangles, halfedges;
+            public NativeList<bool> ignoredHalfedgesForPlantingSeeds, constrainedHalfedges;
+            public NativeReference<Status> status;
+
+            public void Execute()
+            {
+                //
+                //                2
+                //              .'|
+                //            .'  |
+                //          .' .5 |
+                //        .' .'X| |
+                //      .'  3---4 |
+                //     0 -------- 1
+                //
+                using var inputPositions = new NativeList<double2>(Allocator.Temp)
+                {
+                    new(0, 0), new(5, 0), new(5, 5),
+                    new(3, 1), new(4, 1), new(4, 2),
+                };
+                using var inputConstraints = new NativeList<int>(Allocator.Temp)
+                {
+                    0, 1, 1, 2, 2, 0,
+                    3, 4, 4, 5, 5, 3,
+                };
+                using var ignoreConstraintForPlantingSeeds = new NativeList<bool>(Allocator.Temp)
+                {
+                    false, false, false,
+                    false, false, false,
+                };
+                using var holeSeeds = new NativeList<double2>(Allocator.Temp)
+                {
+                    new(4.5, 1.5)
+                };
+
+                using var outputPositions = new NativeList<double2>(Allocator.Temp);
+                using var outputTriangles = new NativeList<int>(Allocator.Temp);
+                using var outputStatus = new NativeReference<Status>(Allocator.Temp);
+                using var outputHalfedges = new NativeList<int>(Allocator.Temp);
+                using var outputConstrainedHalfedges = new NativeList<bool>(Allocator.Temp);
+                using var outputIgnoredHalfedgesForPlantingSeeds = new NativeList<bool>(Allocator.Temp);
+
+                using var p = inputPositions.ToArray(Allocator.Temp);
+                using var c = inputConstraints.ToArray(Allocator.Temp);
+                using var i = ignoreConstraintForPlantingSeeds.ToArray(Allocator.Temp);
+                using var h = holeSeeds.ToArray(Allocator.Temp);
+
+                var input = new NativeInputData<double2>
+                {
+                    Positions = p,
+                    ConstraintEdges = c,
+                    IgnoreConstraintForPlantingSeeds = i,
+                    HoleSeeds = h,
+                };
+
+                var output = new NativeOutputData<double2>
+                {
+                    Positions = outputPositions,
+                    Triangles = outputTriangles,
+                    Status = outputStatus,
+                    Halfedges = outputHalfedges,
+                    ConstrainedHalfedges = outputConstrainedHalfedges,
+                    IgnoredHalfedgesForPlantingSeeds = outputIgnoredHalfedgesForPlantingSeeds,
+                };
+
+                var t = new UnsafeTriangulator();
+                var args = Args.Default(autoHolesAndBoundary: true, refineMesh: true);
+                LowLevel.Unsafe.Extensions.Triangulate(t, input, output, args, allocator: Allocator.Temp);
+
+                positions.CopyFrom(outputPositions);
+                triangles.CopyFrom(outputTriangles);
+                status.CopyFrom(outputStatus);
+                halfedges.CopyFrom(outputHalfedges);
+                constrainedHalfedges.CopyFrom(constrainedHalfedges);
+                ignoredHalfedgesForPlantingSeeds.CopyFrom(outputIgnoredHalfedgesForPlantingSeeds);
+            }
+        }
+
+        [Test]
+        public void UsingTempAllocatorInJobWithInputTempTest()
+        {
+            // When using Temp allocation e.g. for native it can throw exception:
+            //
+            // ```
+            // InvalidOperationException: The Unity.Collections.NativeList`1[System.Int32]
+            // has been declared as [WriteOnly] in the job, but you are reading from it.
+            // ```
+            //
+            // This seems to be a known issue in current Unity.Collections package
+            // https://docs.unity3d.com/Packages/com.unity.collections@2.2/manual/issues.html
+            //
+            // ```
+            // All containers allocated with Allocator.Temp on the same thread use a shared
+            // AtomicSafetyHandle instance rather than each having their own. Most of the time,
+            // this isn't an issue because you can't pass Temp allocated collections into a job.
+            //
+            // However, when you use Native*HashMap, NativeParallelMultiHashMap, Native*HashSet,
+            // and NativeList together with their secondary safety handle, this shared AtomicSafetyHandle
+            // instance is a problem.
+            //
+            // A secondary safety handle ensures that a NativeArray which aliases a NativeList
+            // is invalidated when the NativeList is reallocated due to resizing
+            // ```
+            using var positions = new NativeList<double2>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            using var ignoredHalfedgesForPlantingSeeds = new NativeList<bool>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var status = new NativeReference<Status>(Status.OK, Allocator.Persistent);
+            new UnsafeTriangulatorWithTempInputAllocatorJob
+            {
+                positions = positions,
+                triangles = triangles,
+                constrainedHalfedges = constrainedHalfedges,
+                halfedges = halfedges,
+                ignoredHalfedgesForPlantingSeeds = ignoredHalfedgesForPlantingSeeds,
+                status = status,
+            }.Run();
+        }
     }
 
     [TestFixture(typeof(float2))]
