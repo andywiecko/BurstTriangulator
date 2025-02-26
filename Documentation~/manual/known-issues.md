@@ -1,8 +1,50 @@
 # Known Issues
 
-Currently, there are no known issues. If you found a bug, please report it by opening a **[GitHub issue]**.
+Below you can find current known issues. If you found a bug, please report it by opening a **[GitHub issue]**.
+
+### [#333]: AtomicSafetyHandle may throw InvalidOperationException
+
+`Unity.Collections@2.2+` has an unresolved bug, as you can read [here](https://docs.unity3d.com/Packages/com.unity.collections@2.2/manual/issues.html):
+
+> [!QUOTE]
+> All containers allocated with `Allocator.Temp` on the same thread use a shared `AtomicSafetyHandle` instance rather than each having their own.
+
+This can lead to safety check error throws like this:
+
+```txt
+InvalidOperationException: The Unity.Collections.NativeList`1[System.Int32]
+has been declared as [WriteOnly] in the job, but you are reading from it.
+```
+
+when using [`UnsafeTriangulator`][unsafe-triangulator] with `Allocator.Temp`. Consider the following example:
+
+```csharp
+using var positions = new NativeList<double2>(Allocator.Temp);
+positions.Add(...);
+
+new UnsafeTriangulator().Triangulate(input: new(){ Positions = positions.AsArray() }, ...);
+```
+
+Unfortunately, due to `AsArray()` call, which should be safe, the above example will trigger an exception from the safety handle.
+Currently the only way to resolve this issue is:
+
+- Disable safety checks, or
+- Call [`ToArray(Allocator)`][to-array]
+
+I recommend the second option, calling [ToArray][to-array], unless you are certain about what you are doing.
+
+```csharp
+using var positions = new NativeList<double2>(Allocator.Temp);
+positions.Add(...);
+
+using var p = postions.ToArray(Allocator.Temp);
+new UnsafeTriangulator().Triangulate(input: new(){ Positions = p }, ...);
+```
 
 [GitHub issue]: https://github.com/andywiecko/BurstTriangulator/issues/new?template=Blank+issue
+[#333]: https://github.com/andywiecko/BurstTriangulator/issues/333
+[unsafe-triangulator]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator
+[to-array]: https://docs.unity3d.com/Packages/com.unity.collections@2.5/api/Unity.Collections.NativeList-1.html#Unity_Collections_NativeList_1_ToArray_Unity_Collections_AllocatorManager_AllocatorHandle_
 
 ---
 
