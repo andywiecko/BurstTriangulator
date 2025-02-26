@@ -20,7 +20,10 @@
     ],
     "markdownEngineName": "markdig",
     "markdownEngineProperties": {
-      "markdigExtensions": [ "footnotes" ]
+      "markdigExtensions": [ "footnotes" ],
+      "alerts": {
+        "QUOTE": "alert alert-info"
+      }
     },
     "content": [
       {"files": ["index.md", "toc.yml"]},
