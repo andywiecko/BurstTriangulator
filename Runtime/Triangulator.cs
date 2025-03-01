@@ -763,12 +763,9 @@ namespace andywiecko.BurstTriangulator
         /// <param name="allocator">The allocator to use for temporary data.</param>
         public static void GenerateHalfedges(Span<int> halfedges, ReadOnlySpan<int> triangles, Allocator allocator)
         {
-            CheckAndThrowIfLengthNotEqual(halfedges, triangles);
+            ThrowCheckGenerateHalfedges(halfedges, triangles);
 
-            for (int i = 0; i < halfedges.Length; i++)
-            {
-                halfedges[i] = -1;
-            }
+            halfedges.Fill(-1);
 
             using var tmp = new NativeHashMap<int2, int>(triangles.Length, allocator);
             for (int he = 0; he < halfedges.Length; he++)
@@ -786,6 +783,56 @@ namespace andywiecko.BurstTriangulator
                 else
                 {
                     tmp.Add(edge, he);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generates triangle <paramref name="colors"/> using the provided <paramref name="halfedges"/>.
+        /// Triangles that share a common edge are assigned the same color index.
+        /// The resulting <paramref name="colors"/> contains values in the range <tt>[0, <paramref name="colorsCount"/>)</tt>.
+        /// Check the documentation for further details.
+        /// </summary>
+        /// <param name="colors">A buffer that will be populated with triangle colors. Its length must be three times smaller than <paramref name="halfedges"/>.</param>
+        /// <param name="halfedges">The halfedge data used for generating colors.</param>
+        /// <param name="colorsCount">The total number of unique colors assigned.</param>
+        /// <param name="allocator">The allocator to use for temporary data.</param>
+        /// <seealso cref="GenerateHalfedges(Span{int}, ReadOnlySpan{int}, Allocator)"/>
+        public static void GenerateTriangleColors(Span<int> colors, ReadOnlySpan<int> halfedges, out int colorsCount, Allocator allocator)
+        {
+            ThrowCheckGenerateTriangleColors(colors, halfedges);
+
+            colorsCount = 0;
+            colors.Fill(-1);
+
+            using var heQueue = new NativeQueueList<int>(allocator);
+            for (int t = 0; t < colors.Length; t++)
+            {
+                if (colors[t] == -1)
+                {
+                    heQueue.Enqueue(3 * t + 0);
+                    heQueue.Enqueue(3 * t + 1);
+                    heQueue.Enqueue(3 * t + 2);
+                    colors[t] = colorsCount;
+                    BFS(colorsCount++, colors, heQueue, halfedges);
+                }
+            }
+
+            static void BFS(int color, Span<int> colors, NativeQueueList<int> heQueue, ReadOnlySpan<int> halfedges)
+            {
+                while (heQueue.TryDequeue(out var he))
+                {
+                    var ohe = halfedges[he];
+                    var t = ohe / 3;
+                    if (ohe == -1 || colors[t] != -1)
+                    {
+                        continue;
+                    }
+
+                    heQueue.Enqueue(3 * t + 0);
+                    heQueue.Enqueue(3 * t + 1);
+                    heQueue.Enqueue(3 * t + 2);
+                    colors[t] = color;
                 }
             }
         }
@@ -837,12 +884,23 @@ namespace andywiecko.BurstTriangulator
         public static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
 
         [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        private static void CheckAndThrowIfLengthNotEqual(ReadOnlySpan<int> halfedges, ReadOnlySpan<int> triangles)
+        private static void ThrowCheckGenerateHalfedges(ReadOnlySpan<int> halfedges, ReadOnlySpan<int> triangles)
         {
             if (halfedges.Length != triangles.Length)
             {
                 throw new ArgumentException(
                     $"The provided halfedges[{halfedges.Length}] does not match the length of triangles[{triangles.Length}]."
+                );
+            }
+        }
+
+        [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        private static void ThrowCheckGenerateTriangleColors(ReadOnlySpan<int> colors, ReadOnlySpan<int> halfedges)
+        {
+            if (3 * colors.Length != halfedges.Length)
+            {
+                throw new ArgumentException(
+                    $"The provided colors[{colors.Length}] must be one-third of the length of halfedges [{halfedges.Length}]."
                 );
             }
         }
