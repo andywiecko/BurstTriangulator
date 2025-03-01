@@ -47,10 +47,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }
 
         [Test]
-        public void GenerateHalfedgesThrowIfDifferentLengthTest()
-        {
-            Assert.Throws<ArgumentException>(() => Utilities.GenerateHalfedges(new int[4], new int[7], Allocator.Persistent));
-        }
+        public void GenerateHalfedgesThrowTest() => Assert.Throws<ArgumentException>(() =>
+            Utilities.GenerateHalfedges(halfedges: new int[4], triangles: new int[7], Allocator.Persistent)
+        );
 
         private static readonly TestCaseData[] nextHalfedgeTestData =
         {
@@ -116,5 +115,68 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(positions.AsArray(), Is.EqualTo(mesh.p.Concat(subMesh.p)));
             return triangles.AsReadOnly().ToArray();
         }
+
+        private static readonly TestCaseData[] generateTriangleColorsTestData =
+        {
+            new(new int[]{ }, 0)
+            {
+                ExpectedResult = new int[]{ },
+                TestName = "Test case 0 - 0 triangles 0 colors (GenerateTriangleColorsTest)"
+            },
+            new(new int[]{ -1, -1, -1 }, 1)
+            {
+                ExpectedResult = new int[]{ 0 },
+                TestName = "Test case 1 - 1 triangle 1 color (GenerateTriangleColorsTest)"
+            },
+            new(new int[]{ -1, -1, -1, -1, -1, -1 }, 2)
+            {
+                ExpectedResult = new int[]{ 0, 1 },
+                TestName = "Test case 2a - 2 triangles 2 colors (GenerateTriangleColorsTest)"
+            },
+            new(new int[]{ 3, -1, -1, 0, -1, -1 }, 1)
+            {
+                ExpectedResult = new int[]{ 0, 0 },
+                TestName = "Test case 2b - 2 triangles 1 colors (GenerateTriangleColorsTest)"
+            },
+            new(new int[]{ -1, -1, -1, -1, -1, -1, -1, -1, -1 }, 3)
+            {
+                ExpectedResult = new int[]{ 0, 1, 2 },
+                TestName = "Test case 3a - 3 triangles 3 colors (GenerateTriangleColorsTest)"
+            },
+            new(new int[]{ 3, -1, -1, 0, -1, -1, -1, -1, -1 }, 2)
+            {
+                ExpectedResult = new int[]{ 0, 0, 1 },
+                TestName = "Test case 3b - 3 triangles 2 colors (GenerateTriangleColorsTest)"
+            },
+            new(new int[]{ 6, -1, -1, -1, -1, -1, 0, -1, -1 }, 2)
+            {
+                ExpectedResult = new int[]{ 0, 1, 0 },
+                TestName = "Test case 3c - 3 triangles 2 colors (GenerateTriangleColorsTest)"
+            },
+            new(new int[]{ -1, -1, -1, 6, -1, -1, 3, -1, -1 }, 2)
+            {
+                ExpectedResult = new int[]{ 0, 1, 1 },
+                TestName = "Test case 3d - 3 triangles 2 colors (GenerateTriangleColorsTest)"
+            },
+            new(new int[]{ 3, -1, -1, 0, 6, -1, 4, -1, -1 }, 1)
+            {
+                ExpectedResult = new int[]{ 0, 0, 0 },
+                TestName = "Test case 3e - 3 triangles 1 color (GenerateTriangleColorsTest)"
+            },
+        };
+
+        [Test, TestCaseSource(nameof(generateTriangleColorsTestData))]
+        public int[] GenerateTriangleColorsTest(int[] halfedges, int expectedCount)
+        {
+            var colors = new int[halfedges.Length / 3];
+            Utilities.GenerateTriangleColors(colors, halfedges, out var count, Allocator.Persistent);
+            Assert.That(count, Is.EqualTo(expectedCount));
+            return colors;
+        }
+
+        [Test]
+        public void GenerateTriangleColorsThrowTest() => Assert.Throws<ArgumentException>(() =>
+            Utilities.GenerateTriangleColors(colors: new int[1], halfedges: new int[30], out _, Allocator.Persistent)
+        );
     }
 }
