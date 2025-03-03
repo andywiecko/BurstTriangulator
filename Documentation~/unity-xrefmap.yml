@@ -59,3 +59,7 @@ references:
 - uid: UnityEngine.MonoBehaviour
   name: MonoBehaviour
   href: https://docs.unity3d.com/ScriptReference/MonoBehaviour.html
+
+- uid: UnityEngine.Mesh
+  name: Mesh
+  href: https://docs.unity3d.com/ScriptReference/Mesh.html
