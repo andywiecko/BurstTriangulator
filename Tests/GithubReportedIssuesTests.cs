@@ -1,7 +1,10 @@
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Mathematics;
+using UnityEngine;
+using static andywiecko.BurstTriangulator.Editor.Tests.GithubIssuesData;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -10,8 +13,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void GithubIssue030Test()
         {
-            using var positions = new NativeArray<double2>(GithubIssuesData.Issue30.points, Allocator.Persistent);
-            using var constraintEdges = new NativeArray<int>(GithubIssuesData.Issue30.constraints, Allocator.Persistent);
+            using var positions = new NativeArray<double2>(Issue30.points, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(Issue30.constraints, Allocator.Persistent);
             using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
             {
                 Input =
@@ -38,8 +41,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void GithubIssue031Test()
         {
-            using var positions = new NativeArray<double2>(GithubIssuesData.Issue31.points, Allocator.Persistent);
-            using var constraintEdges = new NativeArray<int>(GithubIssuesData.Issue31.constraints, Allocator.Persistent);
+            using var positions = new NativeArray<double2>(Issue31.points, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(Issue31.constraints, Allocator.Persistent);
             using var triangulator = new Triangulator(capacity: 1024, Allocator.Persistent)
             {
                 Input =
@@ -71,8 +74,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void GithubIssue105Test()
         {
-            using var points = new NativeArray<double2>(GithubIssuesData.Issue105.points, Allocator.Persistent);
-            using var edges = new NativeArray<int>(GithubIssuesData.Issue105.constraints, Allocator.Persistent);
+            using var points = new NativeArray<double2>(Issue105.points, Allocator.Persistent);
+            using var edges = new NativeArray<int>(Issue105.constraints, Allocator.Persistent);
             using var triangulator = new Triangulator(capacity: 10_000, Allocator.Persistent)
             {
                 Input = { Positions = points, ConstraintEdges = edges, },
@@ -130,9 +133,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         [Test]
         public void GithubIssue111Test()
         {
-            using var constraintEdges = new NativeArray<int>(GithubIssuesData.Issue111.constraints, Allocator.Persistent);
-            using var nativePositions = new NativeArray<double2>(GithubIssuesData.Issue111.points, Allocator.Persistent);
-            using var holes = new NativeArray<double2>(GithubIssuesData.Issue111.holes, Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(Issue111.constraints, Allocator.Persistent);
+            using var nativePositions = new NativeArray<double2>(Issue111.points, Allocator.Persistent);
+            using var holes = new NativeArray<double2>(Issue111.holes, Allocator.Persistent);
 
             using var triangulator = new Triangulator(Allocator.Persistent)
             {
@@ -154,6 +157,38 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.Triangles, Has.Length.GreaterThan(0));
             triangulator.Draw();
             TestUtils.AssertValidTriangulation(triangulator);
+        }
+
+        private static readonly TestCaseData[] githubIssue134Testdata =
+        {
+            new(Issue134_Case2.positions, Issue134_Case2.triangles) { TestName = "Case 2 (GithubIssue134Test)" },
+            new(Issue134_Case3.positions, Issue134_Case3.triangles) { TestName = "Case 3 (GithubIssue134Test)" },
+            // NOTE: This input is complex; it will complete in approximately 5 seconds.
+            new(Issue134_Case4.positions, Issue134_Case4.triangles) { TestName = "Case 4 (GithubIssue134Test)", RunState = RunState.Explicit },
+            new(Issue134_Case5.positions, Issue134_Case5.triangles) { TestName = "Case 5 (GithubIssue134Test)" },
+            new(Issue134_Case10.positions, Issue134_Case10.triangles) { TestName = "Case 10 (GithubIssue134Test)" },
+        };
+
+        [Test, TestCaseSource(nameof(githubIssue134Testdata))]
+        public void GithubIssue134Test(Vector3[] positions, int[] triangles)
+        {
+            var mesh = new Mesh()
+            {
+                vertices = positions,
+                triangles = triangles,
+            };
+
+            mesh.Retriangulate(
+                axisInput: Axis.XZ,
+                settings: new()
+                {
+                    AutoHolesAndBoundary = true,
+                    RefineMesh = true,
+                    RefinementThresholds = { Angle = 0, Area = 1e5f },
+                }
+            );
+
+            TestUtils.Draw(mesh.vertices, mesh.triangles, Color.red, duration: 5f);
         }
     }
 }

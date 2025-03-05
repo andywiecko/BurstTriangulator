@@ -1,9 +1,13 @@
 using NUnit.Framework;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Unity.Collections;
 using Unity.Collections.NotBurstCompatible;
 using Unity.Mathematics;
+using UnityEngine;
+using UnityEngine.TestTools;
+using static andywiecko.BurstTriangulator.Utilities;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
 {
@@ -42,13 +46,13 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public int[] GenerateHalfedgesTest(int[] triangles)
         {
             var halfedges = new int[triangles.Length];
-            Utilities.GenerateHalfedges(halfedges, triangles, Allocator.Persistent);
+            GenerateHalfedges(halfedges, triangles, Allocator.Persistent);
             return halfedges;
         }
 
         [Test]
         public void GenerateHalfedgesThrowTest() => Assert.Throws<ArgumentException>(() =>
-            Utilities.GenerateHalfedges(halfedges: new int[4], triangles: new int[7], Allocator.Persistent)
+            GenerateHalfedges(halfedges: new int[4], triangles: new int[7], Allocator.Persistent)
         );
 
         private static readonly TestCaseData[] nextHalfedgeTestData =
@@ -62,7 +66,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         };
 
         [Test, TestCaseSource(nameof(nextHalfedgeTestData))]
-        public int NextHalfedgeTest(int he) => Utilities.NextHalfedge(he);
+        public int NextHalfedgeTest(int he) => NextHalfedge(he);
 
         private static readonly TestCaseData[] insertSubMeshTestData =
         {
@@ -108,7 +112,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             positions.CopyFromNBC(mesh.p);
             triangles.CopyFromNBC(mesh.t);
 
-            Utilities.InsertSubMesh(positions, triangles, subMesh.p, subMesh.t);
+            InsertSubMesh(positions, triangles, subMesh.p, subMesh.t);
 
             // NOTE:
             //   NUnit does not support for returning type of (float2[], int[]).
@@ -169,14 +173,246 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         public int[] GenerateTriangleColorsTest(int[] halfedges, int expectedCount)
         {
             var colors = new int[halfedges.Length / 3];
-            Utilities.GenerateTriangleColors(colors, halfedges, out var count, Allocator.Persistent);
+            GenerateTriangleColors(colors, halfedges, out var count, Allocator.Persistent);
             Assert.That(count, Is.EqualTo(expectedCount));
             return colors;
         }
 
         [Test]
         public void GenerateTriangleColorsThrowTest() => Assert.Throws<ArgumentException>(() =>
-            Utilities.GenerateTriangleColors(colors: new int[1], halfedges: new int[30], out _, Allocator.Persistent)
+            GenerateTriangleColors(colors: new int[1], halfedges: new int[30], out _, Allocator.Persistent)
         );
+
+        [Test]
+        public void RetriangulateThrowEmptyMeshTest() => Debug.Log(Assert.Throws<InvalidOperationException>(() =>
+            new Mesh().Retriangulate()
+        ));
+
+        [Test]
+        public void RetriangulateThrowUVChannelOutOfRangeMeshTest([Values(-1, 8, 16)] int uvChanelIndex) => Debug.Log(Assert.Throws<ArgumentException>(() =>
+            new Mesh { vertices = new Vector3[] { } }.Retriangulate(uvChannelIndex: uvChanelIndex)
+        ));
+
+        [Test]
+        public void RetriangulateThrowFailedTriangulationTest()
+        {
+            var initialVertices = new Vector3[] { math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0), math.float3(0, 1, 0) };
+            var initialTriangles = new int[] { 0, 1, 2, 0, 1, 3 };
+            var mesh = new Mesh
+            {
+                vertices = initialVertices,
+                triangles = initialTriangles,
+            };
+
+            Assert.Throws<Exception>(() =>
+            {
+                LogAssert.Expect(LogType.Error, new Regex(".*"));
+                mesh.Retriangulate();
+            });
+            Assert.That(mesh.vertices, Is.EqualTo(initialVertices));
+            Assert.That(mesh.triangles, Is.EqualTo(initialTriangles));
+        }
+
+        [Test]
+        public void RetriangulateEmptyVerticesTest()
+        {
+            var mesh = new Mesh { vertices = new Vector3[] { } };
+            mesh.Retriangulate();
+            Assert.That(mesh.vertices, Is.Empty);
+        }
+
+        [Test]
+        public void RetriangulateEmptyTrianglesTest()
+        {
+            var mesh = new Mesh { vertices = new Vector3[] { default } };
+            mesh.Retriangulate();
+            Assert.That(mesh.vertices, Is.EqualTo(new Vector3[] { default }));
+        }
+
+        [Test]
+        public void RetriangulateSingleColorTest()
+        {
+            var inputVertices = new Vector3[] { math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0) };
+            var mesh = new Mesh
+            {
+                vertices = inputVertices,
+                triangles = new int[] { 0, 1, 2 }
+            };
+
+            mesh.Retriangulate();
+
+            Assert.That(mesh.vertices, Is.EqualTo(inputVertices));
+            // NOTE: triangulator will produce clockwise-oriented triangles.
+            Assert.That(mesh.triangles, Is.EqualTo(new[] { 0, 2, 1 }).Using(TrianglesComparer.Instance));
+        }
+
+        [Test]
+        public void RetriangulateManyColorsTest()
+        {
+            var inputVertices = new Vector3[]
+            {
+                math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0),
+                math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0),
+                math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0),
+                math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0),
+            };
+            var mesh = new Mesh
+            {
+                vertices = inputVertices,
+                triangles = new int[]
+                {
+                    0, 1, 2,
+                    3, 4, 5,
+                    6, 7, 8,
+                    9, 10, 11,
+                }
+            };
+
+            mesh.Retriangulate();
+
+            Assert.That(mesh.vertices, Is.EqualTo(inputVertices));
+            // NOTE: triangulator will produce clockwise-oriented triangles.
+            Assert.That(mesh.triangles, Is.EqualTo(new[] { 0, 2, 1, 4, 3, 5, 7, 6, 8, 10, 9, 11 }).Using(TrianglesComparer.Instance));
+        }
+
+        [Test]
+        public void RetriangulateSettingsTest()
+        {
+            var mesh = new Mesh
+            {
+                vertices = new Vector3[] { math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0), math.float3(0, 1, 0) },
+                triangles = new int[] { 0, 3, 2, 0, 2, 1 }
+            };
+
+            mesh.Retriangulate(settings: new()
+            {
+                AutoHolesAndBoundary = true,
+                RefineMesh = true,
+                RefinementThresholds = { Area = 0.25f, Angle = 0 },
+            });
+
+            Assert.That(mesh.vertices, Has.Length.GreaterThan(4));
+            Assert.That(mesh.triangles, Has.Length.GreaterThan(6));
+            TestUtils.AssertValidTriangulation(mesh);
+        }
+
+        [Test]
+        public void RetriangulateAxisTest([Values] Axis input, [Values] Axis output)
+        {
+            var p = new[] { math.float2(0, 0), math.float2(1, 0), math.float2(1, 1) };
+            Vector3[] verticies(Axis axis) => p.Select(i =>
+            {
+                var x = math.float3(i, 0);
+                return (Vector3)(axis switch
+                {
+                    Axis.XY => x.xyz,
+                    Axis.XZ => x.xzy,
+                    Axis.YX => x.yxz,
+                    Axis.YZ => x.zxy,
+                    Axis.ZX => x.yzx,
+                    Axis.ZY => x.zyx,
+                    _ => throw new NotImplementedException(),
+                });
+            }).ToArray();
+            var mesh = new Mesh
+            {
+                vertices = verticies(input),
+                triangles = new int[] { 0, 1, 2 }
+            };
+
+            mesh.Retriangulate(axisInput: input, axisOutput: output);
+
+            Assert.That(mesh.vertices, Is.EqualTo(verticies(output)));
+        }
+
+        [Test]
+        public void RetriangulateUVNoneTest()
+        {
+            var initialVertices = new Vector3[]
+            {
+                math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0), math.float3(0, 1, 0)
+            };
+            var initialUV = new Vector2[]
+            {
+                math.float2(0, 0), math.float2(1, 0), math.float2(1, 1), math.float2(0, 1)
+            };
+            var mesh = new Mesh
+            {
+                vertices = initialVertices,
+                triangles = new int[] { 0, 1, 2, 0, 2, 3 },
+                uv = initialUV
+            };
+
+            mesh.Retriangulate(
+                uvMap: UVMap.None,
+                settings: new()
+                {
+                    RefineMesh = true,
+                    RefinementThresholds = { Area = 0.25f, Angle = 0 }
+                }
+            );
+
+            Assert.That(mesh.vertices, Is.EqualTo(initialVertices.Concat(new Vector3[] { math.float3(1, 0.5f, 0), math.float3(0, 0.5f, 0) })));
+            Assert.That(mesh.uv, Is.EqualTo(initialUV.Concat(new Vector2[] { math.float2(0), math.float2(0) })));
+        }
+
+        [Test]
+        public void RetriangulateUVNotNoneTest([Values(UVMap.Planar, UVMap.Barycentric)] UVMap uvMap)
+        {
+            var initialVertices = new Vector3[]
+            {
+                math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0), math.float3(0, 1, 0)
+            };
+            var initialUV = new Vector2[]
+            {
+                math.float2(0, 0), math.float2(1, 0), math.float2(1, 1), math.float2(0, 1)
+            };
+            var mesh = new Mesh
+            {
+                vertices = initialVertices,
+                triangles = new int[] { 0, 1, 2, 0, 2, 3 },
+                uv = initialUV
+            };
+
+            mesh.Retriangulate(
+                uvMap: uvMap,
+                settings: new()
+                {
+                    RefineMesh = true,
+                    RefinementThresholds = { Area = 0.25f, Angle = 0 }
+                }
+            );
+
+            Assert.That(mesh.vertices, Is.EqualTo(initialVertices.Concat(new Vector3[] { math.float3(1, 0.5f, 0), math.float3(0, 0.5f, 0) })));
+            Assert.That(mesh.uv, Is.EqualTo(initialUV.Concat(new Vector2[] { math.float2(1, 0.5f), math.float2(0, 0.5f) })));
+        }
+
+        [Test]
+        public void RetriangulateGenerateInitialUVPlanarMapTest()
+        {
+            var initialVertices = new Vector3[]
+            {
+                math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0), math.float3(0, 1, 0)
+            };
+            var mesh = new Mesh
+            {
+                vertices = initialVertices,
+                triangles = new int[] { 0, 1, 2, 0, 2, 3 },
+                uv = new Vector2[4]
+            };
+
+            mesh.Retriangulate(
+                generateInitialUVPlanarMap: true,
+                uvMap: UVMap.None,
+                settings: new()
+                {
+                    RefineMesh = true,
+                    RefinementThresholds = { Area = 0.25f, Angle = 0 }
+                }
+            );
+
+            Assert.That(mesh.vertices, Is.EqualTo(initialVertices.Concat(new Vector3[] { math.float3(1, 0.5f, 0), math.float3(0, 0.5f, 0) })));
+            Assert.That(mesh.uv, Is.EqualTo(new Vector2[] { math.float2(0, 0), math.float2(1, 0), math.float2(1, 1), math.float2(0, 1), math.float2(0, 0), math.float2(0, 0) }));
+        }
     }
 }

@@ -34,6 +34,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Profiling;
 using UnityEngine;
+using UnityEngine.Rendering;
 #if UNITY_MATHEMATICS_FIXEDPOINT
 using Unity.Mathematics.FixedPoint;
 #endif
@@ -147,6 +148,20 @@ namespace andywiecko.BurstTriangulator
         /// </summary>
         PCA
     }
+
+    /// <summary>
+    /// An <see cref="Enum"/> representing the UV mapping method used in the re-triangulation utility.
+    /// </summary>
+    /// <seealso cref="Extensions.Retriangulate"/>
+    /// <seealso cref="RetriangulateMeshJob"/>
+    public enum UVMap { None, Planar, Barycentric };
+
+    /// <summary>
+    /// An <see cref="Enum"/> representing possible 3D-to-2D projection axes, used in the re-triangulation utility.
+    /// </summary>
+    /// <seealso cref="Extensions.Retriangulate"/>
+    /// <seealso cref="RetriangulateMeshJob"/>
+    public enum Axis { XY, XZ, YX, YZ, ZX, ZY }
 
     /// <summary>
     /// A helper class for setting up refinement thresholds.
@@ -649,6 +664,76 @@ namespace andywiecko.BurstTriangulator
             return ret;
         }
 
+        // TODO:
+        // - add "assume uniform" (perf)
+        // - add "insert edge mid points" (feat)
+        // - add "insert triangle mid points" (feat)
+        // - add "third axis interpolation" (feat)
+        public static void Retriangulate(this Mesh mesh,
+            TriangulationSettings settings = default,
+            Axis axisInput = Axis.XY,
+            Axis axisOutput = Axis.XY,
+            UVMap uvMap = UVMap.None,
+            int uvChannelIndex = 0, // [0..7]
+            int subMeshIndex = 0,
+            bool generateInitialUVPlanarMap = false,
+            bool recalculateBounds = true,
+            bool recalculateNormals = true,
+            bool recalculateTangents = true
+        )
+        {
+            using var meshDataArray = Mesh.AcquireReadOnlyMeshData(mesh);
+            // NOTE: It is guaranteed that meshDataArray.Length is 1 when constructing with `Mesh`.
+            var meshData = meshDataArray[0];
+
+            if (!meshData.HasVertexAttribute(VertexAttribute.Position))
+            {
+                throw new InvalidOperationException("Mesh data does not have Position vertex component");
+            }
+
+            var hasUV = uvChannelIndex switch
+            {
+                0 => meshData.HasVertexAttribute(VertexAttribute.TexCoord0),
+                1 => meshData.HasVertexAttribute(VertexAttribute.TexCoord1),
+                2 => meshData.HasVertexAttribute(VertexAttribute.TexCoord2),
+                3 => meshData.HasVertexAttribute(VertexAttribute.TexCoord3),
+                4 => meshData.HasVertexAttribute(VertexAttribute.TexCoord4),
+                5 => meshData.HasVertexAttribute(VertexAttribute.TexCoord5),
+                6 => meshData.HasVertexAttribute(VertexAttribute.TexCoord6),
+                7 => meshData.HasVertexAttribute(VertexAttribute.TexCoord7),
+                _ => throw new ArgumentException($"{nameof(uvChannelIndex)} is out of range! It must be in the range [0, 7]."),
+
+            };
+
+            using var outputPositions = new NativeList<float3>(Allocator.Persistent);
+            using var outputTriangles = new NativeList<int>(Allocator.Persistent);
+            using var outputUVs = new NativeList<float2>(Allocator.Persistent);
+            using var status = new NativeReference<Status>(Allocator.Persistent);
+            new RetriangulateMeshJob(meshData, outputPositions, outputTriangles,
+                outputUVs: hasUV ? outputUVs : default,
+                status,
+                args: settings ?? Args.Default(autoHolesAndBoundary: true),
+                axisInput,
+                axisOutput,
+                uvMap,
+                uvChannelIndex,
+                subMeshIndex,
+                generateInitialUVPlanarMap
+            ).Run();
+
+            if (status.Value != Status.OK)
+            {
+                throw new Exception($"Mesh re-triangulation failed with status: {status.Value}.");
+            }
+
+            mesh.SetVertices(outputPositions.AsArray());
+            mesh.SetIndices(outputTriangles.AsArray(), MeshTopology.Triangles, subMeshIndex);
+            if (hasUV) mesh.SetUVs(uvChannelIndex, outputUVs.AsArray());
+            if (recalculateBounds) mesh.RecalculateBounds();
+            if (recalculateNormals) mesh.RecalculateNormals();
+            if (recalculateTangents) mesh.RecalculateTangents();
+        }
+
         /// <summary>
         /// Perform the job's Execute method immediately on the same thread.
         /// </summary>
@@ -882,6 +967,327 @@ namespace andywiecko.BurstTriangulator
         /// <returns>The next halfedge index.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
+
+        [BurstCompile]
+        public struct RetriangulateMeshJob : IJob
+        {
+            [ReadOnly]
+            private Mesh.MeshData meshData;
+
+            private NativeList<float3> outputPositions;
+            private NativeList<int> outputTriangles;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeList<float2> outputUVs;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeReference<Status> status;
+            private readonly Args args;
+            private readonly Axis axisInput, axisOutput;
+            private readonly UVMap uvMap;
+            private readonly int uvChannelIndex, subMeshIndex;
+            private readonly bool generateInitialUVPlanarMap;
+
+            public RetriangulateMeshJob(
+                Mesh.MeshData meshData,
+                NativeList<float3> outputPositions,
+                NativeList<int> outputTriangles,
+                NativeList<float2> outputUVs = default,
+                NativeReference<Status> status = default,
+                Args? args = default,
+                Axis axisInput = Axis.XY,
+                Axis axisOutput = Axis.XY,
+                UVMap uvMap = UVMap.None,
+                int uvChannelIndex = 0,
+                int subMeshIndex = 0,
+                bool generateInitialUVPlanarMap = false
+            )
+            {
+                this.meshData = meshData;
+                this.outputPositions = outputPositions;
+                this.outputTriangles = outputTriangles;
+                this.outputUVs = outputUVs;
+                this.status = status;
+                this.args = args ?? Args.Default(autoHolesAndBoundary: true);
+                this.axisInput = axisInput;
+                this.axisOutput = axisOutput;
+                this.uvMap = uvMap;
+                this.uvChannelIndex = uvChannelIndex;
+                this.subMeshIndex = subMeshIndex;
+                this.generateInitialUVPlanarMap = generateInitialUVPlanarMap;
+            }
+
+            public void Execute()
+            {
+                var indexCount = meshData.GetSubMesh(subMeshIndex).indexCount;
+                using var inputPositions = new NativeArray<Vector3>(meshData.vertexCount, Allocator.Temp);
+                using var inputTriangles = new NativeArray<int>(indexCount, Allocator.Temp);
+                using var inputUVs = new NativeArray<Vector2>(meshData.vertexCount, Allocator.Temp);
+
+                meshData.GetVertices(inputPositions);
+                meshData.GetIndices(inputTriangles, subMeshIndex);
+                if (outputUVs.IsCreated) meshData.GetUVs(uvChannelIndex, inputUVs);
+
+                using var positions = new NativeArray<double2>(inputPositions.Length, Allocator.Temp);
+                using var colors = new NativeArray<int>(inputTriangles.Length / 3, Allocator.Temp);
+                using var halfedges = new NativeArray<int>(inputTriangles.Length, Allocator.Temp);
+
+                GenerateHalfedges(halfedges, inputTriangles, Allocator.Temp);
+                GenerateInputPositions(positions, inputPositions.Reinterpret<float3>(), out var min, out var max);
+                GenerateTriangleColors(colors, halfedges, out var colorsCount, Allocator.Temp);
+
+                if (generateInitialUVPlanarMap)
+                {
+                    GenerateUVsWithPlanarMap(inputUVs.Reinterpret<float2>(), positions, min, max);
+                }
+
+                var tmpStatus = default(NativeReference<Status>);
+                status = status.IsCreated ? status : tmpStatus = new(Allocator.Temp);
+
+                outputPositions.Clear();
+                outputTriangles.Clear();
+                if (outputUVs.IsCreated) outputUVs.Clear();
+                status.Value = Status.OK;
+
+                for (int i = 0; i < colorsCount; i++)
+                {
+                    ProcessSubMesh(color: i,
+                        positions.AsReadOnly(), inputTriangles, colors, inputUVs.Reinterpret<float2>(),
+                        min, max
+                    );
+                    if (status.Value != Status.OK)
+                    {
+                        break;
+                    }
+                }
+
+                if (colorsCount == 0)
+                {
+                    if (args.Verbose)
+                    {
+                        Debug.LogWarning(
+                            "[Triangulator]: colorsCount = 0 during retriangulation. " +
+                            "The input mesh is empty or the triangle indices do not match the input vertices."
+                        );
+                    }
+
+                    GenerateOutputPositions(inputPositions.Reinterpret<float3>(), positions);
+                    outputPositions.AddRange(inputPositions.Reinterpret<float3>());
+                    outputTriangles.AddRange(inputTriangles);
+                    if (outputUVs.IsCreated) outputUVs.AddRange(inputUVs.Reinterpret<float2>());
+                }
+
+                if (tmpStatus.IsCreated) tmpStatus.Dispose();
+            }
+
+            private readonly void GenerateInputPositions(Span<double2> positions, ReadOnlySpan<float3> inputPositions, out double2 min, out double2 max)
+            {
+                min = double.MaxValue;
+                max = double.MinValue;
+
+                for (int i = 0; i < inputPositions.Length; i++)
+                {
+                    var q = (double3)inputPositions[i];
+                    var p = axisInput switch
+                    {
+                        Axis.XY => q.xy,
+                        Axis.XZ => q.xz,
+                        Axis.YX => q.yx,
+                        Axis.YZ => q.yz,
+                        Axis.ZX => q.zx,
+                        Axis.ZY => q.zy,
+                        _ => throw new NotImplementedException()
+                    };
+
+                    min = math.min(min, p);
+                    max = math.max(max, p);
+                    positions[i] = p;
+                }
+            }
+
+            private readonly void GenerateOutputPositions(Span<float3> outputPositions, ReadOnlySpan<double2> inputPositions)
+            {
+                for (int i = 0; i < inputPositions.Length; i++)
+                {
+                    var q = math.float3((float2)inputPositions[i], 0);
+                    var p = axisOutput switch
+                    {
+                        Axis.XY => q.xyz,
+                        Axis.XZ => q.xzy,
+                        Axis.YX => q.yxz,
+                        Axis.YZ => q.zxy,
+                        Axis.ZX => q.yzx,
+                        Axis.ZY => q.zyx,
+                        _ => throw new NotImplementedException()
+                    };
+
+                    outputPositions[i] = p;
+                }
+            }
+
+            private static void UnpackSubMesh(int color, Span<int> map, NativeList<double2> subpositions, NativeList<int> subtriangles, NativeList<float2> subuvs, ReadOnlySpan<double2> positions, ReadOnlySpan<int> triangles, ReadOnlySpan<int> colors, ReadOnlySpan<float2> uvs)
+            {
+                map.Fill(-1);
+
+                using var visited = new NativeArray<bool>(positions.Length, Allocator.Temp);
+                for (int i = 0; i < triangles.Length / 3; i++)
+                {
+                    if (colors[i] == color)
+                    {
+                        var (t0, t1, t2) = (triangles[3 * i + 0], triangles[3 * i + 1], triangles[3 * i + 2]);
+                        TryVisitPoint(t0, positions, uvs, visited, map);
+                        TryVisitPoint(t1, positions, uvs, visited, map);
+                        TryVisitPoint(t2, positions, uvs, visited, map);
+
+                        void TryVisitPoint(int p, ReadOnlySpan<double2> positions, ReadOnlySpan<float2> uvs, Span<bool> visited, Span<int> map)
+                        {
+                            if (!visited[p])
+                            {
+                                visited[p] = true;
+                                map[p] = subpositions.Length;
+                                subpositions.Add(positions[p]);
+                                subuvs.Add(uvs[p]);
+                            }
+                            subtriangles.Add(map[p]);
+                        }
+                    }
+                }
+            }
+
+            private static NativeArray<int> GenerateConstraints(ReadOnlySpan<int> triangles, Allocator allocator)
+            {
+                using var halfedges = new NativeArray<int>(triangles.Length, allocator);
+                GenerateHalfedges(halfedges, triangles, allocator);
+
+                using var constraints = new NativeList<int>(allocator);
+                for (int i = 0; i < halfedges.Length; i++)
+                {
+                    var he = halfedges[i];
+                    if (he == -1)
+                    {
+                        var e0 = triangles[i];
+                        var e1 = triangles[NextHalfedge(i)];
+                        constraints.Add(e0);
+                        constraints.Add(e1);
+                    }
+                }
+                return constraints.ToArray(allocator);
+            }
+
+            private readonly void GenerateUVs(NativeList<float2> subuvs, double2 min, double2 max,
+                ReadOnlySpan<double2> subpositions, ReadOnlySpan<int> subtriangles, ReadOnlySpan<double2> outputPositions)
+            {
+                subuvs.Length = outputPositions.Length;
+
+                var uvs = subuvs.AsArray().AsSpan()[subpositions.Length..];
+                var positions = outputPositions[subpositions.Length..];
+                var inputUVs = subuvs.AsArray().AsReadOnlySpan()[..subpositions.Length];
+
+                switch (uvMap)
+                {
+                    case UVMap.None:
+                        break;
+
+                    case UVMap.Planar:
+                        GenerateUVsWithPlanarMap(uvs, positions, min, max);
+                        break;
+
+                    case UVMap.Barycentric:
+                        GenerateUVsWithBarycentricMap(uvs, positions, subtriangles, inputUVs, subpositions);
+                        break;
+
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+
+            private static void GenerateUVsWithPlanarMap(Span<float2> uvs, ReadOnlySpan<double2> positions, double2 min, double2 max)
+            {
+                var range = max - min;
+                for (int i = 0; i < uvs.Length; i++)
+                {
+                    var uv = (positions[i] - min) / range;
+                    uvs[i] = (float2)uv;
+                }
+            }
+
+            private static void GenerateUVsWithBarycentricMap(Span<float2> uvs, ReadOnlySpan<double2> positions, ReadOnlySpan<int> inputTriangles, ReadOnlySpan<float2> inputUVs, ReadOnlySpan<double2> inputPositions)
+            {
+                for (int i = 0; i < uvs.Length; i++)
+                {
+                    var p = positions[i];
+                    // NOTE: this can be optimized from O(n m) to O(n log m). Use tree/grid/...
+                    for (int j = 0; j < inputTriangles.Length / 3; j++)
+                    {
+                        var (t0, t1, t2) = (inputTriangles[3 * j + 0], inputTriangles[3 * j + 1], inputTriangles[3 * j + 2]);
+                        var (q0, q1, q2) = (inputPositions[t0], inputPositions[t1], inputPositions[t2]);
+
+                        var bar = barycoords(p, q0, q1, q2);
+                        if (math.all(-math.EPSILON <= bar & bar <= 1 + math.EPSILON))
+                        {
+                            var b = (float3)bar;
+                            uvs[i] = b.x * inputUVs[t0] + b.y * inputUVs[t1] + b.z * inputUVs[t2];
+                            break;
+                        }
+
+                        static double3 barycoords(double2 p, double2 a, double2 b, double2 c)
+                        {
+                            static double cross(double2 x, double2 y) => x.x * y.y - x.y * y.x;
+                            var (v0, v1, v2) = (b - a, c - a, p - a);
+                            var v = cross(v2, v1) / cross(v0, v1);
+                            var w = cross(v0, v2) / cross(v0, v1);
+                            var u = 1 - v - w;
+                            return math.double3(u, v, w);
+                        }
+                    }
+                }
+            }
+
+            private void ProcessSubMesh(
+                int color,
+                ReadOnlySpan<double2> positions, ReadOnlySpan<int> triangles, ReadOnlySpan<int> colors, ReadOnlySpan<float2> uvs,
+                double2 min, double2 max
+            )
+            {
+                using var subtriangles = new NativeList<int>(Allocator.Temp);
+                using var subpositions = new NativeList<double2>(Allocator.Temp);
+                using var subuvs = new NativeList<float2>(Allocator.Temp);
+                using var map = new NativeArray<int>(positions.Length, Allocator.Temp);
+
+                UnpackSubMesh(color, map, subpositions, subtriangles, subuvs, positions, triangles, colors, uvs);
+
+                using var subconstraints = GenerateConstraints(subtriangles.AsReadOnly(), Allocator.Temp);
+
+                using var tmpPositionsT2 = new NativeList<double2>(Allocator.Temp);
+                using var tmpTriangles = new NativeList<int>(Allocator.Temp);
+                // NOTE: This ToArray allocation is required due to Unity.Collections bug. See issue #333 for more details.
+                using var p = subpositions.ToArray(Allocator.Temp);
+                new UnsafeTriangulator<double2>().Triangulate(
+                    input: new() { Positions = p, ConstraintEdges = subconstraints },
+                    output: new() { Positions = tmpPositionsT2, Triangles = tmpTriangles, Status = status },
+                    args, Allocator.Temp
+                );
+
+                if (status.Value != Status.OK)
+                {
+                    return;
+                }
+
+                using var tmpPositions = new NativeArray<float3>(tmpPositionsT2.Length, Allocator.Temp);
+                GenerateOutputPositions(tmpPositions, tmpPositionsT2.AsReadOnly());
+
+                InsertSubMesh(
+                    positions: outputPositions,
+                    triangles: outputTriangles,
+                    subpositions: tmpPositions,
+                    subtriangles: tmpTriangles.AsReadOnly()
+                );
+
+                if (outputUVs.IsCreated)
+                {
+                    GenerateUVs(subuvs, min, max, subpositions.AsReadOnly(), subtriangles.AsReadOnly(), tmpPositionsT2.AsReadOnly());
+                    outputUVs.AddRange(subuvs.AsArray());
+                }
+            }
+        }
 
         [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
         private static void ThrowCheckGenerateHalfedges(ReadOnlySpan<int> halfedges, ReadOnlySpan<int> triangles)
