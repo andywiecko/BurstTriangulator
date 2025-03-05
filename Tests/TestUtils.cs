@@ -250,7 +250,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
     public static class TestUtils
     {
         /// <summary>
-        /// Asserts that all <paramref name="triangles"/> are oriented clockwise and do not intersect with one another.
+        /// Asserts that all triangles are oriented clockwise and do not intersect with one another.
         /// </summary>
         /// <exception cref="AssertionException"></exception>
         public static void AssertValidTriangulation<T2>(Triangulator<T2> triangulator) where T2 : unmanaged => AssertValidTriangulation(
@@ -259,12 +259,34 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         );
 
         /// <summary>
-        /// Asserts that all <paramref name="triangles"/> are oriented clockwise and do not intersect with one another.
+        /// Asserts that all triangles are oriented clockwise and do not intersect with one another.
         /// </summary>
         /// <exception cref="AssertionException"></exception>
         public static void AssertValidTriangulation(Triangulator triangulator) => AssertValidTriangulation(
             positions: triangulator.Output.Positions.AsReadOnly().Select(i => (float2)i).ToArray(),
             triangles: triangulator.Output.Triangles.AsReadOnly().AsReadOnlySpan()
+        );
+
+        /// <summary>
+        /// Asserts that all triangles are oriented clockwise and do not intersect with one another.
+        /// </summary>
+        /// <exception cref="AssertionException"></exception>
+        public static void AssertValidTriangulation(Mesh mesh, Axis axis = Axis.XY) => AssertValidTriangulation(
+            positions: mesh.vertices.Select(i =>
+            {
+                var p = (float3)i;
+                return axis switch
+                {
+                    Axis.XY => p.xy,
+                    Axis.XZ => p.xz,
+                    Axis.YX => p.yx,
+                    Axis.YZ => p.yx,
+                    Axis.ZX => p.zx,
+                    Axis.ZY => p.zy,
+                    _ => throw new(),
+                };
+            }).ToArray(),
+            triangles: mesh.triangles
         );
 
         /// <summary>
@@ -345,6 +367,20 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 var x = math.float3(positions[triangles[3 * i + 0]], 0);
                 var y = math.float3(positions[triangles[3 * i + 1]], 0);
                 var z = math.float3(positions[triangles[3 * i + 2]], 0);
+
+                Debug.DrawLine(x, y, color, duration);
+                Debug.DrawLine(x, z, color, duration);
+                Debug.DrawLine(z, y, color, duration);
+            }
+        }
+
+        public static void Draw(ReadOnlySpan<Vector3> positions, ReadOnlySpan<int> triangles, Color color, float duration)
+        {
+            for (int i = 0; i < triangles.Length / 3; i++)
+            {
+                var x = positions[triangles[3 * i + 0]];
+                var y = positions[triangles[3 * i + 1]];
+                var z = positions[triangles[3 * i + 2]];
 
                 Debug.DrawLine(x, y, color, duration);
                 Debug.DrawLine(x, z, color, duration);
