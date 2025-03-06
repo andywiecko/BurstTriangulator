@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "andywiecko.BurstTriangulator",
+        "andywiecko.BurstTriangulator.Tests",
         "UnityEditor.TestRunner",
         "UnityEngine.TestRunner",
         "Unity.Burst",
