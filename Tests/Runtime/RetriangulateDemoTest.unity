@@ -508,6 +508,7 @@ MonoBehaviour:
   Case: 0
   uvMap: 2
   InsertTriangleMidPoints: 0
+  InsertEdgeMidPoints: 0
   settings:
     <ValidateInput>k__BackingField: 1
     <Verbose>k__BackingField: 1
