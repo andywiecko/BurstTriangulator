@@ -10,6 +10,7 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
         public enum Cases { Case2, Case3, Case4, Case5, Case10, };
         public Cases Case = Cases.Case3;
         public UVMap uvMap = UVMap.Barycentric;
+        public bool InsertTriangleMidPoints;
 
         [SerializeField]
         private TriangulationSettings settings = new()
@@ -46,7 +47,8 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
                 settings: settings,
                 axisInput: Axis.XZ,
                 uvMap: uvMap,
-                generateInitialUVPlanarMap: Case != Cases.Case10
+                generateInitialUVPlanarMap: Case != Cases.Case10,
+                insertTriangleMidPoints: InsertTriangleMidPoints
             );
         }
 

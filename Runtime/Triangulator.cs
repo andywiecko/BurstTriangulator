@@ -679,7 +679,8 @@ namespace andywiecko.BurstTriangulator
             bool generateInitialUVPlanarMap = false,
             bool recalculateBounds = true,
             bool recalculateNormals = true,
-            bool recalculateTangents = true
+            bool recalculateTangents = true,
+            bool insertTriangleMidPoints = false
         )
         {
             using var meshDataArray = Mesh.AcquireReadOnlyMeshData(mesh);
@@ -718,7 +719,8 @@ namespace andywiecko.BurstTriangulator
                 uvMap,
                 uvChannelIndex,
                 subMeshIndex,
-                generateInitialUVPlanarMap
+                generateInitialUVPlanarMap,
+                insertTriangleMidPoints
             ).Run();
 
             if (status.Value != Status.OK)
@@ -984,7 +986,7 @@ namespace andywiecko.BurstTriangulator
             private readonly Axis axisInput, axisOutput;
             private readonly UVMap uvMap;
             private readonly int uvChannelIndex, subMeshIndex;
-            private readonly bool generateInitialUVPlanarMap;
+            private readonly bool generateInitialUVPlanarMap, insertTriangleMidPoints;
 
             public RetriangulateMeshJob(
                 Mesh.MeshData meshData,
@@ -998,7 +1000,8 @@ namespace andywiecko.BurstTriangulator
                 UVMap uvMap = UVMap.None,
                 int uvChannelIndex = 0,
                 int subMeshIndex = 0,
-                bool generateInitialUVPlanarMap = false
+                bool generateInitialUVPlanarMap = false,
+                bool insertTriangleMidPoints = false
             )
             {
                 this.meshData = meshData;
@@ -1013,6 +1016,7 @@ namespace andywiecko.BurstTriangulator
                 this.uvChannelIndex = uvChannelIndex;
                 this.subMeshIndex = subMeshIndex;
                 this.generateInitialUVPlanarMap = generateInitialUVPlanarMap;
+                this.insertTriangleMidPoints = insertTriangleMidPoints;
             }
 
             public void Execute()
@@ -1241,6 +1245,21 @@ namespace andywiecko.BurstTriangulator
                 }
             }
 
+            private void InsertTriangleMidPoints(NativeList<double2> subpositions, NativeList<float2> subuvs, ReadOnlySpan<int> subtriangles)
+            {
+                for (int t = 0; t < subtriangles.Length / 3; t++)
+                {
+                    var (t0, t1, t2) = (subtriangles[3 * t + 0], subtriangles[3 * t + 1], subtriangles[3 * t + 2]);
+                    var (p0, p1, p2) = (subpositions[t0], subpositions[t1], subpositions[t2]);
+                    var p = (p0 + p1 + p2) / 3;
+                    subpositions.Add(p);
+
+                    var (uv0, uv1, uv2) = (subuvs[t0], subuvs[t1], subuvs[t2]);
+                    var uv = (uv0 + uv1 + uv2) / 3;
+                    subuvs.Add(uv);
+                }
+            }
+
             private void ProcessSubMesh(
                 int color,
                 ReadOnlySpan<double2> positions, ReadOnlySpan<int> triangles, ReadOnlySpan<int> colors, ReadOnlySpan<float2> uvs,
@@ -1255,6 +1274,11 @@ namespace andywiecko.BurstTriangulator
                 UnpackSubMesh(color, map, subpositions, subtriangles, subuvs, positions, triangles, colors, uvs);
 
                 using var subconstraints = GenerateConstraints(subtriangles.AsReadOnly(), Allocator.Temp);
+
+                if (insertTriangleMidPoints)
+                {
+                    InsertTriangleMidPoints(subpositions, subuvs, subtriangles.AsReadOnly());
+                }
 
                 using var tmpPositionsT2 = new NativeList<double2>(Allocator.Temp);
                 using var tmpTriangles = new NativeList<int>(Allocator.Temp);
