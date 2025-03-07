@@ -7,6 +7,7 @@ using Unity.Collections.NotBurstCompatible;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
 using static andywiecko.BurstTriangulator.Utilities;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
@@ -413,6 +414,30 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             Assert.That(mesh.vertices, Is.EqualTo(initialVertices.Concat(new Vector3[] { math.float3(1, 0.5f, 0), math.float3(0, 0.5f, 0) })));
             Assert.That(mesh.uv, Is.EqualTo(new Vector2[] { math.float2(0, 0), math.float2(1, 0), math.float2(1, 1), math.float2(0, 1), math.float2(0, 0), math.float2(0, 0) }));
+        }
+
+        [Test]
+        public void RetriangulateInsertTriangleMidPointsTest()
+        {
+            var initialVertices = new Vector3[]
+            {
+                math.float3(0, 0, 0), math.float3(1, 0, 0), math.float3(1, 1, 0), math.float3(0, 1, 0)
+            };
+            var mesh = new Mesh
+            {
+                vertices = initialVertices,
+                triangles = new int[] { 0, 1, 2, 0, 2, 3 },
+                uv = new Vector2[4]
+            };
+
+            mesh.Retriangulate(
+                generateInitialUVPlanarMap: true,
+                insertTriangleMidPoints: true,
+                uvMap: UVMap.None
+            );
+
+            Assert.That(mesh.vertices, Is.EqualTo(initialVertices.Concat(new Vector3[] { new(2f / 3, 1f / 3, 0), new(1f / 3, 2f / 3, 0) })));
+            Assert.That(mesh.uv, Is.EqualTo(new Vector2[] { math.float2(0, 0), math.float2(1, 0), math.float2(1, 1), math.float2(0, 1), math.float2(2f / 3, 1f / 3), math.float2(1f / 3, 2f / 3) }));
         }
     }
 }
