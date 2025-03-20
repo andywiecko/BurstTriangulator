@@ -616,6 +616,9 @@ namespace andywiecko.BurstTriangulator
         }
     }
 
+    /// <summary>
+    /// Provides extension methods.
+    /// </summary>
     public static class Extensions
     {
         /// <summary>
@@ -664,6 +667,36 @@ namespace andywiecko.BurstTriangulator
             return ret;
         }
 
+        /// <summary>
+        /// Retriangulates <paramref name="mesh"/> in place using the provided <paramref name="settings"/>.
+        /// </summary>
+        /// <remarks>
+        /// This method supports non-uniform meshes, including those with <em>windmill</em>-like connections between triangles.
+        /// It also provides limited UV interpolation (see <paramref name="uvMap"/>),
+        /// however, in complex cases, manual handling of UVs may be required after retriangulation.
+        /// Refer to the documentation for more details. Advanced customization is available through <see cref="RetriangulateMeshJob"/>.
+        /// </remarks>
+        /// <param name="mesh">The mesh to be retriangulated.</param>
+        /// <param name="settings">
+        /// The settings used during retriangulation. If <see langword="null"/> is provided,
+        /// the default settings with <see cref="TriangulationSettings.AutoHolesAndBoundary"/> <b>enabled</b> will be used.
+        /// <b>Note:</b> It is recommended to enable <see cref="TriangulationSettings.AutoHolesAndBoundary"/> in <paramref name="settings"/>, as it is disabled by default.
+        /// </param>
+        /// <param name="axisInput">The axis from <see cref="Mesh.vertices"/> to use for retriangulation, by default <see cref="Axis.XY"/>.</param>
+        /// <param name="axisOutput">The axis used to write the retriangulation result, by default <see cref="Axis.XY"/>.</param>
+        /// <param name="uvMap">The UV mapping method for UV interpolation, by default <see cref="UVMap.None"/>.</param>
+        /// <param name="uvChannelIndex">The UV channel index, in the range <tt>[0..7]</tt>.</param>
+        /// <param name="subMeshIndex">The sub-mesh to modify.</param>
+        /// <param name="generateInitialUVPlanarMap">If <see langword="true"/>, an initial UV map is generated using <see cref="UVMap.Planar"/> interpolation.</param>
+        /// <param name="recalculateBounds">If <see langword="true"/>, recalculates the bounding volume of the Mesh and all of its sub-meshes with the vertex data.</param>
+        /// <param name="recalculateNormals">If <see langword="true"/>, recalculates the normals of the Mesh from the triangles and vertices.</param>
+        /// <param name="recalculateTangents">If <see langword="true"/>, recalculates the tangents of the Mesh from the normals and texture coordinates.</param>
+        /// <param name="insertTriangleMidPoints">If <see langword="true"/>, additional points are inserted at the center of mass of the initial triangles before retriangulation.</param>
+        /// <param name="insertEdgeMidPoints">If <see langword="true"/>, additional points are inserted at the center of the initial edges before retriangulation.</param>
+        /// <exception cref="InvalidOperationException">Thrown when the provided mesh does not have a Position vertex component.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="uvChannelIndex"/> is out of the valid range <tt>[0, 7]</tt>.</exception>
+        /// <exception cref="Exception">Thrown when retriangulation fails during the process. The exception should contain <see cref="Status"/>.</exception>
+        /// <seealso cref="RetriangulateMeshJob"/>
         // TODO:
         // - add "assume uniform" (perf)
         // - add "third axis interpolation" (feat)
@@ -688,7 +721,7 @@ namespace andywiecko.BurstTriangulator
 
             if (!meshData.HasVertexAttribute(VertexAttribute.Position))
             {
-                throw new InvalidOperationException("Mesh data does not have Position vertex component");
+                throw new InvalidOperationException("Mesh data does not have Position vertex component.");
             }
 
             var hasUV = uvChannelIndex switch
@@ -702,7 +735,6 @@ namespace andywiecko.BurstTriangulator
                 6 => meshData.HasVertexAttribute(VertexAttribute.TexCoord6),
                 7 => meshData.HasVertexAttribute(VertexAttribute.TexCoord7),
                 _ => throw new ArgumentException($"{nameof(uvChannelIndex)} is out of range! It must be in the range [0, 7]."),
-
             };
 
             using var outputPositions = new NativeList<float3>(Allocator.Persistent);
@@ -970,6 +1002,10 @@ namespace andywiecko.BurstTriangulator
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int NextHalfedge(int he) => he % 3 == 2 ? he - 2 : he + 1;
 
+        /// <summary>
+        /// A job for performing manual retriangulation, similar to <see cref="Extensions.Retriangulate"/>.
+        /// </summary>
+        /// <seealso cref="Extensions.Retriangulate"/>
         [BurstCompile]
         public struct RetriangulateMeshJob : IJob
         {
@@ -988,6 +1024,28 @@ namespace andywiecko.BurstTriangulator
             private readonly int uvChannelIndex, subMeshIndex;
             private readonly bool generateInitialUVPlanarMap, insertTriangleMidPoints, insertEdgeMidPoints;
 
+            /// <summary>
+            /// Constructs a new retriangulation job. Use <see cref="IJobExtensions.Run"/>, <see cref="IJobExtensions.Schedule"/>,
+            /// or <see cref="Execute"/> to compute the result.
+            /// </summary>
+            /// <param name="meshData">The mesh data to be retriangulated.</param>
+            /// <param name="outputPositions">A native list containing the retriangulated positions. Must be allocated by the user.</param>
+            /// <param name="outputTriangles">A native list containing the retriangulated triangles. Must be allocated by the user.</param>
+            /// <param name="outputUVs">An optional native list containing the retriangulated UVs. Must be allocated by the user.</param>
+            /// <param name="status">The status of the retriangulation (optional native reference).</param>
+            /// <param name="args">
+            /// The settings used during retriangulation. If <see langword="default"/> is provided,
+            /// the default settings with <see cref="Args.AutoHolesAndBoundary"/> <b>enabled</b> will be used.
+            /// <b>Note:</b> It is recommended to enable <see cref="Args.AutoHolesAndBoundary"/> in <paramref name="args"/>, as it is disabled by default.
+            /// </param>
+            /// <param name="axisInput">The axis from <see cref="Mesh.vertices"/> to use for retriangulation, by default <see cref="Axis.XY"/>.</param>
+            /// <param name="axisOutput">The axis used to write the retriangulation result, by default <see cref="Axis.XY"/>.</param>
+            /// <param name="uvMap">The UV mapping method for UV interpolation, by default <see cref="UVMap.None"/>.</param>
+            /// <param name="uvChannelIndex">The UV channel index, in the range <tt>[0..7]</tt>.</param>
+            /// <param name="subMeshIndex">The sub-mesh to modify.</param>
+            /// <param name="generateInitialUVPlanarMap">If <see langword="true"/>, an initial UV map is generated using <see cref="UVMap.Planar"/> interpolation.</param>
+            /// <param name="insertTriangleMidPoints">If <see langword="true"/>, additional points are inserted at the center of mass of the initial triangles before retriangulation.</param>
+            /// <param name="insertEdgeMidPoints">If <see langword="true"/>, additional points are inserted at the center of the initial edges before retriangulation.</param>
             public RetriangulateMeshJob(
                 Mesh.MeshData meshData,
                 NativeList<float3> outputPositions,
@@ -1603,6 +1661,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
     /// <seealso cref="Extensions"/>
     public readonly struct UnsafeTriangulator<T2> where T2 : unmanaged { }
 
+    /// <summary>
+    /// Provides extension methods.
+    /// </summary>
     public static class Extensions
     {
         /// <summary>
