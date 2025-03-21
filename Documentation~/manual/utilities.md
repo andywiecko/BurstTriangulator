@@ -87,9 +87,54 @@ for (int he = 0; he < halfedges.Length; he++)
 }
 ```
 
+## Retriangulate
+
+This package provides a utility for [Mesh](xref:UnityEngine.Mesh) retriangulation.
+To retriangulate a mesh, use [Retriangulate] extension method.
+This method supports non-uniform meshes, including those with *windmill*-like connections between triangles (e.g., the red and blue triangles in the figure in [GenerateTriangleColors](#generatetrianglecolors)).
+See the example below:
+
+```csharp
+mesh.Retriangulate(
+    settings: new()
+    {
+        AutoHolesAndBoundary = true,
+        RefineMesh = true,
+        RefinementThresholds = { Angle = 0, Area = 1e-2f }
+    },
+    axisInput: Axis.XZ,
+    uvMap: UVMap.Planar,
+);
+```
+
+> [!NOTE]
+> Refer to the [Retriangulate] API documentation for additional settings.
+
+For more advanced use cases, [`Utilities.RetriangulateMeshJob`][retrianglate-mesh-job] provides greater customization.
+This job can be executed on the main thread, scheduled within the Job System, or run inside another job.
+The user must allocate all required output containers before running the job. See the example below:
+
+```csharp
+using var outputPositions = new NativeList<float3>(Allocator.Persistent);
+using var outputTriangles = new NativeList<int>(Allocator.Persistent);
+using var meshDataArray = Mesh.AcquireReadOnlyMeshData(mesh);
+var meshData = meshDataArray[0];
+
+new RetriangulateMeshJob(meshData, outputPositions, outputTriangles,
+    args: Args.Default(autoHolesAndBoundary: true),
+    axisInput: Axis.XY
+).Schedule(dependencies)
+
+// ...
+
+dependencies.Complete();
+```
+
 [Utilities]: xref:andywiecko.BurstTriangulator.Utilities
 [Extensions]: xref:andywiecko.BurstTriangulator.Extensions
 [generate-halfedges]: xref:andywiecko.BurstTriangulator.Utilities.GenerateHalfedges*
 [generate-triangle-colors]: xref:andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors*
 [insert-submesh]: xref:andywiecko.BurstTriangulator.Utilities.InsertSubMesh*
 [next-halfedge]: xref:andywiecko.BurstTriangulator.Utilities.NextHalfedge*
+[Retriangulate]: xref:andywiecko.BurstTriangulator.Extensions.Retriangulate*
+[retrianglate-mesh-job]: xref:andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob
