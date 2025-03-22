@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.7.0] – 2025-03-22
+
+### Added
+
+- Several triangle mesh related utilities, including:
+  - `GenerateHalfedges`;
+  - `GenerateTriangleColors`;
+  - `InsertSubMesh`;
+  - `NextHalfedge`;
+  - `Retriangulate`, an extension for `UnityEngine.Mesh`;
+  - `RetriangulateMeshJob`.
+- `Triangulator` and `Triangulator<T>` now implement `INativeDisposable`.
+
+### Fixed
+
+- Safety handles for `NativeList`s in `UnsafeTriangulator`.
+
 ## [3.6.0] – 2025-02-01
 
 ### Added
@@ -315,6 +332,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.7.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.7.0
 [3.6.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.6.0
 [3.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.5.0
 [3.4.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.4.0
