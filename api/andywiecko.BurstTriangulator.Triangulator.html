@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.6.0</b></div>
+                "><b>v3.7.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -105,6 +105,7 @@ It acts as a wrapper for <a class="xref" href="andywiecko.BurstTriangulator.Tria
   </div>
   <div class="implements">
     <h5>Implements</h5>
+    <div><span class="xref">INativeDisposable</span></div>
     <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.idisposable">IDisposable</a></div>
   </div>
   <div class="inheritedMembers">
@@ -135,7 +136,7 @@ It acts as a wrapper for <a class="xref" href="andywiecko.BurstTriangulator.Tria
   <h6><strong>Assembly</strong>: .dll</h6>
   <h5 id="andywiecko_BurstTriangulator_Triangulator_syntax">Syntax</h5>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class Triangulator : IDisposable</code></pre>
+    <pre><code class="lang-csharp hljs">public class Triangulator : INativeDisposable, IDisposable</code></pre>
   </div>
   <h5 id="andywiecko_BurstTriangulator_Triangulator_remarks"><strong>Remarks</strong></h5>
   <div class="markdown level0 remarks"><p>The triangulation process can be configured using the parameters available in <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Settings.html#andywiecko_BurstTriangulator_Triangulator_Settings">Settings</a>.
@@ -233,6 +234,13 @@ var triangles = triangulator.Output.Triangles;</code></pre>
           <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Dispose.html#andywiecko_BurstTriangulator_Triangulator_Dispose">Dispose()</a>
         </td>
         <td class="markdown level1 summary"><p>Releases all resources (memory and safety handles).</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Triangulator_Dispose_Unity_Jobs_JobHandle_" data-uid="andywiecko.BurstTriangulator.Triangulator.Dispose(Unity.Jobs.JobHandle)">
+          <a class="xref" href="andywiecko.BurstTriangulator.Triangulator.Dispose.html#andywiecko_BurstTriangulator_Triangulator_Dispose_Unity_Jobs_JobHandle_">Dispose(JobHandle)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Creates and schedules a job that releases all resources (memory and safety handles).</p>
 </td>
       </tr>
       <tr>

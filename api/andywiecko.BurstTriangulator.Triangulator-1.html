@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.6.0</b></div>
+                "><b>v3.7.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -104,6 +104,7 @@
   </div>
   <div class="implements">
     <h5>Implements</h5>
+    <div><span class="xref">INativeDisposable</span></div>
     <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.idisposable">IDisposable</a></div>
   </div>
   <div class="inheritedMembers">
@@ -134,7 +135,7 @@
   <h6><strong>Assembly</strong>: .dll</h6>
   <h5 id="andywiecko_BurstTriangulator_Triangulator_1_syntax">Syntax</h5>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class Triangulator&lt;T2&gt; : IDisposable where T2 : unmanaged</code></pre>
+    <pre><code class="lang-csharp hljs">public class Triangulator&lt;T2&gt; : INativeDisposable, IDisposable where T2 : unmanaged</code></pre>
   </div>
   <h5 class="typeParameters">Type Parameters</h5>
   <table class="table table-bordered table-condensed">
@@ -255,6 +256,13 @@ var triangles = triangulator.Output.Triangles;</code></pre>
           <a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.Dispose.html#andywiecko_BurstTriangulator_Triangulator_1_Dispose">Dispose()</a>
         </td>
         <td class="markdown level1 summary"><p>Releases all resources (memory and safety handles).</p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_Triangulator_1_Dispose_Unity_Jobs_JobHandle_" data-uid="andywiecko.BurstTriangulator.Triangulator`1.Dispose(Unity.Jobs.JobHandle)">
+          <a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.Dispose.html#andywiecko_BurstTriangulator_Triangulator_1_Dispose_Unity_Jobs_JobHandle_">Dispose(JobHandle)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Creates and schedules a job that releases all resources (memory and safety handles).</p>
 </td>
       </tr>
     </tbody>

@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.6.0</b></div>
+                "><b>v3.7.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -108,6 +108,54 @@
 </div>
 <h5 class="implements">Implements</h5>
     <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.idisposable.dispose">IDisposable.Dispose()</a></div>
+<a id="andywiecko_BurstTriangulator_Triangulator_Dispose_" data-uid="andywiecko.BurstTriangulator.Triangulator.Dispose*"></a>
+<h4 id="andywiecko_BurstTriangulator_Triangulator_Dispose_Unity_Jobs_JobHandle_" data-uid="andywiecko.BurstTriangulator.Triangulator.Dispose(Unity.Jobs.JobHandle)">Dispose(JobHandle)</h4>
+<div class="markdown level1 summary"><p>Creates and schedules a job that releases all resources (memory and safety handles).</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">public JobHandle Dispose(JobHandle dependencies)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Jobs.JobHandle.html">JobHandle</a></td>
+      <td><span class="parametername">dependencies</span></td>
+      <td><p>The dependency for the new job.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="https://docs.unity3d.com/2022.3/Documentation/ScriptReference/Unity.Jobs.JobHandle.html">JobHandle</a></td>
+      <td><p>The handle of the new job. The job depends upon <code class="paramref">dependencies</code> and releases all resources (memory and safety handles).</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="implements">Implements</h5>
+    <div><span class="xref">Unity.Collections.INativeDisposable.Dispose(Unity.Jobs.JobHandle)</span></div>
+<h5 id="andywiecko_BurstTriangulator_Triangulator_Dispose_Unity_Jobs_JobHandle__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>Note: Consider using <a class="xref" href="andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator.html">UnsafeTriangulator</a>, which provides more customization for data management.</p>
+</div>
 </article>
           </div>
 

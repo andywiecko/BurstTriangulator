@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.6.0</b></div>
+                "><b>v3.7.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -92,7 +92,36 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="known-issues">Known Issues</h1>
 
-<p>Currently, there are no known issues. If you found a bug, please report it by opening a <strong><a href="https://github.com/andywiecko/BurstTriangulator/issues/new?template=Blank+issue">GitHub issue</a></strong>.</p>
+<p>Below you can find current known issues. If you found a bug, please report it by opening a <strong><a href="https://github.com/andywiecko/BurstTriangulator/issues/new?template=Blank+issue">GitHub issue</a></strong>.</p>
+<h3 id="333-atomicsafetyhandle-may-throw-invalidoperationexception"><a href="https://github.com/andywiecko/BurstTriangulator/issues/333">#333</a>: AtomicSafetyHandle may throw InvalidOperationException</h3>
+<p><code>Unity.Collections@2.2+</code> has an unresolved bug, as you can read <a href="https://docs.unity3d.com/Packages/com.unity.collections@2.2/manual/issues.html">here</a>:</p>
+<div class="alert alert-info">
+<h5>QUOTE</h5>
+<p>All containers allocated with <code>Allocator.Temp</code> on the same thread use a shared <code>AtomicSafetyHandle</code> instance rather than each having their own.</p>
+</div>
+<p>This can lead to safety check error throws like this:</p>
+<pre><code class="lang-txt">InvalidOperationException: The Unity.Collections.NativeList`1[System.Int32]
+has been declared as [WriteOnly] in the job, but you are reading from it.
+</code></pre>
+<p>when using <a class="xref" href="../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator.html"><code>UnsafeTriangulator</code></a> with <code>Allocator.Temp</code>. Consider the following example:</p>
+<pre><code class="lang-csharp">using var positions = new NativeList&lt;double2&gt;(Allocator.Temp);
+positions.Add(...);
+
+new UnsafeTriangulator().Triangulate(input: new(){ Positions = positions.AsArray() }, ...);
+</code></pre>
+<p>Unfortunately, due to <code>AsArray()</code> call, which should be safe, the above example will trigger an exception from the safety handle.
+Currently the only way to resolve this issue is:</p>
+<ul>
+<li>Disable safety checks, or</li>
+<li>Call <a href="https://docs.unity3d.com/Packages/com.unity.collections@2.5/api/Unity.Collections.NativeList-1.html#Unity_Collections_NativeList_1_ToArray_Unity_Collections_AllocatorManager_AllocatorHandle_"><code>ToArray(Allocator)</code></a></li>
+</ul>
+<p>I recommend the second option, calling <a href="https://docs.unity3d.com/Packages/com.unity.collections@2.5/api/Unity.Collections.NativeList-1.html#Unity_Collections_NativeList_1_ToArray_Unity_Collections_AllocatorManager_AllocatorHandle_">ToArray</a>, unless you are certain about what you are doing.</p>
+<pre><code class="lang-csharp">using var positions = new NativeList&lt;double2&gt;(Allocator.Temp);
+positions.Add(...);
+
+using var p = postions.ToArray(Allocator.Temp);
+new UnsafeTriangulator().Triangulate(input: new(){ Positions = p }, ...);
+</code></pre>
 <hr>
 <details>
     <summary>

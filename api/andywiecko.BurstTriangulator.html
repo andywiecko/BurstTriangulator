@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.6.0</b></div>
+                "><b>v3.7.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -99,7 +99,8 @@
 Classes
 </h3>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.Extensions.html">Extensions</a></h4>
-      <section></section>
+      <section><p>Provides extension methods.</p>
+</section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.InputData-1.html">InputData&lt;T2&gt;</a></h4>
       <section><p>A managed helper class that contains all native buffers for triangulation input.</p>
 </section>
@@ -119,6 +120,9 @@ It acts as a wrapper for <a class="xref" href="andywiecko.BurstTriangulator.Tria
       <h4><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator&lt;T2&gt;</a></h4>
       <section><p>A generic class for triangulation of coordinate type <code class="typeparamref">T2</code>, which provides the core functionality for performing triangulation on 2D geometric data.</p>
 </section>
+      <h4><a class="xref" href="andywiecko.BurstTriangulator.Utilities.html">Utilities</a></h4>
+      <section><p>A collection of utility functions related to triangulation.</p>
+</section>
     <h3 id="structs">
 Structs
 </h3>
@@ -126,15 +130,24 @@ Structs
       <section><p>A handle that prevents an object from being deallocated by the garbage collector (GC).
 Call <a class="xref" href="andywiecko.BurstTriangulator.Handle.Free.html#andywiecko_BurstTriangulator_Handle_Free">Free()</a> to release the object.</p>
 </section>
+      <h4><a class="xref" href="andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.html">Utilities.RetriangulateMeshJob</a></h4>
+      <section><p>A job for performing manual retriangulation, similar to <a class="xref" href="andywiecko.BurstTriangulator.Extensions.Retriangulate.html#andywiecko_BurstTriangulator_Extensions_Retriangulate_UnityEngine_Mesh_andywiecko_BurstTriangulator_TriangulationSettings_andywiecko_BurstTriangulator_Axis_andywiecko_BurstTriangulator_Axis_andywiecko_BurstTriangulator_UVMap_System_Int32_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_">Retriangulate(Mesh, TriangulationSettings, Axis, Axis, UVMap, int, int, bool, bool, bool, bool, bool, bool)</a>.</p>
+</section>
     <h3 id="enums">
 Enums
 </h3>
+      <h4><a class="xref" href="andywiecko.BurstTriangulator.Axis.html">Axis</a></h4>
+      <section><p>An <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.enum">Enum</a> representing possible 3D-to-2D projection axes, used in the re-triangulation utility.</p>
+</section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.Preprocessor.html">Preprocessor</a></h4>
       <section><p>An <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.enum">Enum</a> representing the type of transformation applied to input positions before triangulation.</p>
 </section>
       <h4><a class="xref" href="andywiecko.BurstTriangulator.Status.html">Status</a></h4>
       <section><p>An <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.enum">Enum</a> representing the status of triangulation.
 To check if the triangulation was successful, compare the status with <a class="xref" href="andywiecko.BurstTriangulator.Status.html#andywiecko_BurstTriangulator_Status_OK">OK</a>.</p>
+</section>
+      <h4><a class="xref" href="andywiecko.BurstTriangulator.UVMap.html">UVMap</a></h4>
+      <section><p>An <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.enum">Enum</a> representing the UV mapping method used in the re-triangulation utility.</p>
 </section>
 
 

@@ -7,6 +7,48 @@ references:
   commentId: N:andywiecko.BurstTriangulator
   fullName: andywiecko.BurstTriangulator
   nameWithType: andywiecko.BurstTriangulator
+- uid: andywiecko.BurstTriangulator.Axis
+  name: Axis
+  href: api/andywiecko.BurstTriangulator.Axis.html
+  commentId: T:andywiecko.BurstTriangulator.Axis
+  fullName: andywiecko.BurstTriangulator.Axis
+  nameWithType: Axis
+- uid: andywiecko.BurstTriangulator.Axis.XY
+  name: XY
+  href: api/andywiecko.BurstTriangulator.Axis.html#andywiecko_BurstTriangulator_Axis_XY
+  commentId: F:andywiecko.BurstTriangulator.Axis.XY
+  fullName: andywiecko.BurstTriangulator.Axis.XY
+  nameWithType: Axis.XY
+- uid: andywiecko.BurstTriangulator.Axis.XZ
+  name: XZ
+  href: api/andywiecko.BurstTriangulator.Axis.html#andywiecko_BurstTriangulator_Axis_XZ
+  commentId: F:andywiecko.BurstTriangulator.Axis.XZ
+  fullName: andywiecko.BurstTriangulator.Axis.XZ
+  nameWithType: Axis.XZ
+- uid: andywiecko.BurstTriangulator.Axis.YX
+  name: YX
+  href: api/andywiecko.BurstTriangulator.Axis.html#andywiecko_BurstTriangulator_Axis_YX
+  commentId: F:andywiecko.BurstTriangulator.Axis.YX
+  fullName: andywiecko.BurstTriangulator.Axis.YX
+  nameWithType: Axis.YX
+- uid: andywiecko.BurstTriangulator.Axis.YZ
+  name: YZ
+  href: api/andywiecko.BurstTriangulator.Axis.html#andywiecko_BurstTriangulator_Axis_YZ
+  commentId: F:andywiecko.BurstTriangulator.Axis.YZ
+  fullName: andywiecko.BurstTriangulator.Axis.YZ
+  nameWithType: Axis.YZ
+- uid: andywiecko.BurstTriangulator.Axis.ZX
+  name: ZX
+  href: api/andywiecko.BurstTriangulator.Axis.html#andywiecko_BurstTriangulator_Axis_ZX
+  commentId: F:andywiecko.BurstTriangulator.Axis.ZX
+  fullName: andywiecko.BurstTriangulator.Axis.ZX
+  nameWithType: Axis.ZX
+- uid: andywiecko.BurstTriangulator.Axis.ZY
+  name: ZY
+  href: api/andywiecko.BurstTriangulator.Axis.html#andywiecko_BurstTriangulator_Axis_ZY
+  commentId: F:andywiecko.BurstTriangulator.Axis.ZY
+  fullName: andywiecko.BurstTriangulator.Axis.ZY
+  nameWithType: Axis.ZY
 - uid: andywiecko.BurstTriangulator.Extensions
   name: Extensions
   href: api/andywiecko.BurstTriangulator.Extensions.html
@@ -28,6 +70,21 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.Extensions.AsNativeArray(Of T)(T(), andywiecko.BurstTriangulator.Handle)
   nameWithType: Extensions.AsNativeArray<T>(T[], out Handle)
   nameWithType.vb: Extensions.AsNativeArray(Of T)(T(), Handle)
+- uid: andywiecko.BurstTriangulator.Extensions.Retriangulate(UnityEngine.Mesh,andywiecko.BurstTriangulator.TriangulationSettings,andywiecko.BurstTriangulator.Axis,andywiecko.BurstTriangulator.Axis,andywiecko.BurstTriangulator.UVMap,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)
+  name: Retriangulate(Mesh, TriangulationSettings, Axis, Axis, UVMap, int, int, bool, bool, bool, bool, bool, bool)
+  href: api/andywiecko.BurstTriangulator.Extensions.Retriangulate.html#andywiecko_BurstTriangulator_Extensions_Retriangulate_UnityEngine_Mesh_andywiecko_BurstTriangulator_TriangulationSettings_andywiecko_BurstTriangulator_Axis_andywiecko_BurstTriangulator_Axis_andywiecko_BurstTriangulator_UVMap_System_Int32_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.Extensions.Retriangulate(UnityEngine.Mesh,andywiecko.BurstTriangulator.TriangulationSettings,andywiecko.BurstTriangulator.Axis,andywiecko.BurstTriangulator.Axis,andywiecko.BurstTriangulator.UVMap,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean)
+  name.vb: Retriangulate(Mesh, TriangulationSettings, Axis, Axis, UVMap, Integer, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean)
+  fullName: andywiecko.BurstTriangulator.Extensions.Retriangulate(UnityEngine.Mesh, andywiecko.BurstTriangulator.TriangulationSettings, andywiecko.BurstTriangulator.Axis, andywiecko.BurstTriangulator.Axis, andywiecko.BurstTriangulator.UVMap, int, int, bool, bool, bool, bool, bool, bool)
+  fullName.vb: andywiecko.BurstTriangulator.Extensions.Retriangulate(UnityEngine.Mesh, andywiecko.BurstTriangulator.TriangulationSettings, andywiecko.BurstTriangulator.Axis, andywiecko.BurstTriangulator.Axis, andywiecko.BurstTriangulator.UVMap, Integer, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean)
+  nameWithType: Extensions.Retriangulate(Mesh, TriangulationSettings, Axis, Axis, UVMap, int, int, bool, bool, bool, bool, bool, bool)
+  nameWithType.vb: Extensions.Retriangulate(Mesh, TriangulationSettings, Axis, Axis, UVMap, Integer, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean)
+- uid: andywiecko.BurstTriangulator.Extensions.Retriangulate*
+  name: Retriangulate
+  href: api/andywiecko.BurstTriangulator.Extensions.Retriangulate.html
+  commentId: Overload:andywiecko.BurstTriangulator.Extensions.Retriangulate
+  fullName: andywiecko.BurstTriangulator.Extensions.Retriangulate
+  nameWithType: Extensions.Retriangulate
 - uid: andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.FixedPoint.fp2})
   name: Run(Triangulator<fp2>)
   href: api/andywiecko.BurstTriangulator.Extensions.Run.html#andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_FixedPoint_fp2__
@@ -1300,6 +1357,12 @@ references:
   commentId: M:andywiecko.BurstTriangulator.Triangulator.Dispose
   fullName: andywiecko.BurstTriangulator.Triangulator.Dispose()
   nameWithType: Triangulator.Dispose()
+- uid: andywiecko.BurstTriangulator.Triangulator.Dispose(Unity.Jobs.JobHandle)
+  name: Dispose(JobHandle)
+  href: api/andywiecko.BurstTriangulator.Triangulator.Dispose.html#andywiecko_BurstTriangulator_Triangulator_Dispose_Unity_Jobs_JobHandle_
+  commentId: M:andywiecko.BurstTriangulator.Triangulator.Dispose(Unity.Jobs.JobHandle)
+  fullName: andywiecko.BurstTriangulator.Triangulator.Dispose(Unity.Jobs.JobHandle)
+  nameWithType: Triangulator.Dispose(JobHandle)
 - uid: andywiecko.BurstTriangulator.Triangulator.Dispose*
   name: Dispose
   href: api/andywiecko.BurstTriangulator.Triangulator.Dispose.html
@@ -1410,6 +1473,14 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Dispose()
   nameWithType: Triangulator<T2>.Dispose()
   nameWithType.vb: Triangulator(Of T2).Dispose()
+- uid: andywiecko.BurstTriangulator.Triangulator`1.Dispose(Unity.Jobs.JobHandle)
+  name: Dispose(JobHandle)
+  href: api/andywiecko.BurstTriangulator.Triangulator-1.Dispose.html#andywiecko_BurstTriangulator_Triangulator_1_Dispose_Unity_Jobs_JobHandle_
+  commentId: M:andywiecko.BurstTriangulator.Triangulator`1.Dispose(Unity.Jobs.JobHandle)
+  fullName: andywiecko.BurstTriangulator.Triangulator<T2>.Dispose(Unity.Jobs.JobHandle)
+  fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Dispose(Unity.Jobs.JobHandle)
+  nameWithType: Triangulator<T2>.Dispose(JobHandle)
+  nameWithType.vb: Triangulator(Of T2).Dispose(JobHandle)
 - uid: andywiecko.BurstTriangulator.Triangulator`1.Dispose*
   name: Dispose
   href: api/andywiecko.BurstTriangulator.Triangulator-1.Dispose.html
@@ -1466,6 +1537,132 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.Triangulator(Of T2).Settings
   nameWithType: Triangulator<T2>.Settings
   nameWithType.vb: Triangulator(Of T2).Settings
+- uid: andywiecko.BurstTriangulator.UVMap
+  name: UVMap
+  href: api/andywiecko.BurstTriangulator.UVMap.html
+  commentId: T:andywiecko.BurstTriangulator.UVMap
+  fullName: andywiecko.BurstTriangulator.UVMap
+  nameWithType: UVMap
+- uid: andywiecko.BurstTriangulator.UVMap.Barycentric
+  name: Barycentric
+  href: api/andywiecko.BurstTriangulator.UVMap.html#andywiecko_BurstTriangulator_UVMap_Barycentric
+  commentId: F:andywiecko.BurstTriangulator.UVMap.Barycentric
+  fullName: andywiecko.BurstTriangulator.UVMap.Barycentric
+  nameWithType: UVMap.Barycentric
+- uid: andywiecko.BurstTriangulator.UVMap.None
+  name: None
+  href: api/andywiecko.BurstTriangulator.UVMap.html#andywiecko_BurstTriangulator_UVMap_None
+  commentId: F:andywiecko.BurstTriangulator.UVMap.None
+  fullName: andywiecko.BurstTriangulator.UVMap.None
+  nameWithType: UVMap.None
+- uid: andywiecko.BurstTriangulator.UVMap.Planar
+  name: Planar
+  href: api/andywiecko.BurstTriangulator.UVMap.html#andywiecko_BurstTriangulator_UVMap_Planar
+  commentId: F:andywiecko.BurstTriangulator.UVMap.Planar
+  fullName: andywiecko.BurstTriangulator.UVMap.Planar
+  nameWithType: UVMap.Planar
+- uid: andywiecko.BurstTriangulator.Utilities
+  name: Utilities
+  href: api/andywiecko.BurstTriangulator.Utilities.html
+  commentId: T:andywiecko.BurstTriangulator.Utilities
+  fullName: andywiecko.BurstTriangulator.Utilities
+  nameWithType: Utilities
+- uid: andywiecko.BurstTriangulator.Utilities.GenerateHalfedges(System.Span{System.Int32},System.ReadOnlySpan{System.Int32},Unity.Collections.Allocator)
+  name: GenerateHalfedges(Span<int>, ReadOnlySpan<int>, Allocator)
+  href: api/andywiecko.BurstTriangulator.Utilities.GenerateHalfedges.html#andywiecko_BurstTriangulator_Utilities_GenerateHalfedges_System_Span_System_Int32__System_ReadOnlySpan_System_Int32__Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.Utilities.GenerateHalfedges(System.Span{System.Int32},System.ReadOnlySpan{System.Int32},Unity.Collections.Allocator)
+  name.vb: GenerateHalfedges(Span(Of Integer), ReadOnlySpan(Of Integer), Allocator)
+  fullName: andywiecko.BurstTriangulator.Utilities.GenerateHalfedges(System.Span<int>, System.ReadOnlySpan<int>, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.Utilities.GenerateHalfedges(System.Span(Of Integer), System.ReadOnlySpan(Of Integer), Unity.Collections.Allocator)
+  nameWithType: Utilities.GenerateHalfedges(Span<int>, ReadOnlySpan<int>, Allocator)
+  nameWithType.vb: Utilities.GenerateHalfedges(Span(Of Integer), ReadOnlySpan(Of Integer), Allocator)
+- uid: andywiecko.BurstTriangulator.Utilities.GenerateHalfedges*
+  name: GenerateHalfedges
+  href: api/andywiecko.BurstTriangulator.Utilities.GenerateHalfedges.html
+  commentId: Overload:andywiecko.BurstTriangulator.Utilities.GenerateHalfedges
+  fullName: andywiecko.BurstTriangulator.Utilities.GenerateHalfedges
+  nameWithType: Utilities.GenerateHalfedges
+- uid: andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors(System.Span{System.Int32},System.ReadOnlySpan{System.Int32},System.Int32@,Unity.Collections.Allocator)
+  name: GenerateTriangleColors(Span<int>, ReadOnlySpan<int>, out int, Allocator)
+  href: api/andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors.html#andywiecko_BurstTriangulator_Utilities_GenerateTriangleColors_System_Span_System_Int32__System_ReadOnlySpan_System_Int32__System_Int32__Unity_Collections_Allocator_
+  commentId: M:andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors(System.Span{System.Int32},System.ReadOnlySpan{System.Int32},System.Int32@,Unity.Collections.Allocator)
+  name.vb: GenerateTriangleColors(Span(Of Integer), ReadOnlySpan(Of Integer), Integer, Allocator)
+  fullName: andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors(System.Span<int>, System.ReadOnlySpan<int>, out int, Unity.Collections.Allocator)
+  fullName.vb: andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors(System.Span(Of Integer), System.ReadOnlySpan(Of Integer), Integer, Unity.Collections.Allocator)
+  nameWithType: Utilities.GenerateTriangleColors(Span<int>, ReadOnlySpan<int>, out int, Allocator)
+  nameWithType.vb: Utilities.GenerateTriangleColors(Span(Of Integer), ReadOnlySpan(Of Integer), Integer, Allocator)
+- uid: andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors*
+  name: GenerateTriangleColors
+  href: api/andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors.html
+  commentId: Overload:andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors
+  fullName: andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors
+  nameWithType: Utilities.GenerateTriangleColors
+- uid: andywiecko.BurstTriangulator.Utilities.InsertSubMesh*
+  name: InsertSubMesh
+  href: api/andywiecko.BurstTriangulator.Utilities.InsertSubMesh.html
+  commentId: Overload:andywiecko.BurstTriangulator.Utilities.InsertSubMesh
+  fullName: andywiecko.BurstTriangulator.Utilities.InsertSubMesh
+  nameWithType: Utilities.InsertSubMesh
+- uid: andywiecko.BurstTriangulator.Utilities.InsertSubMesh``1(Unity.Collections.NativeList{``0},Unity.Collections.NativeList{System.Int32},System.ReadOnlySpan{``0},System.ReadOnlySpan{System.Int32})
+  name: InsertSubMesh<T>(NativeList<T>, NativeList<int>, ReadOnlySpan<T>, ReadOnlySpan<int>)
+  href: api/andywiecko.BurstTriangulator.Utilities.InsertSubMesh.html#andywiecko_BurstTriangulator_Utilities_InsertSubMesh__1_Unity_Collections_NativeList___0__Unity_Collections_NativeList_System_Int32__System_ReadOnlySpan___0__System_ReadOnlySpan_System_Int32__
+  commentId: M:andywiecko.BurstTriangulator.Utilities.InsertSubMesh``1(Unity.Collections.NativeList{``0},Unity.Collections.NativeList{System.Int32},System.ReadOnlySpan{``0},System.ReadOnlySpan{System.Int32})
+  name.vb: InsertSubMesh(Of T)(NativeList(Of T), NativeList(Of Integer), ReadOnlySpan(Of T), ReadOnlySpan(Of Integer))
+  fullName: andywiecko.BurstTriangulator.Utilities.InsertSubMesh<T>(Unity.Collections.NativeList<T>, Unity.Collections.NativeList<int>, System.ReadOnlySpan<T>, System.ReadOnlySpan<int>)
+  fullName.vb: andywiecko.BurstTriangulator.Utilities.InsertSubMesh(Of T)(Unity.Collections.NativeList(Of T), Unity.Collections.NativeList(Of Integer), System.ReadOnlySpan(Of T), System.ReadOnlySpan(Of Integer))
+  nameWithType: Utilities.InsertSubMesh<T>(NativeList<T>, NativeList<int>, ReadOnlySpan<T>, ReadOnlySpan<int>)
+  nameWithType.vb: Utilities.InsertSubMesh(Of T)(NativeList(Of T), NativeList(Of Integer), ReadOnlySpan(Of T), ReadOnlySpan(Of Integer))
+- uid: andywiecko.BurstTriangulator.Utilities.NextHalfedge(System.Int32)
+  name: NextHalfedge(int)
+  href: api/andywiecko.BurstTriangulator.Utilities.NextHalfedge.html#andywiecko_BurstTriangulator_Utilities_NextHalfedge_System_Int32_
+  commentId: M:andywiecko.BurstTriangulator.Utilities.NextHalfedge(System.Int32)
+  name.vb: NextHalfedge(Integer)
+  fullName: andywiecko.BurstTriangulator.Utilities.NextHalfedge(int)
+  fullName.vb: andywiecko.BurstTriangulator.Utilities.NextHalfedge(Integer)
+  nameWithType: Utilities.NextHalfedge(int)
+  nameWithType.vb: Utilities.NextHalfedge(Integer)
+- uid: andywiecko.BurstTriangulator.Utilities.NextHalfedge*
+  name: NextHalfedge
+  href: api/andywiecko.BurstTriangulator.Utilities.NextHalfedge.html
+  commentId: Overload:andywiecko.BurstTriangulator.Utilities.NextHalfedge
+  fullName: andywiecko.BurstTriangulator.Utilities.NextHalfedge
+  nameWithType: Utilities.NextHalfedge
+- uid: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob
+  name: Utilities.RetriangulateMeshJob
+  href: api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.html
+  commentId: T:andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob
+  fullName: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob
+  nameWithType: Utilities.RetriangulateMeshJob
+- uid: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.#ctor(UnityEngine.Mesh.MeshData,Unity.Collections.NativeList{Unity.Mathematics.float3},Unity.Collections.NativeList{System.Int32},Unity.Collections.NativeList{Unity.Mathematics.float2},Unity.Collections.NativeReference{andywiecko.BurstTriangulator.Status},System.Nullable{andywiecko.BurstTriangulator.LowLevel.Unsafe.Args},andywiecko.BurstTriangulator.Axis,andywiecko.BurstTriangulator.Axis,andywiecko.BurstTriangulator.UVMap,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean)
+  name: RetriangulateMeshJob(MeshData, NativeList<float3>, NativeList<int>, NativeList<float2>, NativeReference<Status>, Args?, Axis, Axis, UVMap, int, int, bool, bool, bool)
+  href: api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.-ctor.html#andywiecko_BurstTriangulator_Utilities_RetriangulateMeshJob__ctor_UnityEngine_Mesh_MeshData_Unity_Collections_NativeList_Unity_Mathematics_float3__Unity_Collections_NativeList_System_Int32__Unity_Collections_NativeList_Unity_Mathematics_float2__Unity_Collections_NativeReference_andywiecko_BurstTriangulator_Status__System_Nullable_andywiecko_BurstTriangulator_LowLevel_Unsafe_Args__andywiecko_BurstTriangulator_Axis_andywiecko_BurstTriangulator_Axis_andywiecko_BurstTriangulator_UVMap_System_Int32_System_Int32_System_Boolean_System_Boolean_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.#ctor(UnityEngine.Mesh.MeshData,Unity.Collections.NativeList{Unity.Mathematics.float3},Unity.Collections.NativeList{System.Int32},Unity.Collections.NativeList{Unity.Mathematics.float2},Unity.Collections.NativeReference{andywiecko.BurstTriangulator.Status},System.Nullable{andywiecko.BurstTriangulator.LowLevel.Unsafe.Args},andywiecko.BurstTriangulator.Axis,andywiecko.BurstTriangulator.Axis,andywiecko.BurstTriangulator.UVMap,System.Int32,System.Int32,System.Boolean,System.Boolean,System.Boolean)
+  name.vb: New(MeshData, NativeList(Of float3), NativeList(Of Integer), NativeList(Of float2), NativeReference(Of Status), Args?, Axis, Axis, UVMap, Integer, Integer, Boolean, Boolean, Boolean)
+  fullName: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.RetriangulateMeshJob(UnityEngine.Mesh.MeshData, Unity.Collections.NativeList<Unity.Mathematics.float3>, Unity.Collections.NativeList<int>, Unity.Collections.NativeList<Unity.Mathematics.float2>, Unity.Collections.NativeReference<andywiecko.BurstTriangulator.Status>, andywiecko.BurstTriangulator.LowLevel.Unsafe.Args?, andywiecko.BurstTriangulator.Axis, andywiecko.BurstTriangulator.Axis, andywiecko.BurstTriangulator.UVMap, int, int, bool, bool, bool)
+  fullName.vb: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.New(UnityEngine.Mesh.MeshData, Unity.Collections.NativeList(Of Unity.Mathematics.float3), Unity.Collections.NativeList(Of Integer), Unity.Collections.NativeList(Of Unity.Mathematics.float2), Unity.Collections.NativeReference(Of andywiecko.BurstTriangulator.Status), andywiecko.BurstTriangulator.LowLevel.Unsafe.Args?, andywiecko.BurstTriangulator.Axis, andywiecko.BurstTriangulator.Axis, andywiecko.BurstTriangulator.UVMap, Integer, Integer, Boolean, Boolean, Boolean)
+  nameWithType: Utilities.RetriangulateMeshJob.RetriangulateMeshJob(Mesh.MeshData, NativeList<float3>, NativeList<int>, NativeList<float2>, NativeReference<Status>, Args?, Axis, Axis, UVMap, int, int, bool, bool, bool)
+  nameWithType.vb: Utilities.RetriangulateMeshJob.New(Mesh.MeshData, NativeList(Of float3), NativeList(Of Integer), NativeList(Of float2), NativeReference(Of Status), Args?, Axis, Axis, UVMap, Integer, Integer, Boolean, Boolean, Boolean)
+- uid: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.#ctor*
+  name: RetriangulateMeshJob
+  href: api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.-ctor.html
+  commentId: Overload:andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.#ctor
+  name.vb: New
+  fullName: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.RetriangulateMeshJob
+  fullName.vb: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.New
+  nameWithType: Utilities.RetriangulateMeshJob.RetriangulateMeshJob
+  nameWithType.vb: Utilities.RetriangulateMeshJob.New
+- uid: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.Execute
+  name: Execute()
+  href: api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.Execute.html#andywiecko_BurstTriangulator_Utilities_RetriangulateMeshJob_Execute
+  commentId: M:andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.Execute
+  fullName: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.Execute()
+  nameWithType: Utilities.RetriangulateMeshJob.Execute()
+- uid: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.Execute*
+  name: Execute
+  href: api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.Execute.html
+  commentId: Overload:andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.Execute
+  fullName: andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.Execute
+  nameWithType: Utilities.RetriangulateMeshJob.Execute
 - uid: benchmark-md
   name: Benchmark
   href: manual/benchmark.html

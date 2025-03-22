@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Utilities | BurstTriangulator </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Utilities | BurstTriangulator ">
+    
+    
+      <link rel="shortcut icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../styles/docfx.css">
+      <link rel="stylesheet" href="../styles/main.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/logo.svg" alt="BurstTriangulator">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+                <!-- Added by me -->
+                <div style="margin-right: 15px;"><a href="https://github.com/andywiecko/BurstTriangulator/"><i class="fa fa-github" style="font-size:30px; color: white"></i></a></div>
+              </form>
+            </div>
+          </div>
+        </nav>        <div class="subnav navbar navbar-default">
+            <div class="container" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div class="container hide-when-search" id="breadcrumb">
+                 <ul class="breadcrumb">
+                   <li></li>
+                 </ul>
+                </div>
+                <div class="container" style="
+                    width: 80px;
+                    line-height: 40px;
+                "><b>v3.7.0</b></div>
+          </div>
+        </div>      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="utilities">Utilities</h1>
+
+<p>The package also provides several utilities related to triangulations.
+These utilities can be found in the <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.html">Utilities</a> and <a class="xref" href="../api/andywiecko.BurstTriangulator.Extensions.html">Extensions</a> classes.</p>
+<h2 id="generatehalfedges">GenerateHalfedges</h2>
+<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GenerateHalfedges.html">GenerateHalfedges(Span&lt;int&gt; halfedges, ReadOnlySpan&lt;int&gt; triangles, Allocator allocator)</a> can be used to generate halfedges based on the given triangles. The provided <code>allocator</code> is used for temporary data allocation.
+This function is especially useful when you have mesh data but need to use halfedges, for example, when iterating through the mesh.
+Learn more about halfedges <a href="advanced/output-halfedges.html">here</a>.</p>
+<p>An example usage is shown below:</p>
+<pre><code class="lang-csharp">Mesh mesh = ...
+var triangles = mesh.triangles;
+var halfedges = new int[triangles.Length];
+
+Utilities.GenerateHalfedges(halfdeges, triangles, Allocator.Persistent);
+</code></pre>
+<h2 id="generatetrianglecolors">GenerateTriangleColors</h2>
+<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors.html">GenerateTriangleColors</a> can be used to generate triangle colors using the provided halfedges.
+Triangles that share a common edge are assigned the same color index.
+The resulting colors contains values in the range <span class="math">\([0, \,\mathtt{colorsCount})\)</span>.
+Below is an illustration of an example coloring result, where colors represent actual visual colors rather than ids.
+Please note that coloring is based on shared edges, i.e. triangles that share only a single vertex may not receive the same color.</p>
+<br>
+<p align="center"><img src="../images/utilities-triangle-coloring.svg" width="500"></p>
+<br>
+<p>Example usage:</p>
+<pre><code class="lang-csharp">var halfedges = new int[] {...};
+var colors = new int[halfedges.Length / 3];
+
+Utilities.GenerateTriangleColors(colors, halfedges, out var colorsCount, Allocator.Persistent);
+</code></pre>
+<h2 id="insertsubmesh">InsertSubMesh</h2>
+<p>The <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.InsertSubMesh.html">InsertSubMesh</a> utility can be used to combine meshes by inserting a sub-mesh into the <em>main</em> mesh.
+In such cases, triangle indices must be adjusted accordingly, and this method handles that for you.</p>
+<p>Example usage:</p>
+<pre><code class="lang-csharp">using var positions = new NativeList&lt;float2&gt;(..., Allocator);
+using var triangles = new NativeList&lt;int&gt;(..., Allocator);
+
+var subpositions = new float2[]
+{
+    math.float2(0, 0), math.float2(1, 0), math.float2(1, 1)
+};
+var subtriangles = new[] { 0, 1, 2 };
+
+Utilities.InsertSubMesh(positions, triangles, subpositions, subtriangles);
+</code></pre>
+<h2 id="nexthalfedge">NextHalfedge</h2>
+<p>The <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.NextHalfedge.html">NextHalfedge(int he)</a> method is a simple yet powerful utility.
+As its name suggests, it returns the index of the next halfedge.
+This is particularly useful when iterating through a triangular mesh.
+Learn more about halfedges <a href="advanced/output-halfedges.html">here</a>.</p>
+<p>The example below iterates over all edges in a mesh, ensuring each edge is visited only once before drawing the corresponding edge:</p>
+<pre><code class="lang-csharp">var triangles = ...
+var halfedges = ...
+var positions = ...
+
+for (int he = 0; he &lt; halfedges.Length; he++)
+{
+    if (he &gt; halfedges[he])
+    {
+        var e0 = triangles[he];
+        var e1 = triangles[NextHalfedge(he)];
+        var p0 = math.float3((float2)positions[e0], 0);
+        var p1 = math.float3((float2)positions[e1], 0);
+        Gizmos.DrawLine(p0, p1);
+    }
+}
+</code></pre>
+<h2 id="retriangulate">Retriangulate</h2>
+<p>This package provides a utility for <a class="xref" href="https://docs.unity3d.com/ScriptReference/Mesh.html">Mesh</a> retriangulation.
+To retriangulate a mesh, use <a class="xref" href="../api/andywiecko.BurstTriangulator.Extensions.Retriangulate.html">Retriangulate</a> extension method.
+This method supports non-uniform meshes, including those with <em>windmill</em>-like connections between triangles (e.g., the red and blue triangles in the figure in <a href="#generatetrianglecolors">GenerateTriangleColors</a>).
+See the example below:</p>
+<pre><code class="lang-csharp">mesh.Retriangulate(
+    settings: new()
+    {
+        AutoHolesAndBoundary = true,
+        RefineMesh = true,
+        RefinementThresholds = { Angle = 0, Area = 1e-2f }
+    },
+    axisInput: Axis.XZ,
+    uvMap: UVMap.Planar,
+);
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Refer to the <a class="xref" href="../api/andywiecko.BurstTriangulator.Extensions.Retriangulate.html">Retriangulate</a> API documentation for additional settings.</p>
+</div>
+<p>For more advanced use cases, <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.html"><code>Utilities.RetriangulateMeshJob</code></a> provides greater customization.
+This job can be executed on the main thread, scheduled within the Job System, or run inside another job.
+The user must allocate all required output containers before running the job. See the example below:</p>
+<pre><code class="lang-csharp">using var outputPositions = new NativeList&lt;float3&gt;(Allocator.Persistent);
+using var outputTriangles = new NativeList&lt;int&gt;(Allocator.Persistent);
+using var meshDataArray = Mesh.AcquireReadOnlyMeshData(mesh);
+var meshData = meshDataArray[0];
+
+new RetriangulateMeshJob(meshData, outputPositions, outputTriangles,
+    args: Args.Default(autoHolesAndBoundary: true),
+    axisInput: Axis.XY
+).Schedule(dependencies)
+
+// ...
+
+dependencies.Complete();
+</code></pre>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Generated by <strong>DocFX</strong> | Documentation © 2024 by <a href="https://github.com/andywiecko">Andrzej Więckowski</a> is licensed under CC BY 4.0
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
+    <script type="text/javascript" src="../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+    .hljs {
+        background: #f5f5f5;
+    }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </body>
+</html>
