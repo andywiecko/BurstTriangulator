@@ -467,7 +467,7 @@ namespace andywiecko.BurstTriangulator
     /// </remarks>
     /// <seealso cref="Triangulator{T2}"/>
     /// <seealso cref="UnsafeTriangulator{T2}"/>
-    public class Triangulator : IDisposable
+    public class Triangulator : INativeDisposable
     {
         /// <summary>
         /// Settings used for triangulation.
@@ -498,6 +498,18 @@ namespace andywiecko.BurstTriangulator
         /// Releases all resources (memory and safety handles).
         /// </summary>
         public void Dispose() => impl.Dispose();
+
+        /// <summary>
+        /// Creates and schedules a job that releases all resources (memory and safety handles).
+        /// </summary>
+        /// <param name="dependencies">The dependency for the new job.</param>
+        /// <remarks>
+        /// Note: Consider using <see cref="UnsafeTriangulator"/>, which provides more customization for data management.
+        /// </remarks>
+        /// <returns>
+        /// The handle of the new job. The job depends upon <paramref name="dependencies"/> and releases all resources (memory and safety handles).
+        /// </returns>
+        public JobHandle Dispose(JobHandle dependencies) => impl.Dispose(dependencies);
 
         /// <summary>
         /// Perform the job's Execute method immediately on the same thread.
@@ -556,7 +568,7 @@ namespace andywiecko.BurstTriangulator
     /// <seealso cref="Triangulator"/>
     /// <seealso cref="UnsafeTriangulator{T2}"/>
     /// <seealso cref="Extensions"/>
-    public class Triangulator<T2> : IDisposable where T2 : unmanaged
+    public class Triangulator<T2> : INativeDisposable where T2 : unmanaged
     {
         /// <summary>
         /// Settings used for triangulation.
@@ -613,6 +625,27 @@ namespace andywiecko.BurstTriangulator
             halfedges.Dispose();
             constrainedHalfedges.Dispose();
             ignoredHalfedgesForPlantingSeeds.Dispose();
+        }
+
+        /// <summary>
+        /// Creates and schedules a job that releases all resources (memory and safety handles).
+        /// </summary>
+        /// <param name="dependencies">The dependency for the new job.</param>
+        /// <remarks>
+        /// Note: Consider using <see cref="UnsafeTriangulator"/>, which provides more customization for data management.
+        /// </remarks>
+        /// <returns>
+        /// The handle of the new job. The job depends upon <paramref name="dependencies"/> and releases all resources (memory and safety handles).
+        /// </returns>
+        public JobHandle Dispose(JobHandle dependencies)
+        {
+            dependencies = outputPositions.Dispose(dependencies);
+            dependencies = triangles.Dispose(dependencies);
+            dependencies = status.Dispose(dependencies);
+            dependencies = halfedges.Dispose(dependencies);
+            dependencies = constrainedHalfedges.Dispose(dependencies);
+            dependencies = ignoredHalfedgesForPlantingSeeds.Dispose(dependencies);
+            return dependencies;
         }
     }
 
