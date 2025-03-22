@@ -28,3 +28,4 @@ To showcase the functionality of our package, we provide an illustrative example
 - [Native support](advanced/unsafe-triangulator.md) (low level API)
 - [Managed input support](advanced/input-managed.md)
 - [Dynamic triangulation](advanced/dynamic-triangulation.md)
+- [Triangle mesh utilities](utilities.md)
