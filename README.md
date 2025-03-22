@@ -21,6 +21,7 @@ A single-file package which provides Delaunay triangulation of the given set of 
 - **Native support** (low level API) [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/unsafe-triangulator.html)
 - **Managed input support** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-managed.html)
 - **Dynamic triangulation** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/dynamic-triangulation.html)
+- **Triangle mesh utilities** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/utilities.html)
 
 To view the documentation for the manual and scripting API access it online [**here**][manual] or navigate to `Documentation~/` and build this using `docfx.json`.
 
