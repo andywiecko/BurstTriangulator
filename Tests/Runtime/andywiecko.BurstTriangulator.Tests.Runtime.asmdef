@@ -8,6 +8,7 @@
         "UnityEngine.TestRunner",
         "Unity.Burst",
         "Unity.Mathematics",
+        "Unity.Mathematics.FixedPoint",
         "Unity.Collections"
     ],
     "includePlatforms": [],
@@ -21,6 +22,12 @@
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
     ],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.danielmansson.mathematics.fixedpoint",
+            "expression": "0.1.0",
+            "define": "UNITY_MATHEMATICS_FIXEDPOINT"
+        }
+    ],
     "noEngineReferences": false
 }
