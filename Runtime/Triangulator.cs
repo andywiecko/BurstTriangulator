@@ -198,7 +198,7 @@ namespace andywiecko.BurstTriangulator
     /// A helper class that defines settings for the α-shape filtering algorithm.
     /// </summary>
     [Serializable]
-    public class AlphaShapeFilterSettings
+    public class AlphaShapeSettings
     {
         /// <summary>
         /// The α-value used by the filter to remove triangles.
@@ -209,7 +209,7 @@ namespace andywiecko.BurstTriangulator
             "The α-value used by the filter to remove triangles. " +
             "Triangles whose circumradius <i>R</i> satisfies the condition <i>R</i>² ≥ α⁻¹ will be removed."
         )]
-        public float AlphaValue { get; set; } = 1;
+        public float Alpha { get; set; } = 1;
     }
 
     /// <summary>
@@ -320,7 +320,7 @@ namespace andywiecko.BurstTriangulator
         /// If set to <see langword="true"/> then enables the α-shape filter.
         /// When enabled, the filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹,
         /// which is useful in mesh reconstruction from unconstrained point clouds.
-        /// See <see cref="AlphaShapeFilterSettings"/> for configuration options.
+        /// See <see cref="AlphaShapeSettings"/> for configuration options.
         /// </summary>
         /// <remarks>
         /// For more information about α-shapes, refer to:
@@ -333,7 +333,7 @@ namespace andywiecko.BurstTriangulator
             "If set to true then enables the α-shape filter. " +
             "When enabled, the filter removes triangles whose circumradius R satisfies the condition <i>R</i>² ≥ α⁻¹, " +
             "which is useful in mesh reconstruction from unconstrained point clouds. " +
-            "See AlphaShapeFilterSettings for configuration options.\n" +
+            "See AlphaShapeSettings for configuration options.\n" +
             "\n" +
             "For more information about α-shapes, refer to: " +
             "H. Edelsbrunner, D. Kirkpatrick, R. Seidel, On the shape of a set of points in the plane, " +
@@ -341,10 +341,10 @@ namespace andywiecko.BurstTriangulator
         )]
         public bool UseAlphaShapeFilter { get; set; } = false;
         /// <summary>
-        /// Configuration settings for the α-shape filter. See <see cref="AlphaShapeFilterSettings.AlphaValue"/>.
+        /// Configuration settings for the α-shape filter. See <see cref="AlphaShapeSettings.Alpha"/>.
         /// </summary>
-        [field: SerializeField, Tooltip("Configuration settings for the α-shape filter. See AlphaValue.")]
-        public AlphaShapeFilterSettings AlphaShapeFilterSettings { get; private set; } = new();
+        [field: SerializeField, Tooltip("Configuration settings for the α-shape filter. See Alpha.")]
+        public AlphaShapeSettings AlphaShapeSettings { get; private set; } = new();
     }
 
     /// <summary>
@@ -1640,7 +1640,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         //       Learn more about blittable here: https://learn.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types
         [MarshalAs(UnmanagedType.U1)]
         public readonly bool AutoHolesAndBoundary, RefineMesh, RestoreBoundary, ValidateInput, Verbose, UseAlphaShapeFilter;
-        public readonly float ConcentricShellsParameter, RefinementThresholdAngle, RefinementThresholdArea, AlphaValue;
+        public readonly float ConcentricShellsParameter, RefinementThresholdAngle, RefinementThresholdArea, Alpha;
 
         /// <summary>
         /// Constructs a new <see cref="Args"/>.
@@ -1652,7 +1652,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             Preprocessor preprocessor,
             int sloanMaxIters,
             bool autoHolesAndBoundary, bool refineMesh, bool restoreBoundary, bool validateInput, bool verbose, bool useAlphaShapeFilter,
-            float concentricShellsParameter, float refinementThresholdAngle, float refinementThresholdArea, float alphaValue
+            float concentricShellsParameter, float refinementThresholdAngle, float refinementThresholdArea, float alpha
         )
         {
             AutoHolesAndBoundary = autoHolesAndBoundary;
@@ -1666,7 +1666,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             ConcentricShellsParameter = concentricShellsParameter;
             RefinementThresholdAngle = refinementThresholdAngle;
             RefinementThresholdArea = refinementThresholdArea;
-            AlphaValue = alphaValue;
+            Alpha = alpha;
         }
 
         /// <summary>
@@ -1676,12 +1676,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             Preprocessor preprocessor = Preprocessor.None,
             int sloanMaxIters = 1_000_000,
             bool autoHolesAndBoundary = false, bool refineMesh = false, bool restoreBoundary = false, bool validateInput = true, bool verbose = true, bool useAlphaShapeFilter = false,
-            float concentricShellsParameter = 0.001f, float refinementThresholdAngle = 0.0872664626f, float refinementThresholdArea = 1f, float alphaValue = 1f
+            float concentricShellsParameter = 0.001f, float refinementThresholdAngle = 0.0872664626f, float refinementThresholdArea = 1f, float alpha = 1f
         ) => new(
             preprocessor,
             sloanMaxIters,
             autoHolesAndBoundary, refineMesh, restoreBoundary, validateInput, verbose, useAlphaShapeFilter,
-            concentricShellsParameter, refinementThresholdAngle, refinementThresholdArea, alphaValue
+            concentricShellsParameter, refinementThresholdAngle, refinementThresholdArea, alpha
         );
 
         public static implicit operator Args(TriangulationSettings settings) => new(
@@ -1696,7 +1696,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             useAlphaShapeFilter: settings.UseAlphaShapeFilter,
             refinementThresholdAngle: settings.RefinementThresholds.Angle,
             refinementThresholdArea: settings.RefinementThresholds.Area,
-            alphaValue: settings.AlphaShapeFilterSettings.AlphaValue
+            alpha: settings.AlphaShapeSettings.Alpha
         );
 
         /// <summary>
@@ -1706,12 +1706,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             Preprocessor? preprocessor = null,
             int? sloanMaxIters = null,
             bool? autoHolesAndBoundary = null, bool? refineMesh = null, bool? restoreBoundary = null, bool? validateInput = null, bool? verbose = null, bool? useAlphaShapeFilter = null,
-            float? concentricShellsParameter = null, float? refinementThresholdAngle = null, float? refinementThresholdArea = null, float? alphaValue = null
+            float? concentricShellsParameter = null, float? refinementThresholdAngle = null, float? refinementThresholdArea = null, float? alpha = null
         ) => new(
             preprocessor ?? Preprocessor,
             sloanMaxIters ?? SloanMaxIters,
             autoHolesAndBoundary ?? AutoHolesAndBoundary, refineMesh ?? RefineMesh, restoreBoundary ?? RestoreBoundary, validateInput ?? ValidateInput, verbose ?? Verbose, useAlphaShapeFilter ?? UseAlphaShapeFilter,
-            concentricShellsParameter ?? ConcentricShellsParameter, refinementThresholdAngle ?? RefinementThresholdAngle, refinementThresholdArea ?? RefinementThresholdArea, alphaValue ?? AlphaValue
+            concentricShellsParameter ?? ConcentricShellsParameter, refinementThresholdAngle ?? RefinementThresholdAngle, refinementThresholdArea ?? RefinementThresholdArea, alpha ?? Alpha
         );
     }
 
@@ -2585,7 +2585,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public void AlphaShapeFilterForInts(NativeOutputData<T2> output, float alpha, Allocator allocator)
         {
-            new AlphaShapeFilterStep(output, Args.Default(alphaValue: alpha)).Execute(allocator, applyFilter: true);
+            new AlphaShapeFilterStep(output, Args.Default(alpha: alpha)).Execute(allocator, applyFilter: true);
         }
 
         public void DynamicInsertPoint(NativeOutputData<T2> output, int tId, T2 p, Allocator allocator)
@@ -4334,9 +4334,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 alphaForInts = default;
             }
 
-            public AlphaShapeFilterStep(NativeOutputData<T2> output, Args args) : this(output, alpha: utils.Const(args.AlphaValue))
+            public AlphaShapeFilterStep(NativeOutputData<T2> output, Args args) : this(output, alpha: utils.Const(args.Alpha))
             {
-                alphaForInts = args.AlphaValue;
+                alphaForInts = args.Alpha;
             }
 
             public void Execute(Allocator allocator, bool applyFilter)
