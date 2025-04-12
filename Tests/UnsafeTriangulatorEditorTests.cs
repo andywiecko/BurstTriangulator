@@ -40,6 +40,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(args.ConcentricShellsParameter, Is.EqualTo(settings.ConcentricShellsParameter));
             Assert.That(args.RefinementThresholdAngle, Is.EqualTo(settings.RefinementThresholds.Angle));
             Assert.That(args.RefinementThresholdArea, Is.EqualTo(settings.RefinementThresholds.Area));
+            Assert.That(args.UseAlphaShapeFilter, Is.EqualTo(settings.UseAlphaShapeFilter));
+            Assert.That(args.AlphaValue, Is.EqualTo(settings.AlphaShapeFilterSettings.AlphaValue));
         }
 
         [Test] public void ArgsImplicitSettingsCastTest() => Assert.That((Args)new TriangulationSettings(), Is.EqualTo(Args.Default()));
