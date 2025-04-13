@@ -4434,6 +4434,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 triangles.Length = 3 * wId;
                 constrainedHalfedges.Length = 3 * wId;
                 halfedges.Length = 3 * wId;
+
+                radius.Dispose();
+                ids.Dispose();
+                visitedTriangles.Dispose();
             }
         }
 
