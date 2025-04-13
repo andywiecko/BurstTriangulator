@@ -1854,7 +1854,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pId, Allocator allocator) => new UnsafeTriangulator<double2>().DynamicRemoveBulkPoint(output, pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator @this, NativeOutputData<double2> output, double alpha, Allocator allocator) => new UnsafeTriangulator<double2>().AlphaShapeFilter(output, alpha, allocator);
+        public static void AlphaShapeFilter(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1) => new UnsafeTriangulator<double2>().AlphaShapeFilter(output, allocator, alpha);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -1966,7 +1966,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pId, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().DynamicRemoveBulkPoint(output, pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, float alpha, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().AlphaShapeFilter(output, alpha, allocator);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, Allocator allocator, float alpha = 1) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().AlphaShapeFilter(output, alpha, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -2073,7 +2073,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pId, Allocator allocator) => new UnsafeTriangulator<float2>().DynamicRemoveBulkPoint(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, float alpha, Allocator allocator) => new UnsafeTriangulator<float2>().AlphaShapeFilter(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), alpha, allocator);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, float alpha = 1) => new UnsafeTriangulator<float2>().AlphaShapeFilter(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, alpha);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -2185,7 +2185,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pId, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().DynamicRemoveBulkPoint(output, pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, double alpha, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().AlphaShapeFilter(output, alpha, allocator);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().AlphaShapeFilter(output, alpha, allocator);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -2228,7 +2228,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(input, output, args, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, float alpha, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().AlphaShapeFilterForInts(output, alpha, allocator);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, Allocator allocator, float alpha = 1) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().AlphaShapeFilterForInts(output, alpha, allocator);
 
 #if UNITY_MATHEMATICS_FIXEDPOINT
         /// <summary>
@@ -2341,7 +2341,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pId, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().DynamicRemoveBulkPoint(output, pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, fp alpha, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().AlphaShapeFilter(output, alpha, allocator);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, Allocator allocator, fp? alpha = null) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().AlphaShapeFilter(output, alpha ?? 1, allocator);
 #endif
     }
 
