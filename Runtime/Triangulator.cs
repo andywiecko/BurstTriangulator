@@ -2534,7 +2534,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             new DelaunayTriangulationStep(output, args).Execute(allocator);
             new ConstrainEdgesStep(input, output, args).Execute(allocator);
             new PlantingSeedStep(output, args, localHoles).Execute(allocator, input.ConstraintEdges.IsCreated);
-            new AlphaShapeFilterStep(output, args).Execute(allocator, applyFilter: args.UseAlphaShapeFilter);
+            new AlphaShapeFilterStep(output, args, lt).Execute(allocator, applyFilter: args.UseAlphaShapeFilter);
             new RefineMeshStep(output, args, lt).Execute(allocator, refineMesh: args.RefineMesh, constrainBoundary: !input.ConstraintEdges.IsCreated || !args.RestoreBoundary);
             PostProcessInputStep(output, args, lt);
 
@@ -4344,7 +4344,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             public static AlphaShapeFilterStep ForInts(NativeOutputData<T2> output, float alpha, bool protectPoints) => new(output, alpha: default, alphaForInts: alpha, protectPoints);
             public static AlphaShapeFilterStep ForFloats(NativeOutputData<T2> output, T alpha, bool protectPoints) => new(output, alpha, alphaForInts: default, protectPoints);
-            public AlphaShapeFilterStep(NativeOutputData<T2> output, Args args) : this(output, utils.Const(args.Alpha), args.Alpha, args.AlphaShapeProtectPoints) { }
+            public AlphaShapeFilterStep(NativeOutputData<T2> output, Args args, TTransform lt) : this(output,
+                alpha: utils.div(utils.Const(args.Alpha), lt.AreaScalingFactor),
+                alphaForInts: args.Alpha, // NOTE: For integers, we do not need to rescale alpha since integers do not support scaling!
+                protectPoints: args.AlphaShapeProtectPoints)
+            { }
             public AlphaShapeFilterStep(NativeOutputData<T2> output, T alpha, float alphaForInts, bool protectPoints)
             {
                 triangles = output.Triangles;
@@ -5680,6 +5684,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         TBig diff(TBig a, TBig b);
         T2 diff(T2 a, T2 b);
         TBig distancesq(T2 a, T2 b);
+        T div(T a, T b);
         T dot(T2 a, T2 b);
         bool2 eq(T2 v, T2 w);
         bool2 ge(T2 a, T2 b);
@@ -5770,6 +5775,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float diff(float a, float b) => a - b;
         public readonly float2 diff(float2 a, float2 b) => a - b;
         public readonly float distancesq(float2 a, float2 b) => math.distancesq(a, b);
+        public readonly float div(float a, float b) => a / b;
         public readonly float dot(float2 a, float2 b) => math.dot(a, b);
         public readonly bool2 eq(float2 v, float2 w) => v == w;
         public readonly bool2 ge(float2 a, float2 b) => a >= b;
@@ -5866,6 +5872,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double diff(double a, double b) => a - b;
         public readonly double2 diff(double2 a, double2 b) => a - b;
         public readonly double distancesq(double2 a, double2 b) => math.distancesq(a, b);
+        public readonly double div(double a, double b) => a / b;
         public readonly double dot(double2 a, double2 b) => math.dot(a, b);
         public readonly bool2 eq(double2 v, double2 w) => v == w;
         public readonly bool2 ge(double2 a, double2 b) => a >= b;
@@ -5965,6 +5972,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly long diff(long a, long b) => a - b;
         public readonly int2 diff(int2 a, int2 b) => a - b;
         public readonly long distancesq(int2 a, int2 b) => (long)(a - b).x * (a - b).x + (long)(a - b).y * (a - b).y;
+        public readonly int div(int a, int b) => a / b;
         public readonly int dot(int2 a, int2 b) => throw new NotImplementedException();
         public readonly bool2 eq(int2 v, int2 w) => v == w;
         public readonly bool2 ge(int2 a, int2 b) => a >= b;
@@ -6067,6 +6075,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly fp diff(fp a, fp b) => a - b;
         public readonly fp2 diff(fp2 a, fp2 b) => a - b;
         public readonly fp distancesq(fp2 a, fp2 b) => fpmath.distancesq(a, b);
+        public readonly fp div(fp a, fp b) => a / b;
         public readonly fp dot(fp2 a, fp2 b) => fpmath.dot(a, b);
         public readonly bool2 eq(fp2 v, fp2 w) => v == w;
         public readonly bool2 ge(fp2 a, fp2 b) => a >= b;

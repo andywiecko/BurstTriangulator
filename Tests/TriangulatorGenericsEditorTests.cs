@@ -1671,6 +1671,45 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             Assert.That(pointTriangleCount, Has.All.GreaterThan(0));
         }
+
+        [Test]
+        public void AlphaShapeWithPreprocessorTest()
+        {
+            var alpha = 1e-4f;
+            var count = 64;
+            var points = new float2[count];
+            var random = new Unity.Mathematics.Random(42);
+            for (int i = 0; i < count; i++)
+            {
+                points[i] = random.NextInt2(0, 1000);
+            }
+
+            int[] triangulate(Preprocessor preprocessor)
+            {
+                using var positions = new NativeArray<T>(points.DynamicCast<T>(), Allocator.Persistent);
+                using var triangulator = new Triangulator<T>(Allocator.Persistent)
+                {
+                    Input = { Positions = positions },
+                    Settings =
+                    {
+                        UseAlphaShapeFilter = true,
+                        AlphaShapeSettings = { Alpha = alpha },
+                        Preprocessor = preprocessor
+                    }
+                };
+                triangulator.Run();
+
+                return triangulator.Output.Triangles.AsReadOnly().ToArray();
+            }
+
+            var trianglesNone = triangulate(Preprocessor.None);
+            var trianglesCOM = triangulate(Preprocessor.COM);
+
+            TestUtils.Draw(points, trianglesNone, Color.red, duration: 5);
+            TestUtils.Draw(points, trianglesCOM, Color.blue, duration: 5);
+
+            Assert.That(trianglesNone, Is.EqualTo(trianglesCOM).Using(TrianglesComparer.Instance));
+        }
     }
 
     [TestFixture(typeof(float2))]
