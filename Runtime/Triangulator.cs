@@ -3033,6 +3033,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     LogError($"[Triangulator]: Invalid arguments! RefinementThresholdAngle must be in the range [0, π / 4]. Note that in the literature, the upper boundary for convergence is approximately π / 6.");
                     status.Value |= Status.ERR_ARGS_INVALID;
                 }
+
+                if (args.UseAlphaShapeFilter && args.Alpha < 0)
+                {
+                    LogError($"[Triangulator]: Invalid arguments! AlphaShapeSettings.Alpha must be non-negative!");
+                    status.Value |= Status.ERR_ARGS_INVALID;
+                }
             }
 
             private void ValidatePositions()

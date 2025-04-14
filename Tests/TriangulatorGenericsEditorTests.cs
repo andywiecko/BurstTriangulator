@@ -116,15 +116,12 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         {
             new TestCaseData(new TriangulationSettings{ AutoHolesAndBoundary = true }, Status.OK, false){ TestName = "Test case 1 (log warning for AutoHolesAndBoundary)." },
             new TestCaseData(new TriangulationSettings{ RestoreBoundary = true }, Status.OK, false){ TestName = "Test case 2 (log warning for RestoreBoundary)." },
-            new TestCaseData(new TriangulationSettings{ RefineMesh = true }, Status.ERR_ARGS_INVALID, false){
-                TestName = "Test case 3 (log error for RefineMesh).", RunState = typeof(T) != typeof(int2) ? RunState.Ignored : RunState.Runnable },
+            new TestCaseData(new TriangulationSettings{ RefineMesh = true }, Status.ERR_ARGS_INVALID, false){ TestName = "Test case 3 (log error for RefineMesh).", RunState = typeof(T) != typeof(int2) ? RunState.Ignored : RunState.Runnable },
             new TestCaseData(new TriangulationSettings{ SloanMaxIters = -100 }, Status.ERR_ARGS_INVALID, true){ TestName = "Test case 4 (log error for SloanMaxIters)." },
-            new TestCaseData(new TriangulationSettings{ RefineMesh = true, RefinementThresholds = { Area = -1 } }, Status.ERR_ARGS_INVALID, false){
-                TestName = "Test case 5 (log error for negative area threshold).", RunState = typeof(T) == typeof(int2) ? RunState.Ignored : RunState.Runnable },
-            new TestCaseData(new TriangulationSettings{ RefineMesh = true, RefinementThresholds = { Angle = -1 } }, Status.ERR_ARGS_INVALID, false){
-                TestName = "Test case 6 (log error for negative angle threshold).", RunState = typeof(T) == typeof(int2) ? RunState.Ignored : RunState.Runnable },
-            new TestCaseData(new TriangulationSettings{ RefineMesh = true, RefinementThresholds = { Angle = math.PI / 4 + 1e-5f } }, Status.ERR_ARGS_INVALID, false){
-                TestName = "Test case 7 (log error for too big angle threshold).", RunState = typeof(T) == typeof(int2) ? RunState.Ignored : RunState.Runnable },
+            new TestCaseData(new TriangulationSettings{ RefineMesh = true, RefinementThresholds = { Area = -1 } }, Status.ERR_ARGS_INVALID, false){ TestName = "Test case 5 (log error for negative area threshold).", RunState = typeof(T) == typeof(int2) ? RunState.Ignored : RunState.Runnable },
+            new TestCaseData(new TriangulationSettings{ RefineMesh = true, RefinementThresholds = { Angle = -1 } }, Status.ERR_ARGS_INVALID, false){ TestName = "Test case 6 (log error for negative angle threshold).", RunState = typeof(T) == typeof(int2) ? RunState.Ignored : RunState.Runnable },
+            new TestCaseData(new TriangulationSettings{ RefineMesh = true, RefinementThresholds = { Angle = math.PI / 4 + 1e-5f } }, Status.ERR_ARGS_INVALID, false){ TestName = "Test case 7 (log error for too big angle threshold).", RunState = typeof(T) == typeof(int2) ? RunState.Ignored : RunState.Runnable },
+            new TestCaseData(new TriangulationSettings{ UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = -1 } }, Status.ERR_ARGS_INVALID, false){ TestName = "Test case 8 (log error for negative alpha)." },
         };
 
         [Test, TestCaseSource(nameof(validateArgsTestData))]
