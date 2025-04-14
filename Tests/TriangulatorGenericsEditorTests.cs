@@ -1608,6 +1608,72 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(triangulator.Output.ConstrainedHalfedges.AsArray().Count(i => i), Is.EqualTo(10));
             Assert.That(triangulator.Output.IgnoredHalfedgesForPlantingSeeds.AsArray().Count(i => i), Is.EqualTo(2));
         }
+
+        [Test]
+        public void AlphaShapeTest()
+        {
+            var alpha = 1e-5f;
+            var count = 64;
+            var points = new float2[count];
+            var random = new Unity.Mathematics.Random(42);
+            for (int i = 0; i < count; i++)
+            {
+                points[i] = random.NextInt2(0, 1000);
+            }
+
+            using var positions = new NativeArray<T>(points.DynamicCast<T>(), Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions },
+                Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = alpha } }
+            };
+            triangulator.Run();
+
+            triangulator.Draw();
+
+            var p = triangulator.Output.Positions.AsReadOnly().Select(i => i.ToFloat2()).ToArray();
+            var t = triangulator.Output.Triangles.AsReadOnly().ToArray();
+            static float R(float2 a, float2 b, float2 c) => math.distancesq(default(LowLevel.Unsafe.UtilsFloat).CircumCenter(a, b, c), a);
+            var radius = new float[t.Length / 3];
+            for (int i = 0; i < radius.Length; i++)
+            {
+                var (a, b, c) = (p[t[3 * i + 0]], p[t[3 * i + 1]], p[t[3 * i + 2]]);
+                radius[i] = R(a, b, c);
+            }
+
+            Assert.That(radius, Has.All.LessThan(1 / alpha));
+        }
+
+        [Test]
+        public void AlphaShapeProtectPointsTest()
+        {
+            var alpha = 1e-3f;
+            var count = 64;
+            var points = new float2[count];
+            var random = new Unity.Mathematics.Random(42);
+            for (int i = 0; i < count; i++)
+            {
+                points[i] = random.NextInt2(0, 1000);
+            }
+
+            using var positions = new NativeArray<T>(points.DynamicCast<T>(), Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions },
+                Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = alpha, ProtectPoints = true } }
+            };
+            triangulator.Run();
+
+            triangulator.Draw();
+
+            var pointTriangleCount = new int[triangulator.Output.Positions.Length];
+            foreach (var t in triangulator.Output.Triangles.AsReadOnly())
+            {
+                pointTriangleCount[t]++;
+            }
+
+            Assert.That(pointTriangleCount, Has.All.GreaterThan(0));
+        }
     }
 
     [TestFixture(typeof(float2))]
