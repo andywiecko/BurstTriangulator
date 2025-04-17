@@ -78,6 +78,10 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 static string join<T>(string sep, ReadOnlySpan<T> span)
                 {
+                    if (span.Length == 0)
+                    {
+                        return "";
+                    }
                     var b = new StringBuilder();
                     b.Append(span[0]);
                     foreach (var s in span[1..])
