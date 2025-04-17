@@ -562,6 +562,47 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 return -1;
             }
         }
+
+        [Test]
+        public void UnsafeTriangulatorAlphaShapeTest()
+        {
+            var t = new UnsafeTriangulator<T>();
+
+            var alpha = 1e-5f;
+            var count = 64;
+            var points = new float2[count];
+            var random = new Unity.Mathematics.Random(42);
+            for (int i = 0; i < count; i++)
+            {
+                points[i] = random.NextInt2(0, 1000);
+            }
+
+            using var positions = new NativeArray<T>(points.DynamicCast<T>(), Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions },
+                Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = alpha } }
+            };
+            triangulator.Run();
+
+            triangulator.Draw();
+
+            using var outputPositions = new NativeList<T>(Allocator.Persistent);
+            using var triangles = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+            var output = new NativeOutputData<T>()
+            {
+                Positions = outputPositions,
+                Triangles = triangles,
+                Halfedges = halfedges,
+                ConstrainedHalfedges = constrainedHalfedges,
+            };
+            t.Triangulate(new() { Positions = positions }, output, Args.Default(), Allocator.Persistent);
+            t.AlphaShapeFilter(output, Allocator.Persistent, alpha);
+
+            Assert.That(triangulator.Output.Triangles.AsReadOnly().ToArray(), Is.EqualTo(triangles.AsReadOnly().ToArray()).Using(TrianglesComparer.Instance));
+        }
     }
 
     [TestFixture(typeof(float2))]
