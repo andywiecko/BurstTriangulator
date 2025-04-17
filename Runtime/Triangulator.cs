@@ -1865,7 +1865,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pId, Allocator allocator) => new UnsafeTriangulator<double2>().DynamicRemoveBulkPoint(output, pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1) => new UnsafeTriangulator<double2>().AlphaShapeFilter(output, allocator, alpha);
+        public static void AlphaShapeFilter(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1, bool protectPoints = false) => new UnsafeTriangulator<double2>().AlphaShapeFilter(output, allocator, alpha, protectPoints);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -2084,7 +2084,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pId, Allocator allocator) => new UnsafeTriangulator<float2>().DynamicRemoveBulkPoint(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, float alpha = 1) => new UnsafeTriangulator<float2>().AlphaShapeFilter(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, alpha);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, float alpha = 1, bool protectPoints = false) => new UnsafeTriangulator<float2>().AlphaShapeFilter(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, alpha, protectPoints);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
