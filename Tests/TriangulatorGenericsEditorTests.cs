@@ -1668,7 +1668,67 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             {
                 pointTriangleCount[t]++;
             }
+            Assert.That(pointTriangleCount, Has.All.GreaterThan(0));
+        }
 
+        [Test]
+        public void AlphaShapePreventWindmillsTest()
+        {
+            var alpha = 1e-3f;
+            var count = 64;
+            var points = new float2[count];
+            var random = new Unity.Mathematics.Random(42);
+            for (int i = 0; i < count; i++)
+            {
+                points[i] = random.NextInt2(0, 1000);
+            }
+
+            using var positions = new NativeArray<T>(points.DynamicCast<T>(), Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions },
+                Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = alpha, PreventWindmills = true } }
+            };
+            triangulator.Run();
+
+            triangulator.Draw();
+
+            var colors = new int[triangulator.Output.Triangles.Length / 3];
+            GenerateTriangleColors(colors, triangulator.Output.Halfedges.AsReadOnly(), out var colorsCount, Allocator.Persistent);
+            Assert.That(colorsCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void AlphaShapePreventWindmillAndProtectPointsTest()
+        {
+            var alpha = 1e-3f;
+            var count = 64;
+            var points = new float2[count];
+            var random = new Unity.Mathematics.Random(42);
+            for (int i = 0; i < count; i++)
+            {
+                points[i] = random.NextInt2(0, 1000);
+            }
+
+            using var positions = new NativeArray<T>(points.DynamicCast<T>(), Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions },
+                Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = alpha, PreventWindmills = true, ProtectPoints = true } }
+            };
+            triangulator.Run();
+
+            triangulator.Draw();
+
+            var colors = new int[triangulator.Output.Triangles.Length / 3];
+            GenerateTriangleColors(colors, triangulator.Output.Halfedges.AsReadOnly(), out var colorsCount, Allocator.Persistent);
+            Assert.That(colorsCount, Is.EqualTo(1));
+
+            var pointTriangleCount = new int[triangulator.Output.Positions.Length];
+            foreach (var t in triangulator.Output.Triangles.AsReadOnly())
+            {
+                pointTriangleCount[t]++;
+            }
             Assert.That(pointTriangleCount, Has.All.GreaterThan(0));
         }
 

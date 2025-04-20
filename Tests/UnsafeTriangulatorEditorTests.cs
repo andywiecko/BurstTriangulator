@@ -568,7 +568,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         {
             var t = new UnsafeTriangulator<T>();
 
-            var alpha = 1e-5f;
+            var alpha = 1e-3f;
             var count = 64;
             var points = new float2[count];
             var random = new Unity.Mathematics.Random(42);
@@ -581,7 +581,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
                 Input = { Positions = positions },
-                Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = alpha } }
+                Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = alpha, ProtectPoints = true, PreventWindmills = true } }
             };
             triangulator.Run();
 
@@ -599,7 +599,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 ConstrainedHalfedges = constrainedHalfedges,
             };
             t.Triangulate(new() { Positions = positions }, output, Args.Default(), Allocator.Persistent);
-            t.AlphaShapeFilter(output, Allocator.Persistent, alpha);
+            t.AlphaShapeFilter(output, Allocator.Persistent, alpha, protectPoints: true, preventWindmills: true);
 
             Assert.That(triangulator.Output.Triangles.AsReadOnly().ToArray(), Is.EqualTo(triangles.AsReadOnly().ToArray()).Using(TrianglesComparer.Instance));
         }
