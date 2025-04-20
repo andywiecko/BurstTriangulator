@@ -181,14 +181,14 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 #endif
             _ => (float2)(dynamic)v,
         };
-        public static void AlphaShapeFilter<T>(this UnsafeTriangulator<T> triangulator, NativeOutputData<T> output, Allocator allocator, float alpha = 1, bool protectPoints = false) where T : unmanaged => LowLevel.Unsafe.Extensions.AlphaShapeFilter((dynamic)triangulator, (dynamic)output, allocator, default(T) switch
+        public static void AlphaShapeFilter<T>(this UnsafeTriangulator<T> triangulator, NativeOutputData<T> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false) where T : unmanaged => LowLevel.Unsafe.Extensions.AlphaShapeFilter((dynamic)triangulator, (dynamic)output, allocator, default(T) switch
         {
 #if UNITY_MATHEMATICS_FIXEDPOINT
             fp2 => (fp)alpha,
 #endif
             _ => (dynamic)alpha,
         }
-        , protectPoints);
+        , protectPoints, preventWindmills);
         public static void Triangulate<T>(this UnsafeTriangulator<T> triangulator, NativeInputData<T> input, NativeOutputData<T> output, Args args, Allocator allocator) where T : unmanaged => LowLevel.Unsafe.Extensions.Triangulate((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
         public static void ConstrainEdge<T>(this UnsafeTriangulator<T> triangulator, NativeOutputData<T> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) where T : unmanaged => LowLevel.Unsafe.Extensions.ConstrainEdge((dynamic)triangulator, (dynamic)output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         public static void PlantHoleSeeds<T>(this UnsafeTriangulator<T> triangulator, NativeInputData<T> input, NativeOutputData<T> output, Args args, Allocator allocator) where T : unmanaged => LowLevel.Unsafe.Extensions.PlantHoleSeeds((dynamic)triangulator, (dynamic)input, (dynamic)output, args, allocator);
