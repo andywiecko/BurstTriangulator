@@ -1004,6 +1004,22 @@ namespace andywiecko.BurstTriangulator
         }
 
         /// <summary>
+        /// Populates the <paramref name="triangleCount"/> buffer with the number of triangles each vertex index is part of,
+        /// based on the provided <paramref name="triangles"/> index buffer.
+        /// </summary>
+        /// <param name="triangleCount">The buffer to populate with per-vertex triangle usage counts. Must be large enough to accommodate the highest index in <paramref name="triangles"/>.</param>
+        /// <param name="triangles">The index buffer representing triangles.</param>
+        public static void GeneratePointTriangleCount(Span<int> triangleCount, ReadOnlySpan<int> triangles)
+        {
+            ThrowCheckPointTriangleCount(triangleCount, triangles);
+
+            foreach (var t in triangles)
+            {
+                triangleCount[t]++;
+            }
+        }
+
+        /// <summary>
         /// Generates triangle <paramref name="colors"/> using the provided <paramref name="halfedges"/>.
         /// Triangles that share a common edge are assigned the same color index.
         /// The resulting <paramref name="colors"/> contains values in the range <tt>[0, <paramref name="colorsCount"/>)</tt>.
@@ -1510,6 +1526,23 @@ namespace andywiecko.BurstTriangulator
             {
                 throw new ArgumentException(
                     $"The provided halfedges[{halfedges.Length}] does not match the length of triangles[{triangles.Length}]."
+                );
+            }
+        }
+
+        [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        private static void ThrowCheckPointTriangleCount(ReadOnlySpan<int> triangleCount, ReadOnlySpan<int> triangles)
+        {
+            var max = -1;
+            foreach (var t in triangles)
+            {
+                max = math.max(t, max);
+            }
+
+            if (triangleCount.Length <= max)
+            {
+                throw new ArgumentException(
+                    $"The provided triangleCount[{triangleCount.Length}] length must be greater than the largest triangle index: max(triangles[])={max}."
                 );
             }
         }
@@ -4393,10 +4426,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 var pointTriangleCount = protectPoints || preventWindmills ? new NativeArray<int>(positions.Length, allocator) : default;
                 if (pointTriangleCount.IsCreated)
                 {
-                    foreach (var t in triangles)
-                    {
-                        pointTriangleCount[t]++;
-                    }
+                    GeneratePointTriangleCount(pointTriangleCount, triangles.AsReadOnly());
                 }
 
                 var tIdMinVisited = -1;

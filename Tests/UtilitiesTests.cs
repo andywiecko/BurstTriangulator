@@ -56,6 +56,48 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             GenerateHalfedges(halfedges: new int[4], triangles: new int[7], Allocator.Persistent)
         );
 
+        private static readonly TestCaseData[] generatePointTriangleCountTestData =
+        {
+            new(new int[0])
+            {
+                TestName = $"Test case 1 ({nameof(GeneratePointTriangleCountTest)})",
+                ExpectedResult = new int[0],
+            },
+            new(new int[] { 0, 1, 2 })
+            {
+                TestName = $"Test case 2 ({nameof(GeneratePointTriangleCountTest)})",
+                ExpectedResult = new int[] { 1, 1, 1 },
+            },
+            new(new int[] { 0, 1, 2, 0, 1, 2 })
+            {
+                TestName = $"Test case 3 ({nameof(GeneratePointTriangleCountTest)})",
+                ExpectedResult = new int[] { 2, 2, 2 },
+            },
+            new(new int[] { 1, 1, 1, 1, 1, 1 })
+            {
+                TestName = $"Test case 4 ({nameof(GeneratePointTriangleCountTest)})",
+                ExpectedResult = new int[] { 0, 6 },
+            },
+        };
+
+        [Test, TestCaseSource(nameof(generatePointTriangleCountTestData))]
+        public int[] GeneratePointTriangleCountTest(int[] triangles)
+        {
+            var max = -1;
+            foreach (var t in triangles)
+            {
+                max = math.max(t, max);
+            }
+            var pointTriangleCount = new int[max >= 0 ? max + 1 : 0];
+            GeneratePointTriangleCount(pointTriangleCount, triangles);
+            return pointTriangleCount;
+        }
+
+        [Test]
+        public void GeneratePointTriangleCountThrowTest() => Assert.Throws<ArgumentException>(() =>
+            GeneratePointTriangleCount(new int[5], triangles: new int[] { 0, 1, 2, 3, 4, 5 })
+        );
+
         private static readonly TestCaseData[] nextHalfedgeTestData =
         {
             new(0) { ExpectedResult = 1, TestName= "Test case 1 (NextHalfedgeTest)"},
