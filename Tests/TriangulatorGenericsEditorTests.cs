@@ -1664,10 +1664,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             triangulator.Draw();
 
             var pointTriangleCount = new int[triangulator.Output.Positions.Length];
-            foreach (var t in triangulator.Output.Triangles.AsReadOnly())
-            {
-                pointTriangleCount[t]++;
-            }
+            GeneratePointTriangleCount(pointTriangleCount, triangulator.Output.Triangles.AsReadOnly());
             Assert.That(pointTriangleCount, Has.All.GreaterThan(0));
         }
 
@@ -1693,8 +1690,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Draw();
 
-            var colors = new int[triangulator.Output.Triangles.Length / 3];
-            GenerateTriangleColors(colors, triangulator.Output.Halfedges.AsReadOnly(), out var colorsCount, Allocator.Persistent);
+            GenerateTriangleColors(colors: new int[triangulator.Output.Triangles.Length / 3], halfedges: triangulator.Output.Halfedges.AsReadOnly(), out var colorsCount, Allocator.Persistent);
             Assert.That(colorsCount, Is.EqualTo(1));
         }
 
@@ -1720,15 +1716,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             triangulator.Draw();
 
-            var colors = new int[triangulator.Output.Triangles.Length / 3];
-            GenerateTriangleColors(colors, triangulator.Output.Halfedges.AsReadOnly(), out var colorsCount, Allocator.Persistent);
+            GenerateTriangleColors(colors: new int[triangulator.Output.Triangles.Length / 3], halfedges: triangulator.Output.Halfedges.AsReadOnly(), out var colorsCount, Allocator.Persistent);
             Assert.That(colorsCount, Is.EqualTo(1));
 
             var pointTriangleCount = new int[triangulator.Output.Positions.Length];
-            foreach (var t in triangulator.Output.Triangles.AsReadOnly())
-            {
-                pointTriangleCount[t]++;
-            }
+            GeneratePointTriangleCount(pointTriangleCount, triangulator.Output.Triangles.AsReadOnly());
             Assert.That(pointTriangleCount, Has.All.GreaterThan(0));
         }
 
