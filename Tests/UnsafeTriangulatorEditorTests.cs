@@ -570,18 +570,22 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             var alpha = 1e-3f;
             var count = 64;
-            var points = new float2[count];
+            using var points = new NativeList<float2>(Allocator.Persistent)
+            {
+                new(0, 0), new(1000, 0), new(1000, 1000), new(0, 1000),
+            };
             var random = new Unity.Mathematics.Random(42);
             for (int i = 0; i < count; i++)
             {
-                points[i] = random.NextInt2(0, 1000);
+                points.Add(random.NextInt2(0, 1000));
             }
 
-            using var positions = new NativeArray<T>(points.DynamicCast<T>(), Allocator.Persistent);
+            using var positions = new NativeArray<T>(points.AsReadOnly().DynamicCast<T>(), Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new[] { 0, 1, 1, 2, 2, 3, 3, 0 }, Allocator.Persistent);
             using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
-                Input = { Positions = positions },
-                Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = alpha, ProtectPoints = true, PreventWindmills = true } }
+                Input = { Positions = positions, ConstraintEdges = constraints },
+                Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = alpha, ProtectPoints = true, PreventWindmills = true, ProtectConstraints = true } }
             };
             triangulator.Run();
 
@@ -598,8 +602,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 Halfedges = halfedges,
                 ConstrainedHalfedges = constrainedHalfedges,
             };
-            t.Triangulate(new() { Positions = positions }, output, Args.Default(), Allocator.Persistent);
-            t.AlphaShapeFilter(output, Allocator.Persistent, alpha, protectPoints: true, preventWindmills: true);
+            t.Triangulate(new() { Positions = positions, ConstraintEdges = constraints }, output, Args.Default(), Allocator.Persistent);
+            t.AlphaShapeFilter(output, Allocator.Persistent, alpha, protectPoints: true, preventWindmills: true, protectConstraints: true);
 
             Assert.That(triangulator.Output.Triangles.AsReadOnly().ToArray(), Is.EqualTo(triangles.AsReadOnly().ToArray()).Using(TrianglesComparer.Instance));
         }
