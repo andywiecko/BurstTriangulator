@@ -19,6 +19,17 @@ var halfedges = new int[triangles.Length];
 Utilities.GenerateHalfedges(halfdeges, triangles, Allocator.Persistent);
 ```
 
+## GeneratePointTriangleCount
+
+The method [GeneratePointTriangleCount][generate-point-triangle-count] populates the `pointTriangleCount` buffer with the number of triangles each vertex index is part of, based on the provided triangles index buffer.
+The provided `pointTriangleCount` buffer for counting triangles must be large enough to accommodate the highest index in `triangles`.
+An example usage is shown below:
+
+```csharp
+var pointTriangleCount = new int[pointsCount];
+Utilities.GeneratePointTriangleCount(pointTriangleCount, triangles);
+```
+
 ## GenerateTriangleColors
 
 The method [GenerateTriangleColors][generate-triangle-colors] can be used to generate triangle colors using the provided halfedges.
@@ -133,6 +144,7 @@ dependencies.Complete();
 [Utilities]: xref:andywiecko.BurstTriangulator.Utilities
 [Extensions]: xref:andywiecko.BurstTriangulator.Extensions
 [generate-halfedges]: xref:andywiecko.BurstTriangulator.Utilities.GenerateHalfedges*
+[generate-point-triangle-count]: xref:andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount*
 [generate-triangle-colors]: xref:andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors*
 [insert-submesh]: xref:andywiecko.BurstTriangulator.Utilities.InsertSubMesh*
 [next-halfedge]: xref:andywiecko.BurstTriangulator.Utilities.NextHalfedge*
