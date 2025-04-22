@@ -227,6 +227,13 @@ namespace andywiecko.BurstTriangulator
             "If set to true, triangle removal is skipped " +
             "if it would result in a windmill structure around any vertex.")]
         public bool PreventWindmills { get; set; } = false;
+        /// <summary>
+        /// If set to <see langword="true"/>, triangle removal is skipped if any of the triangle's halfedges are constrained.
+        /// </summary>
+        [field: SerializeField, Tooltip(
+            "If set to true, triangle removal is skipped if any of the triangle's halfedges are constrained."
+        )]
+        public bool ProtectConstraints { get; set; } = false;
     }
 
     /// <summary>
@@ -1689,7 +1696,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         //       Unfortunately bool type is non-blittable and required marshaling for compilation.
         //       Learn more about blittable here: https://learn.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types
         [MarshalAs(UnmanagedType.U1)]
-        public readonly bool AutoHolesAndBoundary, RefineMesh, RestoreBoundary, ValidateInput, Verbose, UseAlphaShapeFilter, AlphaShapeProtectPoints, AlphaShapePreventWindmills;
+        public readonly bool AutoHolesAndBoundary, RefineMesh, RestoreBoundary, ValidateInput, Verbose, UseAlphaShapeFilter, AlphaShapeProtectPoints, AlphaShapePreventWindmills, AlphaShapeProtectConstraints;
         public readonly float ConcentricShellsParameter, RefinementThresholdAngle, RefinementThresholdArea, Alpha;
 
         /// <summary>
@@ -1701,7 +1708,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public Args(
             Preprocessor preprocessor,
             int sloanMaxIters,
-            bool autoHolesAndBoundary, bool refineMesh, bool restoreBoundary, bool validateInput, bool verbose, bool useAlphaShapeFilter, bool alphaShapeProtectPoints, bool alphaShapePreventWindmills,
+            bool autoHolesAndBoundary, bool refineMesh, bool restoreBoundary, bool validateInput, bool verbose, bool useAlphaShapeFilter, bool alphaShapeProtectPoints, bool alphaShapePreventWindmills, bool alphaShapeProtectConstraints,
             float concentricShellsParameter, float refinementThresholdAngle, float refinementThresholdArea, float alpha
         )
         {
@@ -1719,6 +1726,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             Alpha = alpha;
             AlphaShapeProtectPoints = alphaShapeProtectPoints;
             AlphaShapePreventWindmills = alphaShapePreventWindmills;
+            AlphaShapeProtectConstraints = alphaShapeProtectConstraints;
         }
 
         /// <summary>
@@ -1727,12 +1735,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public static Args Default(
             Preprocessor preprocessor = Preprocessor.None,
             int sloanMaxIters = 1_000_000,
-            bool autoHolesAndBoundary = false, bool refineMesh = false, bool restoreBoundary = false, bool validateInput = true, bool verbose = true, bool useAlphaShapeFilter = false, bool alphaShapeProtectPoints = false, bool alphaShapePreventWindmills = false,
+            bool autoHolesAndBoundary = false, bool refineMesh = false, bool restoreBoundary = false, bool validateInput = true, bool verbose = true, bool useAlphaShapeFilter = false, bool alphaShapeProtectPoints = false, bool alphaShapePreventWindmills = false, bool alphaShapeProtectConstraints = false,
             float concentricShellsParameter = 0.001f, float refinementThresholdAngle = 0.0872664626f, float refinementThresholdArea = 1f, float alpha = 1f
         ) => new(
             preprocessor,
             sloanMaxIters,
-            autoHolesAndBoundary, refineMesh, restoreBoundary, validateInput, verbose, useAlphaShapeFilter, alphaShapeProtectPoints, alphaShapePreventWindmills,
+            autoHolesAndBoundary, refineMesh, restoreBoundary, validateInput, verbose, useAlphaShapeFilter, alphaShapeProtectPoints, alphaShapePreventWindmills, alphaShapeProtectConstraints,
             concentricShellsParameter, refinementThresholdAngle, refinementThresholdArea, alpha
         );
 
@@ -1748,6 +1756,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             useAlphaShapeFilter: settings.UseAlphaShapeFilter,
             alphaShapeProtectPoints: settings.AlphaShapeSettings.ProtectPoints,
             alphaShapePreventWindmills: settings.AlphaShapeSettings.PreventWindmills,
+            alphaShapeProtectConstraints: settings.AlphaShapeSettings.ProtectConstraints,
             refinementThresholdAngle: settings.RefinementThresholds.Angle,
             refinementThresholdArea: settings.RefinementThresholds.Area,
             alpha: settings.AlphaShapeSettings.Alpha
@@ -1759,12 +1768,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public Args With(
             Preprocessor? preprocessor = null,
             int? sloanMaxIters = null,
-            bool? autoHolesAndBoundary = null, bool? refineMesh = null, bool? restoreBoundary = null, bool? validateInput = null, bool? verbose = null, bool? useAlphaShapeFilter = null, bool? alphaShapeProtectPoints = null, bool? alphaShapePreventWindmills = null,
+            bool? autoHolesAndBoundary = null, bool? refineMesh = null, bool? restoreBoundary = null, bool? validateInput = null, bool? verbose = null, bool? useAlphaShapeFilter = null, bool? alphaShapeProtectPoints = null, bool? alphaShapePreventWindmills = null, bool? alphaShapeProtectConstraints = null,
             float? concentricShellsParameter = null, float? refinementThresholdAngle = null, float? refinementThresholdArea = null, float? alpha = null
         ) => new(
             preprocessor ?? Preprocessor,
             sloanMaxIters ?? SloanMaxIters,
-            autoHolesAndBoundary ?? AutoHolesAndBoundary, refineMesh ?? RefineMesh, restoreBoundary ?? RestoreBoundary, validateInput ?? ValidateInput, verbose ?? Verbose, useAlphaShapeFilter ?? UseAlphaShapeFilter, alphaShapeProtectPoints ?? AlphaShapeProtectPoints, alphaShapePreventWindmills ?? AlphaShapePreventWindmills,
+            autoHolesAndBoundary ?? AutoHolesAndBoundary, refineMesh ?? RefineMesh, restoreBoundary ?? RestoreBoundary, validateInput ?? ValidateInput, verbose ?? Verbose, useAlphaShapeFilter ?? UseAlphaShapeFilter, alphaShapeProtectPoints ?? AlphaShapeProtectPoints, alphaShapePreventWindmills ?? AlphaShapePreventWindmills, alphaShapeProtectConstraints ?? AlphaShapeProtectConstraints,
             concentricShellsParameter ?? ConcentricShellsParameter, refinementThresholdAngle ?? RefinementThresholdAngle, refinementThresholdArea ?? RefinementThresholdArea, alpha ?? Alpha
         );
     }
@@ -1912,7 +1921,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pId, Allocator allocator) => new UnsafeTriangulator<double2>().DynamicRemoveBulkPoint(output, pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1, bool protectPoints = false, bool preventWindmills = false) => new UnsafeTriangulator<double2>().AlphaShapeFilter(output, allocator, alpha, protectPoints, preventWindmills);
+        public static void AlphaShapeFilter(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<double2>().AlphaShapeFilter(output, allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -2028,7 +2037,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pId, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().DynamicRemoveBulkPoint(output, pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().AlphaShapeFilterForFloats(output, allocator, alpha, protectPoints, preventWindmills);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().AlphaShapeFilterForFloats(output, allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -2139,7 +2148,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pId, Allocator allocator) => new UnsafeTriangulator<float2>().DynamicRemoveBulkPoint(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false) => new UnsafeTriangulator<float2>().AlphaShapeFilter(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, alpha, protectPoints, preventWindmills);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<float2>().AlphaShapeFilter(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -2255,7 +2264,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pId, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().DynamicRemoveBulkPoint(output, pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1, bool protectPoints = false, bool preventWindmills = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().AlphaShapeFilterForFloats(output, allocator, alpha, protectPoints, preventWindmills);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().AlphaShapeFilterForFloats(output, allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
         /// <summary>
         /// Performs triangulation on the given <paramref name="input"/>, producing the result in <paramref name="output"/> based on the settings specified in <paramref name="args"/>.
@@ -2298,7 +2307,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(input, output, args, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().AlphaShapeFilterForInts(output, allocator, alpha, protectPoints, preventWindmills);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().AlphaShapeFilterForInts(output, allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
 #if UNITY_MATHEMATICS_FIXEDPOINT
         /// <summary>
@@ -2415,7 +2424,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pId, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().DynamicRemoveBulkPoint(output, pId, allocator);
-        public static void AlphaShapeFilter(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, Allocator allocator, fp? alpha = null, bool protectPoints = false, bool preventWindmills = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().AlphaShapeFilterForFloats(output, allocator, alpha ?? 1, protectPoints, preventWindmills);
+        public static void AlphaShapeFilter(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, Allocator allocator, fp? alpha = null, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().AlphaShapeFilterForFloats(output, allocator, alpha ?? 1, protectPoints, preventWindmills, protectConstraints);
 #endif
     }
 
@@ -2652,14 +2661,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             new RefineMeshStep(output, area2Threshold, angleThreshold, shells).Execute(allocator, refineMesh: true, constrainBoundary);
         }
 
-        public void AlphaShapeFilterForFloats(NativeOutputData<T2> output, Allocator allocator, T alpha, bool protectPoints, bool preventWindmills)
+        public void AlphaShapeFilterForFloats(NativeOutputData<T2> output, Allocator allocator, T alpha, bool protectPoints, bool preventWindmills, bool protectConstraints)
         {
-            AlphaShapeFilterStep.ForFloats(output, alpha, protectPoints, preventWindmills).Execute(allocator, applyFilter: true);
+            AlphaShapeFilterStep.ForFloats(output, alpha, protectPoints, preventWindmills, protectConstraints).Execute(allocator, applyFilter: true);
         }
 
-        public void AlphaShapeFilterForInts(NativeOutputData<T2> output, Allocator allocator, float alpha, bool protectPoints, bool preventWindmills)
+        public void AlphaShapeFilterForInts(NativeOutputData<T2> output, Allocator allocator, float alpha, bool protectPoints, bool preventWindmills, bool protectConstraints)
         {
-            AlphaShapeFilterStep.ForInts(output, alpha, protectPoints, preventWindmills).Execute(allocator, applyFilter: true);
+            AlphaShapeFilterStep.ForInts(output, alpha, protectPoints, preventWindmills, protectConstraints).Execute(allocator, applyFilter: true);
         }
 
         public void DynamicInsertPoint(NativeOutputData<T2> output, int tId, T2 p, Allocator allocator)
@@ -4403,17 +4412,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<bool> constrainedHalfedges;
             private readonly T alpha;
             private readonly float alphaForInts;
-            private readonly bool protectPoints, preventWindmills;
+            private readonly bool protectPoints, preventWindmills, protectConstraints;
 
-            public static AlphaShapeFilterStep ForInts(NativeOutputData<T2> output, float alpha, bool protectPoints, bool preventWindmills) => new(output, alpha: default, alphaForInts: alpha, protectPoints, preventWindmills);
-            public static AlphaShapeFilterStep ForFloats(NativeOutputData<T2> output, T alpha, bool protectPoints, bool preventWindmills) => new(output, alpha, alphaForInts: default, protectPoints, preventWindmills);
+            public static AlphaShapeFilterStep ForInts(NativeOutputData<T2> output, float alpha, bool protectPoints, bool preventWindmills, bool protectConstraints) => new(output, alpha: default, alphaForInts: alpha, protectPoints, preventWindmills, protectConstraints);
+            public static AlphaShapeFilterStep ForFloats(NativeOutputData<T2> output, T alpha, bool protectPoints, bool preventWindmills, bool protectConstraints) => new(output, alpha, alphaForInts: default, protectPoints, preventWindmills, protectConstraints);
             public AlphaShapeFilterStep(NativeOutputData<T2> output, Args args, TTransform lt) : this(output,
                 alpha: utils.div(utils.Const(args.Alpha), lt.AreaScalingFactor),
                 alphaForInts: args.Alpha, // NOTE: For integers, we do not need to rescale alpha since integers do not support scaling!
                 protectPoints: args.AlphaShapeProtectPoints,
-                preventWindmills: args.AlphaShapePreventWindmills)
+                preventWindmills: args.AlphaShapePreventWindmills,
+                protectConstraints: args.AlphaShapeProtectConstraints)
             { }
-            public AlphaShapeFilterStep(NativeOutputData<T2> output, T alpha, float alphaForInts, bool protectPoints, bool preventWindmills)
+            public AlphaShapeFilterStep(NativeOutputData<T2> output, T alpha, float alphaForInts, bool protectPoints, bool preventWindmills, bool protectConstraints)
             {
                 triangles = output.Triangles;
                 halfedges = output.Halfedges;
@@ -4421,6 +4431,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 constrainedHalfedges = output.ConstrainedHalfedges;
                 this.protectPoints = protectPoints;
                 this.preventWindmills = preventWindmills;
+                this.protectConstraints = protectConstraints;
                 this.alpha = alpha;
                 this.alphaForInts = alphaForInts;
             }
@@ -4470,20 +4481,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         break;
                     }
 
+                    var (h0, h1, h2) = (3 * tId + 0, 3 * tId + 1, 3 * tId + 2);
+                    var (t0, t1, t2) = (triangles[h0], triangles[h1], triangles[h2]);
+                    var (c0, c1, c2) = pointTriangleCount.IsCreated ? (pointTriangleCount[t0], pointTriangleCount[t1], pointTriangleCount[t2]) : (0, 0, 0);
+
+                    if (false
+                        || protectConstraints && (constrainedHalfedges[h0] || constrainedHalfedges[h1] || constrainedHalfedges[h2])
+                        || protectPoints && (c0 == 1 || c1 == 1 || c2 == 1)
+                        || preventWindmills && (WindmillCandidate(h0, c0, visitedTriangles) || WindmillCandidate(h1, c1, visitedTriangles) || WindmillCandidate(h2, c2, visitedTriangles))
+                    )
+                    {
+                        continue;
+                    }
+
                     if (pointTriangleCount.IsCreated)
                     {
-                        var (h0, h1, h2) = (3 * tId + 0, 3 * tId + 1, 3 * tId + 2);
-                        var (t0, t1, t2) = (triangles[h0], triangles[h1], triangles[h2]);
-                        var (c0, c1, c2) = (pointTriangleCount[t0], pointTriangleCount[t1], pointTriangleCount[t2]);
-
-                        if (false
-                            || preventWindmills && (WindmillCandidate(h0, c0, visitedTriangles) || WindmillCandidate(h1, c1, visitedTriangles) || WindmillCandidate(h2, c2, visitedTriangles))
-                            || protectPoints && (c0 == 1 || c1 == 1 || c2 == 1)
-                        )
-                        {
-                            continue;
-                        }
-
                         pointTriangleCount[t0]--;
                         pointTriangleCount[t1]--;
                         pointTriangleCount[t2]--;
