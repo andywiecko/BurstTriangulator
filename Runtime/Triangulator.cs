@@ -1004,18 +1004,18 @@ namespace andywiecko.BurstTriangulator
         }
 
         /// <summary>
-        /// Populates the <paramref name="triangleCount"/> buffer with the number of triangles each vertex index is part of,
+        /// Populates the <paramref name="pointTriangleCount"/> buffer with the number of triangles each vertex index is part of,
         /// based on the provided <paramref name="triangles"/> index buffer.
         /// </summary>
-        /// <param name="triangleCount">The buffer to populate with per-vertex triangle usage counts. Must be large enough to accommodate the highest index in <paramref name="triangles"/>.</param>
+        /// <param name="pointTriangleCount">The buffer to populate with per-vertex triangle usage counts. Must be large enough to accommodate the highest index in <paramref name="triangles"/>.</param>
         /// <param name="triangles">The index buffer representing triangles.</param>
-        public static void GeneratePointTriangleCount(Span<int> triangleCount, ReadOnlySpan<int> triangles)
+        public static void GeneratePointTriangleCount(Span<int> pointTriangleCount, ReadOnlySpan<int> triangles)
         {
-            ThrowCheckPointTriangleCount(triangleCount, triangles);
+            ThrowCheckPointTriangleCount(pointTriangleCount, triangles);
 
             foreach (var t in triangles)
             {
-                triangleCount[t]++;
+                pointTriangleCount[t]++;
             }
         }
 
@@ -1531,7 +1531,7 @@ namespace andywiecko.BurstTriangulator
         }
 
         [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
-        private static void ThrowCheckPointTriangleCount(ReadOnlySpan<int> triangleCount, ReadOnlySpan<int> triangles)
+        private static void ThrowCheckPointTriangleCount(ReadOnlySpan<int> pointTriangleCount, ReadOnlySpan<int> triangles)
         {
             var max = -1;
             foreach (var t in triangles)
@@ -1539,10 +1539,10 @@ namespace andywiecko.BurstTriangulator
                 max = math.max(t, max);
             }
 
-            if (triangleCount.Length <= max)
+            if (pointTriangleCount.Length <= max)
             {
                 throw new ArgumentException(
-                    $"The provided triangleCount[{triangleCount.Length}] length must be greater than the largest triangle index: max(triangles[])={max}."
+                    $"The provided pointTriangleCount[{pointTriangleCount.Length}] length must be greater than the largest triangle index: max(triangles[])={max}."
                 );
             }
         }
