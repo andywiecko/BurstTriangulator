@@ -21,8 +21,8 @@ however, the user is responsible to data allocation, including output data.
 Below one can find minimal working example using [`UnsafeTriangulator<T2>`][unsafe-triangulator]
 
 ```csharp
-using var positions = new NativeArray<float2>(..., Allocator.Temp);
-using var triangles = new NativeArray<int>(64, Allocator.Temp);
+using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var triangles = new NativeList<int>(Allocator.Persistent);
 new UnsafeTriangulator<float2>().Triangulate(
     input: new() { Positions = positions },
     output: new() { Triangles = triangles },
@@ -34,9 +34,10 @@ new UnsafeTriangulator<float2>().Triangulate(
 this corresponds to the following managed approach with [`Triangulator<T2>`][triangulator]
 
 ```csharp
-using var triangulator = new Triangulator(Allocator.Persistent)
+using var positions = new NativeArray<float2>(..., Allocator.Persistent);
+using var triangulator = new Triangulator<float2>(Allocator.Persistent)
 {
-    Input = { Positions = new float2[]{ ... }.AsNativeArray() }
+    Input = { Positions = positions }
 };
 triangulator.Run();
 var triangles = triangulator.Output.Triangles;
@@ -172,7 +173,8 @@ The extension [`RefineMesh(output, allocator, areaThreshold?, angleThreshold?, c
 - `angleThreshold = math.radians(5)`
 - `concentricShells = 0.001`
 
-The last optional parameter, `constrainBoundary`, is used to constrain boundary halfedges. Since the refinement algorithm (whether for constrained triangulation or not) requires constrained halfedges at the boundary, not setting this option may cause unexpected behavior, especially when the `restoreBoundary` option is disabled.
+The last optional parameter, `constrainBoundary`, is used to constrain boundary halfedges. Since the refinement algorithm (whether for constrained triangulation or not) requires constrained halfedges at the boundary, not setting this option may cause unexpected behavior,
+especially when the `output` was generated without the [`Args.RestoreBoundary`][args-restore-boundary] or [`Args.AutoHolesAndBoundary`][args-auto-holes-and-boundary] options, or when [`Args.UseAlphaShapeFilter`][args-use-alpha-shape-filter] was enabled.
 
 Below is an example of refinement in the unsafe context:
 
@@ -213,6 +215,9 @@ The [`UnsafeTriangulator<T>`][unsafe-triangulator] API also offers an option for
 [monobehaviour]: xref:UnityEngine.MonoBehaviour
 [args-default]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default*
 [args-with]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With*
+[args-restore-boundary]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary
+[args-auto-holes-and-boundary]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary
+[args-use-alpha-shape-filter]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter
 [triangulate]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate*
 [run]: xref:andywiecko.BurstTriangulator.Extensions.Run*
 [constrain-edge]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge*
