@@ -1,3 +1,7 @@
+---
+uid: introduction-md
+---
+
 # Introduction
 
 ## Delaunay triangulation
@@ -42,6 +46,16 @@ Hole seeds act as starting points for a removal process resembling the spread of
 <p align="center"><img src="../images/introduction-holes.svg" width="500"/></p>
 <br>
 
+## $\alpha$-shape filter
+
+$\alpha$-shape[^edelsbrunner.1983] are closely connected to Delaunay triangulation.
+After Delaunay triangulation one can apply filter which removes any triangle for which circumradius $R$ satisfies the condition $R^2 \ge \alpha^{-1}$
+This could be used for mesh reconstruction (with holes!) from points cloud without introducing any constraints!
+
+<br>
+<p align="center"><img src="../images/introduction-alpha-shape.svg" width="500"/></p>
+<br>
+
 ## Implementation
 
 In this package implemented *classic* Delaunay triangulation is based on
@@ -64,6 +78,8 @@ $$
 \Downarrow\\
 \boxed{\text{Planting holes}}\\
 \Downarrow\\
+\boxed{\alpha\text{-shape filter}}\\
+\Downarrow\\
 \boxed{\text{Refine mesh}}\\
 \Downarrow\\
 \boxed{\text{Postprocessor}}\\
@@ -73,10 +89,11 @@ $$
 ## Bibliography
 
 [^bowyer.1981]: A. Bowyer. "Computing Dirichlet tessellations". [*Comput. J.* 24 (2): 162–166 (1981)](https://doi.org/10.1093%2Fcomjnl%2F24.2.162).
-[^watson.1981]: D. F. Watson. "Computing the n-dimensional Delaunay tessellation with application to Voronoi polytopes". [*Comput. J.* 24 (2): 167–172 (1981)](https://doi.org/10.1093%2Fcomjnl%2F24.2.167).
-[^sloan.1993]:S. W. Sloan. "A fast algorithm for generating constrained Delaunay triangulations." [*Comput. Struct.* 47.3:441-450 (1993)](https://doi.org/10.1016/0045-7949(93)90239-A).
-[^ruppert.1995]:J. Ruppert. "A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation". [*J. Algorithms* 18(3):548-585 (1995)](https://doi.org/10.1006/jagm.1995.1021).
-[^shewchuk.2002]:J. R. Shewchuk. "Delaunay refinement algorithms for triangular mesh generation." [*Comput. Geom.* 22.1-3 (2002)](https://doi.org/10.1016/S0925-7721(01)00047-5).
+[^watson.1981]: D. F. Watson. "Computing the n-dimensional Delaunay tessellation with application to Voronoi polytopes". [*Comput. J.* **24**(2): 167–172 (1981)](https://doi.org/10.1093%2Fcomjnl%2F24.2.167).
+[^sloan.1993]:S. W. Sloan. "A fast algorithm for generating constrained Delaunay triangulations." [*Comput. Struct.* **47**(3):441-450 (1993)](https://doi.org/10.1016/0045-7949(93)90239-A).
+[^ruppert.1995]:J. Ruppert. "A Delaunay Refinement Algorithm for Quality 2-Dimensional Mesh Generation". [*J. Algorithms* **18**(3):548-585 (1995)](https://doi.org/10.1006/jagm.1995.1021).
+[^shewchuk.2002]:J. R. Shewchuk. "Delaunay refinement algorithms for triangular mesh generation." [*Comput. Geom.* **22**:1-3 (2002)](https://doi.org/10.1016/S0925-7721(01)00047-5).
+[^edelsbrunner.1983]: H. Edelsbrunner, D. Kirkpatrick, R. Seidel. "On the shape of a set of points in the plane." [*IEEE Trans. Inf. Theory*, **29**:4 (1983)](https://doi.org/10.1109/TIT.1983.1056714)
 
 [bowyerwatson]: https://en.wikipedia.org/wiki/Bowyer%E2%80%93Watson_algorithm
 [rupperts]: https://en.wikipedia.org/wiki/Delaunay_refinement#Ruppert's_algorithm
