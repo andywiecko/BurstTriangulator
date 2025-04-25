@@ -22,18 +22,22 @@ See benchmark for the generic coordinates [**here**][benchmark].
 
 <br>
 
-| <div style="width:70px">type</div>                 | delaunay | constraints | holes      | refinement | preprocessors     | <div style="width:100px">dynamic[^dynamic]</div> | <div style="width:100px">notes</div>                                    |
-| :------------------: | :------: | :---------: | :--------: | :--------: | :---------------: | :-----: | :--------------------------------------: |
-| [`float2`][float2]   | ✔️       | ✔️         | ✔️         | ✔️         |✔️                |✔️      |                                          |
-| [`Vector2`][Vector2] | ✔️       | ✔️         | ✔️         | ✔️         |✔️                |✔️      | Via [float2] reinterpret                 |
-| [`double2`][double2] | ✔️       | ✔️         | ✔️         | ✔️         |✔️                |✔️      |                                          |
-| [`fp2`][fp2]         | ✔️       | ✔️         | ✔️         | ✔️         |✔️                |✔️      | Requires additional package[^fixed-math] |
-| [`int2`][int2]       | ✔️       | ✔️         | 🟡[^holes] | ❌         |🟡[^preprocessors]|❌      |  Support up to $\sim 2^{20}$             |
+| feature         | [`float2`][float2] | [`Vector2`][Vector2][^note1] | [`double2`][double2] | [`fp2`][fp2][^note2] | [`int2`][int2][^note3] |
+| :-------------: | :----------------: | :--------------------------: | :------------------: | :-------------------:| :--------------------: |
+| delaunay        | ✔️                 | ✔️                          | ✔️                   | ✔️                  | ✔️                     |
+| constraints     | ✔️                 | ✔️                          | ✔️                   | ✔️                  | ✔️                     |
+| holes           | ✔️                 | ✔️                          | ✔️                   | ✔️                  | 🟡[^note4]             |
+| refinement      | ✔️                 | ✔️                          | ✔️                   | ✔️                  | ❌                     |
+| preprocessors   | ✔️                 | ✔️                          | ✔️                   | ✔️                  | 🟡[^note5]             |
+| dynamic[^note6] | ✔️                 | ✔️                          | ✔️                   | ✔️                  | ❌                     |
+| $\alpha$-shape  | ✔️                 | ✔️                          | ✔️                   | ✔️                  | ✔️                     |
 
-[^holes]: In the current implementation, holes are fully supported with [`Settings.AutoHolesAndBoundary`][auto]. However, manual holes with [`int2`][int2] coordinates may not guarantee that the given hole can be created. An additional extension is planned in the future to support holes with manual floating-point precision for [`int2`][int2].
-[^preprocessors]: Support for [`Preprocessor.COM`][com] with translation only is available.
-[^fixed-math]: This feature is available through an optional dependency. Users must install [`com.danielmansson.mathematics.fixedpoint`][fp2]. See how to install it [**here**](xref:getting-started-md#optional-dependencies).
-[^dynamic]: Available only through [`UnsafeTriangulator<T>`][unsafe-triangulator] API.
+[^note1]: Via [float2] reinterpret.
+[^note2]: This feature is available through an optional dependency. Users must install [`com.danielmansson.mathematics.fixedpoint`][fp2]. See how to install it [**here**](xref:getting-started-md#optional-dependencies).
+[^note3]: Support up to $\sim 2^{20}$.
+[^note4]: In the current implementation, holes are fully supported with [`Settings.AutoHolesAndBoundary`][auto]. However, manual holes with [`int2`][int2] coordinates may not guarantee that the given hole can be created. An additional extension is planned in the future to support holes with manual floating-point precision for [`int2`][int2].
+[^note5]: Support for [`Preprocessor.COM`][com] with translation only is available.
+[^note6]: Available only through [`UnsafeTriangulator<T>`][unsafe-triangulator] API.
 
 [auto]: xref:andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary
 [com]: xref:andywiecko.BurstTriangulator.Preprocessor.COM

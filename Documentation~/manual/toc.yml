@@ -19,6 +19,8 @@ items:
     href: examples/constrained-triangulation.md
   - name: Holes and boundaries
     href: examples/holes-and-boundaries.md
+  - name: 𝛼-shape filter
+    href: examples/alpha-shape-filter.md
 
 - name: Advanced
   href: advanced/input-validation.md
