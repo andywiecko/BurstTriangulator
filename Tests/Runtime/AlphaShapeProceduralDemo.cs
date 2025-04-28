@@ -8,7 +8,7 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
 {
     [RequireComponent(typeof(MeshRenderer))]
     [RequireComponent(typeof(MeshFilter))]
-    public class AlphaShapeDemo : MonoBehaviour
+    public class AlphaShapeProceduralDemo : MonoBehaviour
     {
         [Min(3)] public int Count = 128;
         [Min(1)] public int Seed = 42;
