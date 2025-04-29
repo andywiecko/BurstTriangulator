@@ -1,3 +1,7 @@
+---
+uid: alpha-shape-filter-md
+---
+
 # 𝛼-shape filter <!-- LaTeX not supported in "card title" -->
 
 The package also provides the ability to apply the $\alpha$-shape filter (see [Introduction]) during triangulation, i.e., to remove any triangle whose circumradius $R$ satisfies the condition $R^2 \ge \alpha^{-1}$.
