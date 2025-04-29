@@ -1921,6 +1921,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pId, Allocator allocator) => new UnsafeTriangulator<double2>().DynamicRemoveBulkPoint(output, pId, allocator);
+        /// <summary>
+        /// Applies the α-shape filter to the <paramref name="output"/> data.
+        /// The filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹.
+        /// See the documentation for more details.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="alpha">The α-value used by the filter to remove triangles.</param>
+        /// <param name="protectPoints">If set to <see langword="true"/>, triangle removal is skipped if it would result in any of the triangle's points not belonging to any triangle.</param>
+        /// <param name="preventWindmills">If set to <see langword="true"/>, triangle removal is skipped if it would result in a windmill structure around any vertex.</param>
+        /// <param name="protectConstraints">If set to <see langword="true"/>, triangle removal is skipped if any of the triangle's halfedges are constrained.</param>
         public static void AlphaShapeFilter(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<double2>().AlphaShapeFilter(output, allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
         /// <summary>
@@ -2037,6 +2052,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pId, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().DynamicRemoveBulkPoint(output, pId, allocator);
+        /// <summary>
+        /// Applies the α-shape filter to the <paramref name="output"/> data.
+        /// The filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹.
+        /// See the documentation for more details.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="alpha">The α-value used by the filter to remove triangles.</param>
+        /// <param name="protectPoints">If set to <see langword="true"/>, triangle removal is skipped if it would result in any of the triangle's points not belonging to any triangle.</param>
+        /// <param name="preventWindmills">If set to <see langword="true"/>, triangle removal is skipped if it would result in a windmill structure around any vertex.</param>
+        /// <param name="protectConstraints">If set to <see langword="true"/>, triangle removal is skipped if any of the triangle's halfedges are constrained.</param>
         public static void AlphaShapeFilter(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().AlphaShapeFilterForFloats(output, allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
         /// <summary>
@@ -2148,6 +2178,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pId, Allocator allocator) => new UnsafeTriangulator<float2>().DynamicRemoveBulkPoint(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pId, allocator);
+        /// <summary>
+        /// Applies the α-shape filter to the <paramref name="output"/> data.
+        /// The filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹.
+        /// See the documentation for more details.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="alpha">The α-value used by the filter to remove triangles.</param>
+        /// <param name="protectPoints">If set to <see langword="true"/>, triangle removal is skipped if it would result in any of the triangle's points not belonging to any triangle.</param>
+        /// <param name="preventWindmills">If set to <see langword="true"/>, triangle removal is skipped if it would result in a windmill structure around any vertex.</param>
+        /// <param name="protectConstraints">If set to <see langword="true"/>, triangle removal is skipped if any of the triangle's halfedges are constrained.</param>
         public static void AlphaShapeFilter(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<float2>().AlphaShapeFilter(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
         /// <summary>
@@ -2264,6 +2309,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pId, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().DynamicRemoveBulkPoint(output, pId, allocator);
+        /// <summary>
+        /// Applies the α-shape filter to the <paramref name="output"/> data.
+        /// The filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹.
+        /// See the documentation for more details.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="alpha">The α-value used by the filter to remove triangles.</param>
+        /// <param name="protectPoints">If set to <see langword="true"/>, triangle removal is skipped if it would result in any of the triangle's points not belonging to any triangle.</param>
+        /// <param name="preventWindmills">If set to <see langword="true"/>, triangle removal is skipped if it would result in a windmill structure around any vertex.</param>
+        /// <param name="protectConstraints">If set to <see langword="true"/>, triangle removal is skipped if any of the triangle's halfedges are constrained.</param>
         public static void AlphaShapeFilter(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, Allocator allocator, double alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().AlphaShapeFilterForFloats(output, allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
         /// <summary>
@@ -2307,6 +2367,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(input, output, args, allocator);
+        /// <summary>
+        /// Applies the α-shape filter to the <paramref name="output"/> data.
+        /// The filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹.
+        /// See the documentation for more details.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="alpha">The α-value used by the filter to remove triangles.</param>
+        /// <param name="protectPoints">If set to <see langword="true"/>, triangle removal is skipped if it would result in any of the triangle's points not belonging to any triangle.</param>
+        /// <param name="preventWindmills">If set to <see langword="true"/>, triangle removal is skipped if it would result in a windmill structure around any vertex.</param>
+        /// <param name="protectConstraints">If set to <see langword="true"/>, triangle removal is skipped if any of the triangle's halfedges are constrained.</param>
         public static void AlphaShapeFilter(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, Allocator allocator, float alpha = 1, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().AlphaShapeFilterForInts(output, allocator, alpha, protectPoints, preventWindmills, protectConstraints);
 
 #if UNITY_MATHEMATICS_FIXEDPOINT
@@ -2424,6 +2499,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="pId">The index of the <b>bulk</b> point to remove.</param>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
         public static void DynamicRemoveBulkPoint(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pId, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().DynamicRemoveBulkPoint(output, pId, allocator);
+        /// <summary>
+        /// Applies the α-shape filter to the <paramref name="output"/> data.
+        /// The filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹.
+        /// See the documentation for more details.
+        /// </summary>
+        /// <remarks>
+        /// <b>Note:</b>
+        /// This method requires that <paramref name="output"/> contains valid triangulation data.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// </remarks>
+        /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="alpha">The α-value used by the filter to remove triangles.</param>
+        /// <param name="protectPoints">If set to <see langword="true"/>, triangle removal is skipped if it would result in any of the triangle's points not belonging to any triangle.</param>
+        /// <param name="preventWindmills">If set to <see langword="true"/>, triangle removal is skipped if it would result in a windmill structure around any vertex.</param>
+        /// <param name="protectConstraints">If set to <see langword="true"/>, triangle removal is skipped if any of the triangle's halfedges are constrained.</param>
         public static void AlphaShapeFilter(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, Allocator allocator, fp? alpha = null, bool protectPoints = false, bool preventWindmills = false, bool protectConstraints = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().AlphaShapeFilterForFloats(output, allocator, alpha ?? 1, protectPoints, preventWindmills, protectConstraints);
 #endif
     }

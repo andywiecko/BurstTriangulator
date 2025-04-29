@@ -200,6 +200,41 @@ t.Triangulate(input, output, Args.Default(restoreBoundary: true), Allocator.Pers
 t.RefineMesh(output, Allocator.Persistent, areaThreshold: 1, angleThreshold: 0.5f, constrainBoundary: false);
 ```
 
+### AlphaShapeFilter
+
+The [`AlphaShapeFilter`][alpha-shape-filter] extension can be used to apply an $\alpha$-shape filter to triangulated data (see the [manual](xref:alpha-shape-filter-md)).
+It is especially useful when you need to control when this filtering step is applied, for example, after refinement rather than before (which is the default behavior).
+Similar to `RefineMesh`, this extension allows you to specify an `alpha` value using the precision type `T` (an exception is when `T = int`, in which requires `float alpha` precision).
+This feature is particularly helpful when using fixed-point (`fp`) precision to ensure consistent results across different machines.
+
+Example:
+
+```csharp
+using var positions = new NativeArray<double2>(..., Allocator.Persistent);
+using var constraints = new NativeArray<int>(..., Allocator.Persistent);
+var input = new NativeInputData<double2>
+{
+    Positions = positions,
+    ConstraintEdges = constraints,
+};
+
+using var outputPositions = new NativeList<double2>(Allocator.Persistent);
+using var triangles = new NativeList<int>(Allocator.Persistent);
+using var halfedges = new NativeList<int>(Allocator.Persistent);
+using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+var output = new NativeOutputData<double2>
+{
+    Positions = outputPositions,
+    Triangles = triangles,
+    Halfedges = halfedges,
+    ConstrainedHalfedges = constrainedHalfedges,
+};
+
+var t = new UnsafeTriangulator<double2>();
+t.Triangulate(input, output, Args.Default(), Allocator.Persistent);
+t.AlphaShapeFilter(output, Allocator.Persistent, alpha, protectPoints: true, preventWindmills: true, protectConstraints: true);
+```
+
 ### Dynamic triangulation
 
 The [`UnsafeTriangulator<T>`][unsafe-triangulator] API also offers an option for dynamic triangulation. For more details, refer to the [manual](xref:dynamic-triangulation-manual).
@@ -223,5 +258,6 @@ The [`UnsafeTriangulator<T>`][unsafe-triangulator] API also offers an option for
 [constrain-edge]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge*
 [plant-seeds]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds*
 [refine-mesh]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh*
+[alpha-shape-filter]: xref:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter*
 [float]: xref:System.Single
 [allocator-temp]: https://docs.unity3d.com/Packages/com.unity.collections@2.2/manual/allocator-overview.html#allocatortemp
