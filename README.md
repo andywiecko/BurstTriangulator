@@ -14,6 +14,7 @@ A single-file package which provides Delaunay triangulation of the given set of 
 - **Constrained triangulation** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/examples/constrained-triangulation.html)
 - **Mesh refinement** (angle and area parameters) [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/examples/mesh-refinement.html)
 - **Holes and restoring boundary** (manual and auto) [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/examples/holes-and-boundaries.html)
+- **$\alpha$-shape filter** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/examples/alpha-shape-filter.html)
 - **Support for `Unity.Jobs` pipeline** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-jobs.html)
 - **Input preprocessors** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/preprocessor.html)
 - **Input validation** [ᵈᵒᶜˢ](https://andywiecko.github.io/BurstTriangulator/manual/advanced/input-validation.html)

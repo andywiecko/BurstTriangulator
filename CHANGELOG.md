@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.8.0] – 2025-04-30
+
+### Added
+
+- $\alpha$-shape filter for `Triangulator<T>` and corresponding extensions for `UnsafeTriangulator<T>`. Enable this via the `UseAlphaShapeFilter` in `TriangulatorSettings`. Additional configuration is available through `AlphaShapeSettings`. Options include:
+  - `ProtectPoints` prevents triangle removal if it would leave any of its points unassigned to a triangle;
+  - `ProtectConstraints` ensures triangles with constrained edges are preserved;
+  - `PreventWindmills` avoids formation of windmill structures.
+- `GeneratePointTriangleCount` utility in `Utilities`. This method fills an input buffer with the count of triangles each vertex index participates in, based on a given triangle index buffer.
+
 ## [3.7.0] – 2025-03-22
 
 ### Added
@@ -332,6 +342,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.8.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.8.0
 [3.7.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.7.0
 [3.6.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.6.0
 [3.5.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.5.0
