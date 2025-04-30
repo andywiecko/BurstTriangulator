@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>&#120572;-shape filter  | BurstTriangulator </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="&#120572;-shape filter  | BurstTriangulator ">
+    
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <meta property="docfx:navrel" content="../../toc.html">
+      <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" class="svg" src="../../images/logo.svg" alt="BurstTriangulator">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+                <!-- Added by me -->
+                <div style="margin-right: 15px;"><a href="https://github.com/andywiecko/BurstTriangulator/"><i class="fa fa-github" style="font-size:30px; color: white"></i></a></div>
+              </form>
+            </div>
+          </div>
+        </nav>        <div class="subnav navbar navbar-default">
+            <div class="container" style="
+                display: flex;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div class="container hide-when-search" id="breadcrumb">
+                 <ul class="breadcrumb">
+                   <li></li>
+                 </ul>
+                </div>
+                <div class="container" style="
+                    width: 80px;
+                    line-height: 40px;
+                "><b>v3.8.0</b></div>
+          </div>
+        </div>      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first=First data-prev=Previous data-next=Next data-last=Last></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="alpha-shape-filter-md">
+<h1 id="-shape-filter-">𝛼-shape filter <!-- LaTeX not supported in "card title" --></h1>
+
+<p>The package also provides the ability to apply the <span class="math">\(\alpha\)</span>-shape filter (see <a class="xref" href="../introduction.html#-shape-filter">Introduction</a>) during triangulation, i.e., to remove any triangle whose circumradius <span class="math">\(R\)</span> satisfies the condition <span class="math">\(R^2 \ge \alpha^{-1}\)</span>.
+This can be particularly useful when reconstructing meshes from point clouds without introducing additional constraints.</p>
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
+using var triangulator = new Triangulator(Allocator.Persistent)
+{
+  Input = { Positions = positions },
+  Settings = { UseAlphaShapeFilter = true, AlphaShapeSettings = { Alpha = 0.1f, ... }},
+};
+
+triangulator.Run();
+</code></pre>
+<h2 id="additional-settings">Additional settings</h2>
+<h3 id="protect-points">Protect points</h3>
+<p>By default, the <span class="math">\(\alpha\)</span>-shape filter can remove any triangle, which may result in some input points not being associated with any triangle.
+To prevent this, use the <a class="xref" href="../../api/andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectPoints.html#andywiecko_BurstTriangulator_AlphaShapeSettings_ProtectPoints"><code>ProtectPoints</code></a> option:</p>
+<pre><code class="lang-csharp">triangulator.Settings.AlphaShapeSettings.ProtectPoints = true;
+</code></pre>
+<p>Enabling this option ensures that all input points are assigned to at least one triangle.<a id="fnref:1" href="#fn:1" class="footnote-ref"><sup>1</sup></a></p>
+<h3 id="protect-constraints">Protect constraints</h3>
+<p>By default, the <span class="math">\(\alpha\)</span>-shape filter may remove triangles even if they include constrained edges.
+Use the <a class="xref" href="../../api/andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints.html#andywiecko_BurstTriangulator_AlphaShapeSettings_ProtectConstraints"><code>ProtectConstraints</code></a> setting to ensure that triangles with any constrained edge are not removed:</p>
+<pre><code class="lang-csharp">triangulator.Settings.AlphaShapeSettings.ProtectConstraints = true;
+</code></pre>
+<h3 id="prevent-windmills">Prevent windmills</h3>
+<p>Using the <span class="math">\(\alpha\)</span>-shape filter may sometimes produce windmill-like triangle structures.
+Such a structure occurs when the triangles connected to a single point can be grouped into more than one connected component (see example below):</p>
+<p>By default, using <span class="math">\(\alpha\)</span>-shape filter can produce <em>windmill</em> like triangle structures.
+TSuch a structure occurs when for a single point one can group point's triangles into more than one colored group, see example below:</p>
+<p align="center"><img src="../../images/alpha-shape-windmill.svg" width="350"></p>
+<br>
+<p>This may be undesirable, as it can alter the mesh's topology, coloring, or continuity (see also <a class="xref" href="../utilities.html#generatetrianglecolors">Utilities</a>)
+To prevent these structures from forming, enable the <a class="xref" href="../../api/andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills.html#andywiecko_BurstTriangulator_AlphaShapeSettings_PreventWindmills"><code>PreventWindmills</code></a> setting</p>
+<pre><code class="lang-csharp">triangulator.Settings.AlphaShapeSettings.PreventWindmills = true;
+</code></pre>
+<div class="footnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>This guarantee only applies to triangles removed by this feature.<a href="#fnref:1" class="footnote-back-ref">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In this article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Generated by <strong>DocFX</strong> | Documentation © 2024 by <a href="https://github.com/andywiecko">Andrzej Więckowski</a> is licensed under CC BY 4.0
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/default/partials -->
+    <!-- https://github.com/dotnet/docfx/tree/main/templates/statictoc/partials -->
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+    .hljs {
+        background: #f5f5f5;
+    }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </body>
+</html>

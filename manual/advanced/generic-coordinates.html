@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.7.0</b></div>
+                "><b>v3.8.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -110,66 +110,70 @@ The only difference is that the input/output types are the same as <code>T2</cod
 <table>
 <thead>
 <tr>
-<th style="text-align: center;"><div style="width:70px">type</div></th>
-<th style="text-align: center;">delaunay</th>
-<th style="text-align: center;">constraints</th>
-<th style="text-align: center;">holes</th>
-<th style="text-align: center;">refinement</th>
-<th style="text-align: center;">preprocessors</th>
-<th style="text-align: center;"><div style="width:100px">dynamic<a id="fnref:1" href="#fn:1" class="footnote-ref"><sup>1</sup></a></div></th>
-<th style="text-align: center;"><div style="width:100px">notes</div></th>
+<th style="text-align: center;">feature</th>
+<th style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html"><code>float2</code></a></th>
+<th style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/ScriptReference/Vector2.html"><code>Vector2</code></a><a id="fnref:1" href="#fn:1" class="footnote-ref"><sup>1</sup></a></th>
+<th style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html"><code>double2</code></a></th>
+<th style="text-align: center;"><a href="https://github.com/danielmansson/Unity.Mathematics.FixedPoint"><code>fp2</code></a><a id="fnref:2" href="#fn:2" class="footnote-ref"><sup>2</sup></a></th>
+<th style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html"><code>int2</code></a><a id="fnref:3" href="#fn:3" class="footnote-ref"><sup>3</sup></a></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html"><code>float2</code></a></td>
+<td style="text-align: center;">delaunay</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;"></td>
 </tr>
 <tr>
-<td style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/ScriptReference/Vector2.html"><code>Vector2</code></a></td>
+<td style="text-align: center;">constraints</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">Via <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html">float2</a> reinterpret</td>
 </tr>
 <tr>
-<td style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html"><code>double2</code></a></td>
+<td style="text-align: center;">holes</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
 <td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;"></td>
-</tr>
-<tr>
-<td style="text-align: center;"><a href="https://github.com/danielmansson/Unity.Mathematics.FixedPoint"><code>fp2</code></a></td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">Requires additional package<a id="fnref:2" href="#fn:2" class="footnote-ref"><sup>2</sup></a></td>
-</tr>
-<tr>
-<td style="text-align: center;"><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html"><code>int2</code></a></td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">✔️</td>
-<td style="text-align: center;">🟡<a id="fnref:3" href="#fn:3" class="footnote-ref"><sup>3</sup></a></td>
-<td style="text-align: center;">❌</td>
 <td style="text-align: center;">🟡<a id="fnref:4" href="#fn:4" class="footnote-ref"><sup>4</sup></a></td>
+</tr>
+<tr>
+<td style="text-align: center;">refinement</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
 <td style="text-align: center;">❌</td>
-<td style="text-align: center;">Support up to <span class="math">\(\sim 2^{20}\)</span></td>
+</tr>
+<tr>
+<td style="text-align: center;">preprocessors</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">🟡<a id="fnref:5" href="#fn:5" class="footnote-ref"><sup>5</sup></a></td>
+</tr>
+<tr>
+<td style="text-align: center;">dynamic<a id="fnref:6" href="#fn:6" class="footnote-ref"><sup>6</sup></a></td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td style="text-align: center;"><span class="math">\(\alpha\)</span>-shape</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
+<td style="text-align: center;">✔️</td>
 </tr>
 </tbody>
 </table>
@@ -177,16 +181,22 @@ The only difference is that the input/output types are the same as <code>T2</cod
 <hr>
 <ol>
 <li id="fn:1">
-<p>Available only through <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html"><code>UnsafeTriangulator&lt;T&gt;</code></a> API.<a href="#fnref:1" class="footnote-back-ref">&#8617;</a></p>
+<p>Via <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html">float2</a> reinterpret.<a href="#fnref:1" class="footnote-back-ref">&#8617;</a></p>
 </li>
 <li id="fn:2">
 <p>This feature is available through an optional dependency. Users must install <a href="https://github.com/danielmansson/Unity.Mathematics.FixedPoint"><code>com.danielmansson.mathematics.fixedpoint</code></a>. See how to install it <a class="xref" href="../getting-started.html#optional-dependencies"><strong>here</strong></a>.<a href="#fnref:2" class="footnote-back-ref">&#8617;</a></p>
 </li>
 <li id="fn:3">
-<p>In the current implementation, holes are fully supported with <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary"><code>Settings.AutoHolesAndBoundary</code></a>. However, manual holes with <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html"><code>int2</code></a> coordinates may not guarantee that the given hole can be created. An additional extension is planned in the future to support holes with manual floating-point precision for <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html"><code>int2</code></a>.<a href="#fnref:3" class="footnote-back-ref">&#8617;</a></p>
+<p>Support up to <span class="math">\(\sim 2^{20}\)</span>.<a href="#fnref:3" class="footnote-back-ref">&#8617;</a></p>
 </li>
 <li id="fn:4">
-<p>Support for <a class="xref" href="../../api/andywiecko.BurstTriangulator.Preprocessor.html#andywiecko_BurstTriangulator_Preprocessor_COM"><code>Preprocessor.COM</code></a> with translation only is available.<a href="#fnref:4" class="footnote-back-ref">&#8617;</a></p>
+<p>In the current implementation, holes are fully supported with <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary"><code>Settings.AutoHolesAndBoundary</code></a>. However, manual holes with <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html"><code>int2</code></a> coordinates may not guarantee that the given hole can be created. An additional extension is planned in the future to support holes with manual floating-point precision for <a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html"><code>int2</code></a>.<a href="#fnref:4" class="footnote-back-ref">&#8617;</a></p>
+</li>
+<li id="fn:5">
+<p>Support for <a class="xref" href="../../api/andywiecko.BurstTriangulator.Preprocessor.html#andywiecko_BurstTriangulator_Preprocessor_COM"><code>Preprocessor.COM</code></a> with translation only is available.<a href="#fnref:5" class="footnote-back-ref">&#8617;</a></p>
+</li>
+<li id="fn:6">
+<p>Available only through <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html"><code>UnsafeTriangulator&lt;T&gt;</code></a> API.<a href="#fnref:6" class="footnote-back-ref">&#8617;</a></p>
 </li>
 </ol>
 </div>

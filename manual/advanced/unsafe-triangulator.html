@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.7.0</b></div>
+                "><b>v3.8.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -109,8 +109,8 @@ To use this, similar to <code>Unity.Collections</code>, you need to load the low
 Additionally this struct allows much more customization with respect to managed <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator-1.html"><code>Triangulator&lt;T2&gt;</code></a>,
 however, the user is responsible to data allocation, including output data.
 Below one can find minimal working example using <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html"><code>UnsafeTriangulator&lt;T2&gt;</code></a></p>
-<pre><code class="lang-csharp">using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Temp);
-using var triangles = new NativeArray&lt;int&gt;(64, Allocator.Temp);
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
+using var triangles = new NativeList&lt;int&gt;(Allocator.Persistent);
 new UnsafeTriangulator&lt;float2&gt;().Triangulate(
     input: new() { Positions = positions },
     output: new() { Triangles = triangles },
@@ -119,9 +119,10 @@ new UnsafeTriangulator&lt;float2&gt;().Triangulate(
 );
 </code></pre>
 <p>this corresponds to the following managed approach with <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator-1.html"><code>Triangulator&lt;T2&gt;</code></a></p>
-<pre><code class="lang-csharp">using var triangulator = new Triangulator(Allocator.Persistent)
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
+using var triangulator = new Triangulator&lt;float2&gt;(Allocator.Persistent)
 {
-    Input = { Positions = new float2[]{ ... }.AsNativeArray() }
+    Input = { Positions = positions }
 };
 triangulator.Run();
 var triangles = triangulator.Output.Triangles;
@@ -229,7 +230,8 @@ t.PlantHoleSeeds(input, output, args.With(autoHolesAndBoundary: true), Allocator
 <li><code>angleThreshold = math.radians(5)</code></li>
 <li><code>concentricShells = 0.001</code></li>
 </ul>
-<p>The last optional parameter, <code>constrainBoundary</code>, is used to constrain boundary halfedges. Since the refinement algorithm (whether for constrained triangulation or not) requires constrained halfedges at the boundary, not setting this option may cause unexpected behavior, especially when the <code>restoreBoundary</code> option is disabled.</p>
+<p>The last optional parameter, <code>constrainBoundary</code>, is used to constrain boundary halfedges. Since the refinement algorithm (whether for constrained triangulation or not) requires constrained halfedges at the boundary, not setting this option may cause unexpected behavior,
+especially when the <code>output</code> was generated without the <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary.html"><code>Args.RestoreBoundary</code></a> or <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary.html"><code>Args.AutoHolesAndBoundary</code></a> options, or when <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter.html"><code>Args.UseAlphaShapeFilter</code></a> was enabled.</p>
 <p>Below is an example of refinement in the unsafe context:</p>
 <pre><code class="lang-csharp">using var triangles = new NativeList&lt;int&gt;(Allocator.Persistent);
 using var halfedges = new NativeList&lt;int&gt;(Allocator.Persistent);
@@ -250,6 +252,36 @@ var output = new NativeOutputData&lt;float2&gt;
 var t = new UnsafeTriangulator&lt;float2&gt;();
 t.Triangulate(input, output, Args.Default(restoreBoundary: true), Allocator.Persistent);
 t.RefineMesh(output, Allocator.Persistent, areaThreshold: 1, angleThreshold: 0.5f, constrainBoundary: false);
+</code></pre>
+<h3 id="alphashapefilter">AlphaShapeFilter</h3>
+<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html"><code>AlphaShapeFilter</code></a> extension can be used to apply an <span class="math">\(\alpha\)</span>-shape filter to triangulated data (see the <a class="xref" href="../examples/alpha-shape-filter.html">manual</a>).
+It is especially useful when you need to control when this filtering step is applied, for example, after refinement rather than before (which is the default behavior).
+Similar to <code>RefineMesh</code>, this extension allows you to specify an <code>alpha</code> value using the precision type <code>T</code> (an exception is when <code>T = int</code>, in which requires <code>float alpha</code> precision).
+This feature is particularly helpful when using fixed-point (<code>fp</code>) precision to ensure consistent results across different machines.</p>
+<p>Example:</p>
+<pre><code class="lang-csharp">using var positions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
+using var constraints = new NativeArray&lt;int&gt;(..., Allocator.Persistent);
+var input = new NativeInputData&lt;double2&gt;
+{
+    Positions = positions,
+    ConstraintEdges = constraints,
+};
+
+using var outputPositions = new NativeList&lt;double2&gt;(Allocator.Persistent);
+using var triangles = new NativeList&lt;int&gt;(Allocator.Persistent);
+using var halfedges = new NativeList&lt;int&gt;(Allocator.Persistent);
+using var constrainedHalfedges = new NativeList&lt;bool&gt;(Allocator.Persistent);
+var output = new NativeOutputData&lt;double2&gt;
+{
+    Positions = outputPositions,
+    Triangles = triangles,
+    Halfedges = halfedges,
+    ConstrainedHalfedges = constrainedHalfedges,
+};
+
+var t = new UnsafeTriangulator&lt;double2&gt;();
+t.Triangulate(input, output, Args.Default(), Allocator.Persistent);
+t.AlphaShapeFilter(output, Allocator.Persistent, alpha, protectPoints: true, preventWindmills: true, protectConstraints: true);
 </code></pre>
 <h3 id="dynamic-triangulation">Dynamic triangulation</h3>
 <p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html"><code>UnsafeTriangulator&lt;T&gt;</code></a> API also offers an option for dynamic triangulation. For more details, refer to the <a class="xref" href="dynamic-triangulation.html">manual</a>.</p>

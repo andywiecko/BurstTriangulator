@@ -1,12 +1,69 @@
 ### YamlMime:XRefMap
 sorted: true
 references:
+- uid: alpha-shape-filter-md
+  name: "\U0001D6FC-shape filter "
+  href: manual/examples/alpha-shape-filter.html
 - uid: andywiecko.BurstTriangulator
   name: andywiecko.BurstTriangulator
   href: api/andywiecko.BurstTriangulator.html
   commentId: N:andywiecko.BurstTriangulator
   fullName: andywiecko.BurstTriangulator
   nameWithType: andywiecko.BurstTriangulator
+- uid: andywiecko.BurstTriangulator.AlphaShapeSettings
+  name: AlphaShapeSettings
+  href: api/andywiecko.BurstTriangulator.AlphaShapeSettings.html
+  commentId: T:andywiecko.BurstTriangulator.AlphaShapeSettings
+  fullName: andywiecko.BurstTriangulator.AlphaShapeSettings
+  nameWithType: AlphaShapeSettings
+- uid: andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha
+  name: Alpha
+  href: api/andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha.html#andywiecko_BurstTriangulator_AlphaShapeSettings_Alpha
+  commentId: P:andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha
+  fullName: andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha
+  nameWithType: AlphaShapeSettings.Alpha
+- uid: andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha*
+  name: Alpha
+  href: api/andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha.html
+  commentId: Overload:andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha
+  fullName: andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha
+  nameWithType: AlphaShapeSettings.Alpha
+- uid: andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills
+  name: PreventWindmills
+  href: api/andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills.html#andywiecko_BurstTriangulator_AlphaShapeSettings_PreventWindmills
+  commentId: P:andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills
+  fullName: andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills
+  nameWithType: AlphaShapeSettings.PreventWindmills
+- uid: andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills*
+  name: PreventWindmills
+  href: api/andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills.html
+  commentId: Overload:andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills
+  fullName: andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills
+  nameWithType: AlphaShapeSettings.PreventWindmills
+- uid: andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints
+  name: ProtectConstraints
+  href: api/andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints.html#andywiecko_BurstTriangulator_AlphaShapeSettings_ProtectConstraints
+  commentId: P:andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints
+  fullName: andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints
+  nameWithType: AlphaShapeSettings.ProtectConstraints
+- uid: andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints*
+  name: ProtectConstraints
+  href: api/andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints.html
+  commentId: Overload:andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints
+  fullName: andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints
+  nameWithType: AlphaShapeSettings.ProtectConstraints
+- uid: andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectPoints
+  name: ProtectPoints
+  href: api/andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectPoints.html#andywiecko_BurstTriangulator_AlphaShapeSettings_ProtectPoints
+  commentId: P:andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectPoints
+  fullName: andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectPoints
+  nameWithType: AlphaShapeSettings.ProtectPoints
+- uid: andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectPoints*
+  name: ProtectPoints
+  href: api/andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectPoints.html
+  commentId: Overload:andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectPoints
+  fullName: andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectPoints
+  nameWithType: AlphaShapeSettings.ProtectPoints
 - uid: andywiecko.BurstTriangulator.Axis
   name: Axis
   href: api/andywiecko.BurstTriangulator.Axis.html
@@ -308,15 +365,15 @@ references:
   commentId: T:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args
   fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args
   nameWithType: Args
-- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.#ctor(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single)
-  name: Args(Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
-  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.-ctor.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args__ctor_andywiecko_BurstTriangulator_Preprocessor_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Single_System_Single_System_Single_
-  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.#ctor(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single)
-  name.vb: New(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
-  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Args(andywiecko.BurstTriangulator.Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
-  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.New(andywiecko.BurstTriangulator.Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
-  nameWithType: Args.Args(Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
-  nameWithType.vb: Args.New(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.#ctor(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single,System.Single)
+  name: Args(Preprocessor, int, bool, bool, bool, bool, bool, bool, bool, bool, bool, float, float, float, float)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.-ctor.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args__ctor_andywiecko_BurstTriangulator_Preprocessor_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Single_System_Single_System_Single_System_Single_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.#ctor(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single,System.Single)
+  name.vb: New(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single, Single)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Args(andywiecko.BurstTriangulator.Preprocessor, int, bool, bool, bool, bool, bool, bool, bool, bool, bool, float, float, float, float)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.New(andywiecko.BurstTriangulator.Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single, Single)
+  nameWithType: Args.Args(Preprocessor, int, bool, bool, bool, bool, bool, bool, bool, bool, bool, float, float, float, float)
+  nameWithType.vb: Args.New(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single, Single)
 - uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.#ctor*
   name: Args
   href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.-ctor.html
@@ -326,6 +383,30 @@ references:
   fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.New
   nameWithType: Args.Args
   nameWithType.vb: Args.New
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Alpha
+  name: Alpha
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Alpha.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Alpha
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Alpha
+  nameWithType: Args.Alpha
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapePreventWindmills
+  name: AlphaShapePreventWindmills
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapePreventWindmills.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapePreventWindmills
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapePreventWindmills
+  nameWithType: Args.AlphaShapePreventWindmills
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectConstraints
+  name: AlphaShapeProtectConstraints
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectConstraints.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectConstraints
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectConstraints
+  nameWithType: Args.AlphaShapeProtectConstraints
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectPoints
+  name: AlphaShapeProtectPoints
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectPoints.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectPoints
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectPoints
+  nameWithType: Args.AlphaShapeProtectPoints
 - uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary
   name: AutoHolesAndBoundary
   href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary.html
@@ -338,15 +419,15 @@ references:
   commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter
   fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter
   nameWithType: Args.ConcentricShellsParameter
-- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single)
-  name: Default(Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
-  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Default_andywiecko_BurstTriangulator_Preprocessor_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Single_System_Single_System_Single_
-  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single)
-  name.vb: Default(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
-  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
-  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
-  nameWithType: Args.Default(Preprocessor, int, bool, bool, bool, bool, bool, float, float, float)
-  nameWithType.vb: Args.Default(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single,System.Single)
+  name: Default(Preprocessor, int, bool, bool, bool, bool, bool, bool, bool, bool, bool, float, float, float, float)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Default_andywiecko_BurstTriangulator_Preprocessor_System_Int32_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Single_System_Single_System_Single_System_Single_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor,System.Int32,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Single,System.Single,System.Single,System.Single)
+  name.vb: Default(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single, Single)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor, int, bool, bool, bool, bool, bool, bool, bool, bool, bool, float, float, float, float)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default(andywiecko.BurstTriangulator.Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single, Single)
+  nameWithType: Args.Default(Preprocessor, int, bool, bool, bool, bool, bool, bool, bool, bool, bool, float, float, float, float)
+  nameWithType.vb: Args.Default(Preprocessor, Integer, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Boolean, Single, Single, Single, Single)
 - uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default*
   name: Default
   href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Default.html
@@ -389,6 +470,12 @@ references:
   commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.SloanMaxIters
   fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.SloanMaxIters
   nameWithType: Args.SloanMaxIters
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter
+  name: UseAlphaShapeFilter
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter.html
+  commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter
+  nameWithType: Args.UseAlphaShapeFilter
 - uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ValidateInput
   name: ValidateInput
   href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ValidateInput.html
@@ -401,15 +488,15 @@ references:
   commentId: F:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Verbose
   fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Verbose
   nameWithType: Args.Verbose
-- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(System.Nullable{andywiecko.BurstTriangulator.Preprocessor},System.Nullable{System.Int32},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Single},System.Nullable{System.Single},System.Nullable{System.Single})
-  name: With(Preprocessor?, int?, bool?, bool?, bool?, bool?, bool?, float?, float?, float?)
-  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_With_System_Nullable_andywiecko_BurstTriangulator_Preprocessor__System_Nullable_System_Int32__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Single__System_Nullable_System_Single__System_Nullable_System_Single__
-  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(System.Nullable{andywiecko.BurstTriangulator.Preprocessor},System.Nullable{System.Int32},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Single},System.Nullable{System.Single},System.Nullable{System.Single})
-  name.vb: With(Preprocessor?, Integer?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Single?, Single?, Single?)
-  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(andywiecko.BurstTriangulator.Preprocessor?, int?, bool?, bool?, bool?, bool?, bool?, float?, float?, float?)
-  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(andywiecko.BurstTriangulator.Preprocessor?, Integer?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Single?, Single?, Single?)
-  nameWithType: Args.With(Preprocessor?, int?, bool?, bool?, bool?, bool?, bool?, float?, float?, float?)
-  nameWithType.vb: Args.With(Preprocessor?, Integer?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Single?, Single?, Single?)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(System.Nullable{andywiecko.BurstTriangulator.Preprocessor},System.Nullable{System.Int32},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Single},System.Nullable{System.Single},System.Nullable{System.Single},System.Nullable{System.Single})
+  name: With(Preprocessor?, int?, bool?, bool?, bool?, bool?, bool?, bool?, bool?, bool?, bool?, float?, float?, float?, float?)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_With_System_Nullable_andywiecko_BurstTriangulator_Preprocessor__System_Nullable_System_Int32__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Boolean__System_Nullable_System_Single__System_Nullable_System_Single__System_Nullable_System_Single__System_Nullable_System_Single__
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(System.Nullable{andywiecko.BurstTriangulator.Preprocessor},System.Nullable{System.Int32},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Single},System.Nullable{System.Single},System.Nullable{System.Single},System.Nullable{System.Single})
+  name.vb: With(Preprocessor?, Integer?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Single?, Single?, Single?, Single?)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(andywiecko.BurstTriangulator.Preprocessor?, int?, bool?, bool?, bool?, bool?, bool?, bool?, bool?, bool?, bool?, float?, float?, float?, float?)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With(andywiecko.BurstTriangulator.Preprocessor?, Integer?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Single?, Single?, Single?, Single?)
+  nameWithType: Args.With(Preprocessor?, int?, bool?, bool?, bool?, bool?, bool?, bool?, bool?, bool?, bool?, float?, float?, float?, float?)
+  nameWithType.vb: Args.With(Preprocessor?, Integer?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Boolean?, Single?, Single?, Single?, Single?)
 - uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With*
   name: With
   href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With.html
@@ -440,6 +527,66 @@ references:
   commentId: T:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions
   fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions
   nameWithType: Extensions
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.double2},Unity.Collections.Allocator,System.Double,System.Boolean,System.Boolean,System.Boolean)
+  name: AlphaShapeFilter(UnsafeTriangulator, NativeOutputData<double2>, Allocator, double, bool, bool, bool)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_AlphaShapeFilter_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_Unity_Mathematics_double2__Unity_Collections_Allocator_System_Double_System_Boolean_System_Boolean_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.double2},Unity.Collections.Allocator,System.Double,System.Boolean,System.Boolean,System.Boolean)
+  name.vb: AlphaShapeFilter(UnsafeTriangulator, NativeOutputData(Of double2), Allocator, Double, Boolean, Boolean, Boolean)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator, andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<Unity.Mathematics.double2>, Unity.Collections.Allocator, double, bool, bool, bool)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator, andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData(Of Unity.Mathematics.double2), Unity.Collections.Allocator, Double, Boolean, Boolean, Boolean)
+  nameWithType: Extensions.AlphaShapeFilter(UnsafeTriangulator, NativeOutputData<double2>, Allocator, double, bool, bool, bool)
+  nameWithType.vb: Extensions.AlphaShapeFilter(UnsafeTriangulator, NativeOutputData(Of double2), Allocator, Double, Boolean, Boolean, Boolean)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.FixedPoint.fp2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.FixedPoint.fp2},Unity.Collections.Allocator,System.Nullable{Unity.Mathematics.FixedPoint.fp},System.Boolean,System.Boolean,System.Boolean)
+  name: AlphaShapeFilter(UnsafeTriangulator<fp2>, NativeOutputData<fp2>, Allocator, fp?, bool, bool, bool)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_AlphaShapeFilter_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_FixedPoint_fp2__andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_Unity_Mathematics_FixedPoint_fp2__Unity_Collections_Allocator_System_Nullable_Unity_Mathematics_FixedPoint_fp__System_Boolean_System_Boolean_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.FixedPoint.fp2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.FixedPoint.fp2},Unity.Collections.Allocator,System.Nullable{Unity.Mathematics.FixedPoint.fp},System.Boolean,System.Boolean,System.Boolean)
+  name.vb: AlphaShapeFilter(UnsafeTriangulator(Of fp2), NativeOutputData(Of fp2), Allocator, fp?, Boolean, Boolean, Boolean)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.FixedPoint.fp2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<Unity.Mathematics.FixedPoint.fp2>, Unity.Collections.Allocator, Unity.Mathematics.FixedPoint.fp?, bool, bool, bool)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.FixedPoint.fp2), andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData(Of Unity.Mathematics.FixedPoint.fp2), Unity.Collections.Allocator, Unity.Mathematics.FixedPoint.fp?, Boolean, Boolean, Boolean)
+  nameWithType: Extensions.AlphaShapeFilter(UnsafeTriangulator<fp2>, NativeOutputData<fp2>, Allocator, fp?, bool, bool, bool)
+  nameWithType.vb: Extensions.AlphaShapeFilter(UnsafeTriangulator(Of fp2), NativeOutputData(Of fp2), Allocator, fp?, Boolean, Boolean, Boolean)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.double2},Unity.Collections.Allocator,System.Double,System.Boolean,System.Boolean,System.Boolean)
+  name: AlphaShapeFilter(UnsafeTriangulator<double2>, NativeOutputData<double2>, Allocator, double, bool, bool, bool)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_AlphaShapeFilter_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_double2__andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_Unity_Mathematics_double2__Unity_Collections_Allocator_System_Double_System_Boolean_System_Boolean_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.double2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.double2},Unity.Collections.Allocator,System.Double,System.Boolean,System.Boolean,System.Boolean)
+  name.vb: AlphaShapeFilter(UnsafeTriangulator(Of double2), NativeOutputData(Of double2), Allocator, Double, Boolean, Boolean, Boolean)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.double2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<Unity.Mathematics.double2>, Unity.Collections.Allocator, double, bool, bool, bool)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.double2), andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData(Of Unity.Mathematics.double2), Unity.Collections.Allocator, Double, Boolean, Boolean, Boolean)
+  nameWithType: Extensions.AlphaShapeFilter(UnsafeTriangulator<double2>, NativeOutputData<double2>, Allocator, double, bool, bool, bool)
+  nameWithType.vb: Extensions.AlphaShapeFilter(UnsafeTriangulator(Of double2), NativeOutputData(Of double2), Allocator, Double, Boolean, Boolean, Boolean)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.float2},Unity.Collections.Allocator,System.Single,System.Boolean,System.Boolean,System.Boolean)
+  name: AlphaShapeFilter(UnsafeTriangulator<float2>, NativeOutputData<float2>, Allocator, float, bool, bool, bool)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_AlphaShapeFilter_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_float2__andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_Unity_Mathematics_float2__Unity_Collections_Allocator_System_Single_System_Boolean_System_Boolean_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.float2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.float2},Unity.Collections.Allocator,System.Single,System.Boolean,System.Boolean,System.Boolean)
+  name.vb: AlphaShapeFilter(UnsafeTriangulator(Of float2), NativeOutputData(Of float2), Allocator, Single, Boolean, Boolean, Boolean)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.float2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<Unity.Mathematics.float2>, Unity.Collections.Allocator, float, bool, bool, bool)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.float2), andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData(Of Unity.Mathematics.float2), Unity.Collections.Allocator, Single, Boolean, Boolean, Boolean)
+  nameWithType: Extensions.AlphaShapeFilter(UnsafeTriangulator<float2>, NativeOutputData<float2>, Allocator, float, bool, bool, bool)
+  nameWithType.vb: Extensions.AlphaShapeFilter(UnsafeTriangulator(Of float2), NativeOutputData(Of float2), Allocator, Single, Boolean, Boolean, Boolean)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.int2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.int2},Unity.Collections.Allocator,System.Single,System.Boolean,System.Boolean,System.Boolean)
+  name: AlphaShapeFilter(UnsafeTriangulator<int2>, NativeOutputData<int2>, Allocator, float, bool, bool, bool)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_AlphaShapeFilter_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_Unity_Mathematics_int2__andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_Unity_Mathematics_int2__Unity_Collections_Allocator_System_Single_System_Boolean_System_Boolean_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{Unity.Mathematics.int2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.int2},Unity.Collections.Allocator,System.Single,System.Boolean,System.Boolean,System.Boolean)
+  name.vb: AlphaShapeFilter(UnsafeTriangulator(Of int2), NativeOutputData(Of int2), Allocator, Single, Boolean, Boolean, Boolean)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<Unity.Mathematics.int2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<Unity.Mathematics.int2>, Unity.Collections.Allocator, float, bool, bool, bool)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of Unity.Mathematics.int2), andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData(Of Unity.Mathematics.int2), Unity.Collections.Allocator, Single, Boolean, Boolean, Boolean)
+  nameWithType: Extensions.AlphaShapeFilter(UnsafeTriangulator<int2>, NativeOutputData<int2>, Allocator, float, bool, bool, bool)
+  nameWithType.vb: Extensions.AlphaShapeFilter(UnsafeTriangulator(Of int2), NativeOutputData(Of int2), Allocator, Single, Boolean, Boolean, Boolean)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{UnityEngine.Vector2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{UnityEngine.Vector2},Unity.Collections.Allocator,System.Single,System.Boolean,System.Boolean,System.Boolean)
+  name: AlphaShapeFilter(UnsafeTriangulator<Vector2>, NativeOutputData<Vector2>, Allocator, float, bool, bool, bool)
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_AlphaShapeFilter_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_UnityEngine_Vector2__andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_UnityEngine_Vector2__Unity_Collections_Allocator_System_Single_System_Boolean_System_Boolean_System_Boolean_
+  commentId: M:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator{UnityEngine.Vector2},andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{UnityEngine.Vector2},Unity.Collections.Allocator,System.Single,System.Boolean,System.Boolean,System.Boolean)
+  name.vb: AlphaShapeFilter(UnsafeTriangulator(Of Vector2), NativeOutputData(Of Vector2), Allocator, Single, Boolean, Boolean, Boolean)
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator<UnityEngine.Vector2>, andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<UnityEngine.Vector2>, Unity.Collections.Allocator, float, bool, bool, bool)
+  fullName.vb: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator(Of UnityEngine.Vector2), andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData(Of UnityEngine.Vector2), Unity.Collections.Allocator, Single, Boolean, Boolean, Boolean)
+  nameWithType: Extensions.AlphaShapeFilter(UnsafeTriangulator<Vector2>, NativeOutputData<Vector2>, Allocator, float, bool, bool, bool)
+  nameWithType.vb: Extensions.AlphaShapeFilter(UnsafeTriangulator(Of Vector2), NativeOutputData(Of Vector2), Allocator, Single, Boolean, Boolean, Boolean)
+- uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter*
+  name: AlphaShapeFilter
+  href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html
+  commentId: Overload:andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter
+  fullName: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter
+  nameWithType: Extensions.AlphaShapeFilter
 - uid: andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge(andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator,andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData{Unity.Mathematics.double2},System.Int32,System.Int32,andywiecko.BurstTriangulator.LowLevel.Unsafe.Args,Unity.Collections.Allocator,System.Boolean)
   name: ConstrainEdge(UnsafeTriangulator, NativeOutputData<double2>, int, int, Args, Allocator, bool)
   href: api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge.html#andywiecko_BurstTriangulator_LowLevel_Unsafe_Extensions_ConstrainEdge_andywiecko_BurstTriangulator_LowLevel_Unsafe_UnsafeTriangulator_andywiecko_BurstTriangulator_LowLevel_Unsafe_NativeOutputData_Unity_Mathematics_double2__System_Int32_System_Int32_andywiecko_BurstTriangulator_LowLevel_Unsafe_Args_Unity_Collections_Allocator_System_Boolean_
@@ -1210,6 +1357,18 @@ references:
   commentId: T:andywiecko.BurstTriangulator.TriangulationSettings
   fullName: andywiecko.BurstTriangulator.TriangulationSettings
   nameWithType: TriangulationSettings
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings
+  name: AlphaShapeSettings
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings.html#andywiecko_BurstTriangulator_TriangulationSettings_AlphaShapeSettings
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings
+  nameWithType: TriangulationSettings.AlphaShapeSettings
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings*
+  name: AlphaShapeSettings
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings
+  nameWithType: TriangulationSettings.AlphaShapeSettings
 - uid: andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary
   name: AutoHolesAndBoundary
   href: api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary
@@ -1294,6 +1453,18 @@ references:
   commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters
   fullName: andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters
   nameWithType: TriangulationSettings.SloanMaxIters
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter
+  name: UseAlphaShapeFilter
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter.html#andywiecko_BurstTriangulator_TriangulationSettings_UseAlphaShapeFilter
+  commentId: P:andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter
+  nameWithType: TriangulationSettings.UseAlphaShapeFilter
+- uid: andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter*
+  name: UseAlphaShapeFilter
+  href: api/andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter.html
+  commentId: Overload:andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter
+  fullName: andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter
+  nameWithType: TriangulationSettings.UseAlphaShapeFilter
 - uid: andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput
   name: ValidateInput
   href: api/andywiecko.BurstTriangulator.TriangulationSettings.ValidateInput.html#andywiecko_BurstTriangulator_TriangulationSettings_ValidateInput
@@ -1582,6 +1753,21 @@ references:
   commentId: Overload:andywiecko.BurstTriangulator.Utilities.GenerateHalfedges
   fullName: andywiecko.BurstTriangulator.Utilities.GenerateHalfedges
   nameWithType: Utilities.GenerateHalfedges
+- uid: andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount(System.Span{System.Int32},System.ReadOnlySpan{System.Int32})
+  name: GeneratePointTriangleCount(Span<int>, ReadOnlySpan<int>)
+  href: api/andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount.html#andywiecko_BurstTriangulator_Utilities_GeneratePointTriangleCount_System_Span_System_Int32__System_ReadOnlySpan_System_Int32__
+  commentId: M:andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount(System.Span{System.Int32},System.ReadOnlySpan{System.Int32})
+  name.vb: GeneratePointTriangleCount(Span(Of Integer), ReadOnlySpan(Of Integer))
+  fullName: andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount(System.Span<int>, System.ReadOnlySpan<int>)
+  fullName.vb: andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount(System.Span(Of Integer), System.ReadOnlySpan(Of Integer))
+  nameWithType: Utilities.GeneratePointTriangleCount(Span<int>, ReadOnlySpan<int>)
+  nameWithType.vb: Utilities.GeneratePointTriangleCount(Span(Of Integer), ReadOnlySpan(Of Integer))
+- uid: andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount*
+  name: GeneratePointTriangleCount
+  href: api/andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount.html
+  commentId: Overload:andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount
+  fullName: andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount
+  nameWithType: Utilities.GeneratePointTriangleCount
 - uid: andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors(System.Span{System.Int32},System.ReadOnlySpan{System.Int32},System.Int32@,Unity.Collections.Allocator)
   name: GenerateTriangleColors(Span<int>, ReadOnlySpan<int>, out int, Allocator)
   href: api/andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors.html#andywiecko_BurstTriangulator_Utilities_GenerateTriangleColors_System_Span_System_Int32__System_ReadOnlySpan_System_Int32__System_Int32__Unity_Collections_Allocator_
@@ -1678,3 +1864,9 @@ references:
 - uid: getting-started-md
   name: Getting started
   href: manual/getting-started.html
+- uid: introduction-md
+  name: Introduction
+  href: manual/introduction.html
+- uid: utilities-md
+  name: Utilities
+  href: manual/utilities.html

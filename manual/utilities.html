@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.7.0</b></div>
+                "><b>v3.8.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -89,7 +89,7 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="">
+            <article class="content wrap" id="_content" data-uid="utilities-md">
 <h1 id="utilities">Utilities</h1>
 
 <p>The package also provides several utilities related to triangulations.
@@ -104,6 +104,13 @@ var triangles = mesh.triangles;
 var halfedges = new int[triangles.Length];
 
 Utilities.GenerateHalfedges(halfdeges, triangles, Allocator.Persistent);
+</code></pre>
+<h2 id="generatepointtrianglecount">GeneratePointTriangleCount</h2>
+<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount.html">GeneratePointTriangleCount</a> populates the <code>pointTriangleCount</code> buffer with the number of triangles each vertex index is part of, based on the provided triangles index buffer.
+The provided <code>pointTriangleCount</code> buffer for counting triangles must be large enough to accommodate the highest index in <code>triangles</code>.
+An example usage is shown below:</p>
+<pre><code class="lang-csharp">var pointTriangleCount = new int[pointsCount];
+Utilities.GeneratePointTriangleCount(pointTriangleCount, triangles);
 </code></pre>
 <h2 id="generatetrianglecolors">GenerateTriangleColors</h2>
 <p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors.html">GenerateTriangleColors</a> can be used to generate triangle colors using the provided halfedges.

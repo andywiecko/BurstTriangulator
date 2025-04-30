@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.7.0</b></div>
+                "><b>v3.8.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -144,6 +144,13 @@ public class TriangulationSettings</code></pre>
     </thead>
     <tbody>
       <tr>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_AlphaShapeSettings" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings.html#andywiecko_BurstTriangulator_TriangulationSettings_AlphaShapeSettings">AlphaShapeSettings</a>
+        </td>
+        <td class="markdown level1 summary"><p>Configuration settings for the α-shape filter. See <a class="xref" href="andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha.html#andywiecko_BurstTriangulator_AlphaShapeSettings_Alpha">Alpha</a>.</p>
+</td>
+      </tr>
+      <tr>
         <td id="andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary">
           <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary">AutoHolesAndBoundary</a>
         </td>
@@ -194,6 +201,16 @@ depending on the provided <a class="xref" href="andywiecko.BurstTriangulator.Inp
         </td>
         <td class="markdown level1 summary"><p>Max iteration count during Sloan's algorithm (constraining edges).
 <b>Modify this only if you know what you are doing.</b></p>
+</td>
+      </tr>
+      <tr>
+        <td id="andywiecko_BurstTriangulator_TriangulationSettings_UseAlphaShapeFilter" data-uid="andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter">
+          <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter.html#andywiecko_BurstTriangulator_TriangulationSettings_UseAlphaShapeFilter">UseAlphaShapeFilter</a>
+        </td>
+        <td class="markdown level1 summary"><p>If set to <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a> then enables the α-shape filter.
+When enabled, the filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹,
+which is useful in mesh reconstruction from unconstrained point clouds.
+See <a class="xref" href="andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings.html#andywiecko_BurstTriangulator_TriangulationSettings_AlphaShapeSettings">AlphaShapeSettings</a> for configuration options.</p>
 </td>
       </tr>
       <tr>
