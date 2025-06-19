@@ -46,7 +46,7 @@ Using the $\alpha$-shape filter may sometimes produce windmill-like triangle str
 Such a structure occurs when the triangles connected to a single point can be grouped into more than one connected component (see example below):
 
 By default, using $\alpha$-shape filter can produce *windmill* like triangle structures.
-TSuch a structure occurs when for a single point one can group point's triangles into more than one colored group, see example below:
+Such a structure occurs when for a single point one can group point's triangles into more than one colored group, see example below:
 
 <p align="center"><img src="../../images/alpha-shape-windmill.svg" width="350"/></p>
 <br>
