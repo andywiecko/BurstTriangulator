@@ -5008,7 +5008,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     var (xi, xj, xk) = (outputPositions[i], outputPositions[j], outputPositions[k]);
                     var area2 = Area2(xi, xj, xk);
-                    if (utils.greater(area2, maximumArea2)) // TODO split permited
+                    if (utils.greater(area2, maximumArea2)) // TODO: split permitted
                     {
                         foreach (var he in edges.AsReadOnly())
                         {
@@ -5615,7 +5615,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
 
         /// <summary>
-        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecer product</see> of <paramref name="a"/> and <paramref name="b"/>.
+        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecker product</see> of <paramref name="a"/> and <paramref name="b"/>.
         /// </summary>
         private static float2x2 Kron(float2 a, float2 b) => math.float2x2(a * b[0], a * b[1]);
     }
@@ -5718,7 +5718,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
 
         /// <summary>
-        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecer product</see> of <paramref name="a"/> and <paramref name="b"/>.
+        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecker product</see> of <paramref name="a"/> and <paramref name="b"/>.
         /// </summary>
         private static double2x2 Kron(double2 a, double2 b) => math.double2x2(a * b[0], a * b[1]);
     }
@@ -5854,7 +5854,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
 
         /// <summary>
-        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecer product</see> of <paramref name="a"/> and <paramref name="b"/>.
+        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecker product</see> of <paramref name="a"/> and <paramref name="b"/>.
         /// </summary>
         private static fp2x2 Kron(fp2 a, fp2 b) => fpmath.fp2x2(a * b[0], a * b[1]);
     }
