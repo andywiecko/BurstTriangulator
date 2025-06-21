@@ -5637,11 +5637,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFloat CalculateLocalTransformation(NativeArray<float2> positions)
         {
-            float2 min = float.MaxValue, max = float.MinValue, com = 0;
+            var (min, max) = BoundingBox(positions);
+            var com = float2.zero;
             foreach (var p in positions)
             {
-                min = math.min(p, min);
-                max = math.max(p, max);
                 com += p;
             }
 
@@ -5740,11 +5739,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformDouble CalculateLocalTransformation(NativeArray<double2> positions)
         {
-            double2 min = double.MaxValue, max = double.MinValue, com = 0;
+            var (min, max) = BoundingBox(positions);
+            var com = double2.zero;
             foreach (var p in positions)
             {
-                min = math.min(p, min);
-                max = math.max(p, max);
                 com += p;
             }
 
@@ -5803,11 +5801,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformInt CalculateLocalTransformation(NativeArray<int2> positions)
         {
-            int2 min = int.MaxValue, max = int.MinValue, com = 0;
+            var (min, max) = BoundingBox(positions);
+            var com = int2.zero;
             foreach (var p in positions)
             {
-                min = math.min(p, min);
-                max = math.max(p, max);
                 com += p;
             }
 
@@ -5876,11 +5873,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFp CalculateLocalTransformation(NativeArray<fp2> positions)
         {
-            fp2 min = fp.max_value, max = fp.min_value, com = fp2.zero;
+            var (min, max) = BoundingBox(positions);
+            var com = fp2.zero;
             foreach (var p in positions)
             {
-                min = fpmath.min(p, min);
-                max = fpmath.max(p, max);
                 com += p;
             }
 
