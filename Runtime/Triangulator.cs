@@ -979,6 +979,60 @@ namespace andywiecko.BurstTriangulator
     public static class Utilities
     {
         /// <summary>
+        /// Returns corresponding bounding box for <paramref name="positions"/>.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>A tuple <tt>(min, max)</tt> containing the minimum and maximum corners of the bounding box.</returns>
+        public static (float2 min, float2 max) BoundingBox(ReadOnlySpan<float2> positions)
+        {
+            ThrowCheckBoundingBox(positions.Length);
+            var (min, max) = (positions[0], positions[0]);
+            foreach (var p in positions) (min, max) = (math.min(min, p), math.max(max, p));
+            return (min, max);
+        }
+
+        /// <summary>
+        /// Returns corresponding bounding box for <paramref name="positions"/>.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>A tuple <tt>(min, max)</tt> containing the minimum and maximum corners of the bounding box.</returns>
+        public static (double2 min, double2 max) BoundingBox(ReadOnlySpan<double2> positions)
+        {
+            ThrowCheckBoundingBox(positions.Length);
+            var (min, max) = (positions[0], positions[0]);
+            foreach (var p in positions) (min, max) = (math.min(min, p), math.max(max, p));
+            return (min, max);
+        }
+
+        /// <summary>
+        /// Returns corresponding bounding box for <paramref name="positions"/>.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>A tuple <tt>(min, max)</tt> containing the minimum and maximum corners of the bounding box.</returns>
+        public static (int2 min, int2 max) BoundingBox(ReadOnlySpan<int2> positions)
+        {
+            ThrowCheckBoundingBox(positions.Length);
+            var (min, max) = (positions[0], positions[0]);
+            foreach (var p in positions) (min, max) = (math.min(min, p), math.max(max, p));
+            return (min, max);
+        }
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        /// <summary>
+        /// Returns corresponding bounding box for <paramref name="positions"/>.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>A tuple <tt>(min, max)</tt> containing the minimum and maximum corners of the bounding box.</returns>
+        public static (fp2 min, fp2 max) BoundingBox(ReadOnlySpan<fp2> positions)
+        {
+            ThrowCheckBoundingBox(positions.Length);
+            var (min, max) = (positions[0], positions[0]);
+            foreach (var p in positions) (min, max) = (fpmath.min(min, p), fpmath.max(max, p));
+            return (min, max);
+        }
+#endif
+
+        /// <summary>
         /// Generates <paramref name="halfedges"/> using the provided <paramref name="triangles"/>.
         /// </summary>
         /// <param name="halfedges">The buffer to be filled with halfedges. It must have the same length as <paramref name="triangles"/>.</param>
@@ -1523,6 +1577,15 @@ namespace andywiecko.BurstTriangulator
                     GenerateUVs(subuvs, min, max, subpositions.AsReadOnly(), subtriangles.AsReadOnly(), tmpPositionsT2.AsReadOnly());
                     outputUVs.AddRange(subuvs.AsArray());
                 }
+            }
+        }
+
+        [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        private static void ThrowCheckBoundingBox(int positionsLength)
+        {
+            if (positionsLength == 0)
+            {
+                throw new ArgumentException("The provided positions[0] is empty. To calculate a bounding box, at least one point must be provided.");
             }
         }
 
