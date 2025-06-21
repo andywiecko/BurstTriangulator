@@ -5,9 +5,11 @@ using System.Text.RegularExpressions;
 using Unity.Collections;
 using Unity.Collections.NotBurstCompatible;
 using Unity.Mathematics;
+#if UNITY_MATHEMATICS_FIXEDPOINT
+using Unity.Mathematics.FixedPoint;
+#endif
 using UnityEngine;
 using UnityEngine.TestTools;
-using UnityEngine.TestTools.Utils;
 using static andywiecko.BurstTriangulator.Utilities;
 
 namespace andywiecko.BurstTriangulator.Editor.Tests
@@ -505,5 +507,112 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Assert.That(mesh.vertices, Is.EqualTo(initialVertices.Concat(new Vector3[] { new(0.5f, 0), new(1, 0.5f), new(0.5f, 0.5f), new(0.5f, 1), new(0, 0.5f) })));
             Assert.That(mesh.uv, Is.EqualTo(new Vector2[] { new(0, 0), new(1, 0), new(1, 1), new(0, 1), new(0.5f, 0), new(1, 0.5f), new(0.5f, 0.5f), new(0.5f, 1), new(0, 0.5f) }));
         }
+
+        private static readonly TestCaseData[] boundingBoxTestData =
+        {
+            new(new float2[]
+            {
+                math.float2(0, 0),
+            },
+            math.float2(0, 0),
+            math.float2(0, 0)
+            ){ TestName = $"Test case 1 ({nameof(BoundingBoxTest)})"},
+            new(new float2[]
+            {
+                math.float2(0, 0),
+                math.float2(1, 1),
+            },
+            math.float2(0, 0),
+            math.float2(1, 1)
+            ){ TestName = $"Test case 2 ({nameof(BoundingBoxTest)})"},
+            new(new float2[]
+            {
+                math.float2(1, 0),
+                math.float2(0, 1),
+            },
+            math.float2(0, 0),
+            math.float2(1, 1)
+            ){ TestName = $"Test case 3 ({nameof(BoundingBoxTest)})"},
+            new(new float2[]
+            {
+                math.float2(2, 3),
+                math.float2(2, 3),
+                math.float2(2, 3),
+                math.float2(2, 3),
+            },
+            math.float2(2, 3),
+            math.float2(2, 3)
+            ){ TestName = $"Test case 4 ({nameof(BoundingBoxTest)})"},
+            new(new float2[]
+            {
+                math.float2(-5, -3),
+                math.float2(-1, -7),
+            },
+            math.float2(-5, -7),
+            math.float2(-1, -3)
+            ){ TestName = $"Test case 5 ({nameof(BoundingBoxTest)})"},
+            new(new float2[]
+            {
+                math.float2(-2, 3),
+                math.float2(4, -5),
+                math.float2(0, 0),
+            },
+            math.float2(-2, -5),
+            math.float2(4, 3)
+            ){ TestName = $"Test case 6 ({nameof(BoundingBoxTest)})"},
+        };
+
+        [Test, TestCaseSource(nameof(boundingBoxTestData))]
+        public void BoundingBoxTest(float2[] positions, float2 expectedMin, float2 expectedMax)
+        {
+            var (min, max) = BoundingBox(positions);
+            Assert.That(min, Is.EqualTo(expectedMin).Using(Float2Comparer.Instance));
+            Assert.That(max, Is.EqualTo(expectedMax).Using(Float2Comparer.Instance));
+        }
+
+        private static readonly TestCaseData[] boundingBoxTestDataDouble = boundingBoxTestData.Select(i => new TestCaseData(((float2[])i.Arguments[0]).Select(i => (double2)i).ToArray(), (double2)(float2)i.Arguments[1], (double2)(float2)i.Arguments[2]) { TestName = i.TestName + " (double2)" }).ToArray();
+
+        [Test, TestCaseSource(nameof(boundingBoxTestDataDouble))]
+        public void BoundingBoxDoubleTest(double2[] positions, double2 expectedMin, double2 expectedMax)
+        {
+            var (min, max) = BoundingBox(positions);
+            Assert.That(min, Is.EqualTo(expectedMin).Using(Double2Comparer.Instance));
+            Assert.That(max, Is.EqualTo(expectedMax).Using(Double2Comparer.Instance));
+        }
+
+        private static readonly TestCaseData[] boundingBoxTestDataInt = boundingBoxTestData.Select(i => new TestCaseData(((float2[])i.Arguments[0]).Select(i => (int2)i).ToArray(), (int2)(float2)i.Arguments[1], (int2)(float2)i.Arguments[2]) { TestName = i.TestName + " (int2)" }).ToArray();
+
+        [Test, TestCaseSource(nameof(boundingBoxTestDataInt))]
+        public void BoundingBoxIntTest(int2[] positions, int2 expectedMin, int2 expectedMax)
+        {
+            var (min, max) = BoundingBox(positions);
+            Assert.That(min, Is.EqualTo(expectedMin));
+            Assert.That(max, Is.EqualTo(expectedMax));
+        }
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        private static readonly TestCaseData[] boundingBoxTestDataFp = boundingBoxTestData.Select(i => new TestCaseData(((float2[])i.Arguments[0]).Select(i => i.ToFp2()).ToArray(), ((float2)i.Arguments[1]).ToFp2(), ((float2)i.Arguments[2]).ToFp2()) { TestName = i.TestName + " (fp2)" }).ToArray();
+
+        [Test, TestCaseSource(nameof(boundingBoxTestDataFp))]
+        public void BoundingBoxFpTest(fp2[] positions, fp2 expectedMin, fp2 expectedMax)
+        {
+            var (min, max) = BoundingBox(positions);
+            Assert.That(min, Is.EqualTo(expectedMin).Using(Fp2Comparer.Instance));
+            Assert.That(max, Is.EqualTo(expectedMax).Using(Fp2Comparer.Instance));
+        }
+#endif
+
+        private static readonly TestCaseData[] boundingBoxThrowTestData =
+        {
+            new(new float2[]{ }){ TestName = $"float2 ({nameof(BoundingBoxThrowTest)})"},
+            new(new double2[]{ }){ TestName = $"double2 ({nameof(BoundingBoxThrowTest)})"},
+            new(new int2[]{ }){ TestName = $"int2 ({nameof(BoundingBoxThrowTest)})"},
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            new(new fp2[]{ }){ TestName = $"fp2 ({nameof(BoundingBoxThrowTest)})"},
+#endif
+        };
+
+        [Test, TestCaseSource(nameof(boundingBoxThrowTestData))]
+        public void BoundingBoxThrowTest<T>(T positions) => Debug.Log(Assert.Throws<ArgumentException>(() => BoundingBox((dynamic)positions)));
     }
 }
