@@ -5673,12 +5673,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFloat CalculatePCATransformation(NativeArray<float2> positions)
         {
-            var com = (float2)0;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-            com /= positions.Length;
+            if (positions.Length == 0) return Identity;
+            var com = CenterOfMass(positions);
 
             var cov = float2x2.zero;
             for (int i = 0; i < positions.Length; i++)
@@ -5710,13 +5706,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             if (positions.Length == 0) return Identity;
             var (min, max) = BoundingBox(positions);
-            var com = float2.zero;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-
-            com /= positions.Length;
+            var com = CenterOfMass(positions);
             var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
             return Scale(scale) * Translate(-com);
         }
@@ -5776,12 +5766,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformDouble CalculatePCATransformation(NativeArray<double2> positions)
         {
-            var com = (double2)0;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-            com /= positions.Length;
+            if (positions.Length == 0) return Identity;
+            var com = CenterOfMass(positions);
 
             var cov = double2x2.zero;
             for (int i = 0; i < positions.Length; i++)
@@ -5813,13 +5799,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             if (positions.Length == 0) return Identity;
             var (min, max) = BoundingBox(positions);
-            var com = double2.zero;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-
-            com /= positions.Length;
+            var com = CenterOfMass(positions);
             var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
             return Scale(scale) * Translate(-com);
         }
@@ -5868,22 +5848,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public TransformInt(int2 translation) => this.translation = translation;
         public TransformInt Inverse() => new(-translation);
         public int2 Transform(int2 point) => point + translation;
-        public readonly TransformInt CalculatePCATransformation(NativeArray<int2> positions) => throw new NotImplementedException(
-            "PCA is not implemented for int2 coordinates!"
-        );
-
-        public readonly TransformInt CalculateLocalTransformation(NativeArray<int2> positions)
-        {
-            if (positions.Length == 0) return Identity;
-            var com = int2.zero;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-            com /= positions.Length;
-
-            return new(-com);
-        }
+        public readonly TransformInt CalculatePCATransformation(NativeArray<int2> positions) => throw new NotImplementedException("PCA is not implemented for int2 coordinates!");
+        public readonly TransformInt CalculateLocalTransformation(NativeArray<int2> positions) => positions.Length > 0 ? new(-CenterOfMass(positions)) : Identity;
     }
 
 #if UNITY_MATHEMATICS_FIXEDPOINT
@@ -5913,12 +5879,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly TransformFp CalculatePCATransformation(NativeArray<fp2> positions)
         {
             if (positions.Length == 0) return Identity;
-            var com = (fp2)0;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-            com /= positions.Length;
+            var com = CenterOfMass(positions);
 
             var cov = fp2x2.zero;
             for (int i = 0; i < positions.Length; i++)
@@ -5950,13 +5911,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             if (positions.Length == 0) return Identity;
             var (min, max) = BoundingBox(positions);
-            var com = fp2.zero;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-
-            com /= positions.Length;
+            var com = CenterOfMass(positions);
             var scale = 1 / fpmath.cmax(fpmath.max(fpmath.abs(max - com), fpmath.abs(min - com)));
             return Scale(scale) * Translate(-com);
         }
