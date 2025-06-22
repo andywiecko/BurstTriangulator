@@ -85,6 +85,24 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             _ => RunState.Runnable,
         };
 
+        [Test, Description("Verify that the only error for triangulation with an empty position input is the ERR_INPUT_POSITIONS_LENGTH error code.")]
+        public void EmptyInputPositionsTest([Values] Preprocessor preprocessor)
+        {
+            if (typeof(T) == typeof(int2) && preprocessor == Preprocessor.PCA)
+            {
+                Assert.Ignore($"{nameof(Preprocessor)}.{nameof(Preprocessor.PCA)} is not supported by {nameof(int2)}");
+            }
+
+            using var positions = new NativeArray<T>(Array.Empty<T>(), Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = { Positions = positions },
+                Settings = { ValidateInput = true, Verbose = false, Preprocessor = preprocessor }
+            };
+            triangulator.Run();
+            Assert.That(triangulator.Output.Status.Value, Is.EqualTo(Status.ERR_INPUT_POSITIONS_LENGTH));
+        }
+
         [Test]
         public void DelaunayTriangulationWithoutRefinementTest()
         {

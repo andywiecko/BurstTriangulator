@@ -5637,6 +5637,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFloat CalculateLocalTransformation(NativeArray<float2> positions)
         {
+            if (positions.Length == 0) return Identity;
             var (min, max) = BoundingBox(positions);
             var com = float2.zero;
             foreach (var p in positions)
@@ -5739,6 +5740,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformDouble CalculateLocalTransformation(NativeArray<double2> positions)
         {
+            if (positions.Length == 0) return Identity;
             var (min, max) = BoundingBox(positions);
             var com = double2.zero;
             foreach (var p in positions)
@@ -5801,14 +5803,15 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformInt CalculateLocalTransformation(NativeArray<int2> positions)
         {
-            var (min, max) = BoundingBox(positions);
+            if (positions.Length == 0) return Identity;
             var com = int2.zero;
             foreach (var p in positions)
             {
                 com += p;
             }
+            com /= positions.Length;
 
-            return new(-com / positions.Length);
+            return new(-com);
         }
     }
 
@@ -5838,6 +5841,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFp CalculatePCATransformation(NativeArray<fp2> positions)
         {
+            if (positions.Length == 0) return Identity;
             var com = (fp2)0;
             foreach (var p in positions)
             {
@@ -5873,6 +5877,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFp CalculateLocalTransformation(NativeArray<fp2> positions)
         {
+            if (positions.Length == 0) return Identity;
             var (min, max) = BoundingBox(positions);
             var com = fp2.zero;
             foreach (var p in positions)
