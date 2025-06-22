@@ -614,5 +614,78 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
         [Test, TestCaseSource(nameof(boundingBoxThrowTestData))]
         public void BoundingBoxThrowTest<T>(T positions) => Debug.Log(Assert.Throws<ArgumentException>(() => BoundingBox((dynamic)positions)));
+
+        private static readonly TestCaseData[] centerOfMassTestData =
+        {
+            new(new float2[]
+            {
+                math.float2(0, 0),
+            },
+            math.float2(0, 0)
+            ){ TestName = $"Test case 1 ({nameof(CenterOfMassTest)})"},
+            new(new float2[]
+            {
+                math.float2(0, 0),
+                math.float2(1, 1),
+            },
+            math.float2(0.5f, 0.5f)
+            ){ TestName = $"Test case 2 ({nameof(CenterOfMassTest)})"},
+            new(new float2[]
+            {
+                math.float2(1, 0),
+                math.float2(0, 1),
+            },
+            math.float2(0.5f, 0.5f)
+            ){ TestName = $"Test case 3 ({nameof(CenterOfMassTest)})"},
+            new(new float2[]
+            {
+                math.float2(2, 3),
+                math.float2(2, 3),
+                math.float2(2, 3),
+                math.float2(2, 3),
+            },
+            math.float2(2, 3)
+            ){ TestName = $"Test case 4 ({nameof(CenterOfMassTest)})"},
+            new(new float2[]
+            {
+                math.float2(-5, -3),
+                math.float2(-1, -7),
+            },
+            math.float2(-3, -5)
+            ){ TestName = $"Test case 5 ({nameof(CenterOfMassTest)})"},
+            new(new float2[]
+            {
+                math.float2(-2, 3),
+                math.float2(4, -5),
+                math.float2(0, 0),
+            },
+            math.float2(2f / 3, -2f / 3)
+            ){ TestName = $"Test case 6 ({nameof(CenterOfMassTest)})"},
+        };
+
+        [Test, TestCaseSource(nameof(centerOfMassTestData))] public void CenterOfMassTest(float2[] positions, float2 expected) => Assert.That(CenterOfMass(positions), Is.EqualTo(expected).Using(Float2Comparer.Instance));
+
+        private static readonly TestCaseData[] centerOfMassTestDataDouble = centerOfMassTestData.Select(i => new TestCaseData(((float2[])i.Arguments[0]).Select(i => (double2)i).ToArray(), (double2)(float2)i.Arguments[1]) { TestName = i.TestName + " (double2)" }).ToArray();
+        [Test, TestCaseSource(nameof(centerOfMassTestDataDouble))] public void CenterOfMassDoubleTest(double2[] positions, double2 expected) => Assert.That(CenterOfMass(positions), Is.EqualTo(expected).Using(Double2Comparer.Instance));
+
+        private static readonly TestCaseData[] centerOfMassTestDataInt = centerOfMassTestData.Select(i => new TestCaseData(((float2[])i.Arguments[0]).Select(i => (int2)i).ToArray(), (int2)(float2)i.Arguments[1]) { TestName = i.TestName + " (int2)" }).ToArray();
+        [Test, TestCaseSource(nameof(centerOfMassTestDataInt))] public void CenterOfMassIntTest(int2[] positions, int2 expected) => Assert.That(CenterOfMass(positions), Is.EqualTo(expected));
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        private static readonly TestCaseData[] centerOfMassTestDataFp = centerOfMassTestData.Select(i => new TestCaseData(((float2[])i.Arguments[0]).Select(i => i.ToFp2()).ToArray(), ((float2)i.Arguments[1]).ToFp2()) { TestName = i.TestName + " (fp2)" }).ToArray();
+        [Test, TestCaseSource(nameof(centerOfMassTestDataFp))] public void CenterOfMassFpTest(fp2[] positions, fp2 expected) => Assert.That(CenterOfMass(positions), Is.EqualTo(expected).Using(Fp2Comparer.Instance));
+#endif
+
+        private static readonly TestCaseData[] centerOfMassThrowTestData =
+        {
+            new(new float2[]{ }){ TestName = $"float2 ({nameof(CenterOfMassThrowTest)})"},
+            new(new double2[]{ }){ TestName = $"double2 ({nameof(CenterOfMassThrowTest)})"},
+            new(new int2[]{ }){ TestName = $"int2 ({nameof(CenterOfMassThrowTest)})"},
+#if UNITY_MATHEMATICS_FIXEDPOINT
+            new(new fp2[]{ }){ TestName = $"fp2 ({nameof(CenterOfMassThrowTest)})"},
+#endif
+        };
+
+        [Test, TestCaseSource(nameof(boundingBoxThrowTestData))] public void CenterOfMassThrowTest<T>(T positions) => Debug.Log(Assert.Throws<ArgumentException>(() => CenterOfMass((dynamic)positions)));
     }
 }
