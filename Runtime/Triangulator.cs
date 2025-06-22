@@ -1033,6 +1033,68 @@ namespace andywiecko.BurstTriangulator
 #endif
 
         /// <summary>
+        /// Returns corresponding <em>center of mass</em> (COM) for <paramref name="positions"/>.
+        /// Assumes equal weights for all positions.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>COM value position.</returns>
+        public static float2 CenterOfMass(ReadOnlySpan<float2> positions)
+        {
+            ThrowCheckCenterOfMass(positions.Length);
+            var com = float2.zero;
+            foreach (var p in positions) com += p;
+            com /= positions.Length;
+            return com;
+        }
+
+        /// <summary>
+        /// Returns corresponding <em>center of mass</em> (COM) for <paramref name="positions"/>.
+        /// Assumes equal weights for all positions.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>COM value position.</returns>
+        public static double2 CenterOfMass(ReadOnlySpan<double2> positions)
+        {
+            ThrowCheckCenterOfMass(positions.Length);
+            var com = double2.zero;
+            foreach (var p in positions) com += p;
+            com /= positions.Length;
+            return com;
+        }
+
+        /// <summary>
+        /// Returns corresponding <em>center of mass</em> (COM) for <paramref name="positions"/>.
+        /// Assumes equal weights for all positions.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>COM value position.</returns>
+        public static int2 CenterOfMass(ReadOnlySpan<int2> positions)
+        {
+            ThrowCheckCenterOfMass(positions.Length);
+            var com = int2.zero;
+            foreach (var p in positions) com += p;
+            com /= positions.Length;
+            return com;
+        }
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        /// <summary>
+        /// Returns corresponding <em>center of mass</em> (COM) for <paramref name="positions"/>.
+        /// Assumes equal weights for all positions.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>COM value position.</returns>
+        public static fp2 CenterOfMass(ReadOnlySpan<fp2> positions)
+        {
+            ThrowCheckCenterOfMass(positions.Length);
+            var com = fp2.zero;
+            foreach (var p in positions) com += p;
+            com /= positions.Length;
+            return com;
+        }
+#endif
+
+        /// <summary>
         /// Generates <paramref name="halfedges"/> using the provided <paramref name="triangles"/>.
         /// </summary>
         /// <param name="halfedges">The buffer to be filled with halfedges. It must have the same length as <paramref name="triangles"/>.</param>
@@ -1586,6 +1648,15 @@ namespace andywiecko.BurstTriangulator
             if (positionsLength == 0)
             {
                 throw new ArgumentException("The provided positions[0] is empty. To calculate a bounding box, at least one point must be provided.");
+            }
+        }
+
+        [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        private static void ThrowCheckCenterOfMass(int positionsLength)
+        {
+            if (positionsLength == 0)
+            {
+                throw new ArgumentException("The provided positions[0] is empty. To calculate a center of mass (COM), at least one point must be provided.");
             }
         }
 
