@@ -365,8 +365,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var halfedges = new NativeList<int>(Allocator.Persistent);
             using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
 
-            t.Triangulate(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(autoHolesAndBoundary: false), Allocator.Persistent);
-            t.PlantHoleSeeds(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(autoHolesAndBoundary: true), Allocator.Persistent);
+            t.Triangulate(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args, Allocator.Persistent);
+            t.PlantHoleSeeds(new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, Allocator.Persistent, autoHolesAndBoundary: true);
 
             h1.Free();
             h2.Free();
@@ -391,8 +391,8 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var halfedges = new NativeList<int>(Allocator.Persistent);
             using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
 
-            t.Triangulate(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(restoreBoundary: false), Allocator.Persistent);
-            t.PlantHoleSeeds(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args.With(restoreBoundary: true), Allocator.Persistent);
+            t.Triangulate(input, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, args, Allocator.Persistent);
+            t.PlantHoleSeeds(new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, Allocator.Persistent, restoreBoundary: true);
 
             h1.Free();
             h2.Free();
@@ -422,7 +422,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
 
             t.Triangulate(inputWithoutHoles, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions }, args, Allocator.Persistent);
-            t.PlantHoleSeeds(inputWithHoles, new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions }, args, Allocator.Persistent);
+            t.PlantHoleSeeds(new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions }, Allocator.Persistent, holeSeeds: inputWithHoles.HoleSeeds);
 
             h1.Free();
             h2.Free();
@@ -496,9 +496,9 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 args: Args.Default(), Allocator.Persistent
             );
             t.PlantHoleSeeds(
-                input: default,
                 output: new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions, IgnoredHalfedgesForPlantingSeeds = ignoredHalfedges },
-                args: Args.Default().With(autoHolesAndBoundary: true), Allocator.Persistent
+                Allocator.Persistent,
+                autoHolesAndBoundary: true
             );
 
             Assert.That(triangles1.AsArray(), Has.Length.EqualTo(3 * 12));
@@ -743,7 +743,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
             var output = new NativeOutputData<T> { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges, Positions = outputPositions };
             t.Triangulate(inputWithoutHoles, output, args.With(refineMesh: false), Allocator.Persistent);
-            t.PlantHoleSeeds(inputWithHoles, output, args, Allocator.Persistent);
+            t.PlantHoleSeeds(output, Allocator.Persistent, holeSeeds: inputWithHoles.HoleSeeds);
             LowLevel.Unsafe.Extensions.RefineMesh((dynamic)t, (dynamic)output, Allocator.Persistent);
 
             h1.Free();
