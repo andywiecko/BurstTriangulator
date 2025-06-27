@@ -1978,15 +1978,26 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double2>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<double2> holeSeeds = default) => new UnsafeTriangulator<double2>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
         public static void PlantHoleSeeds(this UnsafeTriangulator @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double2>().PlantHoleSeeds(input, output, args, allocator);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
@@ -2103,16 +2114,27 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeInputData<float2> input, NativeOutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(input, output, args, allocator);
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<float2> holeSeeds = default) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
+        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeInputData<float2> input, NativeOutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -2234,15 +2256,26 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float2>().ConstrainEdge(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<Vector2> holeSeeds = default) => new UnsafeTriangulator<float2>().PlantHoleSeeds(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, autoHolesAndBoundary, restoreBoundary, UnsafeUtility.As<NativeArray<Vector2>, NativeArray<float2>>(ref holeSeeds));
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
         public static void PlantHoleSeeds(this UnsafeTriangulator<Vector2> @this, NativeInputData<Vector2> input, NativeOutputData<Vector2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float2>().PlantHoleSeeds(UnsafeUtility.As<NativeInputData<Vector2>, NativeInputData<float2>>(ref input), UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), args, allocator);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
@@ -2360,16 +2393,27 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(input, output, args, allocator);
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<double2> holeSeeds = default) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
+        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -2491,16 +2535,27 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(input, output, args, allocator);
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<int2> holeSeeds = default) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds);
         /// <summary>
         /// Applies the α-shape filter to the <paramref name="output"/> data.
         /// The filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹.
@@ -2550,16 +2605,27 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </param>
         public static void ConstrainEdge(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeInputData<fp2> input, NativeOutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(input, output, args, allocator);
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<fp2> holeSeeds = default) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
+        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeInputData<fp2> input, NativeOutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -2875,9 +2941,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }.TryApplyConstraint(new(pi, pj), ignoreForPlantingSeeds);
         }
 
-        public void PlantHoleSeeds(NativeInputData<T2> input, NativeOutputData<T2> output, Args args, Allocator allocator)
+        public void PlantHoleSeeds(NativeOutputData<T2> output, Allocator allocator, bool autoHolesAndBoundary, bool restoreBoundary, NativeArray<T2> holeSeeds)
         {
-            new PlantingSeedStep(input, output, args).Execute(allocator, true);
+            new PlantingSeedStep(output, autoHolesAndBoundary, restoreBoundary, holeSeeds).Execute(allocator, true);
         }
 
         public void RefineMesh(NativeOutputData<T2> output, Allocator allocator, T area2Threshold, T angleThreshold, T shells, bool constrainBoundary = false)
@@ -4331,12 +4397,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeQueueList<int> trianglesQueue;
             private NativeArray<T2> holes;
 
-            private readonly Args args;
+            private readonly bool autoHolesAndBoundary, restoreBoundary;
             private int tIdMinVisited;
 
-            public PlantingSeedStep(NativeInputData<T2> input, NativeOutputData<T2> output, Args args) : this(output, args, input.HoleSeeds) { }
-
-            public PlantingSeedStep(NativeOutputData<T2> output, Args args, NativeArray<T2> localHoles)
+            public PlantingSeedStep(NativeOutputData<T2> output, bool autoHolesAndBoundary, bool restoreBoundary, NativeArray<T2> holes)
             {
                 status = output.Status;
                 triangles = output.Triangles;
@@ -4344,14 +4408,17 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 constrainedHalfedges = output.ConstrainedHalfedges;
                 halfedges = output.Halfedges;
                 ignoredHalfedges = output.IgnoredHalfedgesForPlantingSeeds;
-                holes = localHoles;
-                this.args = args;
+                this.holes = holes;
+                this.autoHolesAndBoundary = autoHolesAndBoundary;
+                this.restoreBoundary = restoreBoundary;
 
                 visitedTriangles = default;
                 trianglesQueue = default;
 
                 tIdMinVisited = -1;
             }
+
+            public PlantingSeedStep(NativeOutputData<T2> output, Args args, NativeArray<T2> localHoles) : this(output, args.AutoHolesAndBoundary, args.RestoreBoundary, localHoles) { }
 
             public void Execute(Allocator allocator, bool constraintsIsCreated)
             {
@@ -4365,9 +4432,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 using var _visitedTriangles = visitedTriangles = new(triangles.Length / 3, allocator);
                 using var _trianglesQueue = trianglesQueue = new(allocator);
 
-                if (args.AutoHolesAndBoundary) PlantAuto(allocator);
+                if (autoHolesAndBoundary) PlantAuto(allocator);
                 if (holes.IsCreated) PlantHoleSeeds(holes);
-                if (args.RestoreBoundary) PlantBoundarySeeds();
+                if (restoreBoundary) PlantBoundarySeeds();
 
                 RemoveVisitedTriangles();
             }
