@@ -1976,6 +1976,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<double2>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
         public static void ConstrainEdge(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double2>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
@@ -2112,7 +2116,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
-        public static void ConstrainEdge(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
+        public static void ConstrainEdge(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, args.SloanMaxIters, args.Verbose);
         /// <summary>
         /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
         /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
@@ -2254,6 +2262,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<float2>().ConstrainEdge(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
         public static void ConstrainEdge(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float2>().ConstrainEdge(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
         /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
@@ -2391,7 +2403,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
-        public static void ConstrainEdge(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
+        public static void ConstrainEdge(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, args.SloanMaxIters, args.Verbose);
         /// <summary>
         /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
         /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
@@ -2533,7 +2549,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
-        public static void ConstrainEdge(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
+        public static void ConstrainEdge(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, args.SloanMaxIters, args.Verbose);
         /// <summary>
         /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
         /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
@@ -2603,7 +2623,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
-        public static void ConstrainEdge(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
+        public static void ConstrainEdge(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, args.SloanMaxIters, args.Verbose);
         /// <summary>
         /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
         /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
@@ -2908,7 +2932,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             if (tmpIgnoredHalfedgesForPlantingSeeds.IsCreated) tmpIgnoredHalfedgesForPlantingSeeds.Dispose();
         }
 
-        public void ConstrainEdge(NativeOutputData<T2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds)
+        public void ConstrainEdge(NativeOutputData<T2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds, int sloanMaxIters, bool verbose)
         {
             using var intersections = new NativeList<int>(allocator);
             using var unresolvedIntersections = new NativeList<int>(allocator);
@@ -2937,7 +2961,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 UnresolvedIntersections = unresolvedIntersections,
                 PointToHalfedge = pointToHalfedge,
 
-                Args = args,
+                SloanMaxIters = sloanMaxIters,
+                Verbose = verbose,
             }.TryApplyConstraint(new(pi, pj), ignoreForPlantingSeeds);
         }
 
@@ -3991,7 +4016,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<bool> constrainedHalfedges;
             private NativeList<bool> ignoredHalfedgesForPlantingSeeds;
             private NativeArray<bool> ignoreConstraintForPlantingSeeds;
-            private readonly Args args;
+            private readonly int sloanMaxIters;
+            private readonly bool verbose;
 
             public ConstrainEdgesStep(NativeInputData<T2> input, NativeOutputData<T2> output, Args args)
             {
@@ -4003,7 +4029,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 halfedges = output.Halfedges;
                 constrainedHalfedges = output.ConstrainedHalfedges;
                 ignoredHalfedgesForPlantingSeeds = output.IgnoredHalfedgesForPlantingSeeds;
-                this.args = args;
+                sloanMaxIters = args.SloanMaxIters;
+                verbose = args.Verbose;
             }
 
             public void Execute(Allocator allocator)
@@ -4042,7 +4069,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     UnresolvedIntersections = unresolvedIntersections,
                     PointToHalfedge = pointToHalfedge,
 
-                    Args = args,
+                    SloanMaxIters = sloanMaxIters,
+                    Verbose = verbose,
                 };
 
                 for (int index = 0; index < inputConstraintEdges.Length / 2; index++)
@@ -4069,7 +4097,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public NativeList<int> UnresolvedIntersections;
                 public NativeArray<int> PointToHalfedge;
 
-                public Args Args;
+                public bool Verbose;
+                public int SloanMaxIters;
 
                 public void TryApplyConstraint(int2 c, bool ignoreForPlantingSeeds)
                 {
@@ -4095,7 +4124,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 {
                     for (int i = 0; i < Intersections.Length; i++)
                     {
-                        if (IsMaxItersExceeded(iter++, Args.SloanMaxIters))
+                        if (IsMaxItersExceeded(iter++, SloanMaxIters))
                         {
                             return;
                         }
@@ -4368,7 +4397,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 {
                     if (iter >= maxIters)
                     {
-                        if (Args.Verbose)
+                        if (Verbose)
                         {
                             Debug.LogError(
                                 $"[Triangulator]: Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +

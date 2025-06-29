@@ -536,7 +536,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             t.Triangulate(new() { Positions = inputPositions }, output, args, Allocator.Persistent);
 
             var p = HasEdge(0, 2) ? math.int2(1, 3) : math.int2(0, 2);
-            t.ConstrainEdge(output, pi: p.x, pj: p.y, args, allocator: Allocator.Persistent, ignoreForPlantingSeeds: true);
+            t.ConstrainEdge(output, pi: p.x, pj: p.y, allocator: Allocator.Persistent, ignoreForPlantingSeeds: true);
 
             var he = FindEdge(p.x, p.y);
             var ohe = halfedges[he];
