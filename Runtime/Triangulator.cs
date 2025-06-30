@@ -4451,7 +4451,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
             public void Execute(Allocator allocator, bool constraintsIsCreated)
             {
-                if (!constraintsIsCreated || status.IsCreated && status.Value != Status.OK)
+                if (!constraintsIsCreated || status.IsCreated && status.Value != Status.OK || !autoHolesAndBoundary && !holes.IsCreated && !restoreBoundary)
                 {
                     return;
                 }
