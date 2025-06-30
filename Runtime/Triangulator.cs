@@ -2000,7 +2000,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
         /// </param>
         /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<double2> holeSeeds = default) => new UnsafeTriangulator<double2>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<double2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<double2>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
         [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
         public static void PlantHoleSeeds(this UnsafeTriangulator @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double2>().PlantHoleSeeds(input, output, args, allocator);
         /// <summary>
@@ -2140,9 +2145,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
         /// </param>
         /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<float2> holeSeeds = default) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<float2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
         [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
-        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeInputData<float2> input, NativeOutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeInputData<float2> input, NativeOutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds, mapping: default);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -2286,7 +2296,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
         /// </param>
         /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<Vector2> holeSeeds = default) => new UnsafeTriangulator<float2>().PlantHoleSeeds(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, autoHolesAndBoundary, restoreBoundary, UnsafeUtility.As<NativeArray<Vector2>, NativeArray<float2>>(ref holeSeeds));
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<Vector2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<float2>().PlantHoleSeeds(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, autoHolesAndBoundary, restoreBoundary, UnsafeUtility.As<NativeArray<Vector2>, NativeArray<float2>>(ref holeSeeds), mapping);
         [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
         public static void PlantHoleSeeds(this UnsafeTriangulator<Vector2> @this, NativeInputData<Vector2> input, NativeOutputData<Vector2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float2>().PlantHoleSeeds(UnsafeUtility.As<NativeInputData<Vector2>, NativeInputData<float2>>(ref input), UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), args, allocator);
         /// <summary>
@@ -2427,9 +2442,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
         /// </param>
         /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<double2> holeSeeds = default) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<double2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
         [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
-        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds, mapping: default);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -2573,9 +2593,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
         /// </param>
         /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<int2> holeSeeds = default) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<int2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
         [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
-        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds, mapping: default);
         /// <summary>
         /// Applies the α-shape filter to the <paramref name="output"/> data.
         /// The filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹.
@@ -2647,9 +2672,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
         /// </param>
         /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<fp2> holeSeeds = default) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds);
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<fp2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
         [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
-        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeInputData<fp2> input, NativeOutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds);
+        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeInputData<fp2> input, NativeOutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds, mapping: default);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -2966,9 +2996,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }.TryApplyConstraint(new(pi, pj), ignoreForPlantingSeeds);
         }
 
-        public void PlantHoleSeeds(NativeOutputData<T2> output, Allocator allocator, bool autoHolesAndBoundary, bool restoreBoundary, NativeArray<T2> holeSeeds)
+        public void PlantHoleSeeds(NativeOutputData<T2> output, Allocator allocator, bool autoHolesAndBoundary, bool restoreBoundary, NativeArray<T2> holeSeeds, NativeList<int> mapping)
         {
-            new PlantingSeedStep(output, autoHolesAndBoundary, restoreBoundary, holeSeeds).Execute(allocator, true);
+            new PlantingSeedStep(output, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping).Execute(allocator, true);
         }
 
         public void RefineMesh(NativeOutputData<T2> output, Allocator allocator, T area2Threshold, T angleThreshold, T shells, bool constrainBoundary = false)
@@ -4425,11 +4455,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeArray<bool> visitedTriangles;
             private NativeQueueList<int> trianglesQueue;
             private NativeArray<T2> holes;
+            private NativeList<int> mapping;
 
             private readonly bool autoHolesAndBoundary, restoreBoundary;
             private int tIdMinVisited;
 
-            public PlantingSeedStep(NativeOutputData<T2> output, bool autoHolesAndBoundary, bool restoreBoundary, NativeArray<T2> holes)
+            public PlantingSeedStep(NativeOutputData<T2> output, bool autoHolesAndBoundary, bool restoreBoundary, NativeArray<T2> holes, NativeList<int> mapping)
             {
                 status = output.Status;
                 triangles = output.Triangles;
@@ -4440,6 +4471,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 this.holes = holes;
                 this.autoHolesAndBoundary = autoHolesAndBoundary;
                 this.restoreBoundary = restoreBoundary;
+                this.mapping = mapping;
 
                 visitedTriangles = default;
                 trianglesQueue = default;
@@ -4447,7 +4479,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 tIdMinVisited = -1;
             }
 
-            public PlantingSeedStep(NativeOutputData<T2> output, Args args, NativeArray<T2> localHoles) : this(output, args.AutoHolesAndBoundary, args.RestoreBoundary, localHoles) { }
+            public PlantingSeedStep(NativeOutputData<T2> output, Args args, NativeArray<T2> localHoles) : this(output, args.AutoHolesAndBoundary, args.RestoreBoundary, localHoles, mapping: default) { }
 
             public void Execute(Allocator allocator, bool constraintsIsCreated)
             {
@@ -4542,6 +4574,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         DisableHe(halfedges, 0, rId);
                         DisableHe(halfedges, 1, rId);
                         DisableHe(halfedges, 2, rId);
+                    }
+                }
+
+                if (mapping.IsCreated)
+                {
+                    mapping.Length = triangles3.Length;
+                    var count = 0;
+                    for (int i = 0; i < mapping.Length; i++)
+                    {
+                        mapping[i] = !visitedTriangles[i] ? count++ : -1;
                     }
                 }
 

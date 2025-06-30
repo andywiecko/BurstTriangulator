@@ -431,6 +431,50 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }
 
         [Test]
+        public void UnsafeTriangulatorPlantHoleSeedsMappingTest()
+        {
+            using var positions = new NativeArray<T>(new float2[]
+            {
+                math.float2(0, 0),
+                math.float2(3, 0),
+                math.float2(3, 3),
+                math.float2(0, 3),
+
+                math.float2(1, 1),
+                math.float2(2, 1),
+                math.float2(2, 2),
+                math.float2(1, 2),
+            }.DynamicCast<T>(), Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new int[]
+            {
+                0, 1, 1, 2, 2, 3, 3, 0,
+                4, 5, 5, 6, 6, 7, 7, 4,
+            }, Allocator.Persistent);
+
+            using var triangles1 = new NativeList<int>(Allocator.Persistent);
+            using var halfedges = new NativeList<int>(Allocator.Persistent);
+            using var constrainedHalfedges = new NativeList<bool>(Allocator.Persistent);
+
+            var t = new UnsafeTriangulator<T>();
+            t.Triangulate(
+                input: new() { Positions = positions, ConstraintEdges = constraints },
+                output: new() { Triangles = triangles1, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges },
+                Args.Default(validateInput: false), Allocator.Persistent
+            );
+
+            using var mapping = new NativeList<int>(Allocator.Persistent);
+            using var triangles2 = new NativeList<int>(Allocator.Persistent);
+            triangles2.CopyFrom(triangles1);
+            t.PlantHoleSeeds(new() { Triangles = triangles2, Halfedges = halfedges, ConstrainedHalfedges = constrainedHalfedges }, Allocator.Persistent, autoHolesAndBoundary: true, mapping: mapping);
+
+            // NOTE: Exactly 2 triangles should be removed for given test case.
+            Assert.That(mapping.AsArray().Count(i => i == -1), Is.EqualTo(2));
+            var t1 = triangles1.AsArray().Reinterpret<int3>(4).AsReadOnly();
+            var t2 = triangles2.AsArray().Reinterpret<int3>(4).AsReadOnly();
+            Assert.That(mapping.AsArray().Select((mi, i) => mi == -1 || math.all(t1[i] == t2[mi])), Is.All.True);
+        }
+
+        [Test]
         public void UnsafeTriangulatorAutoHolesWithIgnoredConstraintsTest()
         {
             // 3 ------------------------ 2
