@@ -6,10 +6,31 @@ uid: utilities-md
 
 The package also provides several utilities related to triangulations.
 These utilities can be found in the [Utilities] and [Extensions] classes.
+Most of the utilities are *Burst-compatible* and are implemented using spans, so they can be used with any collection type.
+
+## BoundingBox
+
+The method [`BoundingBox`][bounding-box] returns *axis-aligned bounding box* for provided collection of points.
+It supports all position types (`float2`/`int2`/`double2`/`fp2`), see example below:
+
+```csharp
+var positions = new float2[]{ ... };
+var (min, max) = Utilities.BoundingBox(positions);
+```
+
+## CenterOfMass
+
+The method [`CenterOfMass`][center-of-mass] returns *center of mass* (COM) for provided collection of points, assuming equal weights for all positions.
+It supports all position types (`float2`/`int2`/`double2`/`fp2`), see example below:
+
+```csharp
+var positions = new float2[]{ ... };
+var com = Utilities.CenterOfMass(positions);
+```
 
 ## GenerateHalfedges
 
-The method [GenerateHalfedges(Span&lt;int&gt; halfedges, ReadOnlySpan&lt;int&gt; triangles, Allocator allocator)][generate-halfedges] can be used to generate halfedges based on the given triangles. The provided `allocator` is used for temporary data allocation.
+The method [`GenerateHalfedges`][generate-halfedges] can be used to generate halfedges based on the given triangles. The provided `allocator` is used for temporary data allocation.
 This function is especially useful when you have mesh data but need to use halfedges, for example, when iterating through the mesh.
 Learn more about halfedges [here](advanced/output-halfedges.md).
 
@@ -25,7 +46,7 @@ Utilities.GenerateHalfedges(halfdeges, triangles, Allocator.Persistent);
 
 ## GeneratePointTriangleCount
 
-The method [GeneratePointTriangleCount][generate-point-triangle-count] populates the `pointTriangleCount` buffer with the number of triangles each vertex index is part of, based on the provided triangles index buffer.
+The method [`GeneratePointTriangleCount`][generate-point-triangle-count] populates the `pointTriangleCount` buffer with the number of triangles each vertex index is part of, based on the provided triangles index buffer.
 The provided `pointTriangleCount` buffer for counting triangles must be large enough to accommodate the highest index in `triangles`.
 An example usage is shown below:
 
@@ -36,7 +57,7 @@ Utilities.GeneratePointTriangleCount(pointTriangleCount, triangles);
 
 ## GenerateTriangleColors
 
-The method [GenerateTriangleColors][generate-triangle-colors] can be used to generate triangle colors using the provided halfedges.
+The method [`GenerateTriangleColors`][generate-triangle-colors] can be used to generate triangle colors using the provided halfedges.
 Triangles that share a common edge are assigned the same color index.
 The resulting colors contains values in the range $[0, \,\mathtt{colorsCount})$.
 Below is an illustration of an example coloring result, where colors represent actual visual colors rather than ids.
@@ -57,7 +78,7 @@ Utilities.GenerateTriangleColors(colors, halfedges, out var colorsCount, Allocat
 
 ## InsertSubMesh
 
-The [InsertSubMesh][insert-submesh] utility can be used to combine meshes by inserting a sub-mesh into the *main* mesh.
+The [`InsertSubMesh`][insert-submesh] utility can be used to combine meshes by inserting a sub-mesh into the *main* mesh.
 In such cases, triangle indices must be adjusted accordingly, and this method handles that for you.
 
 Example usage:
@@ -77,7 +98,7 @@ Utilities.InsertSubMesh(positions, triangles, subpositions, subtriangles);
 
 ## NextHalfedge
 
-The [NextHalfedge(int he)][next-halfedge] method is a simple yet powerful utility.
+The [`NextHalfedge`][next-halfedge] method is a simple yet powerful utility.
 As its name suggests, it returns the index of the next halfedge.
 This is particularly useful when iterating through a triangular mesh.
 Learn more about halfedges [here](advanced/output-halfedges.md).
@@ -105,7 +126,7 @@ for (int he = 0; he < halfedges.Length; he++)
 ## Retriangulate
 
 This package provides a utility for [Mesh](xref:UnityEngine.Mesh) retriangulation.
-To retriangulate a mesh, use [Retriangulate] extension method.
+To retriangulate a mesh, use [`Retriangulate`][retriangulate] extension method.
 This method supports non-uniform meshes, including those with *windmill*-like connections between triangles (e.g., the red and blue triangles in the figure in [GenerateTriangleColors](#generatetrianglecolors)).
 See the example below:
 
@@ -123,7 +144,7 @@ mesh.Retriangulate(
 ```
 
 > [!NOTE]
-> Refer to the [Retriangulate] API documentation for additional settings.
+> Refer to the [`Retriangulate`][retriangulate] API documentation for additional settings.
 
 For more advanced use cases, [`Utilities.RetriangulateMeshJob`][retrianglate-mesh-job] provides greater customization.
 This job can be executed on the main thread, scheduled within the Job System, or run inside another job.
@@ -147,10 +168,12 @@ dependencies.Complete();
 
 [Utilities]: xref:andywiecko.BurstTriangulator.Utilities
 [Extensions]: xref:andywiecko.BurstTriangulator.Extensions
+[bounding-box]: xref:andywiecko.BurstTriangulator.Utilities.BoundingBox*
+[center-of-mass]: xref:andywiecko.BurstTriangulator.Utilities.CenterOfMass*
 [generate-halfedges]: xref:andywiecko.BurstTriangulator.Utilities.GenerateHalfedges*
 [generate-point-triangle-count]: xref:andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount*
 [generate-triangle-colors]: xref:andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors*
 [insert-submesh]: xref:andywiecko.BurstTriangulator.Utilities.InsertSubMesh*
 [next-halfedge]: xref:andywiecko.BurstTriangulator.Utilities.NextHalfedge*
-[Retriangulate]: xref:andywiecko.BurstTriangulator.Extensions.Retriangulate*
+[retriangulate]: xref:andywiecko.BurstTriangulator.Extensions.Retriangulate*
 [retrianglate-mesh-job]: xref:andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob
