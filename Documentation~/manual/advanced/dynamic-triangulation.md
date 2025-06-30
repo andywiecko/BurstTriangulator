@@ -9,14 +9,14 @@ This feature is especially useful in scenarios like path-finding in RTS games, w
 
 ## DynamicInsertPoint
 
-The [DynamicInsertPoint][dynamic-insert-point] method allows you to insert a point into a specified triangle using barycentric coordinates. This method only supports point insertion within the original triangulation domain and cannot be used to insert points outside the existing mesh.
+The [`DynamicInsertPoint`][dynamic-insert-point] method allows you to insert a point into a specified triangle using barycentric coordinates. This method only supports point insertion within the original triangulation domain and cannot be used to insert points outside the existing mesh.
 
 Inserting a point at specific `T2 p` coordinates can be computationally expensive since it requires locating the triangle that contains the point `p`.
 This package does not include acceleration structures, as it assumes the user will implement this based on their specific requirements.
 It is recommended to use structures such as bounding volume hierarchies, 2D trees, grids, or buckets for efficient point lookup (`p` $\to \triangle$).
 The most suitable acceleration structure may vary depending on the use case.
 
-The [DynamicInsertPoint][dynamic-insert-point] method accepts the following parameters (in addition to `output` and `allocator`):
+The [`DynamicInsertPoint`][dynamic-insert-point] method accepts the following parameters (in addition to `output` and `allocator`):
 
 - `tId` the index of the triangle where the point should be inserted.
 - `bar` the barycentric coordinates of the point inside triangle `tId`.
@@ -75,11 +75,11 @@ t.DynamicInsertPoint(output, tId: 42, bar: 1f / 3, allocator: Allocator.Persiste
 
 ## DynamicSplitHalfedge
 
-The [DynamicSplitHalfedge][dynamic-split-halfedge] method allows you to split specified halfedge by inserting a point at a position determined by linear interpolation.
+The [`DynamicSplitHalfedge`][dynamic-split-halfedge] method allows you to split specified halfedge by inserting a point at a position determined by linear interpolation.
 The position is interpolated between the start and end points of the halfedge in the triangulation using $\alpha$ as the interpolation parameter.
 This method preserves the "constrained" state of the halfedge, meaning that if the specified halfedge is constrained, the two resulting sub-segments will also be marked as constrained.
 
-The [DynamicSplitHalfedge][dynamic-split-halfedge] method accepts the following parameters (in addition to `output` and `allocator`):
+The [`DynamicSplitHalfedge`][dynamic-split-halfedge] method accepts the following parameters (in addition to `output` and `allocator`):
 
 - `he` the index of the halfedge to split.
 - `alpha` the interpolation parameter for positioning the new point between the start and end points of the halfedge, where $p = (1 - \alpha) \, \text{start} + \alpha \, \text{end}$.
@@ -121,10 +121,10 @@ for(int i = 0; i < 32; i++)
 
 ## DynamicRemoveBulkPoint
 
-The [DynamicRemoveBulkPoint][dynamic-remove-point] method allows you to remove bulk points, i.e. points which are not boundary ones, and re-triangulates the affected region to maintain a valid triangulation.
+The [`DynamicRemoveBulkPoint`][dynamic-remove-point] method allows you to remove bulk points, i.e. points which are not boundary ones, and re-triangulates the affected region to maintain a valid triangulation.
 In addition to `output` and `allocator`, the method requires the index of the point to be removed, specified as `pId`.
 
-Below is an example demonstrating how to use the [DynamicRemoveBulkPoint][dynamic-remove-point] API:
+Below is an example demonstrating how to use the [`DynamicRemoveBulkPoint`][dynamic-remove-point] API:
 
 ```csharp
 using var inputPositions = new NativeArray<double2>(..., Allocator.Persistent);

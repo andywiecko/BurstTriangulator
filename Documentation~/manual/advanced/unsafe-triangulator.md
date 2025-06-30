@@ -83,7 +83,7 @@ Below, you can find extensions (with descriptions and examples) that can be used
 
 ### Triangulate
 
-The extension [`Triangulate(input, output, args, allocator)`][triangulate] is the simplest option to use. The action of this extension essentially produces the same result as the [`Run`][run] method for the managed [`Triangulator`][triangulator]. It can be useful when triangulation is done with [`Allocator.Temp`][allocator-temp] in a single job or to combine this with different extensions.
+The extension [`Triangulate`][triangulate] is the simplest option to use. The action of this extension essentially produces the same result as the [`Run`][run] method for the managed [`Triangulator`][triangulator]. It can be useful when triangulation is done with [`Allocator.Temp`][allocator-temp] in a single job or to combine this with different extensions.
 
 ```csharp
 using var positions = new NativeArray<float2>(..., Allocator.Persistent);
@@ -100,7 +100,7 @@ new UnsafeTriangulator<float2>().Triangulate(
 
 ### ConstrainEdge
 
-The [`ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds)`][constrain-edge] extension allows for constraining the edge `(pi, pj)`.
+The [`ConstrainEdge`][constrain-edge] extension allows for constraining the edge `(pi, pj)`.
 This is especially useful during dynamic triangulation when the user wants to insert a path dynamically and constrain the edges.
 This method is restricted to **bulk** mesh, meaning the edge to be constrained must not intersect any holes.
 The optional parameter `ignoreForPlantingSeeds` is used to ignore the halfedges corresponding to `(pi, pj)` during the seed planting step.
@@ -130,16 +130,14 @@ var output = new NativeOutputData<double2>
     IgnoredHalfedgesForPlantingSeeds = ignoredHalfedgesForPlantingSeeds,
 };
 
-var args = Args.Default();
-
 var t = new UnsafeTriangulator<double2>();
-t.Triangulate(input, output, args, Allocator.Persistent);
-t.ConstrainEdge(output, pi: 0, pj: 1, args, allocator: Allocator.Persistent, ignoreForPlantingSeeds: true);
+t.Triangulate(input, output, args: Args.Default(), Allocator.Persistent);
+t.ConstrainEdge(output, pi: 0, pj: 1, allocator: Allocator.Persistent, ignoreForPlantingSeeds: true);
 ```
 
 ### PlantHoleSeeds
 
-The extension [`PlantHoleSeeds(input, output, args, allocator)`][plant-seeds] is particularly useful when the user requires mesh data *without* removed triangles and additional mesh copy *with* removed triangles. In this case, the triangulation is performed once, which is generally a more expensive operation. Below is an example usage with the `autoHolesAndBoundary` option selected:
+The extension [`PlantHoleSeeds`][plant-seeds] is particularly useful when the user requires mesh data *without* removed triangles and additional mesh copy *with* removed triangles. In this case, the triangulation is performed once, which is generally a more expensive operation. Below is an example usage with the `autoHolesAndBoundary` option selected:
 
 ```csharp
 var input = new NativeInputData<double2>
@@ -156,18 +154,39 @@ var output = new NativeOutputData<double2>
     Halfedges = halfedges,
     ConstrainedHalfedges = constrainedHalfedges,
 };
-var args = Args.Default();
 var t = new UnsafeTriangulator<double2>();
-t.Triangulate(input, output, args), Allocator.Persistent);
-t.PlantHoleSeeds(input, output, args.With(autoHolesAndBoundary: true), Allocator.Persistent);
+t.Triangulate(input, output, args.Default(), Allocator.Persistent);
+t.PlantHoleSeeds(output, Allocator.Persistent, autoHolesAndBoundary: true);
 ```
 
-> [!NOTE]  
+> [!NOTE]
 > Depending on the options, some of the buffers may not be required for [`PlantHoleSeeds`][plant-seeds]. For example, when the user provides `HoleSeeds` in [`NativeInputData<T2>`][n-output-data], `Positions` in [`NativeOutputData<T2>`][n-output-data] must be provided. However, in other cases, it may not be required.
+
+The extension provides also an option to generate a `mapping` from the initial triangles (`t1`) to the triangles after planting seeds (`t2`).
+The condition `t1[3*i + k] == t2[mapping[3*i + k]]` (for $k\in\{0, 1, 2\}$) should hold for triangles that still exist in `t2`.
+If `mapping[i] == -1`, then the corresponding triangle `i` no longer exists in `t2`.
+See example below:
+
+```csharp
+var t = new UnsafeTriangulator<double2>();
+
+using var triangles1 = new NativeList<int>(Allocator.Persistent);
+t.Triangulate(input, output: new(){ Triangles = triangles1, ... }, args.Default(), Allocator.Persistent);
+
+using var mapping = new NativeList<int>(Allocator.Persistent);
+using var triangles2 = new NativeList<int>(Allocator.Persistent);
+triangles2.CopyFrom(triangles1);
+t.PlantHoleSeeds(new(){ Triangles = triangles2, ... }, Allocator.Persistent, mapping: mapping);
+
+// The result:
+// - `triangles1`: the initial triangles buffer before planting seeds.
+// - `triangles2`: the triangles after planting seeds.
+// - `mapping`: `triangles1` → `triangles2`.
+```
 
 ### RefineMesh
 
-The extension [`RefineMesh(output, allocator, areaThreshold?, angleThreshold?, concentricShells?, constrainBoundary?)`][refine-mesh] can be used to refine any triangulation mesh, even an already refined one. Please note that both the managed [`TriangulationSettings`][m-settings] and native [`Args`][n-args] provide refinement parameter setups only for [`float`][float] precision. This extension allows you to provide these parameters with the selected precision type `T` in generics. These parameters have the following default values (in the given precision type `T`, if this extension is available for `T`):
+The extension [`RefineMesh`][refine-mesh] can be used to refine any triangulation mesh, even an already refined one. Please note that both the managed [`TriangulationSettings`][m-settings] and native [`Args`][n-args] provide refinement parameter setups only for [`float`][float] precision. This extension allows you to provide these parameters with the selected precision type `T` in generics. These parameters have the following default values (in the given precision type `T`, if this extension is available for `T`):
 
 - `areaThreshold = 1`;
 - `angleThreshold = math.radians(5)`
