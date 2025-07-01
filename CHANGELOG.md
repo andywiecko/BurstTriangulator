@@ -9,6 +9,8 @@ For online version see [Github Releases].
 
 ## [3.9.0] – 2025-07-01
 
+### Added
+
 - Added `mapping` for the `PlantingHoleSeeds` extension in `UnsafeTriangulator<T2>`. This optional buffer provides a mapping between the initial triangles and triangles after planting hole seeds.
 - Added a utility for calculating the *axis-aligned bounding box* of a given collection of points (`Utilities.BoundingBox`).
 - Added a utility for calculating the *center of mass* (COM) of a given collection of points, assuming equal weights for all positions (`Utilities.CenterOfMass`).
