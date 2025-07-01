@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.9.0] – 2025-07-01
+
+- Added `mapping` for the `PlantingHoleSeeds` extension in `UnsafeTriangulator<T2>`. This optional buffer provides a mapping between the initial triangles and triangles after planting hole seeds.
+- Added a utility for calculating the *axis-aligned bounding box* of a given collection of points (`Utilities.BoundingBox`).
+- Added a utility for calculating the *center of mass* (COM) of a given collection of points, assuming equal weights for all positions (`Utilities.CenterOfMass`).
+
+### Changed
+
+- Extended `UnsafeTriangulator<T2>.ConstrainEdge` to replace the `args` parameter with explicit options: `sloanMaxIters` and `verbose`. The previous overload using `args` is now marked with the `[Obsolete]` attribute.
+- Extended `UnsafeTriangulator<T2>.PlantHoleSeeds` to replace the `args` and `input` parameters with explicit options: `autoHolesAndBoundary`, `restoreBoundary`, and `holeSeeds`. The previous overload using `args` and `input` is now marked with the `[Obsolete]` attribute.
+
+### Fixed
+
+- "Support" for triangulation with empty position buffer with enabled pre-processors.
+
 ## [3.8.0] – 2025-04-30
 
 ### Added
@@ -342,6 +357,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.9.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.9.0
 [3.8.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.8.0
 [3.7.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.7.0
 [3.6.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.6.0
