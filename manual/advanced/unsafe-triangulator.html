@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.8.0</b></div>
+                "><b>v3.9.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -152,7 +152,7 @@ Args args = settings;
 <h2 id="extensions">Extensions</h2>
 <p>Below, you can find extensions (with descriptions and examples) that can be used with <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html"><code>UnsafeTriangulator</code></a>. Check out the unit tests for additional use cases.</p>
 <h3 id="triangulate">Triangulate</h3>
-<p>The extension <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate.html"><code>Triangulate(input, output, args, allocator)</code></a> is the simplest option to use. The action of this extension essentially produces the same result as the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Extensions.Run.html"><code>Run</code></a> method for the managed <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator-1.html"><code>Triangulator</code></a>. It can be useful when triangulation is done with <a href="https://docs.unity3d.com/Packages/com.unity.collections@2.2/manual/allocator-overview.html#allocatortemp"><code>Allocator.Temp</code></a> in a single job or to combine this with different extensions.</p>
+<p>The extension <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.Triangulate.html"><code>Triangulate</code></a> is the simplest option to use. The action of this extension essentially produces the same result as the <a class="xref" href="../../api/andywiecko.BurstTriangulator.Extensions.Run.html"><code>Run</code></a> method for the managed <a class="xref" href="../../api/andywiecko.BurstTriangulator.Triangulator-1.html"><code>Triangulator</code></a>. It can be useful when triangulation is done with <a href="https://docs.unity3d.com/Packages/com.unity.collections@2.2/manual/allocator-overview.html#allocatortemp"><code>Allocator.Temp</code></a> in a single job or to combine this with different extensions.</p>
 <pre><code class="lang-csharp">using var positions = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
 using var constraints = new NativeArray&lt;int&gt;(..., Allocator.Persistent);
 using var holesSeeds = new NativeArray&lt;float2&gt;(..., Allocator.Persistent);
@@ -165,7 +165,7 @@ new UnsafeTriangulator&lt;float2&gt;().Triangulate(
 );
 </code></pre>
 <h3 id="constrainedge">ConstrainEdge</h3>
-<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge.html"><code>ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds)</code></a> extension allows for constraining the edge <code>(pi, pj)</code>.
+<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge.html"><code>ConstrainEdge</code></a> extension allows for constraining the edge <code>(pi, pj)</code>.
 This is especially useful during dynamic triangulation when the user wants to insert a path dynamically and constrain the edges.
 This method is restricted to <strong>bulk</strong> mesh, meaning the edge to be constrained must not intersect any holes.
 The optional parameter <code>ignoreForPlantingSeeds</code> is used to ignore the halfedges corresponding to <code>(pi, pj)</code> during the seed planting step.</p>
@@ -192,14 +192,12 @@ var output = new NativeOutputData&lt;double2&gt;
     IgnoredHalfedgesForPlantingSeeds = ignoredHalfedgesForPlantingSeeds,
 };
 
-var args = Args.Default();
-
 var t = new UnsafeTriangulator&lt;double2&gt;();
-t.Triangulate(input, output, args, Allocator.Persistent);
-t.ConstrainEdge(output, pi: 0, pj: 1, args, allocator: Allocator.Persistent, ignoreForPlantingSeeds: true);
+t.Triangulate(input, output, args: Args.Default(), Allocator.Persistent);
+t.ConstrainEdge(output, pi: 0, pj: 1, allocator: Allocator.Persistent, ignoreForPlantingSeeds: true);
 </code></pre>
 <h3 id="plantholeseeds">PlantHoleSeeds</h3>
-<p>The extension <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds.html"><code>PlantHoleSeeds(input, output, args, allocator)</code></a> is particularly useful when the user requires mesh data <em>without</em> removed triangles and additional mesh copy <em>with</em> removed triangles. In this case, the triangulation is performed once, which is generally a more expensive operation. Below is an example usage with the <code>autoHolesAndBoundary</code> option selected:</p>
+<p>The extension <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds.html"><code>PlantHoleSeeds</code></a> is particularly useful when the user requires mesh data <em>without</em> removed triangles and additional mesh copy <em>with</em> removed triangles. In this case, the triangulation is performed once, which is generally a more expensive operation. Below is an example usage with the <code>autoHolesAndBoundary</code> option selected:</p>
 <pre><code class="lang-csharp">var input = new NativeInputData&lt;double2&gt;
 {
     Positions = ...,
@@ -214,17 +212,35 @@ var output = new NativeOutputData&lt;double2&gt;
     Halfedges = halfedges,
     ConstrainedHalfedges = constrainedHalfedges,
 };
-var args = Args.Default();
 var t = new UnsafeTriangulator&lt;double2&gt;();
-t.Triangulate(input, output, args), Allocator.Persistent);
-t.PlantHoleSeeds(input, output, args.With(autoHolesAndBoundary: true), Allocator.Persistent);
+t.Triangulate(input, output, args.Default(), Allocator.Persistent);
+t.PlantHoleSeeds(output, Allocator.Persistent, autoHolesAndBoundary: true);
 </code></pre>
 <div class="NOTE">
 <h5>Note</h5>
 <p>Depending on the options, some of the buffers may not be required for <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds.html"><code>PlantHoleSeeds</code></a>. For example, when the user provides <code>HoleSeeds</code> in <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.html"><code>NativeInputData&lt;T2&gt;</code></a>, <code>Positions</code> in <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.html"><code>NativeOutputData&lt;T2&gt;</code></a> must be provided. However, in other cases, it may not be required.</p>
 </div>
+<p>The extension provides also an option to generate a <code>mapping</code> from the initial triangles (<code>t1</code>) to the triangles after planting seeds (<code>t2</code>).
+The condition <code>t1[3*i + k] == t2[mapping[3*i + k]]</code> (for <span class="math">\(k\in\{0, 1, 2\}\)</span>) should hold for triangles that still exist in <code>t2</code>.
+If <code>mapping[i] == -1</code>, then the corresponding triangle <code>i</code> no longer exists in <code>t2</code>.
+See example below:</p>
+<pre><code class="lang-csharp">var t = new UnsafeTriangulator&lt;double2&gt;();
+
+using var triangles1 = new NativeList&lt;int&gt;(Allocator.Persistent);
+t.Triangulate(input, output: new(){ Triangles = triangles1, ... }, args.Default(), Allocator.Persistent);
+
+using var mapping = new NativeList&lt;int&gt;(Allocator.Persistent);
+using var triangles2 = new NativeList&lt;int&gt;(Allocator.Persistent);
+triangles2.CopyFrom(triangles1);
+t.PlantHoleSeeds(new(){ Triangles = triangles2, ... }, Allocator.Persistent, mapping: mapping);
+
+// The result:
+// - `triangles1`: the initial triangles buffer before planting seeds.
+// - `triangles2`: the triangles after planting seeds.
+// - `mapping`: `triangles1` → `triangles2`.
+</code></pre>
 <h3 id="refinemesh">RefineMesh</h3>
-<p>The extension <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh.html"><code>RefineMesh(output, allocator, areaThreshold?, angleThreshold?, concentricShells?, constrainBoundary?)</code></a> can be used to refine any triangulation mesh, even an already refined one. Please note that both the managed <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.html"><code>TriangulationSettings</code></a> and native <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.html"><code>Args</code></a> provide refinement parameter setups only for <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.single"><code>float</code></a> precision. This extension allows you to provide these parameters with the selected precision type <code>T</code> in generics. These parameters have the following default values (in the given precision type <code>T</code>, if this extension is available for <code>T</code>):</p>
+<p>The extension <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.RefineMesh.html"><code>RefineMesh</code></a> can be used to refine any triangulation mesh, even an already refined one. Please note that both the managed <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.html"><code>TriangulationSettings</code></a> and native <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.html"><code>Args</code></a> provide refinement parameter setups only for <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.single"><code>float</code></a> precision. This extension allows you to provide these parameters with the selected precision type <code>T</code> in generics. These parameters have the following default values (in the given precision type <code>T</code>, if this extension is available for <code>T</code>):</p>
 <ul>
 <li><code>areaThreshold = 1</code>;</li>
 <li><code>angleThreshold = math.radians(5)</code></li>

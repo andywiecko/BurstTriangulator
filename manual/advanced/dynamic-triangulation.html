@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.8.0</b></div>
+                "><b>v3.9.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -95,12 +95,12 @@
 <p>Using the <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.UnsafeTriangulator-1.html"><code>UnsafeTriangulator&lt;T&gt;</code></a> API, you can perform dynamic triangulation.
 This feature is especially useful in scenarios like path-finding in RTS games, where recalculating only a small portion of the mesh, instead of the entire mesh, can significantly improve efficiency.</p>
 <h2 id="dynamicinsertpoint">DynamicInsertPoint</h2>
-<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint.html">DynamicInsertPoint</a> method allows you to insert a point into a specified triangle using barycentric coordinates. This method only supports point insertion within the original triangulation domain and cannot be used to insert points outside the existing mesh.</p>
+<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint.html"><code>DynamicInsertPoint</code></a> method allows you to insert a point into a specified triangle using barycentric coordinates. This method only supports point insertion within the original triangulation domain and cannot be used to insert points outside the existing mesh.</p>
 <p>Inserting a point at specific <code>T2 p</code> coordinates can be computationally expensive since it requires locating the triangle that contains the point <code>p</code>.
 This package does not include acceleration structures, as it assumes the user will implement this based on their specific requirements.
 It is recommended to use structures such as bounding volume hierarchies, 2D trees, grids, or buckets for efficient point lookup (<code>p</code> <span class="math">\(\to \triangle\)</span>).
 The most suitable acceleration structure may vary depending on the use case.</p>
-<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint.html">DynamicInsertPoint</a> method accepts the following parameters (in addition to <code>output</code> and <code>allocator</code>):</p>
+<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicInsertPoint.html"><code>DynamicInsertPoint</code></a> method accepts the following parameters (in addition to <code>output</code> and <code>allocator</code>):</p>
 <ul>
 <li><code>tId</code> the index of the triangle where the point should be inserted.</li>
 <li><code>bar</code> the barycentric coordinates of the point inside triangle <code>tId</code>.</li>
@@ -156,10 +156,10 @@ t.DynamicInsertPoint(output, tId: 42, bar: 1f / 3, allocator: Allocator.Persiste
 </code></pre>
 </div>
 <h2 id="dynamicsplithalfedge">DynamicSplitHalfedge</h2>
-<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge.html">DynamicSplitHalfedge</a> method allows you to split specified halfedge by inserting a point at a position determined by linear interpolation.
+<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge.html"><code>DynamicSplitHalfedge</code></a> method allows you to split specified halfedge by inserting a point at a position determined by linear interpolation.
 The position is interpolated between the start and end points of the halfedge in the triangulation using <span class="math">\(\alpha\)</span> as the interpolation parameter.
 This method preserves the &quot;constrained&quot; state of the halfedge, meaning that if the specified halfedge is constrained, the two resulting sub-segments will also be marked as constrained.</p>
-<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge.html">DynamicSplitHalfedge</a> method accepts the following parameters (in addition to <code>output</code> and <code>allocator</code>):</p>
+<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge.html"><code>DynamicSplitHalfedge</code></a> method accepts the following parameters (in addition to <code>output</code> and <code>allocator</code>):</p>
 <ul>
 <li><code>he</code> the index of the halfedge to split.</li>
 <li><code>alpha</code> the interpolation parameter for positioning the new point between the start and end points of the halfedge, where <span class="math">\(p = (1 - \alpha) \, \text{start} + \alpha \, \text{end}\)</span>.</li>
@@ -197,9 +197,9 @@ for(int i = 0; i &lt; 32; i++)
 }
 </code></pre>
 <h2 id="dynamicremovebulkpoint">DynamicRemoveBulkPoint</h2>
-<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint.html">DynamicRemoveBulkPoint</a> method allows you to remove bulk points, i.e. points which are not boundary ones, and re-triangulates the affected region to maintain a valid triangulation.
+<p>The <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint.html"><code>DynamicRemoveBulkPoint</code></a> method allows you to remove bulk points, i.e. points which are not boundary ones, and re-triangulates the affected region to maintain a valid triangulation.
 In addition to <code>output</code> and <code>allocator</code>, the method requires the index of the point to be removed, specified as <code>pId</code>.</p>
-<p>Below is an example demonstrating how to use the <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint.html">DynamicRemoveBulkPoint</a> API:</p>
+<p>Below is an example demonstrating how to use the <a class="xref" href="../../api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint.html"><code>DynamicRemoveBulkPoint</code></a> API:</p>
 <pre><code class="lang-csharp">using var inputPositions = new NativeArray&lt;double2&gt;(..., Allocator.Persistent);
 using var outputPositions = new NativeList&lt;double2&gt;(Allocator.Persistent);
 using var triangles = new NativeList&lt;int&gt;(Allocator.Persistent);

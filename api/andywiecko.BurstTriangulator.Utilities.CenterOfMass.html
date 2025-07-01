@@ -5,9 +5,9 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>Method Run | BurstTriangulator </title>
+      <title>Method CenterOfMass | BurstTriangulator </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="Method Run | BurstTriangulator ">
+      <meta name="title" content="Method CenterOfMass | BurstTriangulator ">
     
     
       <link rel="shortcut icon" href="../images/favicon.ico">
@@ -89,22 +89,23 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.Extensions.Run*">
+            <article class="content wrap" id="_content" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass*">
 
 
 
-<h1 id="andywiecko_BurstTriangulator_Extensions_Run_" data-uid="andywiecko.BurstTriangulator.Extensions.Run*">Method Run</h1>
+<h1 id="andywiecko_BurstTriangulator_Utilities_CenterOfMass_" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass*">Method CenterOfMass</h1>
 <div class="markdown level0 summary"></div>
 <div class="markdown level0 conceptual"></div>
 
-<a id="andywiecko_BurstTriangulator_Extensions_Run_" data-uid="andywiecko.BurstTriangulator.Extensions.Run*"></a>
-<h4 id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_float2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.float2})">Run(Triangulator&lt;float2&gt;)</h4>
-<div class="markdown level1 summary"><p>Perform the job's Execute method immediately on the same thread.</p>
+<a id="andywiecko_BurstTriangulator_Utilities_CenterOfMass_" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass*"></a>
+<h4 id="andywiecko_BurstTriangulator_Utilities_CenterOfMass_System_ReadOnlySpan_Unity_Mathematics_float2__" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass(System.ReadOnlySpan{Unity.Mathematics.float2})">CenterOfMass(ReadOnlySpan&lt;float2&gt;)</h4>
+<div class="markdown level1 summary"><p>Returns corresponding <em>center of mass</em> (COM) for <code class="paramref">positions</code>.
+Assumes equal weights for all positions.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void Run(this Triangulator&lt;float2&gt; @this)</code></pre>
+  <pre><code class="lang-csharp hljs">public static float2 CenterOfMass(ReadOnlySpan&lt;float2&gt; positions)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-condensed">
@@ -117,46 +118,38 @@
   </thead>
   <tbody>
     <tr>
-      <td><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html">float2</a>&gt;</td>
-      <td><span class="parametername">this</span></td>
-      <td></td>
+      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.readonlyspan-1">ReadOnlySpan</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html">float2</a>&gt;</td>
+      <td><span class="parametername">positions</span></td>
+      <td><p>A collection of positions. Must contain at least one point.</p>
+</td>
     </tr>
   </tbody>
 </table>
-<a id="andywiecko_BurstTriangulator_Extensions_Run_" data-uid="andywiecko.BurstTriangulator.Extensions.Run*"></a>
-<h4 id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_UnityEngine_Vector2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{UnityEngine.Vector2})">Run(Triangulator&lt;Vector2&gt;)</h4>
-<div class="markdown level1 summary"><p>Perform the job's Execute method immediately on the same thread.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="declaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void Run(this Triangulator&lt;Vector2&gt; @this)</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
+<h5 class="returns">Returns</h5>
 <table class="table table-bordered table-condensed">
   <thead>
     <tr>
       <th>Type</th>
-      <th>Name</th>
       <th>Description</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator</a>&lt;<a class="xref" href="https://docs.unity3d.com/ScriptReference/Vector2.html">Vector2</a>&gt;</td>
-      <td><span class="parametername">this</span></td>
-      <td></td>
+      <td><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.float2.html">float2</a></td>
+      <td><p>COM value position.</p>
+</td>
     </tr>
   </tbody>
 </table>
-<a id="andywiecko_BurstTriangulator_Extensions_Run_" data-uid="andywiecko.BurstTriangulator.Extensions.Run*"></a>
-<h4 id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_double2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.double2})">Run(Triangulator&lt;double2&gt;)</h4>
-<div class="markdown level1 summary"><p>Perform the job's Execute method immediately on the same thread.</p>
+<a id="andywiecko_BurstTriangulator_Utilities_CenterOfMass_" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass*"></a>
+<h4 id="andywiecko_BurstTriangulator_Utilities_CenterOfMass_System_ReadOnlySpan_Unity_Mathematics_double2__" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass(System.ReadOnlySpan{Unity.Mathematics.double2})">CenterOfMass(ReadOnlySpan&lt;double2&gt;)</h4>
+<div class="markdown level1 summary"><p>Returns corresponding <em>center of mass</em> (COM) for <code class="paramref">positions</code>.
+Assumes equal weights for all positions.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void Run(this Triangulator&lt;double2&gt; @this)</code></pre>
+  <pre><code class="lang-csharp hljs">public static double2 CenterOfMass(ReadOnlySpan&lt;double2&gt; positions)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-condensed">
@@ -169,46 +162,38 @@
   </thead>
   <tbody>
     <tr>
-      <td><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>&gt;</td>
-      <td><span class="parametername">this</span></td>
-      <td></td>
+      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.readonlyspan-1">ReadOnlySpan</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a>&gt;</td>
+      <td><span class="parametername">positions</span></td>
+      <td><p>A collection of positions. Must contain at least one point.</p>
+</td>
     </tr>
   </tbody>
 </table>
-<a id="andywiecko_BurstTriangulator_Extensions_Run_" data-uid="andywiecko.BurstTriangulator.Extensions.Run*"></a>
-<h4 id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_int2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.int2})">Run(Triangulator&lt;int2&gt;)</h4>
-<div class="markdown level1 summary"><p>Perform the job's Execute method immediately on the same thread.</p>
-</div>
-<div class="markdown level1 conceptual"></div>
-<h5 class="declaration">Declaration</h5>
-<div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void Run(this Triangulator&lt;int2&gt; @this)</code></pre>
-</div>
-<h5 class="parameters">Parameters</h5>
+<h5 class="returns">Returns</h5>
 <table class="table table-bordered table-condensed">
   <thead>
     <tr>
       <th>Type</th>
-      <th>Name</th>
       <th>Description</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html">int2</a>&gt;</td>
-      <td><span class="parametername">this</span></td>
-      <td></td>
+      <td><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.double2.html">double2</a></td>
+      <td><p>COM value position.</p>
+</td>
     </tr>
   </tbody>
 </table>
-<a id="andywiecko_BurstTriangulator_Extensions_Run_" data-uid="andywiecko.BurstTriangulator.Extensions.Run*"></a>
-<h4 id="andywiecko_BurstTriangulator_Extensions_Run_andywiecko_BurstTriangulator_Triangulator_Unity_Mathematics_FixedPoint_fp2__" data-uid="andywiecko.BurstTriangulator.Extensions.Run(andywiecko.BurstTriangulator.Triangulator{Unity.Mathematics.FixedPoint.fp2})">Run(Triangulator&lt;fp2&gt;)</h4>
-<div class="markdown level1 summary"><p>Perform the job's Execute method immediately on the same thread.</p>
+<a id="andywiecko_BurstTriangulator_Utilities_CenterOfMass_" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass*"></a>
+<h4 id="andywiecko_BurstTriangulator_Utilities_CenterOfMass_System_ReadOnlySpan_Unity_Mathematics_int2__" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass(System.ReadOnlySpan{Unity.Mathematics.int2})">CenterOfMass(ReadOnlySpan&lt;int2&gt;)</h4>
+<div class="markdown level1 summary"><p>Returns corresponding <em>center of mass</em> (COM) for <code class="paramref">positions</code>.
+Assumes equal weights for all positions.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
 <div class="codewrapper">
-  <pre><code class="lang-csharp hljs">public static void Run(this Triangulator&lt;fp2&gt; @this)</code></pre>
+  <pre><code class="lang-csharp hljs">public static int2 CenterOfMass(ReadOnlySpan&lt;int2&gt; positions)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
 <table class="table table-bordered table-condensed">
@@ -221,9 +206,70 @@
   </thead>
   <tbody>
     <tr>
-      <td><a class="xref" href="andywiecko.BurstTriangulator.Triangulator-1.html">Triangulator</a>&lt;<span class="xref">fp2</span>&gt;</td>
-      <td><span class="parametername">this</span></td>
-      <td></td>
+      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.readonlyspan-1">ReadOnlySpan</a>&lt;<a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html">int2</a>&gt;</td>
+      <td><span class="parametername">positions</span></td>
+      <td><p>A collection of positions. Must contain at least one point.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="https://docs.unity3d.com/Packages/com.unity.mathematics@1.3/api/Unity.Mathematics.int2.html">int2</a></td>
+      <td><p>COM value position.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<a id="andywiecko_BurstTriangulator_Utilities_CenterOfMass_" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass*"></a>
+<h4 id="andywiecko_BurstTriangulator_Utilities_CenterOfMass_System_ReadOnlySpan_Unity_Mathematics_FixedPoint_fp2__" data-uid="andywiecko.BurstTriangulator.Utilities.CenterOfMass(System.ReadOnlySpan{Unity.Mathematics.FixedPoint.fp2})">CenterOfMass(ReadOnlySpan&lt;fp2&gt;)</h4>
+<div class="markdown level1 summary"><p>Returns corresponding <em>center of mass</em> (COM) for <code class="paramref">positions</code>.
+Assumes equal weights for all positions.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">public static fp2 CenterOfMass(ReadOnlySpan&lt;fp2&gt; positions)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.readonlyspan-1">ReadOnlySpan</a>&lt;<span class="xref">fp2</span>&gt;</td>
+      <td><span class="parametername">positions</span></td>
+      <td><p>A collection of positions. Must contain at least one point.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="xref">fp2</span></td>
+      <td><p>COM value position.</p>
+</td>
     </tr>
   </tbody>
 </table>

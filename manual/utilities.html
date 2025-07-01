@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.8.0</b></div>
+                "><b>v3.9.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -93,9 +93,22 @@
 <h1 id="utilities">Utilities</h1>
 
 <p>The package also provides several utilities related to triangulations.
-These utilities can be found in the <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.html">Utilities</a> and <a class="xref" href="../api/andywiecko.BurstTriangulator.Extensions.html">Extensions</a> classes.</p>
+These utilities can be found in the <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.html">Utilities</a> and <a class="xref" href="../api/andywiecko.BurstTriangulator.Extensions.html">Extensions</a> classes.
+Most of the utilities are <em>Burst-compatible</em> and are implemented using spans, so they can be used with any collection type.</p>
+<h2 id="boundingbox">BoundingBox</h2>
+<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.BoundingBox.html"><code>BoundingBox</code></a> returns <em>axis-aligned bounding box</em> for provided collection of points.
+It supports all position types (<code>float2</code>/<code>int2</code>/<code>double2</code>/<code>fp2</code>), see example below:</p>
+<pre><code class="lang-csharp">var positions = new float2[]{ ... };
+var (min, max) = Utilities.BoundingBox(positions);
+</code></pre>
+<h2 id="centerofmass">CenterOfMass</h2>
+<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.CenterOfMass.html"><code>CenterOfMass</code></a> returns <em>center of mass</em> (COM) for provided collection of points, assuming equal weights for all positions.
+It supports all position types (<code>float2</code>/<code>int2</code>/<code>double2</code>/<code>fp2</code>), see example below:</p>
+<pre><code class="lang-csharp">var positions = new float2[]{ ... };
+var com = Utilities.CenterOfMass(positions);
+</code></pre>
 <h2 id="generatehalfedges">GenerateHalfedges</h2>
-<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GenerateHalfedges.html">GenerateHalfedges(Span&lt;int&gt; halfedges, ReadOnlySpan&lt;int&gt; triangles, Allocator allocator)</a> can be used to generate halfedges based on the given triangles. The provided <code>allocator</code> is used for temporary data allocation.
+<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GenerateHalfedges.html"><code>GenerateHalfedges</code></a> can be used to generate halfedges based on the given triangles. The provided <code>allocator</code> is used for temporary data allocation.
 This function is especially useful when you have mesh data but need to use halfedges, for example, when iterating through the mesh.
 Learn more about halfedges <a href="advanced/output-halfedges.html">here</a>.</p>
 <p>An example usage is shown below:</p>
@@ -106,14 +119,14 @@ var halfedges = new int[triangles.Length];
 Utilities.GenerateHalfedges(halfdeges, triangles, Allocator.Persistent);
 </code></pre>
 <h2 id="generatepointtrianglecount">GeneratePointTriangleCount</h2>
-<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount.html">GeneratePointTriangleCount</a> populates the <code>pointTriangleCount</code> buffer with the number of triangles each vertex index is part of, based on the provided triangles index buffer.
+<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount.html"><code>GeneratePointTriangleCount</code></a> populates the <code>pointTriangleCount</code> buffer with the number of triangles each vertex index is part of, based on the provided triangles index buffer.
 The provided <code>pointTriangleCount</code> buffer for counting triangles must be large enough to accommodate the highest index in <code>triangles</code>.
 An example usage is shown below:</p>
 <pre><code class="lang-csharp">var pointTriangleCount = new int[pointsCount];
 Utilities.GeneratePointTriangleCount(pointTriangleCount, triangles);
 </code></pre>
 <h2 id="generatetrianglecolors">GenerateTriangleColors</h2>
-<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors.html">GenerateTriangleColors</a> can be used to generate triangle colors using the provided halfedges.
+<p>The method <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.GenerateTriangleColors.html"><code>GenerateTriangleColors</code></a> can be used to generate triangle colors using the provided halfedges.
 Triangles that share a common edge are assigned the same color index.
 The resulting colors contains values in the range <span class="math">\([0, \,\mathtt{colorsCount})\)</span>.
 Below is an illustration of an example coloring result, where colors represent actual visual colors rather than ids.
@@ -128,7 +141,7 @@ var colors = new int[halfedges.Length / 3];
 Utilities.GenerateTriangleColors(colors, halfedges, out var colorsCount, Allocator.Persistent);
 </code></pre>
 <h2 id="insertsubmesh">InsertSubMesh</h2>
-<p>The <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.InsertSubMesh.html">InsertSubMesh</a> utility can be used to combine meshes by inserting a sub-mesh into the <em>main</em> mesh.
+<p>The <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.InsertSubMesh.html"><code>InsertSubMesh</code></a> utility can be used to combine meshes by inserting a sub-mesh into the <em>main</em> mesh.
 In such cases, triangle indices must be adjusted accordingly, and this method handles that for you.</p>
 <p>Example usage:</p>
 <pre><code class="lang-csharp">using var positions = new NativeList&lt;float2&gt;(..., Allocator);
@@ -143,7 +156,7 @@ var subtriangles = new[] { 0, 1, 2 };
 Utilities.InsertSubMesh(positions, triangles, subpositions, subtriangles);
 </code></pre>
 <h2 id="nexthalfedge">NextHalfedge</h2>
-<p>The <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.NextHalfedge.html">NextHalfedge(int he)</a> method is a simple yet powerful utility.
+<p>The <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.NextHalfedge.html"><code>NextHalfedge</code></a> method is a simple yet powerful utility.
 As its name suggests, it returns the index of the next halfedge.
 This is particularly useful when iterating through a triangular mesh.
 Learn more about halfedges <a href="advanced/output-halfedges.html">here</a>.</p>
@@ -166,7 +179,7 @@ for (int he = 0; he &lt; halfedges.Length; he++)
 </code></pre>
 <h2 id="retriangulate">Retriangulate</h2>
 <p>This package provides a utility for <a class="xref" href="https://docs.unity3d.com/ScriptReference/Mesh.html">Mesh</a> retriangulation.
-To retriangulate a mesh, use <a class="xref" href="../api/andywiecko.BurstTriangulator.Extensions.Retriangulate.html">Retriangulate</a> extension method.
+To retriangulate a mesh, use <a class="xref" href="../api/andywiecko.BurstTriangulator.Extensions.Retriangulate.html"><code>Retriangulate</code></a> extension method.
 This method supports non-uniform meshes, including those with <em>windmill</em>-like connections between triangles (e.g., the red and blue triangles in the figure in <a href="#generatetrianglecolors">GenerateTriangleColors</a>).
 See the example below:</p>
 <pre><code class="lang-csharp">mesh.Retriangulate(
@@ -182,7 +195,7 @@ See the example below:</p>
 </code></pre>
 <div class="NOTE">
 <h5>Note</h5>
-<p>Refer to the <a class="xref" href="../api/andywiecko.BurstTriangulator.Extensions.Retriangulate.html">Retriangulate</a> API documentation for additional settings.</p>
+<p>Refer to the <a class="xref" href="../api/andywiecko.BurstTriangulator.Extensions.Retriangulate.html"><code>Retriangulate</code></a> API documentation for additional settings.</p>
 </div>
 <p>For more advanced use cases, <a class="xref" href="../api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.html"><code>Utilities.RetriangulateMeshJob</code></a> provides greater customization.
 This job can be executed on the main thread, scheduled within the Job System, or run inside another job.
