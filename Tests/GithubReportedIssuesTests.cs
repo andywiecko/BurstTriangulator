@@ -190,5 +190,46 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             TestUtils.Draw(mesh.vertices, mesh.triangles, Color.red, duration: 5f);
         }
+
+        private static readonly TestCaseData[] githubIssue384Data =
+        {
+            new(math.int4(0, 1, 2, 3)),
+            new(math.int4(0, 1, 3, 2)),
+            new(math.int4(1, 0, 2, 3)),
+            new(math.int4(1, 0, 3, 2)),
+        };
+
+        [Test, TestCaseSource(nameof(githubIssue384Data))]
+        public void GithubIssue384(int4 perm)
+        {
+            float2[] p =
+            {
+                new(7.95096207f, 5.45096207f),
+                new(8.50216675f, 6.40567636f),
+                new(9.00266838f, 7.27257061f),
+                new(9.45096207f, 8.04903793f),
+            };
+            using var positions = new NativeArray<float2>(new[] {
+                p[perm[0]],
+                p[perm[1]],
+                p[perm[2]],
+                p[perm[3]],
+                new(p[0].x, p[3].y),
+                new(p[3].x, p[0].y),
+            }, Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new[] { 0, 1, 2, 3 }, Allocator.Persistent);
+            using var t = new Triangulator<float2>(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints },
+                Settings = { ValidateInput = true },
+            };
+            t.Run();
+
+            t.Draw();
+            Debug.DrawLine(math.float3(p[0], 0), math.float3(p[1], 0), Color.blue, 5f);
+            Debug.DrawLine(math.float3(p[2], 0), math.float3(p[3], 0), Color.blue, 5f);
+
+            Assert.That(t.Output.Status.Value, Is.EqualTo(Status.OK));
+        }
     }
 }
