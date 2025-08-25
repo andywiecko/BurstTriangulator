@@ -5689,19 +5689,27 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             var (pA, pB, pC) = (positions[i], positions[j], positions[k]);
             return (utils.CircumCenter(pA, pB, pC), utils.Cast(CircumRadiusSq(pA, pB, pC)));
         }
-        private static bool ccw(T2 a, T2 b, T2 c) => utils.greater(
-            utils.mul(utils.diff(utils.Y(c), utils.Y(a)), utils.diff(utils.X(b), utils.X(a))),
-            utils.mul(utils.diff(utils.Y(b), utils.Y(a)), utils.diff(utils.X(c), utils.X(a)))
-        );
+        private static int ccw(T2 a, T2 b, T2 c) =>
+            utils.greater(Orient2dFast(a, b, c), utils.EPSILON()) ? 1 :
+            utils.less(Orient2dFast(a, b, c), utils.neg(utils.EPSILON())) ? -1 :
+            0
+        ;
         /// <summary>
-        /// Returns <see langword="true"/> if edge (<paramref name="a0"/>, <paramref name="a1"/>) intersects 
-        /// (<paramref name="b0"/>, <paramref name="b1"/>), <see langword="false"/> otherwise.
+        /// Returns <see langword="true"/> if edge (<paramref name="a"/>, <paramref name="b"/>) intersects
+        /// (<paramref name="c"/>, <paramref name="d"/>), <see langword="false"/> otherwise.
         /// </summary>
         /// <remarks>
         /// This method will not catch intersecting collinear segments. See unit tests for more details.
         /// Segments intersecting only at their endpoints may or may not return <see langword="true"/>, depending on their orientation.
         /// </remarks>
-        internal static bool EdgeEdgeIntersection(T2 a0, T2 a1, T2 b0, T2 b1) => ccw(a0, a1, b0) != ccw(a0, a1, b1) && ccw(b0, b1, a0) != ccw(b0, b1, a1);
+        // NOTE:
+        //   The commonly used edge–edge intersection check found in the literature
+        //   may fail when using single-precision (float2) calculations:
+        //     ccw(a, b, c) ≠ ccw(a, b, d) ∧ ccw(c, d, a) ≠ ccw(c, d, b)
+        //   Since we do not care about intersecting–collinear cases in this check,
+        //   the algorithm can be implemented using imul:
+        //     ccw(a, b, c) · ccw(a, b, d) < 0 ∧ ccw(c, d, a) · ccw(c, d, b) < 0
+        internal static bool EdgeEdgeIntersection(T2 a, T2 b, T2 c, T2 d) => ccw(a, b, c) * ccw(a, b, d) < 0 && ccw(c, d, a) * ccw(c, d, b) < 0;
         internal static bool IsConvexQuadrilateral(T2 a, T2 b, T2 c, T2 d) => true
             && utils.greater(utils.abs(Orient2dFast(a, c, b)), utils.EPSILON())
             && utils.greater(utils.abs(Orient2dFast(a, c, d)), utils.EPSILON())
@@ -5715,7 +5723,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         );
         internal static bool PointLineSegmentIntersection(T2 a, T2 b0, T2 b1) => true
             && utils.le(utils.abs(Orient2dFast(a, b0, b1)), utils.EPSILON())
-            && math.all(utils.ge(a, utils.min(b0, b1)) & utils.le(a, utils.max(b0, b1)));
+            && math.all(utils.ge(a, utils.min(b0, b1)) & utils.le(a, utils.max(b0, b1)))
+        ;
     }
 
     /// <summary>
@@ -6155,6 +6164,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T2 max(T2 v, T2 w);
         T2 min(T2 v, T2 w);
         TBig mul(T a, T b);
+        TBig neg(TBig v);
         T2 neg(T2 v);
         T2 normalizesafe(T2 v);
 #pragma warning restore IDE1006
@@ -6253,6 +6263,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly float2 max(float2 v, float2 w) => math.max(v, w);
         public readonly float2 min(float2 v, float2 w) => math.min(v, w);
         public readonly float mul(float a, float b) => a * b;
+        public readonly float neg(float v) => -v;
         public readonly float2 neg(float2 v) => -v;
         public readonly float2 normalizesafe(float2 v) => math.normalizesafe(v);
     }
@@ -6350,6 +6361,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly double2 max(double2 v, double2 w) => math.max(v, w);
         public readonly double2 min(double2 v, double2 w) => math.min(v, w);
         public readonly double mul(double a, double b) => a * b;
+        public readonly double neg(double v) => -v;
         public readonly double2 neg(double2 v) => -v;
         public readonly double2 normalizesafe(double2 v) => math.normalizesafe(v);
     }
@@ -6455,6 +6467,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly int2 max(int2 v, int2 w) => math.max(v, w);
         public readonly int2 min(int2 v, int2 w) => math.min(v, w);
         public readonly long mul(int a, int b) => (long)a * b;
+        public readonly long neg(long v) => -v;
         public readonly int2 neg(int2 v) => -v;
         public readonly int2 normalizesafe(int2 v) => throw new NotImplementedException();
     }
@@ -6553,6 +6566,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly fp2 max(fp2 v, fp2 w) => fpmath.max(v, w);
         public readonly fp2 min(fp2 v, fp2 w) => fpmath.min(v, w);
         public readonly fp mul(fp a, fp b) => a * b;
+        public readonly fp neg(fp v) => -v;
         public readonly fp2 neg(fp2 v) => -v;
         public readonly fp2 normalizesafe(fp2 v) => fpmath.normalizesafe(v);
     }
