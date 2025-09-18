@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.9.1] – 2025-09-17
+
+### Fixed
+
+- Fixes a false positive result in the edge–edge intersection test for non-intersecting, nearly collinear edges ([#384]).
+  This fix primarily addresses `float2` precision issues (when using `double2` the issue was not detected).
+  These checks will be improved in the future with *robust-predicates* implementation.
+
 ## [3.9.0] – 2025-07-01
 
 ### Added
@@ -359,6 +367,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.9.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.9.1
 [3.9.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.9.0
 [3.8.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.8.0
 [3.7.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.7.0
@@ -384,6 +393,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 [1.0.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.0.1
 [1.0.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v1.0.0
 
+[#384]: https://github.com/andywiecko/BurstTriangulator/issues/384
 [#173]: https://github.com/andywiecko/BurstTriangulator/issues/173
 [#111]: https://github.com/andywiecko/BurstTriangulator/issues/111
 [#31]: https://github.com/andywiecko/BurstTriangulator/issues/31
