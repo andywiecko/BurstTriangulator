@@ -15,13 +15,41 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha",
+      "Title": "andywiecko.BurstTriangulator.AlphaShapeSettings",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.AlphaShapeSettings.yml\" sourcestartlinenumber=\"1\">A helper class that defines settings for the α-shape filtering algorithm.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills",
       "Summary": null
     },
     {
@@ -43,41 +71,13 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.AlphaShapeSettings.ProtectConstraints",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.AlphaShapeSettings",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.AlphaShapeSettings.yml\" sourcestartlinenumber=\"1\">A helper class that defines settings for the α-shape filtering algorithm.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.AlphaShapeSettings.PreventWindmills",
+      "Title": "andywiecko.BurstTriangulator.AlphaShapeSettings.Alpha",
       "Summary": null
     },
     {
@@ -93,6 +93,48 @@
       "IsMRef": true,
       "Title": "andywiecko.BurstTriangulator.Axis",
       "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Axis.yml\" sourcestartlinenumber=\"1\">An <xref href=\"System.Enum\" data-throw-if-not-resolved=\"false\"></xref> representing possible 3D-to-2D projection axes, used in the re-triangulation utility.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Extensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Extensions.AsNativeArray.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Extensions.AsNativeArray",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Extensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Extensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Extensions",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Extensions.yml\" sourcestartlinenumber=\"1\">Provides extension methods.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Extensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Extensions.Schedule.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Extensions.Schedule",
+      "Summary": null
     },
     {
       "type": "ManagedReference",
@@ -124,59 +166,17 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Extensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Extensions.Schedule.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Extensions.Schedule",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Extensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Extensions.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Extensions",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Extensions.yml\" sourcestartlinenumber=\"1\">Provides extension methods.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Extensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Extensions.AsNativeArray.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Extensions.AsNativeArray",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/andywiecko.BurstTriangulator.Handle.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Handle.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.Handle.Free.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Handle",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Handle.yml\" sourcestartlinenumber=\"1\">A handle that prevents an object from being deallocated by the garbage collector (GC).\nCall <xref href=\"andywiecko.BurstTriangulator.Handle.Free\" data-throw-if-not-resolved=\"false\"></xref> to release the object.</p>\n"
+      "Title": "andywiecko.BurstTriangulator.Handle.Free",
+      "Summary": null
     },
     {
       "type": "ManagedReference",
@@ -197,41 +197,27 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.Handle.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Handle.Free.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.Handle.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Handle.Free",
-      "Summary": null
+      "Title": "andywiecko.BurstTriangulator.Handle",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Handle.yml\" sourcestartlinenumber=\"1\">A handle that prevents an object from being deallocated by the garbage collector (GC).\nCall <xref href=\"andywiecko.BurstTriangulator.Handle.Free\" data-throw-if-not-resolved=\"false\"></xref> to release the object.</p>\n"
     },
     {
       "type": "ManagedReference",
       "source_relative_path": "api/andywiecko.BurstTriangulator.InputData-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.InputData-1.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.InputData<T2>",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.InputData-1.yml\" sourcestartlinenumber=\"1\">A managed helper class that contains all native buffers for triangulation input.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.InputData-1.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.InputData<T2>.ConstraintEdges",
+      "Title": "andywiecko.BurstTriangulator.InputData<T2>.IgnoreConstraintForPlantingSeeds",
       "Summary": null
     },
     {
@@ -253,6 +239,20 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.InputData-1.yml",
       "output": {
         ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.InputData-1.ConstraintEdges.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.InputData<T2>.ConstraintEdges",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.InputData-1.yml",
+      "output": {
+        ".html": {
           "relative_path": "api/andywiecko.BurstTriangulator.InputData-1.HoleSeeds.html"
         }
       },
@@ -267,13 +267,55 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.InputData-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.InputData-1.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.InputData<T2>.IgnoreConstraintForPlantingSeeds",
+      "Title": "andywiecko.BurstTriangulator.InputData<T2>",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.InputData-1.yml\" sourcestartlinenumber=\"1\">A managed helper class that contains all native buffers for triangulation input.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml\" sourcestartlinenumber=\"1\">Native correspondence to <xref href=\"andywiecko.BurstTriangulator.TriangulationSettings\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary",
       "Summary": null
     },
     {
@@ -309,69 +351,13 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Preprocessor.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectPoints.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectPoints",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapePreventWindmills.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapePreventWindmills",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml\" sourcestartlinenumber=\"1\">Native correspondence to <xref href=\"andywiecko.BurstTriangulator.TriangulationSettings\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With",
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Preprocessor",
       "Summary": null
     },
     {
@@ -393,13 +379,13 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectConstraints.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectConstraints",
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.With",
       "Summary": null
     },
     {
@@ -407,69 +393,13 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectPoints.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.ConcentricShellsParameter",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdAngle.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdAngle",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdArea.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdArea",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Alpha.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Alpha",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.-ctor.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Args",
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectPoints",
       "Summary": null
     },
     {
@@ -491,13 +421,27 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapePreventWindmills.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RestoreBoundary",
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapePreventWindmills",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectConstraints.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AlphaShapeProtectConstraints",
       "Summary": null
     },
     {
@@ -533,20 +477,6 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Preprocessor.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Preprocessor",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
-      "output": {
-        ".html": {
           "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary.html"
         }
       },
@@ -554,6 +484,90 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.AutoHolesAndBoundary",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdAngle.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdAngle",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.UseAlphaShapeFilter",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.-ctor.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Args",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Alpha.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.Alpha",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdArea.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Args.RefinementThresholdArea",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds",
       "Summary": null
     },
     {
@@ -575,13 +589,13 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge",
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge",
       "Summary": null
     },
     {
@@ -617,13 +631,27 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter",
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicSplitHalfedge",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint",
       "Summary": null
     },
     {
@@ -645,41 +673,13 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.PlantHoleSeeds",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.ConstrainEdge",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.DynamicRemoveBulkPoint",
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.Extensions.AlphaShapeFilter",
       "Summary": null
     },
     {
@@ -687,14 +687,14 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.IgnoreConstraintForPlantingSeeds.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData<T2>",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.yml\" sourcestartlinenumber=\"1\">Native correspondence to <xref href=\"andywiecko.BurstTriangulator.InputData%601\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData<T2>.IgnoreConstraintForPlantingSeeds",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.yml\" sourcestartlinenumber=\"1\">Optional buffer used to mark constraints that should be ignored during the seed planting step.\nThe buffer length should be half the length of <xref href=\"andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData%601.ConstraintEdges\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -709,6 +709,20 @@
       "IsMRef": true,
       "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData<T2>.Positions",
       "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.yml\" sourcestartlinenumber=\"1\">Positions of points used in triangulation.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData<T2>",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.yml\" sourcestartlinenumber=\"1\">Native correspondence to <xref href=\"andywiecko.BurstTriangulator.InputData%601\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -740,31 +754,17 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.IgnoreConstraintForPlantingSeeds.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData<T2>.IgnoreConstraintForPlantingSeeds",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData-1.yml\" sourcestartlinenumber=\"1\">Optional buffer used to mark constraints that should be ignored during the seed planting step.\nThe buffer length should be half the length of <xref href=\"andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeInputData%601.ConstraintEdges\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.Status.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<T2>.Status",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.yml\" sourcestartlinenumber=\"1\">Status of the triangulation. Retrieve this value to detect any errors that occurred during triangulation.</p>\n"
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<T2>",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.yml\" sourcestartlinenumber=\"1\">Native correspondence to <xref href=\"andywiecko.BurstTriangulator.OutputData%601\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -813,20 +813,6 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<T2>",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.yml\" sourcestartlinenumber=\"1\">Native correspondence to <xref href=\"andywiecko.BurstTriangulator.OutputData%601\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.yml",
-      "output": {
-        ".html": {
           "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.Triangles.html"
         }
       },
@@ -849,6 +835,20 @@
       "IsMRef": true,
       "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<T2>.Positions",
       "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.yml\" sourcestartlinenumber=\"1\">Positions of triangulation points.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.Status.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData<T2>.Status",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.LowLevel.Unsafe.NativeOutputData-1.yml\" sourcestartlinenumber=\"1\">Status of the triangulation. Retrieve this value to detect any errors that occurred during triangulation.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -897,62 +897,6 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.Positions.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.OutputData<T2>.Positions",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.Triangles.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.OutputData<T2>.Triangles",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.Status.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.OutputData<T2>.Status",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.ConstrainedHalfedges.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.OutputData<T2>.ConstrainedHalfedges",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
-      "output": {
-        ".html": {
           "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.IgnoredHalfedgesForPlantingSeeds.html"
         }
       },
@@ -981,6 +925,20 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
       "output": {
         ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.ConstrainedHalfedges.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.OutputData<T2>.ConstrainedHalfedges",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
+      "output": {
+        ".html": {
           "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.Halfedges.html"
         }
       },
@@ -988,6 +946,48 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "andywiecko.BurstTriangulator.OutputData<T2>.Halfedges",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.Status.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.OutputData<T2>.Status",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.Positions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.OutputData<T2>.Positions",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.OutputData-1.Triangles.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.OutputData<T2>.Triangles",
       "Summary": null
     },
     {
@@ -1003,6 +1003,20 @@
       "IsMRef": true,
       "Title": "andywiecko.BurstTriangulator.Preprocessor",
       "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Preprocessor.yml\" sourcestartlinenumber=\"1\">An <xref href=\"System.Enum\" data-throw-if-not-resolved=\"false\"></xref> representing the type of transformation applied to input positions before triangulation.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.RefinementThresholds.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.RefinementThresholds.Area.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.RefinementThresholds.Area",
+      "Summary": null
     },
     {
       "type": "ManagedReference",
@@ -1034,20 +1048,6 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.RefinementThresholds.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.RefinementThresholds.Area.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.RefinementThresholds.Area",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/andywiecko.BurstTriangulator.Status.yml",
       "output": {
         ".html": {
@@ -1065,111 +1065,13 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.TriangulationSettings",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.TriangulationSettings.yml\" sourcestartlinenumber=\"1\">A helper class for configuring triangulation parameters.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds",
+      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary",
       "Summary": null
     },
     {
@@ -1205,20 +1107,6 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.RestoreBoundary",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
-      "output": {
-        ".html": {
           "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.UseAlphaShapeFilter.html"
         }
       },
@@ -1230,16 +1118,142 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.yml",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.-ctor.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Triangulator<T2>.Triangulator",
+      "Title": "andywiecko.BurstTriangulator.TriangulationSettings",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.TriangulationSettings.yml\" sourcestartlinenumber=\"1\">A helper class for configuring triangulation parameters.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.SloanMaxIters",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.AlphaShapeSettings",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.RefinementThresholds",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.RefineMesh",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.Preprocessor",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.ConcentricShellsParameter",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Triangulator<T2>",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Triangulator-1.yml\" sourcestartlinenumber=\"1\">A generic class for triangulation of coordinate type <code class=\"typeparamref\">T2</code>, which provides the core functionality for performing triangulation on 2D geometric data.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.Output.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Triangulator<T2>.Output",
       "Summary": null
     },
     {
@@ -1275,34 +1289,6 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.Output.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Triangulator<T2>.Output",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Triangulator<T2>",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Triangulator-1.yml\" sourcestartlinenumber=\"1\">A generic class for triangulation of coordinate type <code class=\"typeparamref\">T2</code>, which provides the core functionality for performing triangulation on 2D geometric data.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.yml",
-      "output": {
-        ".html": {
           "relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.Input.html"
         }
       },
@@ -1314,30 +1300,16 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator-1.-ctor.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Triangulator",
-      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Triangulator.yml\" sourcestartlinenumber=\"1\">A base class for triangulation, which provides the core functionality for performing triangulation on 2D geometric data.\nIt acts as a wrapper for <xref href=\"andywiecko.BurstTriangulator.Triangulator%601\" data-throw-if-not-resolved=\"false\"></xref> where T2 is <xref href=\"Unity.Mathematics.double2\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Schedule.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Triangulator.Schedule",
+      "Title": "andywiecko.BurstTriangulator.Triangulator<T2>.Triangulator",
       "Summary": null
     },
     {
@@ -1359,13 +1331,13 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Dispose.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Output.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Triangulator.Dispose",
+      "Title": "andywiecko.BurstTriangulator.Triangulator.Output",
       "Summary": null
     },
     {
@@ -1387,13 +1359,13 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Output.html"
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Dispose.html"
         }
       },
       "version": "",
       "Uid": null,
       "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Triangulator.Output",
+      "Title": "andywiecko.BurstTriangulator.Triangulator.Dispose",
       "Summary": null
     },
     {
@@ -1409,6 +1381,34 @@
       "IsMRef": true,
       "Title": "andywiecko.BurstTriangulator.Triangulator.Input",
       "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.Schedule.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Triangulator.Schedule",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Triangulator.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Triangulator.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Triangulator",
+      "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Triangulator.yml\" sourcestartlinenumber=\"1\">A base class for triangulation, which provides the core functionality for performing triangulation on 2D geometric data.\nIt acts as a wrapper for <xref href=\"andywiecko.BurstTriangulator.Triangulator%601\" data-throw-if-not-resolved=\"false\"></xref> where T2 is <xref href=\"Unity.Mathematics.double2\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
     },
     {
       "type": "ManagedReference",
@@ -1443,20 +1443,6 @@
       "source_relative_path": "api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.yml",
       "output": {
         ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.-ctor.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.RetriangulateMeshJob",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.yml",
-      "output": {
-        ".html": {
           "relative_path": "api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.Execute.html"
         }
       },
@@ -1482,6 +1468,34 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.-ctor.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Utilities.RetriangulateMeshJob.RetriangulateMeshJob",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Utilities.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Utilities.NextHalfedge.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Utilities.NextHalfedge",
+      "Summary": null
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/andywiecko.BurstTriangulator.Utilities.yml",
       "output": {
         ".html": {
@@ -1493,6 +1507,20 @@
       "IsMRef": true,
       "Title": "andywiecko.BurstTriangulator.Utilities",
       "Summary": "<p sourcefile=\"api/andywiecko.BurstTriangulator.Utilities.yml\" sourcestartlinenumber=\"1\">A collection of utility functions related to triangulation.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/andywiecko.BurstTriangulator.Utilities.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/andywiecko.BurstTriangulator.Utilities.InsertSubMesh.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "andywiecko.BurstTriangulator.Utilities.InsertSubMesh",
+      "Summary": null
     },
     {
       "type": "ManagedReference",
@@ -1562,34 +1590,6 @@
       "Uid": null,
       "IsMRef": true,
       "Title": "andywiecko.BurstTriangulator.Utilities.GeneratePointTriangleCount",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Utilities.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Utilities.NextHalfedge.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Utilities.NextHalfedge",
-      "Summary": null
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/andywiecko.BurstTriangulator.Utilities.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/andywiecko.BurstTriangulator.Utilities.InsertSubMesh.html"
-        }
-      },
-      "version": "",
-      "Uid": null,
-      "IsMRef": true,
-      "Title": "andywiecko.BurstTriangulator.Utilities.InsertSubMesh",
       "Summary": null
     },
     {
