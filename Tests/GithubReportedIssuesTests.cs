@@ -231,5 +231,60 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
 
             Assert.That(t.Output.Status.Value, Is.EqualTo(Status.OK));
         }
+
+        [Test]
+        public void GithubIssue387()
+        {
+            using var positions = new NativeArray<float2>(new float2[] {
+                new(3.4f, 0.165685549f),
+                new(3.4f, 4.16568565f),
+                new(2.9f, 4.66568565f),
+                new(2.9f, 5.16568565f),
+                new(2.41568518f, 5.65f),
+                new(0.0843144953f, 5.65f),
+                new(-0.900000036f, 4.66568565f),
+                new(-0.9f, 3.16568542f),
+                new(-0.915685534f, 3.14999986f),
+                new(-1.41568553f, 3.15f),
+                new(-1.91568553f, 2.64999986f),
+                new(-2.91568542f, 2.65f),
+                new(-4.9f, 0.6656854f),
+                new(-4.9f, -1.16568553f),
+                new(-4.4f, -1.66568542f),
+                new(-4.4f, -2.16568565f),
+                new(-2.4f, -4.165685f),
+                new(-2.4f, -4.66568565f),
+                new(-1.41568542f, -5.65f),
+                new(-0.915685356f, -5.65f),
+                new(-0.415685415f, -6.15f),
+                new(0.9156854f, -6.15f),
+                new(1.41568542f, -5.65f),
+                new(1.91568542f, -5.65f),
+                new(2.41568542f, -5.15f),
+                new(3.91568542f, -5.15f),
+                new(4.4f, -4.665685f),
+                new(4.4f, -4.16568565f),
+                new(4.9f, -3.66568542f),
+                new(4.9f, -1.83431458f),
+                new(4.4f, -1.33431447f),
+                new(4.4f, -0.8343146f)
+            }, Allocator.Persistent);
+            using var constraints = new NativeArray<int>(new[]{
+                0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29, 30, 30, 31, 31, 0
+            }, Allocator.Persistent);
+            using var t = new Triangulator<float2>(Allocator.Persistent)
+            {
+                Input = { Positions = positions, ConstraintEdges = constraints },
+                Settings = { ValidateInput = true, AutoHolesAndBoundary = true },
+            };
+            t.Run();
+
+            t.Draw();
+
+            Debug.DrawLine(math.float3(positions[5], 0), math.float3(positions[6], 0), Color.blue, 5);
+            Debug.DrawLine(math.float3(positions[11], 0), math.float3(positions[12], 0), Color.blue, 5);
+
+            Assert.That(t.Output.Status.Value, Is.EqualTo(Status.OK));
+        }
     }
 }

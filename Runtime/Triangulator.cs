@@ -3571,7 +3571,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         }
 
                         var (b0, b1) = (positions[b0Id], positions[b1Id]);
-                        if (EdgeEdgeIntersection(a0, a1, b0, b1))
+                        if (true
+                            // NOTE:
+                            //   AABB vs AABB is required due to floating single point precision issues.
+                            //   This should be enhanced with robust predicates.
+                            && math.all(utils.le(utils.min(b0, b1), utils.max(a0, a1)) & utils.le(utils.min(a0, a1), utils.max(b0, b1)))
+                            && EdgeEdgeIntersection(a0, a1, b0, b1))
                         {
                             LogError($"[Triangulator]: ConstraintEdges[{i}] = ({a0Id}, {a1Id}) = <({utils.X(a0)}, {utils.Y(a0)}), ({utils.X(a1)}, {utils.Y(a1)})> and ConstraintEdges[{j}] = ({b0Id}, {b1Id}) = <({utils.X(b0)}, {utils.Y(b0)}), ({utils.X(b1)}, {utils.Y(b1)})> intersect!");
                             status.Value |= Status.ERR_INPUT_CONSTRAINTS_INTERSECTING;
@@ -5701,6 +5706,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <remarks>
         /// This method will not catch intersecting collinear segments. See unit tests for more details.
         /// Segments intersecting only at their endpoints may or may not return <see langword="true"/>, depending on their orientation.
+        /// Additionally, (nearly) collinear disjoint edges may produce false positives. However, this behavior should not affect the constraint algorithm's correctness in this project,
+        /// except during validation, which is further protected by AABB vs AABB checks. This will be enhanced in the future with robust predicates.
         /// </remarks>
         // NOTE:
         //   The commonly used edge–edge intersection check found in the literature
