@@ -287,8 +287,7 @@ namespace andywiecko.BurstTriangulator
         /// depending on the provided <see cref="InputData{T2}.ConstraintEdges"/>.
         /// </summary>
         /// <remarks>
-        /// The current implementation detects only <em>1-level islands</em>.
-        /// It will not detect holes in <em>solid</em> meshes inside other holes.
+        /// Regions are filled using the <em>even-odd</em> rule, so islands can be nested at any depth.
         /// </remarks>
         [field: Header("Constraints and holes")]
         [field: SerializeField]
@@ -296,8 +295,7 @@ namespace andywiecko.BurstTriangulator
             "If set to true, holes and boundaries will be created automatically " +
             "depending on the provided Input.ConstraintEdges.\n" +
             "\n" +
-            "The current implementation detects only <i>1-level islands</i>. " +
-            "It will not detect holes in <i>solid</i> meshes inside other holes."
+            "Regions are filled using the <i>even-odd</i> rule, so islands can be nested at any depth."
         )]
         public bool AutoHolesAndBoundary { get; set; } = false;
         /// <summary>
@@ -4648,120 +4646,102 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return -1;
             }
 
+            // Even-odd rule at any nesting depth: each triangle gets the number of constraint edges crossed on the
+            // way in from outside the convex hull, and the triangles reached after an even number are removed.
+            // For closed constraint loops the parity does not depend on the path taken, so the fewest crossings,
+            // found layer by layer, gives it.
             private void PlantAuto(Allocator allocator)
             {
-                using var heQueue = new NativeQueueList<int>(allocator);
-                using var loop = new NativeList<int>(allocator);
-                var heVisited = new NativeArray<bool>(halfedges.Length, allocator);
+                var triangleCount = triangles.Length / 3;
+                var layers = new NativeArray<int>(triangleCount, allocator);
+                using var queue = new NativeQueueList<int>(allocator);
+                using var nextLayer = new NativeList<int>(allocator);
+                for (int tId = 0; tId < triangleCount; tId++)
+                {
+                    layers[tId] = -1;
+                }
 
-                // Build boundary loop: 1st sweep
+                // Layer 0 starts at the triangles open to the outside through an unconstrained hull edge; a triangle
+                // behind a constrained hull edge only is on layer 1.
                 for (int he = 0; he < halfedges.Length; he++)
                 {
-                    if (halfedges[he] != -1 || heVisited[he])
+                    if (halfedges[he] != -1)
                     {
                         continue;
                     }
 
-                    heVisited[he] = true;
-                    if (constrainedHalfedges[he] && !HalfedgeIsIgnored(he))
+                    var tId = he / 3;
+                    if (IsConstraint(he))
                     {
-                        loop.Add(he);
+                        nextLayer.Add(tId);
                     }
-                    else
+                    else if (layers[tId] == -1)
                     {
-                        if (!visitedTriangles[he / 3])
-                        {
-                            PlantSeed(he / 3);
-                        }
-
-                        var h2 = NextHalfedge(he);
-                        if (halfedges[h2] != -1 && !heVisited[h2])
-                        {
-                            heQueue.Enqueue(h2);
-                            heVisited[h2] = true;
-                        }
-
-                        var h3 = NextHalfedge(h2);
-                        if (halfedges[h3] != -1 && !heVisited[h3])
-                        {
-                            heQueue.Enqueue(h3);
-                            heVisited[h3] = true;
-                        }
+                        layers[tId] = 0;
+                        queue.Enqueue(tId);
                     }
                 }
 
-                // Build boundary loop: 2nd sweep
-                while (heQueue.TryDequeue(out var he))
+                for (int layer = 0; ; layer++)
                 {
-                    var ohe = halfedges[he]; // valid `ohe` should always exist, -1 are eliminated in the 1st sweep!
-                    if (constrainedHalfedges[ohe] && !HalfedgeIsIgnored(ohe))
+                    // Flood the current layer; triangles across a constraint edge belong to the next one.
+                    while (queue.TryDequeue(out var tId))
                     {
-                        heVisited[ohe] = true;
-                        loop.Add(ohe);
-                    }
-                    else
-                    {
-                        ohe = NextHalfedge(ohe);
-                        if (!heVisited[ohe])
+                        for (int i = 0; i < 3; i++)
                         {
-                            heQueue.Enqueue(ohe);
-                            heVisited[ohe] = true;
-                        }
+                            var he = 3 * tId + i;
+                            var ohe = halfedges[he];
+                            if (ohe == -1)
+                            {
+                                continue;
+                            }
 
-                        ohe = NextHalfedge(ohe);
-                        if (!heVisited[ohe])
-                        {
-                            heQueue.Enqueue(ohe);
-                            heVisited[ohe] = true;
+                            var otherId = ohe / 3;
+                            if (layers[otherId] != -1)
+                            {
+                                continue;
+                            }
+
+                            if (IsConstraint(he))
+                            {
+                                nextLayer.Add(otherId);
+                            }
+                            else
+                            {
+                                layers[otherId] = layer;
+                                queue.Enqueue(otherId);
+                            }
                         }
+                    }
+
+                    foreach (var tId in nextLayer.AsReadOnly())
+                    {
+                        if (layers[tId] == -1)
+                        {
+                            layers[tId] = layer + 1;
+                            queue.Enqueue(tId);
+                        }
+                    }
+
+                    nextLayer.Clear();
+                    if (queue.Count == 0)
+                    {
+                        break;
                     }
                 }
 
-                // Plant seeds for non visited constraint edges
-                foreach (var h1 in loop.AsReadOnly())
+                for (int tId = 0; tId < triangleCount; tId++)
                 {
-                    var h2 = NextHalfedge(h1);
-                    if (!heVisited[h2])
+                    if ((layers[tId] & 1) == 0)
                     {
-                        heQueue.Enqueue(h2);
-                        heVisited[h2] = true;
-                    }
-
-                    var h3 = NextHalfedge(h2);
-                    if (!heVisited[h3])
-                    {
-                        heQueue.Enqueue(h3);
-                        heVisited[h3] = true;
-                    }
-                }
-                while (heQueue.TryDequeue(out var he))
-                {
-                    var ohe = halfedges[he];
-                    if (constrainedHalfedges[ohe] && !HalfedgeIsIgnored(ohe))
-                    {
-                        heVisited[ohe] = true;
-                        PlantSeed(ohe / 3);
-                    }
-                    else
-                    {
-                        ohe = NextHalfedge(ohe);
-                        if (!heVisited[ohe])
-                        {
-                            heQueue.Enqueue(ohe);
-                            heVisited[ohe] = true;
-                        }
-
-                        ohe = NextHalfedge(ohe);
-                        if (!heVisited[ohe])
-                        {
-                            heQueue.Enqueue(ohe);
-                            heVisited[ohe] = true;
-                        }
+                        PlantSeed(tId);
                     }
                 }
 
-                heVisited.Dispose();
+                layers.Dispose();
             }
+
+            private bool IsConstraint(int he) => constrainedHalfedges[he] && !HalfedgeIsIgnored(he);
         }
 
         private struct AlphaShapeFilterStep

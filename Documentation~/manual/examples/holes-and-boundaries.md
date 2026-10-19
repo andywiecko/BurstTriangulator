@@ -76,9 +76,9 @@ triangulator.Run();
 var triangles = triangulator.Output.Triangles;
 ```
 
-> [!WARNING]  
-> The current implementation of [`AutoHolesAndBoundary`][auto-holes-property] detects only *1-level islands*.
-> It will not detect holes in *solid* meshes inside other holes.
+> [!NOTE]  
+> [`AutoHolesAndBoundary`][auto-holes-property] fills regions using the *even-odd* rule, so islands can be nested at any depth:
+> regions inside an odd number of constraint loops are kept, and regions inside an even number are removed.
 
 ## Ignore constraints for planting seeds
 

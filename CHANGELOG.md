@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [Unreleased]
+
+### Changed
+
+- `AutoHolesAndBoundary` now detects islands nested at any depth (using the even-odd rule), instead of only *1-level islands*.
+
 ## [3.9.2] – 2026-06-12
 
 ### Fixed

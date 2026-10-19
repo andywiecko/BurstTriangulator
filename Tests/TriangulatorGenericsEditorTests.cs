@@ -1564,6 +1564,64 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
         }
 
         [Test]
+        public void AutoHolesNestedIslandsTest([Values(1, 2, 3, 4, 5)] int levels)
+        {
+            // Concentric squares, e.g. for 4 levels:
+            // +----------------+
+            // | +------------+ |
+            // | |   (hole)   | |
+            // | | +--------+ | |
+            // | | | +----+ | | |
+            // | | | |hole| | | |
+            // | | | +----+ | | |
+            // | | +--------+ | |
+            // | +------------+ |
+            // +----------------+
+            // Region between square k and k + 1 is a hole for odd k, the innermost square is a hole for odd levels - 1.
+            var scaleFactor = typeof(T) == typeof(int2) ? 1000.0f : 1f;
+            var points = new float2[4 * levels];
+            var constraints = new int[8 * levels];
+            for (int k = 0; k < levels; k++)
+            {
+                points[4 * k + 0] = scaleFactor * math.float2(k, k);
+                points[4 * k + 1] = scaleFactor * math.float2(10 - k, k);
+                points[4 * k + 2] = scaleFactor * math.float2(10 - k, 10 - k);
+                points[4 * k + 3] = scaleFactor * math.float2(k, 10 - k);
+                for (int i = 0; i < 4; i++)
+                {
+                    constraints[8 * k + 2 * i + 0] = 4 * k + i;
+                    constraints[8 * k + 2 * i + 1] = 4 * k + (i + 1) % 4;
+                }
+            }
+            var holeSeeds = Enumerable.Range(0, levels).Where(k => k % 2 == 1).Select(k => scaleFactor * math.float2(k + 0.5f, 5)).ToArray();
+
+            using var positions = new NativeArray<T>(points.DynamicCast<T>(), Allocator.Persistent);
+            using var constraintEdges = new NativeArray<int>(constraints, Allocator.Persistent);
+            using var holes = new NativeArray<T>(holeSeeds.DynamicCast<T>(), Allocator.Persistent);
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
+            {
+                Input = {
+                    Positions = positions,
+                    ConstraintEdges = constraintEdges,
+                },
+                Settings = { AutoHolesAndBoundary = true, },
+            };
+
+            triangulator.Run();
+
+            var autoResult = triangulator.Output.Triangles.AsArray().ToArray();
+
+            triangulator.Input.HoleSeeds = holes;
+            triangulator.Settings.AutoHolesAndBoundary = false;
+            triangulator.Settings.RestoreBoundary = true;
+            triangulator.Run();
+
+            var manualResult = triangulator.Output.Triangles.AsArray().ToArray();
+            Assert.That(autoResult, Is.Not.Empty);
+            Assert.That(autoResult, Is.EqualTo(manualResult));
+        }
+
+        [Test]
         public void AutoHolesWithIgnoredConstraintsTest()
         {
             // 3 ------------------------ 2
