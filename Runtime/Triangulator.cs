@@ -4646,20 +4646,17 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return -1;
             }
 
-            // Even-odd rule at any nesting depth: each triangle gets the number of constraint edges crossed on the
-            // way in from outside the convex hull, and the triangles reached after an even number are removed.
-            // For closed constraint loops the parity does not depend on the path taken, so the fewest crossings,
-            // found layer by layer, gives it.
             private void PlantAuto(Allocator allocator)
             {
-                var triangleCount = triangles.Length / 3;
-                var layers = new NativeArray<int>(triangleCount, allocator);
+                // Even-odd rule at any nesting depth: each triangle gets the number of constraint edges crossed on the
+                // way in from outside the convex hull, and the triangles reached after an even number are removed.
+                // For closed constraint loops the parity does not depend on the path taken, so the fewest crossings,
+                // found layer by layer, gives it.
                 using var queue = new NativeQueueList<int>(allocator);
                 using var nextLayer = new NativeList<int>(allocator);
-                for (int tId = 0; tId < triangleCount; tId++)
-                {
-                    layers[tId] = -1;
-                }
+                using var _layers = new NativeArray<int>(triangles.Length / 3, allocator);
+                var layers = _layers.AsSpan();
+                layers.Fill(-1);
 
                 // Layer 0 starts at the triangles open to the outside through an unconstrained hull edge; a triangle
                 // behind a constrained hull edge only is on layer 1.
@@ -4730,15 +4727,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     }
                 }
 
-                for (int tId = 0; tId < triangleCount; tId++)
+                for (int tId = 0; tId < layers.Length; tId++)
                 {
                     if ((layers[tId] & 1) == 0)
                     {
                         PlantSeed(tId);
                     }
                 }
-
-                layers.Dispose();
             }
 
             private bool IsConstraint(int he) => constrainedHalfedges[he] && !HalfedgeIsIgnored(he);
