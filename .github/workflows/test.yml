@@ -22,7 +22,7 @@ jobs:
         projectPath:
           - Samples~/BurstTriangulatorTestProject
         unityVersion:
-          - 2022.3.62f3
+          - 6000.3.11f1
         testMode:
           - editmode
           - playmode
