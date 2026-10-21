@@ -22,7 +22,7 @@ jobs:
         projectPath:
           - Samples~/BurstTriangulatorTestProject
         unityVersion:
-          - 2022.2.1f1
+          - 2022.3.62f3
         targetPlatform:
           - StandaloneWindows
         manifest:
