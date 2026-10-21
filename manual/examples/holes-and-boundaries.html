@@ -66,7 +66,7 @@
                 <div class="container" style="
                     width: 80px;
                     line-height: 40px;
-                "><b>v3.9.2</b></div>
+                "><b>v3.10.0</b></div>
           </div>
         </div>      </header>
       <div class="container body-content">
@@ -151,10 +151,10 @@ triangulator.Run();
 
 var triangles = triangulator.Output.Triangles;
 </code></pre>
-<div class="WARNING">
-<h5>Warning</h5>
-<p>The current implementation of <a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary"><code>AutoHolesAndBoundary</code></a> detects only <em>1-level islands</em>.
-It will not detect holes in <em>solid</em> meshes inside other holes.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p><a class="xref" href="../../api/andywiecko.BurstTriangulator.TriangulationSettings.AutoHolesAndBoundary.html#andywiecko_BurstTriangulator_TriangulationSettings_AutoHolesAndBoundary"><code>AutoHolesAndBoundary</code></a> fills regions using the <em>even-odd</em> rule, so islands can be nested at any depth:
+regions inside an odd number of constraint loops are kept, and regions inside an even number are removed.</p>
 </div>
 <h2 id="ignore-constraints-for-planting-seeds">Ignore constraints for planting seeds</h2>
 <p>As described in the introduction, the algorithm for triangle removal (and automatic hole detection) is based on a &quot;spreading virus&quot; mechanism, where constrained edges block the propagation. This behavior can be overridden by setting <a class="xref" href="../../api/andywiecko.BurstTriangulator.InputData-1.IgnoreConstraintForPlantingSeeds.html#andywiecko_BurstTriangulator_InputData_1_IgnoreConstraintForPlantingSeeds"><code>IgnoreConstraintForPlantingSeeds</code></a> to <code>true</code> for a given constraint</p>
