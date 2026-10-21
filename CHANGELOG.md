@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.10.0] – 2026-10-21
+
+### Added
+
+- Added nested islands support in `AutoHolesAndBoundary`.
+  PlantAuto now fills regions by the even-odd rule at any nesting depth instead of detecting only 1-level islands.
+  Triangles are visited layer by layer starting outside the convex hull, where crossing a constraint edge moves to the next layer; triangles on even layers are removed.
+
 ## [3.9.2] – 2026-06-12
 
 ### Fixed
@@ -373,6 +381,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.10.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.10.0
 [3.9.2]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.9.2
 [3.9.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.9.1
 [3.9.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.9.0
