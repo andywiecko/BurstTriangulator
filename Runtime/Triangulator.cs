@@ -6417,14 +6417,15 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public readonly long EPSILON() => 0;
         public readonly int FindPoint2(int i0, int i1, ReadOnlySpan<int2> positions)
         {
-            var p0 = positions[i0];
-            var p1 = positions[i1];
-            var (i2, minRadius) = (int.MaxValue, MaxValue());
+            var p0 = (double2)positions[i0];
+            var p1 = (double2)positions[i1];
+            var utils = default(UtilsDouble);
+            var (i2, minRadius) = (int.MaxValue, utils.MaxValue());
             for (int i = 0; i < positions.Length; i++)
             {
                 if (i == i0 || i == i1) continue;
-                var p = positions[i];
-                var r = distancesq(CircumCenter(p0, p1, p), p0);
+                var p = (double2)positions[i];
+                var r = utils.distancesq(utils.CircumCenter(p0, p1, p), p0);
                 (i2, minRadius) = r < minRadius ? (i, r) : (i2, minRadius);
             }
 
@@ -6471,15 +6472,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
         public readonly void SortCircumCenter(int2 p0, int2 p1, int2 p2, NativeArray<int> ids, ReadOnlySpan<int2> positions, Allocator allocator)
         {
-            using var _dists = new NativeArray<long>(positions.Length, allocator);
+            using var _dists = new NativeArray<double>(positions.Length, allocator);
             var dists = _dists.AsSpan();
-            var c = CircumCenter(p0, p1, p2);
+            var utils = default(UtilsDouble);
+            var c = utils.CircumCenter((double2)p0, (double2)p1, (double2)p2);
             for (int i = 0; i < positions.Length; i++)
             {
-                dists[i] = distancesq(c, positions[i]);
+                dists[i] = utils.distancesq(c, positions[i]);
             }
 
-            ids.Sort(new DistComparer<long>(_dists));
+            ids.Sort(new DistComparer<double>(_dists));
         }
         public readonly bool SupportRefinement() => false;
         public readonly int X(int2 a) => a.x;
