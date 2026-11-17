@@ -6164,6 +6164,22 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
         public readonly float Const(float v) => v;
         public readonly float EPSILON() => math.EPSILON;
+        // NOTE:
+        // The circumradius formula was used:
+        //   R = a * b * c / (4 * A),
+        // where a, b, and c are the side lengths of the triangle
+        // and A is its area.
+        // Since the factor `a / 4` does not affect the metric,
+        // it can be omitted.
+        private readonly float score(float2 p0, float2 p1, float2 p)
+        {
+            var b = distancesq(p0, p);
+            var c = distancesq(p1, p);
+            var d = p0 - p;
+            var e = p1 - p;
+            var cross = d.x * e.y - d.y * e.x;
+            return abs(cross) <= EPSILON() ? MaxValue() : b * c / (cross * cross);
+        }
         public readonly int FindPoint2(int i0, int i1, ReadOnlySpan<float2> positions)
         {
             var p0 = positions[i0];
@@ -6173,7 +6189,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 if (i == i0 || i == i1) continue;
                 var p = positions[i];
-                var r = distancesq(CircumCenter(p0, p1, p), p0);
+                var r = score(p0, p1, p);
                 (i2, minRadius) = r < minRadius ? (i, r) : (i2, minRadius);
             }
 
@@ -6217,6 +6233,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             using var _dists = new NativeArray<float>(positions.Length, allocator);
             var dists = _dists.AsSpan();
+            // TODO: the circum center could be eliminated entirely in this calculation.
             var c = CircumCenter(p0, p1, p2);
             for (int i = 0; i < positions.Length; i++)
             {
@@ -6289,6 +6306,15 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
         public readonly double Const(float v) => v;
         public readonly double EPSILON() => math.EPSILON_DBL;
+        private readonly double score(double2 p0, double2 p1, double2 p)
+        {
+            var b = distancesq(p0, p);
+            var c = distancesq(p1, p);
+            var d = p0 - p;
+            var e = p1 - p;
+            var cross = d.x * e.y - d.y * e.x;
+            return abs(cross) <= EPSILON() ? MaxValue() : b * c / (cross * cross);
+        }
         public readonly int FindPoint2(int i0, int i1, ReadOnlySpan<double2> positions)
         {
             var p0 = positions[i0];
@@ -6298,7 +6324,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 if (i == i0 || i == i1) continue;
                 var p = positions[i];
-                var r = distancesq(CircumCenter(p0, p1, p), p0);
+                var r = score(p0, p1, p);
                 (i2, minRadius) = r < minRadius ? (i, r) : (i2, minRadius);
             }
 
@@ -6415,17 +6441,28 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
         public readonly int Const(float v) => (int)v;
         public readonly long EPSILON() => 0;
+        private readonly double score(int2 p0, int2 p1, int2 p)
+        {
+            var b = distancesq(p0, p);
+            var c = distancesq(p1, p);
+            var dx = (long)p0.x - p.x;
+            var dy = (long)p0.y - p.y;
+            var ex = (long)p1.x - p.x;
+            var ey = (long)p1.y - p.y;
+            var cross = dx * ey - dy * ex;
+            // TODO: double casts could be elliminated by cross-num/dom comparison.
+            return abs(cross) <= EPSILON() ? MaxValue() : (double)b * c / ((double)cross * cross);
+        }
         public readonly int FindPoint2(int i0, int i1, ReadOnlySpan<int2> positions)
         {
-            var p0 = (double2)positions[i0];
-            var p1 = (double2)positions[i1];
-            var utils = default(UtilsDouble);
-            var (i2, minRadius) = (int.MaxValue, utils.MaxValue());
+            var p0 = positions[i0];
+            var p1 = positions[i1];
+            var (i2, minRadius) = (int.MaxValue, double.MaxValue);
             for (int i = 0; i < positions.Length; i++)
             {
                 if (i == i0 || i == i1) continue;
-                var p = (double2)positions[i];
-                var r = utils.distancesq(utils.CircumCenter(p0, p1, p), p0);
+                var p = positions[i];
+                var r = score(p0, p1, p);
                 (i2, minRadius) = r < minRadius ? (i, r) : (i2, minRadius);
             }
 
@@ -6475,6 +6512,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             using var _dists = new NativeArray<double>(positions.Length, allocator);
             var dists = _dists.AsSpan();
             var utils = default(UtilsDouble);
+            // TODO: double could be replaced with long, since c is constant!
             var c = utils.CircumCenter((double2)p0, (double2)p1, (double2)p2);
             for (int i = 0; i < positions.Length; i++)
             {
@@ -6550,6 +6588,15 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
         public readonly fp Const(float v) => (fp)v;
         public readonly fp EPSILON() => fp.FromRaw(1L);
+        private readonly fp score(fp2 p0, fp2 p1, fp2 p)
+        {
+            var b = distancesq(p0, p);
+            var c = distancesq(p1, p);
+            var d = p0 - p;
+            var e = p1 - p;
+            var cross = d.x * e.y - d.y * e.x;
+            return abs(cross) <= EPSILON() ? MaxValue() : b * c / (cross * cross);
+        }
         public readonly int FindPoint2(int i0, int i1, ReadOnlySpan<fp2> positions)
         {
             var p0 = positions[i0];
@@ -6559,7 +6606,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             {
                 if (i == i0 || i == i1) continue;
                 var p = positions[i];
-                var r = distancesq(CircumCenter(p0, p1, p), p0);
+                var r = score(p0, p1, p);
                 (i2, minRadius) = r < minRadius ? (i, r) : (i2, minRadius);
             }
 
