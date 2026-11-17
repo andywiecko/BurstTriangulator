@@ -3650,13 +3650,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// </summary>
         private struct DelaunayTriangulationStep
         {
-            private struct DistComparer : IComparer<int>
-            {
-                private NativeArray<TBig> dist;
-                public DistComparer(NativeArray<TBig> dist) => this.dist = dist;
-                public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
-            }
-
             private NativeReference<Status> status;
             private NativeArray<T2>.ReadOnly positions;
             private NativeList<int> triangles;
@@ -3717,7 +3710,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
                 var center = utils.avg(min, max);
 
-                int i0 = int.MaxValue, i1 = int.MaxValue, i2 = int.MaxValue;
+                int i0 = int.MaxValue, i1 = int.MaxValue;
                 var minDistSq = utils.MaxValue();
                 for (int i = 0; i < positions.Length; i++)
                 {
@@ -3747,18 +3740,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 // Second closest to the center
                 var p1 = positions[i1];
 
-                var minRadius = utils.MaxValue();
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    if (i == i0 || i == i1) continue;
-                    var p = positions[i];
-                    var r = CircumRadiusSq(p0, p1, p);
-                    if (utils.less(r, minRadius))
-                    {
-                        i2 = i;
-                        minRadius = r;
-                    }
-                }
+                var i2 = utils.FindPoint2(i0, i1, positions);
 
                 // NOTE: Since `int` does not support NaN or infinity, a circumcenter check is required for int2 validation.
                 // Be aware that the CircumRadiusSq calculation might overflow, leading to invalid or garbage results.
@@ -3778,7 +3760,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 using var _hullTri = hullTri = new(n, allocator);
                 using var _hullHash = hullHash = new(hashSize, allocator);
                 using var _EDGE_STACK = EDGE_STACK = new(math.min(3 * maxTriangles, 512), allocator);
-                var dists = new NativeArray<TBig>(n, allocator);
 
                 // Vertex closest to p1 and p2, as measured by the circumscribed circle radius of p1, p2, p3
                 // Thus (p1,p2,p3) form a triangle close to the center of the point set, and it's guaranteed that there
@@ -3792,15 +3773,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     (p1, p2) = (p2, p1);
                 }
 
-                // Sort all other vertices by their distance to the circumcenter of the initial triangle
+                utils.SortCircumCenter(p0, p1, p2, ids, positions, allocator);
+                // TODO:
+                //   The circumcenter `c` and the utils.hashkey method should be handled similarly
+                //   to the implementations in utils.SortCircumCenter and utils.FindPoint2,
+                //   using double precision when working with int2.
                 var c = utils.CircumCenter(p0, p1, p2);
-
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    dists[i] = utils.distancesq(c, positions[i]);
-                }
-
-                ids.Sort(new DistComparer(dists));
 
                 hullStart = i0;
 
@@ -3907,7 +3885,6 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 constrainedHalfedges.Length = trianglesLen;
 
                 ids.Dispose();
-                dists.Dispose();
             }
 
             private int Legalize(int a)
@@ -4078,6 +4055,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 using var intersections = new NativeList<int>(allocator);
                 using var unresolvedIntersections = new NativeList<int>(allocator);
                 using var pointToHalfedge = new NativeArray<int>(positions.Length, allocator);
+                // TODO: Validate the pointToHalfedge construction, as it may be invalid if Delaunay step fails!
+                // pointToHalfedge.AsSpan().Fill(-1);
                 ignoredHalfedgesForPlantingSeeds.Length = halfedges.Length;
 
                 FillPointToHalfedge(pointToHalfedge, triangles.AsReadOnly());
@@ -6093,6 +6072,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T2 CircumCenter(T2 a, T2 b, T2 c);
         T Const(float v);
         TBig EPSILON();
+        /// <summary>
+        /// Finds index <tt>i2</tt> during Delaunay Triangulation Step.
+        /// </summary>
+        int FindPoint2(int i0, int i1, ReadOnlySpan<T2> positions);
         bool InCircle(T2 a, T2 b, T2 c, T2 p);
         /// <summary>
         /// Returns <see langword="true"/> if <typeparamref name="T"/> is an integer-precision numeric type.
@@ -6102,6 +6085,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         T2 MaxValue2();
         T2 MinValue2();
         bool PointInsideTriangle(T2 p, T2 a, T2 b, T2 c);
+        /// <summary>
+        /// Sorts all other vertices by their distance to the circumcenter of the initial triangle
+        /// </summary>
+        void SortCircumCenter(T2 p0, T2 p1, T2 p2, NativeArray<int> ids, ReadOnlySpan<T2> positions, Allocator allocator);
         bool SupportRefinement();
         T X(T2 v);
         T Y(T2 v);
@@ -6152,6 +6139,13 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 #pragma warning restore IDE1006
     }
 
+    internal struct DistComparer<T> : IComparer<int> where T : unmanaged, IComparable<T>
+    {
+        private NativeArray<T> dist;
+        public DistComparer(NativeArray<T> dist) => this.dist = dist;
+        public int Compare(int x, int y) => dist[x].CompareTo(dist[y]);
+    }
+
     internal readonly struct UtilsFloat : IUtils<float, float2, float>
     {
         public readonly bool AlphaShapeCompare(float r, float alpha, float _) => r * alpha < 1;
@@ -6170,6 +6164,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
         public readonly float Const(float v) => v;
         public readonly float EPSILON() => math.EPSILON;
+        public readonly int FindPoint2(int i0, int i1, ReadOnlySpan<float2> positions)
+        {
+            var p0 = positions[i0];
+            var p1 = positions[i1];
+            var (i2, minRadius) = (int.MaxValue, MaxValue());
+            for (int i = 0; i < positions.Length; i++)
+            {
+                if (i == i0 || i == i1) continue;
+                var p = positions[i];
+                var r = distancesq(CircumCenter(p0, p1, p), p0);
+                (i2, minRadius) = r < minRadius ? (i, r) : (i2, minRadius);
+            }
+
+            return i2;
+        }
         public readonly bool InCircle(float2 a, float2 b, float2 c, float2 p)
         {
             var dx = a.x - p.x;
@@ -6203,6 +6212,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
             // NOTE: use barycentric property.
             return math.cmax(-bar(a, b, c, p)) <= 0;
+        }
+        public readonly void SortCircumCenter(float2 p0, float2 p1, float2 p2, NativeArray<int> ids, ReadOnlySpan<float2> positions, Allocator allocator)
+        {
+            using var _dists = new NativeArray<float>(positions.Length, allocator);
+            var dists = _dists.AsSpan();
+            var c = CircumCenter(p0, p1, p2);
+            for (int i = 0; i < positions.Length; i++)
+            {
+                dists[i] = distancesq(c, positions[i]);
+            }
+
+            ids.Sort(new DistComparer<float>(_dists));
         }
         public readonly bool SupportRefinement() => true;
         public readonly float X(float2 a) => a.x;
@@ -6268,6 +6289,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
         public readonly double Const(float v) => v;
         public readonly double EPSILON() => math.EPSILON_DBL;
+        public readonly int FindPoint2(int i0, int i1, ReadOnlySpan<double2> positions)
+        {
+            var p0 = positions[i0];
+            var p1 = positions[i1];
+            var (i2, minRadius) = (int.MaxValue, MaxValue());
+            for (int i = 0; i < positions.Length; i++)
+            {
+                if (i == i0 || i == i1) continue;
+                var p = positions[i];
+                var r = distancesq(CircumCenter(p0, p1, p), p0);
+                (i2, minRadius) = r < minRadius ? (i, r) : (i2, minRadius);
+            }
+
+            return i2;
+        }
         public readonly bool InCircle(double2 a, double2 b, double2 c, double2 p)
         {
             var dx = a.x - p.x;
@@ -6301,6 +6337,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
             // NOTE: use barycentric property.
             return math.cmax(-bar(a, b, c, p)) <= 0;
+        }
+        public readonly void SortCircumCenter(double2 p0, double2 p1, double2 p2, NativeArray<int> ids, ReadOnlySpan<double2> positions, Allocator allocator)
+        {
+            using var _dists = new NativeArray<double>(positions.Length, allocator);
+            var dists = _dists.AsSpan();
+            var c = CircumCenter(p0, p1, p2);
+            for (int i = 0; i < positions.Length; i++)
+            {
+                dists[i] = distancesq(c, positions[i]);
+            }
+
+            ids.Sort(new DistComparer<double>(_dists));
         }
         public readonly bool SupportRefinement() => true;
         public readonly double X(double2 a) => a.x;
@@ -6367,6 +6415,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
         public readonly int Const(float v) => (int)v;
         public readonly long EPSILON() => 0;
+        public readonly int FindPoint2(int i0, int i1, ReadOnlySpan<int2> positions)
+        {
+            var p0 = positions[i0];
+            var p1 = positions[i1];
+            var (i2, minRadius) = (int.MaxValue, MaxValue());
+            for (int i = 0; i < positions.Length; i++)
+            {
+                if (i == i0 || i == i1) continue;
+                var p = positions[i];
+                var r = distancesq(CircumCenter(p0, p1, p), p0);
+                (i2, minRadius) = r < minRadius ? (i, r) : (i2, minRadius);
+            }
+
+            return i2;
+        }
         public readonly bool InCircle(int2 a, int2 b, int2 c, int2 p)
         {
             // Do a coordinate change to check if the origin is inside abc instead.
@@ -6405,6 +6468,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             static long cross(int2 a, int2 b) => (long)a.x * b.y - (long)a.y * b.x;
             // NOTE: triangle orientation is guaranteed.
             return cross(p - a, b - a) >= 0 && cross(p - b, c - b) >= 0 && cross(p - c, a - c) >= 0;
+        }
+        public readonly void SortCircumCenter(int2 p0, int2 p1, int2 p2, NativeArray<int> ids, ReadOnlySpan<int2> positions, Allocator allocator)
+        {
+            using var _dists = new NativeArray<long>(positions.Length, allocator);
+            var dists = _dists.AsSpan();
+            var c = CircumCenter(p0, p1, p2);
+            for (int i = 0; i < positions.Length; i++)
+            {
+                dists[i] = distancesq(c, positions[i]);
+            }
+
+            ids.Sort(new DistComparer<long>(_dists));
         }
         public readonly bool SupportRefinement() => false;
         public readonly int X(int2 a) => a.x;
@@ -6473,6 +6548,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
         public readonly fp Const(float v) => (fp)v;
         public readonly fp EPSILON() => fp.FromRaw(1L);
+        public readonly int FindPoint2(int i0, int i1, ReadOnlySpan<fp2> positions)
+        {
+            var p0 = positions[i0];
+            var p1 = positions[i1];
+            var (i2, minRadius) = (int.MaxValue, MaxValue());
+            for (int i = 0; i < positions.Length; i++)
+            {
+                if (i == i0 || i == i1) continue;
+                var p = positions[i];
+                var r = distancesq(CircumCenter(p0, p1, p), p0);
+                (i2, minRadius) = r < minRadius ? (i, r) : (i2, minRadius);
+            }
+
+            return i2;
+        }
         public readonly bool InCircle(fp2 a, fp2 b, fp2 c, fp2 p)
         {
             var dx = a.x - p.x;
@@ -6506,6 +6596,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             }
             // NOTE: use barycentric property.
             return fpmath.cmax(-bar(a, b, c, p)) <= 0;
+        }
+        public readonly void SortCircumCenter(fp2 p0, fp2 p1, fp2 p2, NativeArray<int> ids, ReadOnlySpan<fp2> positions, Allocator allocator)
+        {
+            using var _dists = new NativeArray<fp>(positions.Length, allocator);
+            var dists = _dists.AsSpan();
+            var c = CircumCenter(p0, p1, p2);
+            for (int i = 0; i < positions.Length; i++)
+            {
+                dists[i] = distancesq(c, positions[i]);
+            }
+
+            ids.Sort(new DistComparer<fp>(_dists));
         }
         public readonly bool SupportRefinement() => true;
         public readonly fp X(fp2 a) => a.x;
