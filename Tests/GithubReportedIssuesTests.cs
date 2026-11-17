@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -285,6 +287,89 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             Debug.DrawLine(math.float3(positions[11], 0), math.float3(positions[12], 0), Color.blue, 5);
 
             Assert.That(t.Output.Status.Value, Is.EqualTo(Status.OK));
+        }
+
+        [Test]
+        public void GithubIssue398()
+        {
+            using var positions = new NativeArray<int2>(new int2[]
+            {
+                new(28440, 8800),
+                new(8800, 8800),
+                new(8800, -1218),
+                new(8800, -3481),
+                new(9803, -4634),
+                new(9804, -4634),
+                new(10656, -5613),
+                new(10093, -6154),
+                new(8811, -4943),
+                new(8800, -4932),
+                new(8800, -4946),
+                new(8800, -9810),
+                new(8850, -9810),
+                new(28440, -9810),
+                new(11650, -4059),
+                new(10592, -660)
+            }, Allocator.Persistent);
+
+            var constraints = new NativeArray<int>(new int[]
+            {
+                0, 1,
+                1, 2,
+                2, 3,
+                3, 4,
+                4, 5,
+                5, 6,
+                6, 7,
+                7, 8,
+                8, 9,
+                9, 10,
+                10, 11,
+                11, 12,
+                12, 13,
+                0, 13,
+                14, 15,
+                2, 15,
+                5, 14,
+                8, 10,
+            }, Allocator.Persistent);
+
+            using var ignore = new NativeArray<bool>(new bool[]
+            {
+                false, false, false, false, false, false, false,
+                false, false, false, false, false, false, false,
+                true, true, true, true
+            }, Allocator.Persistent);
+
+            using var triangulator = new Triangulator<int2>(Allocator.Persistent)
+            {
+                Input =
+                {
+                    Positions = positions,
+                    ConstraintEdges = constraints,
+                    IgnoreConstraintForPlantingSeeds =  ignore
+                },
+                Settings = { AutoHolesAndBoundary = true }
+            };
+
+            triangulator.Run();
+
+            triangulator.Draw();
+            for (int i = 0; i < constraints.Length / 2; i++)
+            {
+                var ci = positions[constraints[2 * i + 0]];
+                var cj = positions[constraints[2 * i + 1]];
+                Debug.DrawLine(math.float3((float2)ci, 0), math.float3((float2)cj, 0), ignore[i] ? Color.blue : Color.green, 5f);
+            }
+
+            using var pointToHalfedge = new NativeArray<int>(positions.Length, Allocator.Persistent);
+            pointToHalfedge.AsSpan().Fill(-1);
+            for (int i = 0; i < triangulator.Output.Triangles.Length; i++)
+            {
+                pointToHalfedge.AsSpan()[triangulator.Output.Triangles[i]] = i;
+            }
+            TestUtils.AssertValidTriangulation(triangulator);
+            Assert.That(pointToHalfedge, Has.All.Not.EqualTo(-1));
         }
     }
 }
