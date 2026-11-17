@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 For online version see [Github Releases].
 
+## [3.10.1] – 2026-11-17
+
+### Fixed
+
+- Precision issues in `int2` triangulation.
+
 ## [3.10.0] – 2026-10-21
 
 ### Added
@@ -381,6 +387,7 @@ options in the triangulation settings, aka `RestoreBoundary`.
 
 [Github Releases]: https://github.com/andywiecko/BurstTriangulator/releases
 
+[3.10.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.10.1
 [3.10.0]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.10.0
 [3.9.2]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.9.2
 [3.9.1]: https://github.com/andywiecko/BurstTriangulator/releases/tag/v3.9.1
